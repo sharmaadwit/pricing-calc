@@ -16,9 +16,6 @@ COUNTRY_CURRENCY = {
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    if request.method == 'GET':
-        # Always show the first step on GET (reset)
-        return render_template('index.html', step='volumes')
     step = request.form.get('step', 'volumes')
     results = None
     currency_symbol = None
@@ -77,7 +74,10 @@ def index():
         return render_template('index.html', step='results', results=results, inputs=inputs, currency_symbol=currency_symbol)
 
     # Default: show volume input form
-    return render_template('index.html', step='volumes')
+    # Try to get country from session, else default to India
+    country = session.get('inputs', {}).get('country', 'India')
+    currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
+    return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
 
 if __name__ == '__main__':
     app.run(debug=True)

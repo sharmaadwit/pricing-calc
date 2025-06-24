@@ -31,7 +31,8 @@
         <label>Basic Utility/Authentication Message Volume (per month):</label>
         <input type="number" name="basic_utility_volume" required><br><br>
         <label>Platform Fee:</label>
-        <input type="number" name="platform_fee" required><br><br>
+        {{ currency_symbol }}<input type="number" name="platform_fee" required><br>
+        <small>Enter the platform fee in the selected country's currency.</small><br><br>
         <input type="submit" value="Next: Suggest Prices">
     </form>
     {% endif %}
