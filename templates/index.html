@@ -61,11 +61,11 @@
             <tr>
                 <th>Line Item</th>
                 <th>Volume</th>
-                <th>Chosen Price</th>
-                <th>Suggested Price</th>
-                <th>Overage Price</th>
-                <th>Revenue (Chosen)</th>
-                <th>Revenue (Suggested)</th>
+                <th>Chosen Price/message</th>
+                <th>Suggested Price/message</th>
+                <th>Overage Price/message</th>
+                <th>Revenue (Chosen) {{ currency_symbol }}/month</th>
+                <th>Revenue (Suggested) {{ currency_symbol }}/month</th>
             </tr>
             {% for item in results.line_items %}
             <tr>
@@ -81,12 +81,12 @@
         </table>
         <br>
         <table>
-            <tr><th>Platform Fee</th><td>{{ results.platform_fee }}</td></tr>
-            <tr><th>Total Revenue (Chosen)</th><td>{{ results.revenue }}</td></tr>
-            <tr><th>Total Revenue (Suggested)</th><td>{{ results.suggested_revenue }}</td></tr>
+            <tr><th>Platform Fee/month</th><td>{{ results.platform_fee }}</td></tr>
+            <tr><th>Total Revenue (Chosen) {{ currency_symbol }}/month</th><td>{{ results.revenue }}</td></tr>
+            <tr><th>Total Revenue (Suggested) {{ currency_symbol }}/month</th><td>{{ results.suggested_revenue }}</td></tr>
             <tr><th>Channel Cost</th><td>{{ results.channel_cost }}</td></tr>
-            <tr><th>AI Costs</th><td>{{ results.ai_costs }}</td></tr>
-            <tr><th>Total Costs</th><td>{{ results.total_costs }}</td></tr>
+            <tr><th>AI Costs {{ currency_symbol }}/month</th><td>{{ results.ai_costs }}</td></tr>
+            <tr><th>Total Costs {{ currency_symbol }}/month</th><td>{{ results.total_costs }}</td></tr>
             <tr><th>Margin (User Chosen)</th><td>{{ results.margin }}</td></tr>
             <tr><th>Margin (Suggested)</th><td>{{ results.suggested_margin }}</td></tr>
         </table>
