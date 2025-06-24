@@ -6,6 +6,9 @@ app.secret_key = 'your_secret_key'  # Needed for session
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    if request.method == 'GET':
+        # Always show the first step on GET (reset)
+        return render_template('index.html', step='volumes')
     step = request.form.get('step', 'volumes')
     results = None
 
