@@ -4,6 +4,16 @@ from calculator import calculate_pricing, get_suggested_price
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
 
+# Country to currency symbol mapping
+COUNTRY_CURRENCY = {
+    'India': '₹',
+    'MENA': 'د.إ',  # AED
+    'LATAM': '$',   # USD (or local, but $ is common)
+    'Africa': '$',  # USD (or local)
+    'Europe': '€',
+    'Rest of the World': '$',
+}
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
@@ -11,6 +21,7 @@ def index():
         return render_template('index.html', step='volumes')
     step = request.form.get('step', 'volumes')
     results = None
+    currency_symbol = None
 
     if step == 'volumes' and request.method == 'POST':
         # Step 1: User submitted volumes
@@ -38,7 +49,8 @@ def index():
             'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume),
             'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume),
         }
-        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session['inputs'])
+        currency_symbol = COUNTRY_CURRENCY.get(country, '$')
+        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session['inputs'], currency_symbol=currency_symbol)
 
     elif step == 'prices' and request.method == 'POST':
         # Step 2: User submitted prices
@@ -61,7 +73,8 @@ def index():
             basic_marketing_price=basic_marketing_price,
             basic_utility_price=basic_utility_price
         )
-        return render_template('index.html', step='results', results=results, inputs=inputs)
+        currency_symbol = COUNTRY_CURRENCY.get(inputs['country'], '$')
+        return render_template('index.html', step='results', results=results, inputs=inputs, currency_symbol=currency_symbol)
 
     # Default: show volume input form
     return render_template('index.html', step='volumes')

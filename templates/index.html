@@ -41,13 +41,13 @@
         <input type="hidden" name="step" value="prices">
         <h2>Suggested Prices (edit if needed)</h2>
         <label>AI Message Price:</label>
-        <input type="number" step="0.0001" name="ai_price" value="{{ suggested.ai_price }}" required><br><br>
+        {{ currency_symbol }}<input type="number" step="0.0001" name="ai_price" value="{{ suggested.ai_price }}" required><br><br>
         <label>Advanced Message Price:</label>
-        <input type="number" step="0.0001" name="advanced_price" value="{{ suggested.advanced_price }}" required><br><br>
+        {{ currency_symbol }}<input type="number" step="0.0001" name="advanced_price" value="{{ suggested.advanced_price }}" required><br><br>
         <label>Basic Marketing Message Price:</label>
-        <input type="number" step="0.0001" name="basic_marketing_price" value="{{ suggested.basic_marketing_price }}" required><br><br>
+        {{ currency_symbol }}<input type="number" step="0.0001" name="basic_marketing_price" value="{{ suggested.basic_marketing_price }}" required><br><br>
         <label>Basic Utility/Authentication Message Price:</label>
-        <input type="number" step="0.0001" name="basic_utility_price" value="{{ suggested.basic_utility_price }}" required><br><br>
+        {{ currency_symbol }}<input type="number" step="0.0001" name="basic_utility_price" value="{{ suggested.basic_utility_price }}" required><br><br>
         <input type="submit" value="Calculate Results">
     </form>
     <form method="get">
