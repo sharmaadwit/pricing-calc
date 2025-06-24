@@ -191,14 +191,15 @@ def calculate_pricing(
     advanced_revenue = user_advanced_price * advanced_volume
     basic_marketing_revenue = user_basic_marketing_price * basic_marketing_volume
     basic_utility_revenue = user_basic_utility_price * basic_utility_volume
-    revenue = platform_fee + ai_revenue + advanced_revenue + basic_marketing_revenue + basic_utility_revenue
+    # revenue is only message revenue (no platform fee)
+    revenue = ai_revenue + advanced_revenue + basic_marketing_revenue + basic_utility_revenue
 
     # Revenue (suggested)
     ai_revenue_s = suggested_ai_price * ai_volume
     advanced_revenue_s = suggested_advanced_price * advanced_volume
     basic_marketing_revenue_s = suggested_basic_marketing_price * basic_marketing_volume
     basic_utility_revenue_s = suggested_basic_utility_price * basic_utility_volume
-    suggested_revenue = platform_fee + ai_revenue_s + advanced_revenue_s + basic_marketing_revenue_s + basic_utility_revenue_s
+    suggested_revenue = ai_revenue_s + advanced_revenue_s + basic_marketing_revenue_s + basic_utility_revenue_s
 
     # Channel cost (as per your logic)
     adv_marketing_vol = 0.0
@@ -216,19 +217,19 @@ def calculate_pricing(
     # Total costs (platform infra cost is 0)
     total_costs = channel_cost + ai_costs
 
-    # Margin (user-chosen)
-    margin_denom = revenue + channel_cost
+    # Margin (user-chosen, business formula)
+    margin_denom = revenue + platform_fee
     if margin_denom > 0:
-        margin = (revenue + channel_cost - total_costs) / margin_denom
+        margin = (revenue + platform_fee - total_costs) / margin_denom
         margin_percentage = margin * 100
     else:
         margin = 0
         margin_percentage = 0
 
-    # Suggested margin (using suggested prices)
-    suggested_margin_denom = suggested_revenue + channel_cost
+    # Suggested margin (business formula)
+    suggested_margin_denom = suggested_revenue + platform_fee
     if suggested_margin_denom > 0:
-        suggested_margin = (suggested_revenue + channel_cost - total_costs) / suggested_margin_denom
+        suggested_margin = (suggested_revenue + platform_fee - total_costs) / suggested_margin_denom
         suggested_margin_percentage = suggested_margin * 100
     else:
         suggested_margin = 0
@@ -277,8 +278,8 @@ def calculate_pricing(
     return {
         'line_items': line_items,
         'platform_fee': platform_fee,
-        'revenue': f"{revenue:.2f}",
-        'suggested_revenue': f"{suggested_revenue:.2f}",
+        'revenue': f"{(revenue + platform_fee):.2f}",
+        'suggested_revenue': f"{(suggested_revenue + platform_fee):.2f}",
         'channel_cost': f"{channel_cost:.2f}",
         'ai_costs': f"{ai_costs:.2f}",
         'total_costs': f"{total_costs:.2f}",
