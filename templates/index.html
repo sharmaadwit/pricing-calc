@@ -165,8 +165,8 @@
                 <td>{{ item.chosen_price }}</td>
                 <td>{{ item.suggested_price }}</td>
                 <td>{{ item.overage_price }}</td>
-                <td>{{ item.revenue|round(2) }}</td>
-                <td>{{ item.suggested_revenue|round(2) }}</td>
+                <td>{{ item.revenue }}</td>
+                <td>{{ item.suggested_revenue }}</td>
             </tr>
             {% endfor %}
         </table>
@@ -278,11 +278,6 @@
             <tr><th>Margin (Rate Card)</th><td colspan="2">{{ results.suggested_margin }}</td></tr>
         </table>
         <br>
-        <form method="post" action="{{ url_for('export_to_gdoc') }}">
-            <label for="gdoc_link">Paste your Google Doc link to export the results table:</label>
-            <input type="text" name="gdoc_link" id="gdoc_link" required style="width: 400px;">
-            <input type="submit" value="Export to Google Doc">
-        </form>
         <form method="get">
             <input type="submit" value="Start Over">
         </form>

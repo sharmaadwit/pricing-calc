@@ -243,6 +243,15 @@ def index():
                     val = val.replace(',', '')
                     if not val.strip():  # Handle empty strings
                         return '0'
+                    # Check if it's already a formatted number (e.g., "123.45")
+                    if val.replace('.', '').replace('-', '').isdigit():
+                        float_val = float(val)
+                        if float_val == int(float_val):
+                            return '{:,}'.format(int(float_val))
+                        else:
+                            return '{:,.2f}'.format(float_val)
+                    else:
+                        return val  # Return as-is if not a number
                 # Convert to float first to handle decimals properly
                 float_val = float(val)
                 if float_val == int(float_val):
