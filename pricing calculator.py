@@ -325,6 +325,61 @@ def perform_calculations_and_display(data, suggested_fees=None):
     print("-" * 50)
 
 
+def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, agent_assist):
+    if country == 'India':
+        min_fee = 100000
+    elif country in ['Africa', 'Rest of the World']:
+        min_fee = 500
+    else:
+        min_fee = 1000
+    fee = min_fee
+    # BFSI tier
+    if bfsi_tier == 'Tier 1':
+        if country == 'India': fee += 250000
+        elif country == 'Africa': fee += 500
+        else: fee += 1500
+    elif bfsi_tier == 'Tier 2':
+        if country == 'India': fee += 500000
+        elif country == 'Africa': fee += 1000
+        else: fee += 3000
+    elif bfsi_tier == 'Tier 3':
+        if country == 'India': fee += 800000
+        elif country == 'Africa': fee += 1500
+        else: fee += 5000
+    # Personalize load
+    if personalize_load == 'Standard':
+        if country == 'India': fee += 50000
+        elif country == 'Africa': fee += 250
+        else: fee += 500
+    elif personalize_load == 'Advanced':
+        if country == 'India': fee += 100000
+        elif country == 'Africa': fee += 500
+        else: fee += 1000
+    # Human agents
+    if human_agents == '20+':
+        if country == 'India': fee += 50000
+        elif country == 'Africa': fee += 250
+        elif country in ['LATAM', 'Europe']: fee += 1000
+        else: fee += 500
+    elif human_agents == '50+':
+        if country == 'India': fee += 75000
+        elif country == 'Africa': fee += 400
+        elif country in ['LATAM', 'Europe']: fee += 1200
+        else: fee += 700
+    elif human_agents == '100+':
+        if country == 'India': fee += 100000
+        elif country == 'Africa': fee += 500
+        elif country in ['LATAM', 'Europe']: fee += 1500
+        else: fee += 1000
+    # Agent Assist Yes/No
+    if agent_assist == 'Yes':
+        if country == 'India': fee += 50000
+        elif country == 'Africa': fee += 250
+        elif country in ['LATAM', 'Europe']: fee += 1000
+        else: fee += 500
+    return fee
+
+
 def main_calculator():
     """
     Main function to orchestrate the calculator's workflow using the updated formulae.
@@ -406,6 +461,35 @@ def main_calculator():
     print(f"Currency set to {currency} ({currency_symbol})\n")
     print("Please provide the following details for the client.\n")
 
+    # --- Platform Fee Inputs ---
+    print("--- Platform Fee Options ---")
+    print("BFSI Tier options: NA, Tier 1, Tier 2, Tier 3")
+    bfsi_tier = input("Select BFSI Tier: ").strip()
+    if bfsi_tier not in ['NA', 'Tier 1', 'Tier 2', 'Tier 3']:
+        bfsi_tier = 'NA'
+    print("Personalize Load options: NA, Standard, Advanced")
+    personalize_load = input("Select Personalize Load: ").strip()
+    if personalize_load not in ['NA', 'Standard', 'Advanced']:
+        personalize_load = 'NA'
+    print("Number of Human Agents (Agent Assist) options: NA, 20+, 50+, 100+")
+    human_agents = input("Select Human Agents: ").strip()
+    if human_agents not in ['NA', '20+', '50+', '100+']:
+        human_agents = 'NA'
+    print("Agent Assist options: NA, Yes, No")
+    agent_assist = input("Agent Assist (Yes/No): ").strip()
+    if agent_assist not in ['NA', 'Yes', 'No']:
+        agent_assist = 'NA'
+    platform_fee = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, agent_assist)
+    print(f"Calculated Platform Fee: {platform_fee}")
+    user_platform_fee = input(f"Enter platform fee to use (press Enter to accept {platform_fee}): ").strip()
+    if user_platform_fee == '':
+        platform_fee = platform_fee
+    else:
+        try:
+            platform_fee = float(user_platform_fee)
+        except:
+            platform_fee = platform_fee
+
     # --- Gather Initial Client Requirements and Volumes ---
     print("--- Message Volumes (Monthly) ---")
     volumes = {
@@ -449,10 +533,6 @@ def main_calculator():
                         print("Invalid input. Please enter a valid number.")
                         user_input = input(f"Enter the markup fee for a {label} (in {currency_symbol}): ").strip()
 
-    # --- Gather Fixed Fees ---
-    print("\n--- Fixed Fees ---")
-    platform_fee = float(get_numeric_input(f"Enter the fixed monthly platform fee (in {currency_symbol}): "))
-    
     # --- Store all data in a single dictionary ---
     master_data = {
         'meta_costs': meta_costs,
