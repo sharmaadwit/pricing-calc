@@ -14,7 +14,7 @@ COUNTRY_CURRENCY = {
     'Rest of the World': '$',
 }
 
-def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, agent_assist):
+def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module):
     # 1. Minimum platform fee
     if country == 'India':
         min_fee = 100000
@@ -64,8 +64,8 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
         elif country == 'Africa': fee += 500
         elif country in ['LATAM', 'Europe']: fee += 1500
         else: fee += 1000
-    # 5. Agent Assist Yes/No
-    if agent_assist == 'Yes':
+    # 5. AI Module Yes/No
+    if ai_module == 'Yes':
         if country == 'India': fee += 50000
         elif country == 'Africa': fee += 250
         elif country in ['LATAM', 'Europe']: fee += 1000
@@ -88,8 +88,8 @@ def index():
         bfsi_tier = request.form.get('bfsi_tier', 'NA')
         personalize_load = request.form.get('personalize_load', 'NA')
         human_agents = request.form.get('human_agents', 'NA')
-        agent_assist = request.form.get('agent_assist', 'NA')
-        platform_fee, fee_currency = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, agent_assist)
+        ai_module = request.form.get('ai_module', 'NA')
+        platform_fee, fee_currency = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module)
         currency_symbol = COUNTRY_CURRENCY.get(country, '$')
         # Store in session for next step
         session['inputs'] = {
@@ -102,7 +102,7 @@ def index():
             'bfsi_tier': bfsi_tier,
             'personalize_load': personalize_load,
             'human_agents': human_agents,
-            'agent_assist': agent_assist
+            'ai_module': ai_module
         }
         # Suggest prices
         suggested_prices = {

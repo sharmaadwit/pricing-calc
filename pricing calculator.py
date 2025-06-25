@@ -325,7 +325,7 @@ def perform_calculations_and_display(data, suggested_fees=None):
     print("-" * 50)
 
 
-def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, agent_assist):
+def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module):
     if country == 'India':
         min_fee = 100000
     elif country in ['Africa', 'Rest of the World']:
@@ -371,8 +371,8 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
         elif country == 'Africa': fee += 500
         elif country in ['LATAM', 'Europe']: fee += 1500
         else: fee += 1000
-    # Agent Assist Yes/No
-    if agent_assist == 'Yes':
+    # AI Module Yes/No
+    if ai_module == 'Yes':
         if country == 'India': fee += 50000
         elif country == 'Africa': fee += 250
         elif country in ['LATAM', 'Europe']: fee += 1000
@@ -471,15 +471,15 @@ def main_calculator():
     personalize_load = input("Select Personalize Load: ").strip()
     if personalize_load not in ['NA', 'Standard', 'Advanced']:
         personalize_load = 'NA'
-    print("Number of Human Agents (Agent Assist) options: NA, 20+, 50+, 100+")
+    print("Number of Human Agents (AI Module) options: NA, 20+, 50+, 100+")
     human_agents = input("Select Human Agents: ").strip()
     if human_agents not in ['NA', '20+', '50+', '100+']:
         human_agents = 'NA'
-    print("Agent Assist options: NA, Yes, No")
-    agent_assist = input("Agent Assist (Yes/No): ").strip()
-    if agent_assist not in ['NA', 'Yes', 'No']:
-        agent_assist = 'NA'
-    platform_fee = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, agent_assist)
+    print("AI Module options: NA, Yes, No")
+    ai_module = input("AI Module (Yes/No): ").strip()
+    if ai_module not in ['NA', 'Yes', 'No']:
+        ai_module = 'NA'
+    platform_fee = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module)
     print(f"Calculated Platform Fee: {platform_fee}")
     user_platform_fee = input(f"Enter platform fee to use (press Enter to accept {platform_fee}): ").strip()
     if user_platform_fee == '':
