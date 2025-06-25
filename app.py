@@ -234,10 +234,15 @@ def index():
         # Format all numbers with commas for display
         def fmt(val):
             try:
+                # Handle None values
+                if val is None:
+                    return '0'
                 # Handle string values that might already be formatted
                 if isinstance(val, str):
                     # Remove any existing commas and try to convert
                     val = val.replace(',', '')
+                    if not val.strip():  # Handle empty strings
+                        return '0'
                 # Convert to float first to handle decimals properly
                 float_val = float(val)
                 if float_val == int(float_val):
@@ -245,23 +250,23 @@ def index():
                 else:
                     return '{:,.2f}'.format(float_val)
             except (ValueError, TypeError):
-                return str(val)
+                return str(val) if val is not None else '0'
         
         # Format the main results
-        results['revenue'] = fmt(results['revenue'])
-        results['suggested_revenue'] = fmt(results['suggested_revenue'])
-        results['channel_cost'] = fmt(results['channel_cost'])
-        results['ai_costs'] = fmt(results['ai_costs'])
-        results['total_costs'] = fmt(results['total_costs'])
+        results['revenue'] = fmt(results.get('revenue', 0))
+        results['suggested_revenue'] = fmt(results.get('suggested_revenue', 0))
+        results['channel_cost'] = fmt(results.get('channel_cost', 0))
+        results['ai_costs'] = fmt(results.get('ai_costs', 0))
+        results['total_costs'] = fmt(results.get('total_costs', 0))
         
         # Format line item numbers
-        for item in results['line_items']:
-            item['volume'] = fmt(item['volume'])
-            item['chosen_price'] = fmt(item['chosen_price'])
-            item['suggested_price'] = fmt(item['suggested_price'])
-            item['overage_price'] = fmt(item['overage_price'])
-            item['revenue'] = fmt(item['revenue'])
-            item['suggested_revenue'] = fmt(item['suggested_revenue'])
+        for item in results.get('line_items', []):
+            item['volume'] = fmt(item.get('volume', 0))
+            item['chosen_price'] = fmt(item.get('chosen_price', 0))
+            item['suggested_price'] = fmt(item.get('suggested_price', 0))
+            item['overage_price'] = fmt(item.get('overage_price', 0))
+            item['revenue'] = fmt(item.get('revenue', 0))
+            item['suggested_revenue'] = fmt(item.get('suggested_revenue', 0))
         
         chosen_platform_fee = fmt(chosen_platform_fee)
         rate_card_platform_fee = fmt(rate_card_platform_fee)
@@ -412,4 +417,4 @@ def oauth2callback():
 #     creds = Credentials(**session['credentials'])
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
