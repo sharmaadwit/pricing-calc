@@ -135,7 +135,26 @@ def index():
             basic_utility_price=basic_utility_price
         )
         currency_symbol = COUNTRY_CURRENCY.get(inputs['country'], '$')
-        return render_template('index.html', step='results', results=results, inputs=inputs, currency_symbol=currency_symbol)
+        # Pass both chosen and rate card platform fee to results page
+        chosen_platform_fee = platform_fee
+        rate_card_platform_fee, _ = calculate_platform_fee(
+            inputs['country'],
+            inputs.get('bfsi_tier', 'NA'),
+            inputs.get('personalize_load', 'NA'),
+            inputs.get('human_agents', 'NA'),
+            inputs.get('ai_module', 'NA')
+        )
+        platform_fee_used = 'chosen'  # always use the chosen (editable) platform fee for margin calculation
+        return render_template(
+            'index.html',
+            step='results',
+            results=results,
+            inputs=inputs,
+            currency_symbol=currency_symbol,
+            chosen_platform_fee=chosen_platform_fee,
+            rate_card_platform_fee=rate_card_platform_fee,
+            platform_fee_used=platform_fee_used
+        )
 
     # Default: show volume input form
     country = session.get('inputs', {}).get('country', 'India')
