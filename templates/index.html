@@ -6,6 +6,16 @@
         table, th, td { border: 1px solid #ccc; border-collapse: collapse; padding: 6px; }
         th { background: #f0f0f0; }
     </style>
+    <script>
+    // Global function for adding commas to numbers
+    function addCommas(nStr) {
+        nStr = nStr.replace(/,/g, '');
+        if (nStr === '') return '';
+        var parts = nStr.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join('.');
+    }
+    </script>
 </head>
 <body>
     <h1>Pricing Calculator</h1>
@@ -76,14 +86,8 @@
         document.getElementById('min_platform_fee').value = minFee;
     }
     window.onload = updateMinPlatformFee;
+    
     // Format input with commas as user types
-    function addCommas(nStr) {
-        nStr = nStr.replace(/,/g, '');
-        if (nStr === '') return '';
-        var parts = nStr.split('.');
-        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        return parts.join('.');
-    }
     document.querySelectorAll('.comma-number').forEach(function(input) {
         input.addEventListener('input', function(e) {
             var cursor = input.selectionStart;
@@ -110,13 +114,13 @@
         {{ currency_symbol }}<input type="text" name="platform_fee" class="comma-number" value="{{ platform_fee }}" required><br>
         <small>This is the calculated platform fee based on your selections. You can edit it if needed.</small><br><br>
         <label>AI Message Rate Card:</label>
-        {{ currency_symbol }}<input type="text" step="0.0001" name="ai_price" class="comma-number" value="{{ suggested.ai_price }}" required><br><br>
+        {{ currency_symbol }}<input type="text" name="ai_price" class="comma-number" value="{{ suggested.ai_price }}" required><br><br>
         <label>Advanced Message Rate Card:</label>
-        {{ currency_symbol }}<input type="text" step="0.0001" name="advanced_price" class="comma-number" value="{{ suggested.advanced_price }}" required><br><br>
+        {{ currency_symbol }}<input type="text" name="advanced_price" class="comma-number" value="{{ suggested.advanced_price }}" required><br><br>
         <label>Basic Marketing Message Rate Card:</label>
-        {{ currency_symbol }}<input type="text" step="0.0001" name="basic_marketing_price" class="comma-number" value="{{ suggested.basic_marketing_price }}" required><br><br>
+        {{ currency_symbol }}<input type="text" name="basic_marketing_price" class="comma-number" value="{{ suggested.basic_marketing_price }}" required><br><br>
         <label>Basic Utility/Authentication Message Rate Card:</label>
-        {{ currency_symbol }}<input type="text" step="0.0001" name="basic_utility_price" class="comma-number" value="{{ suggested.basic_utility_price }}" required><br><br>
+        {{ currency_symbol }}<input type="text" name="basic_utility_price" class="comma-number" value="{{ suggested.basic_utility_price }}" required><br><br>
         <input type="submit" value="Calculate Results">
     </form>
     <form method="get">
