@@ -126,12 +126,12 @@
             <tr><th>Rate Card Platform Fee</th><td>{{ rate_card_platform_fee }}</td></tr>
             <tr><td colspan="2"><small>Note: Margin is calculated using the chosen platform fee (editable in the previous step).</small></td></tr>
             <tr><th>Total Revenue (Chosen) {{ currency_symbol }}/month</th><td>{{ results.revenue }}</td></tr>
-            <tr><th>Total Revenue (Suggested) {{ currency_symbol }}/month</th><td>{{ results.suggested_revenue }}</td></tr>
+            <tr><th>Total Revenue (Rate Card) {{ currency_symbol }}/month</th><td>{{ results.suggested_revenue }}</td></tr>
             <tr><th>Channel Cost</th><td>{{ results.channel_cost }}</td></tr>
             <tr><th>AI Costs {{ currency_symbol }}/month</th><td>{{ results.ai_costs }}</td></tr>
             <tr><th>Total Costs {{ currency_symbol }}/month</th><td>{{ results.total_costs }}</td></tr>
             <tr><th>Margin (User Chosen)</th><td>{{ results.margin }}</td></tr>
-            <tr><th>Margin (Suggested)</th><td>{{ results.suggested_margin }}</td></tr>
+            <tr><th>Margin (Rate Card)</th><td>{{ results.suggested_margin }}</td></tr>
         </table>
         <br>
         <form method="get">
