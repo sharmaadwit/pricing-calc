@@ -191,6 +191,15 @@ def index():
             'AI Module Yes': [
                 'UI based retarining and configuration features',
             ],
+            'Human Agents 20+': [
+                'Upto 50 agents',
+            ],
+            'Human Agents 50+': [
+                'Upto 100 agents',
+            ],
+            'Human Agents 100+': [
+                'More than 100 agents',
+            ],
         }
 
         return render_template(

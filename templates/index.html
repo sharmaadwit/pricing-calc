@@ -187,7 +187,18 @@
                 <tr>
                     <td>Human Agents {{ value }}</td>
                     <td>Included</td>
-                    <td></td>
+                    <td>
+                        <ul>
+                        {% set key = 'Human Agents ' ~ value %}
+                        {% if inclusions[key] is defined %}
+                            {% for inc in inclusions[key] %}
+                                <li>{{ inc }}</li>
+                            {% endfor %}
+                        {% else %}
+                            <li>No inclusions defined yet.</li>
+                        {% endif %}
+                        </ul>
+                    </td>
                 </tr>
                 {% endif %}
             {% endfor %}
