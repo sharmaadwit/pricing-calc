@@ -221,13 +221,34 @@ def perform_calculations_and_display(data, suggested_fees=None):
     currency_symbol = data['currency_symbol']
 
     # --- Revenue (CC MRR) ---
+    ai_final_price = ai_fee + ai_unit_cost
+    adv_final_price = adv_fee + ai_unit_cost
+    basic_marketing_final_price = basic_marketing_fee + marketing_price
+    basic_utility_final_price = basic_utility_fee + utility_price
+
     revenue = (
         platform_fee
-        + (adv_fee * adv_vol)
-        + (ai_fee * ai_vol)
-        + (basic_marketing_fee * basic_marketing_vol)
-        + (basic_utility_fee * basic_utility_vol)
+        + (adv_final_price * adv_vol)
+        + (ai_final_price * ai_vol)
+        + (basic_marketing_final_price * basic_marketing_vol)
+        + (basic_utility_final_price * basic_utility_vol)
     )
+
+    # --- Suggested Revenue ---
+    if suggested_fees is not None:
+        ai_final_price_s = suggested_fees['ai'] + ai_unit_cost
+        adv_final_price_s = suggested_fees['advanced'] + ai_unit_cost
+        basic_marketing_final_price_s = suggested_fees['basic_marketing'] + marketing_price
+        basic_utility_final_price_s = suggested_fees['basic_utility'] + utility_price
+        suggested_revenue = (
+            platform_fee
+            + (adv_final_price_s * adv_vol)
+            + (ai_final_price_s * ai_vol)
+            + (basic_marketing_final_price_s * basic_marketing_vol)
+            + (basic_utility_final_price_s * basic_utility_vol)
+        )
+    else:
+        suggested_revenue = None
 
     # --- Channel Cost (Advanced + Basic) ---
     # Advanced Marketing/Utility volumes are set to 0 as per current business logic.
@@ -258,13 +279,6 @@ def perform_calculations_and_display(data, suggested_fees=None):
 
     # --- If suggested_fees provided, calculate suggested margin ---
     if suggested_fees is not None:
-        suggested_revenue = (
-            platform_fee
-            + (suggested_fees['advanced'] * adv_vol)
-            + (suggested_fees['ai'] * ai_vol)
-            + (suggested_fees['basic_marketing'] * basic_marketing_vol)
-            + (suggested_fees['basic_utility'] * basic_utility_vol)
-        )
         suggested_margin_denom = suggested_revenue + channel_cost
         if suggested_margin_denom > 0:
             suggested_margin = (suggested_revenue + channel_cost - total_costs) / suggested_margin_denom
@@ -283,13 +297,19 @@ def perform_calculations_and_display(data, suggested_fees=None):
 
     print(f"\n{'FEE COMPONENTS (REVENUE)':<35} {'AMOUNT':>14}")
     print("-" * 50)
-    print(f"{'AI Message Fees':<35} {currency_symbol}{ai_fee * ai_vol:>13.2f}")
-    print(f"{'Advanced Message Fees':<35} {currency_symbol}{adv_fee * adv_vol:>13.2f}")
-    print(f"{'Basic Marketing Message Fees':<35} {currency_symbol}{basic_marketing_fee * basic_marketing_vol:>13.2f}")
-    print(f"{'Basic Utility/Authentication Fees':<35} {currency_symbol}{basic_utility_fee * basic_utility_vol:>13.2f}")
+    print(f"{'AI Message Final Price':<35} {currency_symbol}{ai_final_price:>13.2f}")
+    print(f"{'Advanced Message Final Price':<35} {currency_symbol}{adv_final_price:>13.2f}")
+    print(f"{'Basic Marketing Message Final Price':<35} {currency_symbol}{basic_marketing_final_price:>13.2f}")
+    print(f"{'Basic Utility/Authentication Final Price':<35} {currency_symbol}{basic_utility_final_price:>13.2f}")
+    print(f"{'AI Message Fees':<35} {currency_symbol}{ai_final_price * ai_vol:>13.2f}")
+    print(f"{'Advanced Message Fees':<35} {currency_symbol}{adv_final_price * adv_vol:>13.2f}")
+    print(f"{'Basic Marketing Message Fees':<35} {currency_symbol}{basic_marketing_final_price * basic_marketing_vol:>13.2f}")
+    print(f"{'Basic Utility/Authentication Fees':<35} {currency_symbol}{basic_utility_final_price * basic_utility_vol:>13.2f}")
     print(f"{'Fixed Platform Fee':<35} {currency_symbol}{platform_fee:>13.2f}")
     print("-" * 50)
     print(f"{'CC MRR - Revenue':<35} {currency_symbol}{revenue:>13.2f}")
+    if suggested_revenue is not None:
+        print(f"{'Suggested Revenue':<35} {currency_symbol}{suggested_revenue:>13.2f}")
     print(f"{'CHANNEL COSTS':<35} {currency_symbol}{channel_cost:>13.2f}")
     print(f"{'AI COSTS':<35} {currency_symbol}{ai_costs:>13.2f}")
     print(f"{'TOTAL COSTS':<35} {currency_symbol}{total_costs:>13.2f}")
