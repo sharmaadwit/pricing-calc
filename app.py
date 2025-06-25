@@ -234,14 +234,26 @@ def index():
         # Format all numbers with commas for display
         def fmt(val):
             try:
-                return '{:,}'.format(float(val)) if '.' in str(val) else '{:,}'.format(int(val))
-            except:
-                return val
+                # Handle string values that might already be formatted
+                if isinstance(val, str):
+                    # Remove any existing commas and try to convert
+                    val = val.replace(',', '')
+                # Convert to float first to handle decimals properly
+                float_val = float(val)
+                if float_val == int(float_val):
+                    return '{:,}'.format(int(float_val))
+                else:
+                    return '{:,.2f}'.format(float_val)
+            except (ValueError, TypeError):
+                return str(val)
+        
+        # Format the main results
         results['revenue'] = fmt(results['revenue'])
         results['suggested_revenue'] = fmt(results['suggested_revenue'])
         results['channel_cost'] = fmt(results['channel_cost'])
         results['ai_costs'] = fmt(results['ai_costs'])
         results['total_costs'] = fmt(results['total_costs'])
+        
         # Format line item numbers
         for item in results['line_items']:
             item['volume'] = fmt(item['volume'])
@@ -250,6 +262,7 @@ def index():
             item['overage_price'] = fmt(item['overage_price'])
             item['revenue'] = fmt(item['revenue'])
             item['suggested_revenue'] = fmt(item['suggested_revenue'])
+        
         chosen_platform_fee = fmt(chosen_platform_fee)
         rate_card_platform_fee = fmt(rate_card_platform_fee)
 
