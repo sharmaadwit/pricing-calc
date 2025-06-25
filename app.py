@@ -21,7 +21,7 @@ COUNTRY_CURRENCY = {
     'Rest of the World': '$',
 }
 
-def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module):
+def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas):
     # 1. Minimum platform fee
     if country == 'India':
         min_fee = 100000
@@ -77,6 +77,12 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
         elif country == 'Africa': fee += 250
         elif country in ['LATAM', 'Europe']: fee += 1000
         else: fee += 500
+    # Smart CPaaS
+    if smart_cpaas == 'Yes':
+        if country == 'India':
+            fee += 25000
+        else:
+            fee += 250
     return fee, currency
 
 @app.route('/', methods=['GET', 'POST'])
@@ -96,7 +102,8 @@ def index():
         personalize_load = request.form.get('personalize_load', 'NA')
         human_agents = request.form.get('human_agents', 'NA')
         ai_module = request.form.get('ai_module', 'NA')
-        platform_fee, fee_currency = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module)
+        smart_cpaas = request.form.get('smart_cpaas', 'No')
+        platform_fee, fee_currency = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas)
         currency_symbol = COUNTRY_CURRENCY.get(country, '$')
         # Store in session for next step
         session['inputs'] = {
@@ -109,7 +116,8 @@ def index():
             'bfsi_tier': bfsi_tier,
             'personalize_load': personalize_load,
             'human_agents': human_agents,
-            'ai_module': ai_module
+            'ai_module': ai_module,
+            'smart_cpaas': smart_cpaas
         }
         # Suggest prices
         suggested_prices = {
@@ -149,7 +157,8 @@ def index():
             inputs.get('bfsi_tier', 'NA'),
             inputs.get('personalize_load', 'NA'),
             inputs.get('human_agents', 'NA'),
-            inputs.get('ai_module', 'NA')
+            inputs.get('ai_module', 'NA'),
+            inputs.get('smart_cpaas', 'No')
         )
         platform_fee_used = 'chosen'  # always use the chosen (editable) platform fee for margin calculation
 
@@ -163,6 +172,8 @@ def index():
             user_selections.append(('Human Agents', inputs['human_agents']))
         if inputs.get('ai_module', 'NA') not in ['NA', 'No']:
             user_selections.append(('AI Module', inputs['ai_module']))
+        if inputs.get('smart_cpaas', 'No') == 'Yes':
+            user_selections.append(('Smart CPaaS', 'Yes'))
 
         # Inclusions mapping
         inclusions = {
@@ -207,6 +218,11 @@ def index():
             'Human Agents 100+': [
                 'More than 100 agents',
             ],
+            'Smart CPaaS Yes': [
+                'Channel failover support for',
+                'First channel : WhatsApp or RCS',
+                'Second channel: WhatsApp, SMS or RCS',
+            ],
         }
 
         session['results'] = results
@@ -214,6 +230,28 @@ def index():
         session['rate_card_platform_fee'] = rate_card_platform_fee
         session['user_selections'] = user_selections
         session['inclusions'] = inclusions
+
+        # Format all numbers with commas for display
+        def fmt(val):
+            try:
+                return '{:,}'.format(float(val)) if '.' in str(val) else '{:,}'.format(int(val))
+            except:
+                return val
+        results['revenue'] = fmt(results['revenue'])
+        results['suggested_revenue'] = fmt(results['suggested_revenue'])
+        results['channel_cost'] = fmt(results['channel_cost'])
+        results['ai_costs'] = fmt(results['ai_costs'])
+        results['total_costs'] = fmt(results['total_costs'])
+        # Format line item numbers
+        for item in results['line_items']:
+            item['volume'] = fmt(item['volume'])
+            item['chosen_price'] = fmt(item['chosen_price'])
+            item['suggested_price'] = fmt(item['suggested_price'])
+            item['overage_price'] = fmt(item['overage_price'])
+            item['revenue'] = fmt(item['revenue'])
+            item['suggested_revenue'] = fmt(item['suggested_revenue'])
+        chosen_platform_fee = fmt(chosen_platform_fee)
+        rate_card_platform_fee = fmt(rate_card_platform_fee)
 
         return render_template(
             'index.html',
