@@ -1,8 +1,15 @@
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, redirect, url_for, flash
 from calculator import calculate_pricing, get_suggested_price
+import os
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+import re
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
+
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
 
 # Country to currency symbol mapping
 COUNTRY_CURRENCY = {
@@ -202,6 +209,12 @@ def index():
             ],
         }
 
+        session['results'] = results
+        session['chosen_platform_fee'] = chosen_platform_fee
+        session['rate_card_platform_fee'] = rate_card_platform_fee
+        session['user_selections'] = user_selections
+        session['inclusions'] = inclusions
+
         return render_template(
             'index.html',
             step='results',
@@ -219,6 +232,156 @@ def index():
     country = session.get('inputs', {}).get('country', 'India')
     currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
     return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
+
+@app.route('/authorize')
+def authorize():
+    flow = Flow.from_client_secrets_file(
+        'credentials.json',
+        scopes=['https://www.googleapis.com/auth/documents'],
+        redirect_uri=url_for('oauth2callback', _external=True)
+    )
+    authorization_url, state = flow.authorization_url(access_type='offline', include_granted_scopes='true')
+    session['state'] = state
+    return redirect(authorization_url)
+
+@app.route('/oauth2callback')
+def oauth2callback():
+    flow = Flow.from_client_secrets_file(
+        'credentials.json',
+        scopes=['https://www.googleapis.com/auth/documents'],
+        state=session['state'],
+        redirect_uri=url_for('oauth2callback', _external=True)
+    )
+    flow.fetch_token(authorization_response=request.url)
+    credentials = flow.credentials
+    session['credentials'] = credentials_to_dict(credentials)
+    flash('Google authentication successful. You can now export to Google Docs.')
+    return redirect(url_for('index', step='results'))
+
+def credentials_to_dict(credentials):
+    return {
+        'token': credentials.token,
+        'refresh_token': credentials.refresh_token,
+        'token_uri': credentials.token_uri,
+        'client_id': credentials.client_id,
+        'client_secret': credentials.client_secret,
+        'scopes': credentials.scopes
+    }
+
+def extract_doc_id(doc_link):
+    match = re.search(r'/d/([a-zA-Z0-9-_]+)', doc_link)
+    return match.group(1) if match else None
+
+def find_heading_index(service, doc_id, heading_text):
+    doc = service.documents().get(documentId=doc_id).execute()
+    content = doc.get('body', {}).get('content', [])
+    for element in content:
+        if 'paragraph' in element:
+            elements = element['paragraph'].get('elements', [])
+            text = ''.join([e.get('textRun', {}).get('content', '') for e in elements])
+            if heading_text in text:
+                return element['endIndex']
+    return None
+
+def build_results_table_data(results, chosen_platform_fee, rate_card_platform_fee, user_selections, inclusions):
+    table = [
+        ['Platform Fee Section', 'Value', 'Inclusions'],
+        ['Platform Fee Used for Margin Calculation', str(chosen_platform_fee), ', '.join(inclusions['Platform Fee Used for Margin Calculation'])],
+        ['Rate Card Platform Fee', str(rate_card_platform_fee), ''],
+    ]
+    for label, value in user_selections:
+        if label == 'BFSI Tier' and value in ['Tier 1', 'Tier 2', 'Tier 3']:
+            key = f'BFSI Tier {value.split(" ")[-1]}'
+            table.append([f'BFSI {value}', 'Included', ', '.join(inclusions.get(key, ['No inclusions defined yet.']))])
+        if label == 'Personalize Load' and value in ['Standard', 'Advanced']:
+            key = f'Personalize Load {value}'
+            table.append([f'Personalize Load {value}', 'Included', ', '.join(inclusions.get(key, ['No inclusions defined yet.']))])
+        if label == 'AI Module' and value == 'Yes':
+            key = 'AI Module Yes'
+            table.append(['AI Module', 'Included', ', '.join(inclusions.get(key, ['No inclusions defined yet.']))])
+        if label == 'Human Agents' and value in ['20+', '50+', '100+']:
+            key = f'Human Agents {value}'
+            table.append([f'Human Agents {value}', 'Included', ', '.join(inclusions.get(key, ['No inclusions defined yet.']))])
+    return table
+
+def insert_and_fill_table(service, doc_id, table_data, insert_index):
+    # 1. Insert the table
+    requests = [
+        {
+            'insertTable': {
+                'rows': len(table_data),
+                'columns': len(table_data[0]),
+                'location': {'index': insert_index}
+            }
+        }
+    ]
+    response = service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+    # 2. Insert text into each cell
+    # After insertion, the table starts at insert_index
+    # Each cell is filled left-to-right, top-to-bottom
+    # We need to keep track of the current index as we insert text
+    # We'll fetch the document again to get the table's start index
+    doc = service.documents().get(documentId=doc_id).execute()
+    content = doc.get('body', {}).get('content', [])
+    table_start = None
+    for element in content:
+        if 'table' in element and element['startIndex'] >= insert_index:
+            table_start = element['startIndex']
+            break
+    if table_start is None:
+        raise Exception('Could not find inserted table in document.')
+
+    # Now, fill each cell
+    requests = []
+    cell_index = table_start + 4  # Table start + 4 (table element overhead)
+    for row in table_data:
+        for cell in row:
+            requests.append({
+                'insertText': {
+                    'location': {'index': cell_index},
+                    'text': str(cell)
+                }
+            })
+            cell_index += len(str(cell)) + 1  # +1 for the end-of-cell marker
+
+    if requests:
+        service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+
+@app.route('/export_to_gdoc', methods=['POST'])
+def export_to_gdoc():
+    doc_link = request.form.get('gdoc_link')
+    doc_id = extract_doc_id(doc_link)
+    if not doc_id:
+        flash('Invalid Google Doc link.')
+        return redirect(url_for('index', step='results'))
+
+    if 'credentials' not in session:
+        return redirect(url_for('authorize'))
+
+    creds = Credentials(**session['credentials'])
+
+    # Get all the data needed for the table
+    results = session.get('results')
+    chosen_platform_fee = session.get('chosen_platform_fee')
+    rate_card_platform_fee = session.get('rate_card_platform_fee')
+    user_selections = session.get('user_selections')
+    inclusions = session.get('inclusions')
+    table_data = build_results_table_data(results, chosen_platform_fee, rate_card_platform_fee, user_selections, inclusions)
+
+    # Insert after the heading
+    heading_text = "3. Packaging and Inclusions"
+    service = build('docs', 'v1', credentials=creds)
+    index = find_heading_index(service, doc_id, heading_text)
+    if index is None:
+        flash(f'Heading \"{heading_text}\" not found in the document.')
+        return redirect(url_for('index', step='results'))
+
+    try:
+        insert_and_fill_table(service, doc_id, table_data, index)
+        flash('Results table exported and filled in Google Doc after the specified heading!')
+    except Exception as e:
+        flash(str(e))
+    return redirect(url_for('index', step='results'))
 
 if __name__ == '__main__':
     app.run(debug=True)

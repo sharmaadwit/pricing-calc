@@ -215,6 +215,11 @@
             <tr><th>Margin (Rate Card)</th><td colspan="2">{{ results.suggested_margin }}</td></tr>
         </table>
         <br>
+        <form method="post" action="{{ url_for('export_to_gdoc') }}">
+            <label for="gdoc_link">Paste your Google Doc link to export the results table:</label>
+            <input type="text" name="gdoc_link" id="gdoc_link" required style="width: 400px;">
+            <input type="submit" value="Export to Google Doc">
+        </form>
         <form method="get">
             <input type="submit" value="Start Over">
         </form>
