@@ -183,6 +183,13 @@
                     </td>
                 </tr>
                 {% endif %}
+                {% if label == 'Human Agents' and value in ['20+', '50+', '100+'] %}
+                <tr>
+                    <td>Human Agents {{ value }}</td>
+                    <td>Included</td>
+                    <td></td>
+                </tr>
+                {% endif %}
             {% endfor %}
         </table>
         <br>
