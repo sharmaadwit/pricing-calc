@@ -106,7 +106,7 @@
                 <th>Rate Card Price/message</th>
                 <th>Overage Price/message</th>
                 <th>Revenue (Chosen) {{ currency_symbol }}/month</th>
-                <th>Revenue (Suggested) {{ currency_symbol }}/month</th>
+                <th>Revenue (Rate Card) {{ currency_symbol }}/month</th>
             </tr>
             {% for item in results.line_items %}
             <tr>
@@ -122,16 +122,79 @@
         </table>
         <br>
         <table>
-            <tr><th>Platform Fee Used for Margin Calculation</th><td>{{ chosen_platform_fee }}</td></tr>
-            <tr><th>Rate Card Platform Fee</th><td>{{ rate_card_platform_fee }}</td></tr>
-            <tr><td colspan="2"><small>Note: Margin is calculated using the chosen platform fee (editable in the previous step).</small></td></tr>
-            <tr><th>Total Revenue (Chosen) {{ currency_symbol }}/month</th><td>{{ results.revenue }}</td></tr>
-            <tr><th>Total Revenue (Rate Card) {{ currency_symbol }}/month</th><td>{{ results.suggested_revenue }}</td></tr>
-            <tr><th>Channel Cost</th><td>{{ results.channel_cost }}</td></tr>
-            <tr><th>AI Costs {{ currency_symbol }}/month</th><td>{{ results.ai_costs }}</td></tr>
-            <tr><th>Total Costs {{ currency_symbol }}/month</th><td>{{ results.total_costs }}</td></tr>
-            <tr><th>Margin (User Chosen)</th><td>{{ results.margin }}</td></tr>
-            <tr><th>Margin (Rate Card)</th><td>{{ results.suggested_margin }}</td></tr>
+            <tr>
+                <th>Platform Fee Section</th>
+                <th>Value</th>
+                <th>Inclusions</th>
+            </tr>
+            <tr>
+                <td>Platform Fee Used for Margin Calculation</td>
+                <td>{{ chosen_platform_fee }}</td>
+                <td>
+                    <ul>
+                    {% for inc in inclusions['Platform Fee Used for Margin Calculation'] %}
+                        <li>{{ inc }}</li>
+                    {% endfor %}
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td>Rate Card Platform Fee</td>
+                <td>{{ rate_card_platform_fee }}</td>
+                <td></td>
+            </tr>
+            {% for label, value in user_selections %}
+                {% if label == 'BFSI Tier' and value in ['Tier 1', 'Tier 2', 'Tier 3'] %}
+                <tr>
+                    <td>BFSI {{ value }}</td>
+                    <td>Included</td>
+                    <td>
+                        <ul>
+                        {% for inc in inclusions['BFSI Tier ' ~ value.split(' ')[-1]] %}
+                            <li>{{ inc }}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endif %}
+                {% if label == 'Personalize Load' and value in ['Standard', 'Advanced'] %}
+                <tr>
+                    <td>Personalize Load {{ value }}</td>
+                    <td>Included</td>
+                    <td>
+                        <ul>
+                        {% for inc in inclusions['Personalize Load ' ~ value] %}
+                            <li>{{ inc }}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endif %}
+                {% if label == 'AI Module' and value == 'Yes' %}
+                <tr>
+                    <td>AI Module</td>
+                    <td>Included</td>
+                    <td>
+                        <ul>
+                        {% for inc in inclusions['AI Module Yes'] %}
+                            <li>{{ inc }}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+        </table>
+        <br>
+        <table>
+            <tr><td colspan="3"><small>Note: Margin is calculated using the chosen platform fee (editable in the previous step).</small></td></tr>
+            <tr><th>Total Revenue (Chosen) {{ currency_symbol }}/month</th><td colspan="2">{{ results.revenue }}</td></tr>
+            <tr><th>Total Revenue (Rate Card) {{ currency_symbol }}/month</th><td colspan="2">{{ results.suggested_revenue }}</td></tr>
+            <tr><th>Channel Cost</th><td colspan="2">{{ results.channel_cost }}</td></tr>
+            <tr><th>AI Costs {{ currency_symbol }}/month</th><td colspan="2">{{ results.ai_costs }}</td></tr>
+            <tr><th>Total Costs {{ currency_symbol }}/month</th><td colspan="2">{{ results.total_costs }}</td></tr>
+            <tr><th>Margin (User Chosen)</th><td colspan="2">{{ results.margin }}</td></tr>
+            <tr><th>Margin (Rate Card)</th><td colspan="2">{{ results.suggested_margin }}</td></tr>
         </table>
         <br>
         <form method="get">

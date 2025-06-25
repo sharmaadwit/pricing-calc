@@ -145,6 +145,54 @@ def index():
             inputs.get('ai_module', 'NA')
         )
         platform_fee_used = 'chosen'  # always use the chosen (editable) platform fee for margin calculation
+
+        # Gather non-NA/No selections for display
+        user_selections = []
+        if inputs.get('bfsi_tier', 'NA') not in ['NA', 'No']:
+            user_selections.append(('BFSI Tier', inputs['bfsi_tier']))
+        if inputs.get('personalize_load', 'NA') not in ['NA', 'No']:
+            user_selections.append(('Personalize Load', inputs['personalize_load']))
+        if inputs.get('human_agents', 'NA') not in ['NA', 'No']:
+            user_selections.append(('Human Agents', inputs['human_agents']))
+        if inputs.get('ai_module', 'NA') not in ['NA', 'No']:
+            user_selections.append(('AI Module', inputs['ai_module']))
+
+        # Inclusions mapping
+        inclusions = {
+            'Platform Fee Used for Margin Calculation': [
+                '80 TPS',
+                'Journey Builder Lite',
+                'Campaign Manager',
+                'CTWA - (Meta/Tiktok/Google)',
+                'Agent Assist < 20 Agents',
+                'Personalize upto 1 Million profiles',
+            ],
+            'BFSI Tier 1': [
+                'Audit trail to be stored for 60 days from JB Pro+Flows',
+                'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) from Agent Assist',
+            ],
+            'BFSI Tier 2': [
+                'Audit trail to be stored for 60 days from JB Pro+Flows',
+                'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) from Agent Assist',
+                'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) for AI Conversations',
+            ],
+            'BFSI Tier 3': [
+                'Audit trail to be stored for 60 days from JB Pro+Flows',
+                'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) from Agent Assist',
+                'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) for AI Conversations',
+                'Data Encryption, Logging, Auditing, Purging (Logs) from Campaign Manager, Retargetting and Personalize layers',
+            ],
+            'Personalize Load Standard': [
+                'Personalize upto 5 million profiles',
+            ],
+            'Personalize Load Advanced': [
+                'Personalize upto 10 million profiles',
+            ],
+            'AI Module Yes': [
+                'UI based retarining and configuration features',
+            ],
+        }
+
         return render_template(
             'index.html',
             step='results',
@@ -153,7 +201,9 @@ def index():
             currency_symbol=currency_symbol,
             chosen_platform_fee=chosen_platform_fee,
             rate_card_platform_fee=rate_card_platform_fee,
-            platform_fee_used=platform_fee_used
+            platform_fee_used=platform_fee_used,
+            user_selections=user_selections,
+            inclusions=inclusions
         )
 
     # Default: show volume input form
