@@ -15,6 +15,61 @@
   {% endwith %}
 {% else %}
   <h2>Analytics Dashboard</h2>
-  <p>Only visible to users with the secret keyword.</p>
-  <!-- Add your analytics content here -->
+  <ul>
+    <li><b>Total Calculations:</b> {{ analytics.calculations }}</li>
+    <li><b>Calculations by Day:</b>
+      <ul>
+        {% for day, count in analytics.calculations_by_day.items() %}
+          <li>{{ day }}: {{ count }}</li>
+        {% endfor %}
+      </ul>
+    </li>
+    <li><b>Calculations by Week:</b>
+      <ul>
+        {% for week, count in analytics.calculations_by_week.items() %}
+          <li>{{ week }}: {{ count }}</li>
+        {% endfor %}
+      </ul>
+    </li>
+    <li><b>Most Common Countries:</b>
+      <ul>
+        {% for country, count in analytics.country_counter.most_common(5) %}
+          <li>{{ country }}: {{ count }}</li>
+        {% endfor %}
+      </ul>
+    </li>
+    <li><b>Most Common Platform Fee Options:</b>
+      <ul>
+        {% for fee, count in analytics.platform_fee_options.most_common(5) %}
+          <li>{{ fee }}: {{ count }}</li>
+        {% endfor %}
+      </ul>
+    </li>
+    <li><b>Platform Fee Stats:</b>
+      <ul>
+        <li>Average: {{ analytics.platform_fee_entries|sum / (analytics.platform_fee_entries|length or 1) }}</li>
+        <li>Min: {{ analytics.platform_fee_entries|min }}</li>
+        <li>Max: {{ analytics.platform_fee_entries|max }}</li>
+        <li>Median: {% set sorted = analytics.platform_fee_entries|sort %}{{ sorted[sorted|length // 2] if sorted else 'N/A' }}</li>
+      </ul>
+    </li>
+    <li><b>Message Volume Distribution:</b>
+      <ul>
+        <li>AI: {{ analytics.message_volumes.ai }}</li>
+        <li>Advanced: {{ analytics.message_volumes.advanced }}</li>
+        <li>Basic Marketing: {{ analytics.message_volumes.basic_marketing }}</li>
+        <li>Basic Utility: {{ analytics.message_volumes.basic_utility }}</li>
+      </ul>
+    </li>
+    <li><b>Discount Warnings Triggered:</b>
+      <ul>
+        {% for msg, count in analytics.discount_warnings.items() %}
+          <li>{{ msg }}: {{ count }}</li>
+        {% endfor %}
+      </ul>
+    </li>
+    <li><b>Platform Fee Discount Triggered:</b> {{ analytics.platform_fee_discount_triggered }}</li>
+    <li><b>Average Margin (Chosen):</b> {{ analytics.margin_chosen|sum / (analytics.margin_chosen|length or 1) }}%</li>
+    <li><b>Average Margin (Rate Card):</b> {{ analytics.margin_rate_card|sum / (analytics.margin_rate_card|length or 1) }}%</li>
+  </ul>
 {% endif %} 
