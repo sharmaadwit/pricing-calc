@@ -219,22 +219,22 @@ def index():
                     'overage_price': overage_price
                 })
                 bundle_cost += volume * float(price)
+            # Fix: total_bundle_price is platform_fee + bundle_cost (do not add bundle_cost to platform_fee)
             total_bundle_price = float(pricing_inputs.get('platform_fee', 0)) + bundle_cost
-            platform_fee += bundle_cost
             bundle_details = {
                 'lines': bundle_lines,
                 'bundle_cost': bundle_cost,
                 'total_bundle_price': total_bundle_price,
                 'inclusion_text': 'See table below for included volumes and overage prices.'
             }
-        # Call calculation logic with updated platform fee
+        # Call calculation logic with updated platform fee (do not add bundle_cost to platform_fee)
         results = calculate_pricing(
             inputs['country'],
             inputs['ai_volume'],
             inputs['advanced_volume'],
             inputs['basic_marketing_volume'],
             inputs['basic_utility_volume'],
-            platform_fee,
+            float(pricing_inputs.get('platform_fee', 0)),
             ai_price=ai_price,
             advanced_price=advanced_price,
             basic_marketing_price=basic_marketing_price,
@@ -242,7 +242,7 @@ def index():
         )
         currency_symbol = COUNTRY_CURRENCY.get(inputs['country'], '$')
         # Pass both chosen and rate card platform fee to results page
-        chosen_platform_fee = platform_fee
+        chosen_platform_fee = float(pricing_inputs.get('platform_fee', 0))
         rate_card_platform_fee, _ = calculate_platform_fee(
             inputs['country'],
             inputs.get('bfsi_tier', 'NA'),
@@ -253,6 +253,34 @@ def index():
             inputs.get('increased_tps', 'NA')
         )
         platform_fee_used = 'chosen'  # always use the chosen (editable) platform fee for margin calculation
+
+        # Add platform fee line items to results['line_items']
+        if 'line_items' in results:
+            results['line_items'].append({
+                'label': 'Platform Fee (Chosen)',
+                'volume': '',
+                'chosen_price': chosen_platform_fee,
+                'suggested_price': '',
+                'overage_price': '',
+                'meta_cost': '',
+                'final_price': '',
+                'revenue': chosen_platform_fee,
+                'suggested_revenue': ''
+            })
+            results['line_items'].append({
+                'label': 'Platform Fee (Rate Card)',
+                'volume': '',
+                'chosen_price': '',
+                'suggested_price': rate_card_platform_fee,
+                'overage_price': '',
+                'meta_cost': '',
+                'final_price': '',
+                'revenue': '',
+                'suggested_revenue': rate_card_platform_fee
+            })
+
+        # Pass expected_invoice_amount to template
+        expected_invoice_amount = results.get('revenue', 0)
 
         # Gather non-NA/No selections for display
         user_selections = []
@@ -465,7 +493,8 @@ def index():
             user_selections=user_selections,
             inclusions=inclusions,
             bundle_details=bundle_details,
-            final_inclusions=final_inclusions
+            final_inclusions=final_inclusions,
+            expected_invoice_amount=expected_invoice_amount
         )
 
     # Default: show volume input form

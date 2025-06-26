@@ -225,6 +225,7 @@
         <p><b>Total Bundle Price (Platform Fee + Bundle):</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.total_bundle_price or 0) if ((bundle_details.total_bundle_price or 0) % 1) == 0 else '{:,.3f}'.format(bundle_details.total_bundle_price or 0) }}</p>
         <p><b>Inclusion:</b> {{ bundle_details.inclusion_text or 'N/A' }}</p>
         {% endif %}
+        <p><b>Expected Invoice Amount (Meta charges + Gupshup fee + Platform fee):</b> {{ currency_symbol }}{{ expected_invoice_amount }}</p>
         
         <h4>Inclusions</h4>
         <ul>
