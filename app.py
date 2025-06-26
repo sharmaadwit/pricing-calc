@@ -325,22 +325,24 @@ def index():
 
         # Build dynamic inclusions list (no duplicate/contradictory inclusions)
         final_inclusions = inclusions['Platform Fee Used for Margin Calculation'][:]
-        # Track which tiers are selected for each parameter
         selected_components = []
-        # BFSI Tier
+        # BFSI Tier (show only the selected tier's inclusions, not lower tiers)
         bfsi_tier = inputs.get('bfsi_tier', 'NA')
         if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
+            # Remove all BFSI inclusions from final_inclusions
+            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Audit trail') and not inc.startswith('Conversational Data Encryption') and not inc.startswith('Data Encryption')]
             final_inclusions += inclusions.get(f'BFSI Tier {bfsi_tier.split(" ")[-1]}', [])
             selected_components.append(f"BFSI Tier: {bfsi_tier}")
-        # Personalize Load
+        # Personalize Load (show only the selected tier's inclusion, not base)
         personalize_load = inputs.get('personalize_load', 'NA')
         if personalize_load in ['Standard', 'Advanced']:
-            # Only add the selected tier's inclusion
+            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Personalize') and not inc.startswith('Standard') and not inc.startswith('Advanced')]
             final_inclusions += inclusions.get(f'Personalize Load {personalize_load}', [])
             selected_components.append(f"Personalize Load: {personalize_load}")
-        # Human Agents
+        # Human Agents (show only the selected tier's inclusion, not base)
         human_agents = inputs.get('human_agents', 'NA')
         if human_agents in ['20+', '50+', '100+']:
+            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Agent Assist') and not inc.startswith('Upto') and not inc.startswith('More than')]
             final_inclusions += inclusions.get(f'Human Agents {human_agents}', [])
             selected_components.append(f"Human Agents: {human_agents}")
         # AI Module
@@ -360,7 +362,6 @@ def index():
             selected_components.append(f"Increased TPS: {increased_tps}")
         # Remove duplicates from inclusions
         final_inclusions = list(dict.fromkeys(final_inclusions))
-        # Pass selected_components to template
         session['selected_components'] = selected_components
 
         session['results'] = results
