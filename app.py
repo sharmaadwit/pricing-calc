@@ -160,17 +160,19 @@ def index():
         suggested_advanced = get_suggested_price(country, 'advanced', advanced_volume)
         suggested_marketing = get_suggested_price(country, 'basic_marketing', basic_marketing_volume)
         suggested_utility = get_suggested_price(country, 'basic_utility', basic_utility_volume)
-        error = None
+        discount_errors = []
         if ai_price < 0.5 * suggested_ai:
-            error = True
+            discount_errors.append("AI Message price is less than 50% of the rate card.")
         if advanced_price < 0.5 * suggested_advanced:
-            error = True
+            discount_errors.append("Advanced Message price is less than 50% of the rate card.")
         if basic_marketing_price < 0.5 * suggested_marketing:
-            error = True
+            discount_errors.append("Basic Marketing Message price is less than 50% of the rate card.")
         if basic_utility_price < 0.5 * suggested_utility:
-            error = True
-        if error:
-            flash('Discount too high, probability of deal desk rejection is high', 'error')
+            discount_errors.append("Basic Utility/Authentication Message price is less than 50% of the rate card.")
+        if discount_errors:
+            for msg in discount_errors:
+                flash(msg, 'error')
+            flash("Probability of deal desk rejection is high.", 'error')
             suggested_prices = {
                 'ai_price': suggested_ai,
                 'advanced_price': suggested_advanced,
