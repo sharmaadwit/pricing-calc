@@ -3,8 +3,23 @@
 <head>
     <title>Pricing Calculator</title>
     <style>
-        table, th, td { border: 1px solid #ccc; border-collapse: collapse; padding: 6px; }
+        body { font-family: 'Segoe UI', 'Arial', 'sans-serif'; }
+        h2, h3, h4 { font-weight: bold; margin-top: 1.5em; }
+        h2 { font-size: 2em; }
+        h3 { font-size: 1.5em; }
+        h4 { font-size: 1.2em; }
+        .section { margin-bottom: 2em; }
+        hr { border: none; border-top: 1px solid #ccc; margin: 2em 0; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 1.5em; }
+        table tr:nth-child(even) { background-color: #f9f9f9; }
+        table tr:nth-child(odd) { background-color: #fff; }
+        table th, table td { padding: 8px 12px; }
         th { background: #f0f0f0; }
+        td, th { text-align: right; }
+        th:first-child, td:first-child { text-align: left; }
+        label { display: block; margin-top: 1em; font-weight: 500; }
+        input, select { margin-top: 0.2em; }
+        .key-number { font-weight: bold; font-size: 1.1em; }
     </style>
     <script>
     // Global function for adding commas to numbers
@@ -43,42 +58,47 @@
         <label>Minimum Platform Fee:</label>
         <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly><br>
         <small>This is the minimum platform fee for the selected country. It cannot be edited.</small><br><br>
+        <label>Personalize Load:</label>
+        <select name="personalize_load">
+            <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>NA</option>
+            <option value="Standard" {% if inputs and inputs.personalize_load == 'Standard' %}selected{% endif %}>Standard - upto 5 million records, no external events</option>
+            <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced - 10 million records, external events supported</option>
+        </select><br>
+        <small>If the client requires large number of profiles and support for external events, select the appropriate tier.</small><br><br>
         <label>BFSI Tier:</label>
         <select name="bfsi_tier">
             <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>NA</option>
             <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1</option>
             <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2</option>
             <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3</option>
-        </select><br><br>
-        <label>Personalize Load:</label>
-        <select name="personalize_load">
-            <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>NA</option>
-            <option value="Standard" {% if inputs and inputs.personalize_load == 'Standard' %}selected{% endif %}>Standard</option>
-            <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced</option>
-        </select><br><br>
+        </select><br>
+        <small>Each tier comes with specific controls of privacy and security requirements. The exact inclusions of each tier will be displayed on the final pricing page.</small><br><br>
+        <label>AI Module (Yes/No):</label>
+        <select name="ai_module">
+            <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>NA</option>
+            <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
+            <option value="No" {% if inputs and inputs.ai_module == 'No' %}selected{% endif %}>No</option>
+        </select><br>
+        <small>Access to Workspace Configuration and data retraining screens</small><br><br>
+        <label>Smart CPaaS:</label>
+        <select name="smart_cpaas">
+            <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
+            <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes</option>
+        </select><br>
+        <small>Auto failover between channels</small><br><br>
+        <label>Increased TPS:</label>
+        <select name="increased_tps">
+            <option value="NA" {% if inputs and inputs.increased_tps == 'NA' %}selected{% endif %}>NA</option>
+            <option value="250" {% if inputs and inputs.increased_tps == '250' %}selected{% endif %}>250 (upto 250 Messages per Second)</option>
+            <option value="1000" {% if inputs and inputs.increased_tps == '1000' %}selected{% endif %}>1000 (upto 1000 Messages per Second)</option>
+        </select><br>
+        <small>Required to support high colume campaigns</small><br><br>
         <label>Number of Human Agents (Agent Assist):</label>
         <select name="human_agents">
             <option value="NA" {% if inputs and inputs.human_agents == 'NA' %}selected{% endif %}>NA</option>
             <option value="20+" {% if inputs and inputs.human_agents == '20+' %}selected{% endif %}>20+</option>
             <option value="50+" {% if inputs and inputs.human_agents == '50+' %}selected{% endif %}>50+</option>
             <option value="100+" {% if inputs and inputs.human_agents == '100+' %}selected{% endif %}>100+</option>
-        </select><br><br>
-        <label>AI Module (Yes/No):</label>
-        <select name="ai_module">
-            <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>NA</option>
-            <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
-            <option value="No" {% if inputs and inputs.ai_module == 'No' %}selected{% endif %}>No</option>
-        </select><br><br>
-        <label>Smart CPaaS:</label>
-        <select name="smart_cpaas">
-            <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
-            <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes</option>
-        </select><br><br>
-        <label>Increased TPS:</label>
-        <select name="increased_tps">
-            <option value="NA" {% if inputs and inputs.increased_tps == 'NA' %}selected{% endif %}>NA</option>
-            <option value="250" {% if inputs and inputs.increased_tps == '250' %}selected{% endif %}>250 (upto 250 Messages per Second)</option>
-            <option value="1000" {% if inputs and inputs.increased_tps == '1000' %}selected{% endif %}>1000 (upto 1000 Messages per Second)</option>
         </select><br><br>
         <input type="submit" value="Next: Rate Card">
     </form>

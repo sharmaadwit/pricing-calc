@@ -14,9 +14,9 @@ app.secret_key = 'your_secret_key'  # Needed for session
 # Country to currency symbol mapping
 COUNTRY_CURRENCY = {
     'India': '₹',
-    'MENA': 'د.إ',  # AED
-    'LATAM': '$',   # USD (or local, but $ is common)
-    'Africa': '$',  # USD (or local)
+    'MENA': '$',  # USD for MENA
+    'LATAM': '$',
+    'Africa': '$',
     'Europe': '€',
     'Rest of the World': '$',
 }
@@ -245,7 +245,7 @@ def index():
                 'Campaign Manager',
                 'CTWA - (Meta/Tiktok/Google)',
                 'Agent Assist < 20 Agents',
-                'Personalize upto 1 Million profiles',
+                'Personalize upto 1 Million profiles, external events not supported',
             ],
             'BFSI Tier 1': [
                 'Audit trail to be stored for 60 days from JB Pro+Flows',
@@ -263,13 +263,13 @@ def index():
                 'Data Encryption, Logging, Auditing, Purging (Logs) from Campaign Manager, Retargetting and Personalize layers',
             ],
             'Personalize Load Standard': [
-                'Personalize upto 5 million profiles',
+                'Standard - upto 5 million records, no external events',
             ],
             'Personalize Load Advanced': [
-                'Personalize upto 10 million profiles',
+                'Advanced - 10 million records, external events supported',
             ],
             'AI Module Yes': [
-                'UI based retarining and configuration features',
+                'Access to Workspace Configuration and data retraining screens',
             ],
             'Human Agents 20+': [
                 'Upto 50 agents',
@@ -281,9 +281,7 @@ def index():
                 'More than 100 agents',
             ],
             'Smart CPaaS Yes': [
-                'Channel failover support for',
-                'First channel : WhatsApp or RCS',
-                'Second channel: WhatsApp, SMS or RCS',
+                'Auto failover between channels',
             ],
             'Increased TPS 250': [
                 'Upto 250 Messages per Second',
@@ -325,7 +323,7 @@ def index():
                 'Campaign Manager',
                 'CTWA - (Meta/Tiktok/Google)',
                 'Agent Assist < 20 Agents',
-                'Personalize upto 1 Million profiles',
+                'Personalize upto 1 Million profiles, external events not supported',
             ]
 
         session['results'] = results
