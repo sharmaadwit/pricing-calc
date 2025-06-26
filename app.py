@@ -380,8 +380,42 @@ def index():
             item['revenue'] = fmt(item.get('revenue', 0))
             item['suggested_revenue'] = fmt(item.get('suggested_revenue', 0))
         
-        chosen_platform_fee = fmt(chosen_platform_fee)
-        rate_card_platform_fee = fmt(rate_card_platform_fee)
+        # Ensure all numeric values are floats for template formatting
+        try:
+            chosen_platform_fee = float(chosen_platform_fee)
+        except Exception:
+            chosen_platform_fee = 0.0
+        try:
+            rate_card_platform_fee = float(rate_card_platform_fee)
+        except Exception:
+            rate_card_platform_fee = 0.0
+        if bundle_details:
+            try:
+                bundle_details['bundle_cost'] = float(bundle_details.get('bundle_cost', 0))
+            except Exception:
+                bundle_details['bundle_cost'] = 0.0
+            try:
+                bundle_details['total_bundle_price'] = float(bundle_details.get('total_bundle_price', 0))
+            except Exception:
+                bundle_details['total_bundle_price'] = 0.0
+            for line in bundle_details.get('lines', []):
+                try:
+                    line['volume'] = float(line.get('volume', 0))
+                except Exception:
+                    line['volume'] = 0.0
+                try:
+                    line['price'] = float(line.get('price', 0))
+                except Exception:
+                    line['price'] = 0.0
+                try:
+                    line['overage_price'] = float(line.get('overage_price', 0))
+                except Exception:
+                    line['overage_price'] = 0.0
+        # Also ensure results.revenue, etc. are floats if needed
+        try:
+            results['revenue'] = float(results.get('revenue', 0))
+        except Exception:
+            results['revenue'] = 0.0
 
         return render_template(
             'index.html',
