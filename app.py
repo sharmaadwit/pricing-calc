@@ -21,7 +21,7 @@ COUNTRY_CURRENCY = {
     'Rest of the World': '$',
 }
 
-def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas):
+def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas, increased_tps='NA'):
     # 1. Minimum platform fee
     if country == 'India':
         min_fee = 100000
@@ -83,6 +83,15 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
             fee += 25000
         else:
             fee += 250
+    # 6. Increased TPS
+    if increased_tps == '250':
+        if country == 'India': fee += 50000
+        elif country == 'Africa': fee += 250
+        else: fee += 500
+    elif increased_tps == '1000':
+        if country == 'India': fee += 100000
+        elif country == 'Africa': fee += 500
+        else: fee += 1000
     return fee, currency
 
 @app.route('/', methods=['GET', 'POST'])
@@ -103,7 +112,8 @@ def index():
         human_agents = request.form.get('human_agents', 'NA')
         ai_module = request.form.get('ai_module', 'NA')
         smart_cpaas = request.form.get('smart_cpaas', 'No')
-        platform_fee, fee_currency = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas)
+        increased_tps = request.form.get('increased_tps', 'NA')
+        platform_fee, fee_currency = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas, increased_tps)
         currency_symbol = COUNTRY_CURRENCY.get(country, '$')
         # Store in session for next step
         session['inputs'] = {
@@ -117,7 +127,8 @@ def index():
             'personalize_load': personalize_load,
             'human_agents': human_agents,
             'ai_module': ai_module,
-            'smart_cpaas': smart_cpaas
+            'smart_cpaas': smart_cpaas,
+            'increased_tps': increased_tps
         }
         # Suggest prices
         suggested_prices = {
@@ -158,7 +169,8 @@ def index():
             inputs.get('personalize_load', 'NA'),
             inputs.get('human_agents', 'NA'),
             inputs.get('ai_module', 'NA'),
-            inputs.get('smart_cpaas', 'No')
+            inputs.get('smart_cpaas', 'No'),
+            inputs.get('increased_tps', 'NA')
         )
         platform_fee_used = 'chosen'  # always use the chosen (editable) platform fee for margin calculation
 
@@ -174,6 +186,8 @@ def index():
             user_selections.append(('AI Module', inputs['ai_module']))
         if inputs.get('smart_cpaas', 'No') == 'Yes':
             user_selections.append(('Smart CPaaS', 'Yes'))
+        if inputs.get('increased_tps', 'NA') not in ['NA', 'No']:
+            user_selections.append(('Increased TPS', inputs['increased_tps']))
 
         # Inclusions mapping
         inclusions = {
@@ -223,7 +237,48 @@ def index():
                 'First channel : WhatsApp or RCS',
                 'Second channel: WhatsApp, SMS or RCS',
             ],
+            'Increased TPS 250': [
+                'Upto 250 Messages per Second',
+            ],
+            'Increased TPS 1000': [
+                'Upto 1000 Messages per Second',
+            ],
         }
+
+        # Determine which inclusions to show
+        selected_inclusions = []
+        # Check for any additional options
+        has_additional = False
+        for label, value in user_selections:
+            if label == 'BFSI Tier' and value in ['Tier 1', 'Tier 2', 'Tier 3']:
+                selected_inclusions.extend(inclusions.get(f'BFSI Tier {value.split(" ")[-1]}', []))
+                has_additional = True
+            if label == 'Personalize Load' and value in ['Standard', 'Advanced']:
+                selected_inclusions.extend(inclusions.get(f'Personalize Load {value}', []))
+                has_additional = True
+            if label == 'AI Module' and value == 'Yes':
+                selected_inclusions.extend(inclusions.get('AI Module Yes', []))
+                has_additional = True
+            if label == 'Human Agents' and value in ['20+', '50+', '100+']:
+                selected_inclusions.extend(inclusions.get(f'Human Agents {value}', []))
+                has_additional = True
+            if label == 'Smart CPaaS' and value == 'Yes':
+                selected_inclusions.extend(inclusions.get('Smart CPaaS Yes', []))
+                has_additional = True
+            if label == 'Increased TPS' and value in ['250', '1000']:
+                selected_inclusions.extend(inclusions.get(f'Increased TPS {value}', []))
+                has_additional = True
+        if has_additional:
+            inclusions['Platform Fee Used for Margin Calculation'] = selected_inclusions
+        else:
+            inclusions['Platform Fee Used for Margin Calculation'] = [
+                '80 TPS',
+                'Journey Builder Lite',
+                'Campaign Manager',
+                'CTWA - (Meta/Tiktok/Google)',
+                'Agent Assist < 20 Agents',
+                'Personalize upto 1 Million profiles',
+            ]
 
         session['results'] = results
         session['chosen_platform_fee'] = chosen_platform_fee

@@ -325,7 +325,7 @@ def perform_calculations_and_display(data, suggested_fees=None):
     print("-" * 50)
 
 
-def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module):
+def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, increased_tps='NA'):
     if country == 'India':
         min_fee = 100000
     elif country in ['Africa', 'Rest of the World']:
@@ -377,6 +377,15 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
         elif country == 'Africa': fee += 250
         elif country in ['LATAM', 'Europe']: fee += 1000
         else: fee += 500
+    # Increased TPS
+    if increased_tps == '250':
+        if country == 'India': fee += 50000
+        elif country == 'Africa': fee += 250
+        else: fee += 500
+    elif increased_tps == '1000':
+        if country == 'India': fee += 100000
+        elif country == 'Africa': fee += 500
+        else: fee += 1000
     return fee
 
 
@@ -479,7 +488,11 @@ def main_calculator():
     ai_module = input("AI Module (Yes/No): ").strip()
     if ai_module not in ['NA', 'Yes', 'No']:
         ai_module = 'NA'
-    platform_fee = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module)
+    print("Increased TPS options: NA, 250, 1000")
+    increased_tps = input("Select Increased TPS: ").strip()
+    if increased_tps not in ['NA', '250', '1000']:
+        increased_tps = 'NA'
+    platform_fee = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, increased_tps)
     print(f"Calculated Platform Fee: {platform_fee}")
     user_platform_fee = input(f"Enter platform fee to use (press Enter to accept {platform_fee}): ").strip()
     if user_platform_fee == '':

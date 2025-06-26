@@ -74,6 +74,12 @@
             <option value="No">No</option>
             <option value="Yes">Yes</option>
         </select><br><br>
+        <label>Increased TPS:</label>
+        <select name="increased_tps">
+            <option value="NA">NA</option>
+            <option value="250">250 (upto 250 Messages per Second)</option>
+            <option value="1000">1000 (upto 1000 Messages per Second)</option>
+        </select><br><br>
         <input type="submit" value="Next: Rate Card">
     </form>
     <script>
@@ -239,14 +245,9 @@
                     <td>Included</td>
                     <td>
                         <ul>
-                        {% set key = 'Human Agents ' ~ value %}
-                        {% if inclusions[key] is defined %}
-                            {% for inc in inclusions[key] %}
-                                <li>{{ inc }}</li>
-                            {% endfor %}
-                        {% else %}
-                            <li>No inclusions defined yet.</li>
-                        {% endif %}
+                        {% for inc in inclusions['Human Agents ' ~ value] %}
+                            <li>{{ inc }}</li>
+                        {% endfor %}
                         </ul>
                     </td>
                 </tr>
@@ -257,9 +258,22 @@
                     <td>Included</td>
                     <td>
                         <ul>
-                            <li>Channel failover support for</li>
-                            <li>First channel : WhatsApp or RCS</li>
-                            <li>Second channel: WhatsApp, SMS or RCS</li>
+                        {% for inc in inclusions['Smart CPaaS Yes'] %}
+                            <li>{{ inc }}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endif %}
+                {% if label == 'Increased TPS' and value in ['250', '1000'] %}
+                <tr>
+                    <td>Increased TPS {{ value }}</td>
+                    <td>Included</td>
+                    <td>
+                        <ul>
+                        {% for inc in inclusions['Increased TPS ' ~ value] %}
+                            <li>{{ inc }}</li>
+                        {% endfor %}
                         </ul>
                     </td>
                 </tr>
