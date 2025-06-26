@@ -226,26 +226,6 @@
         <p><b>Inclusion:</b> {{ bundle_details.inclusion_text or 'N/A' }}</p>
         {% endif %}
         
-        <h4>Platform Fee</h4>
-        <table>
-            <tr>
-                <th>Charge Type</th>
-                <th>Details</th>
-                <th>Price</th>
-            </tr>
-            <tr>
-                <td>Platform Fee</td>
-                <td>
-                    <ul style="margin:0; padding-left:18px;">
-                        {% for comp in session.selected_components %}
-                            <li>{{ comp }}</li>
-                        {% endfor %}
-                    </ul>
-                </td>
-                <td style="text-align:right;">{{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</td>
-            </tr>
-        </table>
-        
         <h4>Inclusions</h4>
         <ul>
             {% for inc in final_inclusions %}
