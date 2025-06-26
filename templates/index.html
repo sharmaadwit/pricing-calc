@@ -231,7 +231,7 @@
                         {% endfor %}
                     </ul>
                 </td>
-                <td style="text-align:right;">{{ currency_symbol }}{{ '{:,.0f'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</td>
             </tr>
         </table>
         
