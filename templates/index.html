@@ -17,10 +17,8 @@
         th { background: #f0f0f0; }
         td, th { text-align: right; }
         th:first-child, td:first-child { text-align: left; }
--        label { display: block; margin-top: 1em; font-weight: 500; }
--        input, select { margin-top: 0.2em; }
-+        label { display: block; margin-top: 0.4em; margin-bottom: 0.1em; font-weight: 500; }
-+        input, select { margin-top: 0.1em; margin-bottom: 0.3em; }
+        label { display: block; margin-top: 0.4em; margin-bottom: 0.1em; font-weight: 500; }
+        input, select { margin-top: 0.1em; margin-bottom: 0.3em; }
         .key-number { font-weight: bold; font-size: 1.1em; }
     </style>
     <script>
@@ -59,7 +57,7 @@
         <input type="text" name="basic_utility_volume" class="comma-number" required value="{{ inputs.basic_utility_volume if inputs and inputs.basic_utility_volume is defined else '' }}"><br><br>
         <label>Minimum Platform Fee:</label>
         <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly><br>
-        <small>This is the minimum platform fee for the selected country. It cannot be edited.</small><br><br>
+        <small>80 TPS, Journey Builder Lite, Campaign Manager, CTWA - (Meta/Tiktok), Agent Assist < 20 Agents, Personalize upto 1 Million profiles and external events not supported</small><br><br>
         <label>Personalize Load:</label>
         <select name="personalize_load">
             <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>NA</option>

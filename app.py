@@ -243,9 +243,9 @@ def index():
                 '80 TPS',
                 'Journey Builder Lite',
                 'Campaign Manager',
-                'CTWA - (Meta/Tiktok/Google)',
+                'CTWA - (Meta/Tiktok)',
                 'Agent Assist < 20 Agents',
-                'Personalize upto 1 Million profiles, external events not supported',
+                'Personalize upto 1 Million profiles and external events not supported',
             ],
             'BFSI Tier 1': [
                 'Audit trail to be stored for 60 days from JB Pro+Flows',
@@ -321,9 +321,9 @@ def index():
                 '80 TPS',
                 'Journey Builder Lite',
                 'Campaign Manager',
-                'CTWA - (Meta/Tiktok/Google)',
+                'CTWA - (Meta/Tiktok)',
                 'Agent Assist < 20 Agents',
-                'Personalize upto 1 Million profiles, external events not supported',
+                'Personalize upto 1 Million profiles and external events not supported',
             ]
 
         session['results'] = results
