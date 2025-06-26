@@ -196,7 +196,7 @@
         <h4>Message Bundle</h4>
         <table>
             <tr>
-                <th>Message Type</th>
+                <th>Charge Type</th>
                 <th>Volume Included</th>
                 <th>Bundle Price (per message)</th>
                 <th>Overage Price (per message)</th>
@@ -216,7 +216,24 @@
         {% endif %}
         
         <h4>Platform Fee</h4>
-        <p><b>Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</p>
+        <table>
+            <tr>
+                <th>Charge Type</th>
+                <th>Details</th>
+                <th>Price</th>
+            </tr>
+            <tr>
+                <td>Platform Fee</td>
+                <td>
+                    <ul style="margin:0; padding-left:18px;">
+                        {% for comp in session.selected_components %}
+                            <li>{{ comp }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ '{:,.0f'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</td>
+            </tr>
+        </table>
         
         <h4>Total Charges per Month</h4>
         <p><b>Total Monthly Charges:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(results.revenue or 0) if ((results.revenue or 0) % 1) == 0 else '{:,.3f}'.format(results.revenue or 0) }}</p>

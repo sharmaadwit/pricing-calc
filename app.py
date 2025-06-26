@@ -291,21 +291,45 @@ def index():
             ],
         }
 
-        # Build dynamic inclusions list
+        # Build dynamic inclusions list (no duplicate/contradictory inclusions)
         final_inclusions = inclusions['Platform Fee Used for Margin Calculation'][:]
-        for label, value in user_selections:
-            if label == 'BFSI Tier' and value in ['Tier 1', 'Tier 2', 'Tier 3']:
-                final_inclusions += inclusions.get(f'BFSI Tier {value.split(" ")[-1]}', [])
-            if label == 'Personalize Load' and value in ['Standard', 'Advanced']:
-                final_inclusions += inclusions.get(f'Personalize Load {value}', [])
-            if label == 'AI Module' and value == 'Yes':
-                final_inclusions += inclusions.get('AI Module Yes', [])
-            if label == 'Human Agents' and value in ['20+', '50+', '100+']:
-                final_inclusions += inclusions.get(f'Human Agents {value}', [])
-            if label == 'Smart CPaaS' and value == 'Yes':
-                final_inclusions += inclusions.get('Smart CPaaS Yes', [])
-            if label == 'Increased TPS' and value in ['250', '1000']:
-                final_inclusions += inclusions.get(f'Increased TPS {value}', [])
+        # Track which tiers are selected for each parameter
+        selected_components = []
+        # BFSI Tier
+        bfsi_tier = inputs.get('bfsi_tier', 'NA')
+        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
+            final_inclusions += inclusions.get(f'BFSI Tier {bfsi_tier.split(" ")[-1]}', [])
+            selected_components.append(f"BFSI Tier: {bfsi_tier}")
+        # Personalize Load
+        personalize_load = inputs.get('personalize_load', 'NA')
+        if personalize_load in ['Standard', 'Advanced']:
+            # Only add the selected tier's inclusion
+            final_inclusions += inclusions.get(f'Personalize Load {personalize_load}', [])
+            selected_components.append(f"Personalize Load: {personalize_load}")
+        # Human Agents
+        human_agents = inputs.get('human_agents', 'NA')
+        if human_agents in ['20+', '50+', '100+']:
+            final_inclusions += inclusions.get(f'Human Agents {human_agents}', [])
+            selected_components.append(f"Human Agents: {human_agents}")
+        # AI Module
+        ai_module = inputs.get('ai_module', 'NA')
+        if ai_module == 'Yes':
+            final_inclusions += inclusions.get('AI Module Yes', [])
+            selected_components.append("AI Module: Yes")
+        # Smart CPaaS
+        smart_cpaas = inputs.get('smart_cpaas', 'No')
+        if smart_cpaas == 'Yes':
+            final_inclusions += inclusions.get('Smart CPaaS Yes', [])
+            selected_components.append("Smart CPaaS: Yes")
+        # Increased TPS
+        increased_tps = inputs.get('increased_tps', 'NA')
+        if increased_tps in ['250', '1000']:
+            final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
+            selected_components.append(f"Increased TPS: {increased_tps}")
+        # Remove duplicates from inclusions
+        final_inclusions = list(dict.fromkeys(final_inclusions))
+        # Pass selected_components to template
+        session['selected_components'] = selected_components
 
         session['results'] = results
         session['chosen_platform_fee'] = chosen_platform_fee
