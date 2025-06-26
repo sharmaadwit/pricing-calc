@@ -170,8 +170,10 @@
 
     {% if step == 'results' %}
         <h2>Results</h2>
+        
+        <h3>Section 1: Pricing</h3>
         {% if bundle_details %}
-        <h3>Messaging Bundle Summary</h3>
+        <h4>Message Bundle</h4>
         <table>
             <tr>
                 <th>Message Type</th>
@@ -182,16 +184,40 @@
             {% for line in bundle_details.lines %}
             <tr>
                 <td>{{ line.label }}</td>
-                <td>{{ line.volume }}</td>
-                <td>{{ currency_symbol }}{{ line.price }}</td>
-                <td>{{ currency_symbol }}{{ line.overage_price }}</td>
+                <td>{{ '%.3f'|format(line.volume) }}</td>
+                <td>{{ currency_symbol }}{{ '%.3f'|format(line.price) }}</td>
+                <td>{{ currency_symbol }}{{ '%.3f'|format(line.overage_price) }}</td>
             </tr>
             {% endfor %}
         </table>
-        <p><b>Total Bundle Cost:</b> {{ currency_symbol }}{{ bundle_details.bundle_cost }}</p>
+        <p><b>Total Bundle Cost (messages only):</b> {{ currency_symbol }}{{ '%.3f'|format(bundle_details.bundle_cost) }}</p>
+        <p><b>Total Bundle Price (Platform Fee + Bundle):</b> {{ currency_symbol }}{{ '%.3f'|format(bundle_details.total_bundle_price) }}</p>
         <p><b>Inclusion:</b> {{ bundle_details.inclusion_text }}</p>
-        <br>
         {% endif %}
+        
+        <h4>Platform Fee</h4>
+        <p><b>Platform Fee:</b> {{ currency_symbol }}{{ '%.3f'|format(chosen_platform_fee) }}</p>
+        
+        <h4>Total Charges per Month</h4>
+        <p><b>Total Monthly Charges:</b> {{ currency_symbol }}{{ results.revenue }}</p>
+        
+        <h4>Inclusions</h4>
+        <ul>
+            <li>80 TPS</li>
+            <li>Journey Builder Lite</li>
+            <li>Campaign Manager</li>
+            <li>CTWA - (Meta/Tiktok/Google)</li>
+            <li>Agent Assist < 20 Agents</li>
+            <li>Personalize upto 1 Million profiles</li>
+            {% if bundle_details %}
+            <li>Message bundle as per table above</li>
+            {% endif %}
+        </ul>
+        
+        <hr>
+        
+        <h3>Section 2: Internal - Not to be shared</h3>
+        <h4>Margin and Cost Details</h4>
         <table>
             <tr>
                 <th>Line Item</th>
@@ -216,110 +242,6 @@
         </table>
         <br>
         <table>
-            <tr>
-                <th>Platform Fee Section</th>
-                <th>Value</th>
-                <th>Inclusions</th>
-            </tr>
-            <tr>
-                <td>Platform Fee Used for Margin Calculation</td>
-                <td>{{ chosen_platform_fee }}</td>
-                <td>
-                    <ul>
-                    {% for inc in inclusions['Platform Fee Used for Margin Calculation'] %}
-                        <li>{{ inc }}</li>
-                    {% endfor %}
-                    </ul>
-                </td>
-            </tr>
-            <tr>
-                <td>Rate Card Platform Fee</td>
-                <td>{{ rate_card_platform_fee }}</td>
-                <td></td>
-            </tr>
-            {% for label, value in user_selections %}
-                {% if label == 'BFSI Tier' and value in ['Tier 1', 'Tier 2', 'Tier 3'] %}
-                <tr>
-                    <td>BFSI {{ value }}</td>
-                    <td>Included</td>
-                    <td>
-                        <ul>
-                        {% for inc in inclusions['BFSI Tier ' ~ value.split(' ')[-1]] %}
-                            <li>{{ inc }}</li>
-                        {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-                {% endif %}
-                {% if label == 'Personalize Load' and value in ['Standard', 'Advanced'] %}
-                <tr>
-                    <td>Personalize Load {{ value }}</td>
-                    <td>Included</td>
-                    <td>
-                        <ul>
-                        {% for inc in inclusions['Personalize Load ' ~ value] %}
-                            <li>{{ inc }}</li>
-                        {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-                {% endif %}
-                {% if label == 'AI Module' and value == 'Yes' %}
-                <tr>
-                    <td>AI Module</td>
-                    <td>Included</td>
-                    <td>
-                        <ul>
-                        {% for inc in inclusions['AI Module Yes'] %}
-                            <li>{{ inc }}</li>
-                        {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-                {% endif %}
-                {% if label == 'Human Agents' and value in ['20+', '50+', '100+'] %}
-                <tr>
-                    <td>Human Agents {{ value }}</td>
-                    <td>Included</td>
-                    <td>
-                        <ul>
-                        {% for inc in inclusions['Human Agents ' ~ value] %}
-                            <li>{{ inc }}</li>
-                        {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-                {% endif %}
-                {% if label == 'Smart CPaaS' and value == 'Yes' %}
-                <tr>
-                    <td>Smart CPaaS</td>
-                    <td>Included</td>
-                    <td>
-                        <ul>
-                        {% for inc in inclusions['Smart CPaaS Yes'] %}
-                            <li>{{ inc }}</li>
-                        {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-                {% endif %}
-                {% if label == 'Increased TPS' and value in ['250', '1000'] %}
-                <tr>
-                    <td>Increased TPS {{ value }}</td>
-                    <td>Included</td>
-                    <td>
-                        <ul>
-                        {% for inc in inclusions['Increased TPS ' ~ value] %}
-                            <li>{{ inc }}</li>
-                        {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-                {% endif %}
-            {% endfor %}
-        </table>
-        <br>
-        <table>
             <tr><td colspan="3"><small>Note: Margin is calculated using the chosen platform fee (editable in the previous step).</small></td></tr>
             <tr><th>Total Revenue (Chosen) {{ currency_symbol }}/month</th><td colspan="2">{{ results.revenue }}</td></tr>
             <tr><th>Total Revenue (Rate Card) {{ currency_symbol }}/month</th><td colspan="2">{{ results.suggested_revenue }}</td></tr>
@@ -329,6 +251,7 @@
             <tr><th>Margin (User Chosen)</th><td colspan="2">{{ results.margin }}</td></tr>
             <tr><th>Margin (Rate Card)</th><td colspan="2">{{ results.suggested_margin }}</td></tr>
         </table>
+        
         <br>
         <form method="get">
             <input type="submit" value="Start Over">

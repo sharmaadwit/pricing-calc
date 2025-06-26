@@ -187,10 +187,12 @@ def index():
                     'overage_price': overage_price
                 })
                 bundle_cost += volume * float(price)
+            total_bundle_price = float(pricing_inputs.get('platform_fee', 0)) + bundle_cost
             platform_fee += bundle_cost
             bundle_details = {
                 'lines': bundle_lines,
                 'bundle_cost': bundle_cost,
+                'total_bundle_price': total_bundle_price,
                 'inclusion_text': 'See table below for included volumes and overage prices.'
             }
         # Call calculation logic with updated platform fee
