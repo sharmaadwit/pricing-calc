@@ -21,6 +21,8 @@ COUNTRY_CURRENCY = {
     'Rest of the World': '$',
 }
 
+SECRET_ANALYTICS_KEYWORD = "letmein123"
+
 def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas, increased_tps='NA'):
     # 1. Minimum platform fee
     if country == 'India':
@@ -669,6 +671,17 @@ def oauth2callback():
 #         return redirect(url_for('authorize'))
 
 #     creds = Credentials(**session['credentials'])
+
+@app.route('/analytics', methods=['GET', 'POST'])
+def analytics():
+    if request.method == 'POST':
+        keyword = request.form.get('keyword', '')
+        if keyword == SECRET_ANALYTICS_KEYWORD:
+            return render_template('analytics.html', authorized=True)
+        else:
+            flash('Incorrect keyword.', 'error')
+            return render_template('analytics.html', authorized=False)
+    return render_template('analytics.html', authorized=False)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

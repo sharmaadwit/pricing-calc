@@ -1,0 +1,20 @@
+{% if not authorized %}
+  <h2>Enter Analytics Access Keyword</h2>
+  <form method="post">
+    <input type="password" name="keyword" placeholder="Secret keyword" required>
+    <input type="submit" value="Access Analytics">
+  </form>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+{% else %}
+  <h2>Analytics Dashboard</h2>
+  <p>Only visible to users with the secret keyword.</p>
+  <!-- Add your analytics content here -->
+{% endif %} 
