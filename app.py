@@ -263,7 +263,7 @@ def index():
             results['line_items'].append({
                 'label': 'Platform Fee (Chosen)',
                 'volume': '',
-                'chosen_price': chosen_platform_fee,
+                'chosen_price': '',
                 'suggested_price': '',
                 'overage_price': '',
                 'meta_cost': '',
@@ -275,7 +275,7 @@ def index():
                 'label': 'Platform Fee (Rate Card)',
                 'volume': '',
                 'chosen_price': '',
-                'suggested_price': rate_card_platform_fee,
+                'suggested_price': '',
                 'overage_price': '',
                 'meta_cost': '',
                 'final_price': '',
