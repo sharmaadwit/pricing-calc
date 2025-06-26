@@ -147,6 +147,38 @@ def index():
         basic_marketing_price = float(request.form['basic_marketing_price'])
         basic_utility_price = float(request.form['basic_utility_price'])
         platform_fee = float(request.form['platform_fee'])
+
+        # Get suggested prices for validation
+        country = inputs.get('country', 'India')
+        ai_volume = float(inputs.get('ai_volume', 0))
+        advanced_volume = float(inputs.get('advanced_volume', 0))
+        basic_marketing_volume = float(inputs.get('basic_marketing_volume', 0))
+        basic_utility_volume = float(inputs.get('basic_utility_volume', 0))
+        suggested_ai = get_suggested_price(country, 'ai', ai_volume)
+        suggested_advanced = get_suggested_price(country, 'advanced', advanced_volume)
+        suggested_marketing = get_suggested_price(country, 'basic_marketing', basic_marketing_volume)
+        suggested_utility = get_suggested_price(country, 'basic_utility', basic_utility_volume)
+        error = None
+        if ai_price < 0.5 * suggested_ai:
+            error = True
+        if advanced_price < 0.5 * suggested_advanced:
+            error = True
+        if basic_marketing_price < 0.5 * suggested_marketing:
+            error = True
+        if basic_utility_price < 0.5 * suggested_utility:
+            error = True
+        if error:
+            flash('Discount too high, probability of deal desk rejection is high', 'error')
+            suggested_prices = {
+                'ai_price': suggested_ai,
+                'advanced_price': suggested_advanced,
+                'basic_marketing_price': suggested_marketing,
+                'basic_utility_price': suggested_utility,
+            }
+            currency_symbol = COUNTRY_CURRENCY.get(country, '$')
+            # Re-render the pricing page with user input and error
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+
         session['pricing_inputs'] = {
             'ai_price': ai_price,
             'advanced_price': advanced_price,
