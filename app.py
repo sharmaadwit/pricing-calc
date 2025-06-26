@@ -170,25 +170,28 @@ def index():
         bundle_details = None
         bundle_cost = 0
         if bundle_choice == 'Yes':
-            # For simplicity, use total message volume and average price
-            total_volume = sum([
-                float(inputs.get('ai_volume', 0)),
-                float(inputs.get('advanced_volume', 0)),
-                float(inputs.get('basic_marketing_volume', 0)),
-                float(inputs.get('basic_utility_volume', 0)),
-            ])
-            # Use average price (cost + gupshup fee) for all messages
-            avg_price = sum([
-                float(ai_price), float(advanced_price), float(basic_marketing_price), float(basic_utility_price)
-            ]) / 4
-            bundle_cost = total_volume * avg_price
+            # Show each type of message, volume, and overage price
+            bundle_lines = []
+            for label, key, price in [
+                ("AI Message", 'ai_volume', ai_price),
+                ("Advanced Message", 'advanced_volume', advanced_price),
+                ("Basic Marketing Message", 'basic_marketing_volume', basic_marketing_price),
+                ("Basic Utility/Authentication Message", 'basic_utility_volume', basic_utility_price),
+            ]:
+                volume = float(inputs.get(key, 0))
+                overage_price = float(price) * 1.2
+                bundle_lines.append({
+                    'label': label,
+                    'volume': volume,
+                    'price': float(price),
+                    'overage_price': overage_price
+                })
+                bundle_cost += volume * float(price)
             platform_fee += bundle_cost
             bundle_details = {
-                'total_volume': total_volume,
-                'avg_price': avg_price,
+                'lines': bundle_lines,
                 'bundle_cost': bundle_cost,
-                'inclusion_text': f"{int(total_volume)} messages/month at {avg_price:.2f} each. Overage at {avg_price*1.2:.2f}",
-                'overage_price': avg_price*1.2
+                'inclusion_text': 'See table below for included volumes and overage prices.'
             }
         # Call calculation logic with updated platform fee
         results = calculate_pricing(

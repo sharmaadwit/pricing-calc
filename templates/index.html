@@ -173,12 +173,23 @@
         {% if bundle_details %}
         <h3>Messaging Bundle Summary</h3>
         <table>
-            <tr><th>Number of Messages</th><td>{{ bundle_details.total_volume }}</td></tr>
-            <tr><th>Bundle Price (per message)</th><td>{{ currency_symbol }}{{ bundle_details.avg_price }}</td></tr>
-            <tr><th>Total Bundle Cost</th><td>{{ currency_symbol }}{{ bundle_details.bundle_cost }}</td></tr>
-            <tr><th>Overage Price (per message)</th><td>{{ currency_symbol }}{{ bundle_details.overage_price }}</td></tr>
-            <tr><th>Inclusion</th><td>{{ bundle_details.inclusion_text }}</td></tr>
+            <tr>
+                <th>Message Type</th>
+                <th>Volume Included</th>
+                <th>Bundle Price (per message)</th>
+                <th>Overage Price (per message)</th>
+            </tr>
+            {% for line in bundle_details.lines %}
+            <tr>
+                <td>{{ line.label }}</td>
+                <td>{{ line.volume }}</td>
+                <td>{{ currency_symbol }}{{ line.price }}</td>
+                <td>{{ currency_symbol }}{{ line.overage_price }}</td>
+            </tr>
+            {% endfor %}
         </table>
+        <p><b>Total Bundle Cost:</b> {{ currency_symbol }}{{ bundle_details.bundle_cost }}</p>
+        <p><b>Inclusion:</b> {{ bundle_details.inclusion_text }}</p>
         <br>
         {% endif %}
         <table>
