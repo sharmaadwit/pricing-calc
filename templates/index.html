@@ -20,6 +20,30 @@
         label { display: block; margin-top: 0.4em; margin-bottom: 0.1em; font-weight: 500; }
         input, select { margin-top: 0.1em; margin-bottom: 0.3em; }
         .key-number { font-weight: bold; font-size: 1.1em; }
+        .flashes {
+          list-style: none;
+          padding: 0;
+          margin: 1em 0;
+        }
+        .flashes li {
+          background: #ffe0e0;
+          color: #b30000;
+          border: 1px solid #b30000;
+          padding: 10px 16px;
+          margin-bottom: 8px;
+          font-weight: bold;
+          border-radius: 4px;
+        }
+        .flashes li.error {
+          background: #ffe0e0;
+          color: #b30000;
+          border: 1px solid #b30000;
+        }
+        .flashes li.success {
+          background: #e0ffe0;
+          color: #006600;
+          border: 1px solid #006600;
+        }
     </style>
     <script>
     // Global function for adding commas to numbers
@@ -33,6 +57,15 @@
     </script>
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
     <h1>Pricing Calculator</h1>
 
     {% if step == 'volumes' %}

@@ -96,10 +96,12 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    # Defensive: always use .get() for form/session data
     step = request.form.get('step', 'volumes')
     results = None
     currency_symbol = None
 
+    # Defensive: ensure session data exists for edit actions
     if step == 'volumes' and request.method == 'POST':
         # Step 1: User submitted volumes and platform fee options
         country = request.form['country']
@@ -497,17 +499,20 @@ def index():
             expected_invoice_amount=expected_invoice_amount
         )
 
-    # Default: show volume input form
-    country = session.get('inputs', {}).get('country', 'India')
-    currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
-    if step == 'volumes':
-        # Pre-fill with session values if available
+    # Defensive: handle GET or POST for edit actions
+    elif step == 'volumes':
         inputs = session.get('inputs', {})
+        if not inputs:
+            flash('Session expired or missing. Please start again.', 'error')
+            return redirect(url_for('index'))
+        currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
         return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs)
-    if step == 'prices':
-        # Pre-fill with session values if available
+    elif step == 'prices':
         inputs = session.get('inputs', {})
         pricing_inputs = session.get('pricing_inputs', {})
+        if not inputs or not pricing_inputs:
+            flash('Session expired or missing. Please start again.', 'error')
+            return redirect(url_for('index'))
         suggested_prices = {
             'ai_price': pricing_inputs.get('ai_price', ''),
             'advanced_price': pricing_inputs.get('advanced_price', ''),
@@ -515,8 +520,13 @@ def index():
             'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
         }
         platform_fee = pricing_inputs.get('platform_fee', inputs.get('platform_fee', ''))
+        currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
-    return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
+    else:
+        # Default: show volume input form
+        country = session.get('inputs', {}).get('country', 'India')
+        currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
+        return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
 
 @app.route('/authorize')
 def authorize():
