@@ -172,7 +172,7 @@
         <h2>Results</h2>
         
         <h3>Section 1: Pricing</h3>
-        {% if bundle_details %}
+        {% if bundle_details and bundle_details.lines %}
         <h4>Message Bundle</h4>
         <table>
             <tr>
@@ -183,23 +183,23 @@
             </tr>
             {% for line in bundle_details.lines %}
             <tr>
-                <td>{{ line.label }}</td>
-                <td>{{ '{:,.0f}'.format(line.volume) if line.volume == int(line.volume) else '{:,.3f}'.format(line.volume) }}</td>
-                <td>{{ currency_symbol }}{{ '{:,.0f}'.format(line.price) if line.price == int(line.price) else '{:,.3f}'.format(line.price) }}</td>
-                <td>{{ currency_symbol }}{{ '{:,.0f}'.format(line.overage_price) if line.overage_price == int(line.overage_price) else '{:,.3f}'.format(line.overage_price) }}</td>
+                <td>{{ line.label or 'N/A' }}</td>
+                <td>{{ '{:,.0f}'.format(line.volume or 0) if ((line.volume or 0) % 1) == 0 else '{:,.3f}'.format(line.volume or 0) }}</td>
+                <td>{{ currency_symbol }}{{ '{:,.0f}'.format(line.price or 0) if ((line.price or 0) % 1) == 0 else '{:,.3f}'.format(line.price or 0) }}</td>
+                <td>{{ currency_symbol }}{{ '{:,.0f}'.format(line.overage_price or 0) if ((line.overage_price or 0) % 1) == 0 else '{:,.3f}'.format(line.overage_price or 0) }}</td>
             </tr>
             {% endfor %}
         </table>
-        <p><b>Total Bundle Cost (messages only):</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.bundle_cost) if bundle_details.bundle_cost == int(bundle_details.bundle_cost) else '{:,.3f}'.format(bundle_details.bundle_cost) }}</p>
-        <p><b>Total Bundle Price (Platform Fee + Bundle):</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.total_bundle_price) if bundle_details.total_bundle_price == int(bundle_details.total_bundle_price) else '{:,.3f}'.format(bundle_details.total_bundle_price) }}</p>
-        <p><b>Inclusion:</b> {{ bundle_details.inclusion_text }}</p>
+        <p><b>Total Bundle Cost (messages only):</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.bundle_cost or 0) if ((bundle_details.bundle_cost or 0) % 1) == 0 else '{:,.3f}'.format(bundle_details.bundle_cost or 0) }}</p>
+        <p><b>Total Bundle Price (Platform Fee + Bundle):</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.total_bundle_price or 0) if ((bundle_details.total_bundle_price or 0) % 1) == 0 else '{:,.3f}'.format(bundle_details.total_bundle_price or 0) }}</p>
+        <p><b>Inclusion:</b> {{ bundle_details.inclusion_text or 'N/A' }}</p>
         {% endif %}
         
         <h4>Platform Fee</h4>
-        <p><b>Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee) if chosen_platform_fee == int(chosen_platform_fee) else '{:,.3f}'.format(chosen_platform_fee) }}</p>
+        <p><b>Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</p>
         
         <h4>Total Charges per Month</h4>
-        <p><b>Total Monthly Charges:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(results.revenue) if results.revenue == int(results.revenue) else '{:,.3f}'.format(results.revenue) }}</p>
+        <p><b>Total Monthly Charges:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(results.revenue or 0) if ((results.revenue or 0) % 1) == 0 else '{:,.3f}'.format(results.revenue or 0) }}</p>
         
         <h4>Inclusions</h4>
         <ul>
