@@ -147,7 +147,50 @@ def index():
         basic_marketing_price = float(request.form['basic_marketing_price'])
         basic_utility_price = float(request.form['basic_utility_price'])
         platform_fee = float(request.form['platform_fee'])
-        # Call calculation logic with user-chosen prices
+        session['pricing_inputs'] = {
+            'ai_price': ai_price,
+            'advanced_price': advanced_price,
+            'basic_marketing_price': basic_marketing_price,
+            'basic_utility_price': basic_utility_price,
+            'platform_fee': platform_fee
+        }
+        return render_template('index.html', step='bundle', inputs=inputs, currency_symbol=currency_symbol)
+
+    elif step == 'bundle' and request.method == 'POST':
+        bundle_choice = request.form.get('bundle_choice', 'No')
+        session['bundle_choice'] = bundle_choice
+        # Retrieve previous inputs
+        inputs = session.get('inputs', {})
+        pricing_inputs = session.get('pricing_inputs', {})
+        ai_price = pricing_inputs.get('ai_price', 0)
+        advanced_price = pricing_inputs.get('advanced_price', 0)
+        basic_marketing_price = pricing_inputs.get('basic_marketing_price', 0)
+        basic_utility_price = pricing_inputs.get('basic_utility_price', 0)
+        platform_fee = pricing_inputs.get('platform_fee', 0)
+        bundle_details = None
+        bundle_cost = 0
+        if bundle_choice == 'Yes':
+            # For simplicity, use total message volume and average price
+            total_volume = sum([
+                float(inputs.get('ai_volume', 0)),
+                float(inputs.get('advanced_volume', 0)),
+                float(inputs.get('basic_marketing_volume', 0)),
+                float(inputs.get('basic_utility_volume', 0)),
+            ])
+            # Use average price (cost + gupshup fee) for all messages
+            avg_price = sum([
+                float(ai_price), float(advanced_price), float(basic_marketing_price), float(basic_utility_price)
+            ]) / 4
+            bundle_cost = total_volume * avg_price
+            platform_fee += bundle_cost
+            bundle_details = {
+                'total_volume': total_volume,
+                'avg_price': avg_price,
+                'bundle_cost': bundle_cost,
+                'inclusion_text': f"{int(total_volume)} messages/month at {avg_price:.2f} each. Overage at {avg_price*1.2:.2f}",
+                'overage_price': avg_price*1.2
+            }
+        # Call calculation logic with updated platform fee
         results = calculate_pricing(
             inputs['country'],
             inputs['ai_volume'],
@@ -345,12 +388,29 @@ def index():
             rate_card_platform_fee=rate_card_platform_fee,
             platform_fee_used=platform_fee_used,
             user_selections=user_selections,
-            inclusions=inclusions
+            inclusions=inclusions,
+            bundle_details=bundle_details
         )
 
     # Default: show volume input form
     country = session.get('inputs', {}).get('country', 'India')
     currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
+    if step == 'volumes':
+        # Pre-fill with session values if available
+        inputs = session.get('inputs', {})
+        return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs)
+    if step == 'prices':
+        # Pre-fill with session values if available
+        inputs = session.get('inputs', {})
+        pricing_inputs = session.get('pricing_inputs', {})
+        suggested_prices = {
+            'ai_price': pricing_inputs.get('ai_price', ''),
+            'advanced_price': pricing_inputs.get('advanced_price', ''),
+            'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
+            'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
+        }
+        platform_fee = pricing_inputs.get('platform_fee', inputs.get('platform_fee', ''))
+        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
     return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
 
 @app.route('/authorize')

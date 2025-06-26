@@ -25,60 +25,60 @@
         <input type="hidden" name="step" value="volumes">
         <label>Country:</label>
         <select name="country" id="country-select" onchange="updateMinPlatformFee()">
-            <option value="India">India</option>
-            <option value="MENA">MENA</option>
-            <option value="LATAM">LATAM</option>
-            <option value="Africa">Africa</option>
-            <option value="Europe">Europe</option>
-            <option value="Rest of the World">Rest of the World</option>
+            <option value="India" {% if inputs and inputs.country == 'India' %}selected{% endif %}>India</option>
+            <option value="MENA" {% if inputs and inputs.country == 'MENA' %}selected{% endif %}>MENA</option>
+            <option value="LATAM" {% if inputs and inputs.country == 'LATAM' %}selected{% endif %}>LATAM</option>
+            <option value="Africa" {% if inputs and inputs.country == 'Africa' %}selected{% endif %}>Africa</option>
+            <option value="Europe" {% if inputs and inputs.country == 'Europe' %}selected{% endif %}>Europe</option>
+            <option value="Rest of the World" {% if inputs and inputs.country == 'Rest of the World' %}selected{% endif %}>Rest of the World</option>
         </select><br><br>
         <label>AI Message Volume (per month):</label>
-        <input type="text" name="ai_volume" class="comma-number" required><br><br>
+        <input type="text" name="ai_volume" class="comma-number" required value="{{ inputs.ai_volume if inputs and inputs.ai_volume is defined else '' }}"><br><br>
         <label>Advanced Message Volume (per month):</label>
-        <input type="text" name="advanced_volume" class="comma-number" required><br><br>
+        <input type="text" name="advanced_volume" class="comma-number" required value="{{ inputs.advanced_volume if inputs and inputs.advanced_volume is defined else '' }}"><br><br>
         <label>Basic Marketing Message Volume (per month):</label>
-        <input type="text" name="basic_marketing_volume" class="comma-number" required><br><br>
+        <input type="text" name="basic_marketing_volume" class="comma-number" required value="{{ inputs.basic_marketing_volume if inputs and inputs.basic_marketing_volume is defined else '' }}"><br><br>
         <label>Basic Utility/Authentication Message Volume (per month):</label>
-        <input type="text" name="basic_utility_volume" class="comma-number" required><br><br>
+        <input type="text" name="basic_utility_volume" class="comma-number" required value="{{ inputs.basic_utility_volume if inputs and inputs.basic_utility_volume is defined else '' }}"><br><br>
         <label>Minimum Platform Fee:</label>
         <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly><br>
         <small>This is the minimum platform fee for the selected country. It cannot be edited.</small><br><br>
         <label>BFSI Tier:</label>
         <select name="bfsi_tier">
-            <option value="NA">NA</option>
-            <option value="Tier 1">Tier 1</option>
-            <option value="Tier 2">Tier 2</option>
-            <option value="Tier 3">Tier 3</option>
+            <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>NA</option>
+            <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1</option>
+            <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2</option>
+            <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3</option>
         </select><br><br>
         <label>Personalize Load:</label>
         <select name="personalize_load">
-            <option value="NA">NA</option>
-            <option value="Standard">Standard</option>
-            <option value="Advanced">Advanced</option>
+            <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>NA</option>
+            <option value="Standard" {% if inputs and inputs.personalize_load == 'Standard' %}selected{% endif %}>Standard</option>
+            <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced</option>
         </select><br><br>
         <label>Number of Human Agents (Agent Assist):</label>
         <select name="human_agents">
-            <option value="NA">NA</option>
-            <option value="20+">20+</option>
-            <option value="50+">50+</option>
-            <option value="100+">100+</option>
+            <option value="NA" {% if inputs and inputs.human_agents == 'NA' %}selected{% endif %}>NA</option>
+            <option value="20+" {% if inputs and inputs.human_agents == '20+' %}selected{% endif %}>20+</option>
+            <option value="50+" {% if inputs and inputs.human_agents == '50+' %}selected{% endif %}>50+</option>
+            <option value="100+" {% if inputs and inputs.human_agents == '100+' %}selected{% endif %}>100+</option>
         </select><br><br>
         <label>AI Module (Yes/No):</label>
         <select name="ai_module">
-            <option value="NA">NA</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
+            <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>NA</option>
+            <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
+            <option value="No" {% if inputs and inputs.ai_module == 'No' %}selected{% endif %}>No</option>
         </select><br><br>
         <label>Smart CPaaS:</label>
         <select name="smart_cpaas">
-            <option value="No">No</option>
-            <option value="Yes">Yes</option>
+            <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
+            <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes</option>
         </select><br><br>
         <label>Increased TPS:</label>
         <select name="increased_tps">
-            <option value="NA">NA</option>
-            <option value="250">250 (upto 250 Messages per Second)</option>
-            <option value="1000">1000 (upto 1000 Messages per Second)</option>
+            <option value="NA" {% if inputs and inputs.increased_tps == 'NA' %}selected{% endif %}>NA</option>
+            <option value="250" {% if inputs and inputs.increased_tps == '250' %}selected{% endif %}>250 (upto 250 Messages per Second)</option>
+            <option value="1000" {% if inputs and inputs.increased_tps == '1000' %}selected{% endif %}>1000 (upto 1000 Messages per Second)</option>
         </select><br><br>
         <input type="submit" value="Next: Rate Card">
     </form>
@@ -152,8 +152,35 @@
     </script>
     {% endif %}
 
+    {% if step == 'bundle' %}
+    <form method="post">
+        <h2>Create a Messaging Bundle?</h2>
+        <p>Would you like to create a messaging bundle and lock in a fixed price for your monthly messaging volume?</p>
+        <label>
+            <input type="radio" name="bundle_choice" value="Yes" required> Yes
+        </label>
+        <label>
+            <input type="radio" name="bundle_choice" value="No" required> No
+        </label>
+        <br><br>
+        <input type="hidden" name="step" value="bundle">
+        <input type="submit" value="Continue">
+    </form>
+    {% endif %}
+
     {% if step == 'results' %}
         <h2>Results</h2>
+        {% if bundle_details %}
+        <h3>Messaging Bundle Summary</h3>
+        <table>
+            <tr><th>Number of Messages</th><td>{{ bundle_details.total_volume }}</td></tr>
+            <tr><th>Bundle Price (per message)</th><td>{{ currency_symbol }}{{ bundle_details.avg_price }}</td></tr>
+            <tr><th>Total Bundle Cost</th><td>{{ currency_symbol }}{{ bundle_details.bundle_cost }}</td></tr>
+            <tr><th>Overage Price (per message)</th><td>{{ currency_symbol }}{{ bundle_details.overage_price }}</td></tr>
+            <tr><th>Inclusion</th><td>{{ bundle_details.inclusion_text }}</td></tr>
+        </table>
+        <br>
+        {% endif %}
         <table>
             <tr>
                 <th>Line Item</th>
@@ -295,6 +322,19 @@
         <form method="get">
             <input type="submit" value="Start Over">
         </form>
+    {% endif %}
+
+    {% if step != 'volumes' %}
+    <form method="post" style="display:inline;">
+        <input type="hidden" name="step" value="volumes">
+        <input type="submit" value="Edit Volumes">
+    </form>
+    {% endif %}
+    {% if step != 'prices' %}
+    <form method="post" style="display:inline;">
+        <input type="hidden" name="step" value="prices">
+        <input type="submit" value="Edit Prices">
+    </form>
     {% endif %}
 </body>
 </html>
