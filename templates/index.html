@@ -209,6 +209,17 @@
                 <td>{{ currency_symbol }}{{ '{:,.0f}'.format(line.overage_price or 0) if ((line.overage_price or 0) % 1) == 0 else '{:,.3f}'.format(line.overage_price or 0) }}</td>
             </tr>
             {% endfor %}
+            <tr>
+                <td>Platform Fee</td>
+                <td>
+                    <ul style="margin:0; padding-left:18px;">
+                        {% for comp in session.selected_components %}
+                            <li>{{ comp }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td colspan="2" style="text-align:right;">{{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</td>
+            </tr>
         </table>
         <p><b>Total Bundle Cost (messages only):</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.bundle_cost or 0) if ((bundle_details.bundle_cost or 0) % 1) == 0 else '{:,.3f}'.format(bundle_details.bundle_cost or 0) }}</p>
         <p><b>Total Bundle Price (Platform Fee + Bundle):</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.total_bundle_price or 0) if ((bundle_details.total_bundle_price or 0) % 1) == 0 else '{:,.3f}'.format(bundle_details.total_bundle_price or 0) }}</p>
@@ -234,9 +245,6 @@
                 <td style="text-align:right;">{{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</td>
             </tr>
         </table>
-        
-        <h4>Total Charges per Month</h4>
-        <p><b>Total Monthly Charges:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(results.revenue or 0) if ((results.revenue or 0) % 1) == 0 else '{:,.3f}'.format(results.revenue or 0) }}</p>
         
         <h4>Inclusions</h4>
         <ul>
