@@ -223,15 +223,9 @@
         
         <h4>Inclusions</h4>
         <ul>
-            <li>80 TPS</li>
-            <li>Journey Builder Lite</li>
-            <li>Campaign Manager</li>
-            <li>CTWA - (Meta/Tiktok/Google)</li>
-            <li>Agent Assist < 20 Agents</li>
-            <li>Personalize upto 1 Million profiles</li>
-            {% if bundle_details %}
-            <li>Message bundle as per table above</li>
-            {% endif %}
+            {% for inc in final_inclusions %}
+                <li>{{ inc }}</li>
+            {% endfor %}
         </ul>
         
         <hr>

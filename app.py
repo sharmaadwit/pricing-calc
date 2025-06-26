@@ -291,40 +291,21 @@ def index():
             ],
         }
 
-        # Determine which inclusions to show
-        selected_inclusions = []
-        # Check for any additional options
-        has_additional = False
+        # Build dynamic inclusions list
+        final_inclusions = inclusions['Platform Fee Used for Margin Calculation'][:]
         for label, value in user_selections:
             if label == 'BFSI Tier' and value in ['Tier 1', 'Tier 2', 'Tier 3']:
-                selected_inclusions.extend(inclusions.get(f'BFSI Tier {value.split(" ")[-1]}', []))
-                has_additional = True
+                final_inclusions += inclusions.get(f'BFSI Tier {value.split(" ")[-1]}', [])
             if label == 'Personalize Load' and value in ['Standard', 'Advanced']:
-                selected_inclusions.extend(inclusions.get(f'Personalize Load {value}', []))
-                has_additional = True
+                final_inclusions += inclusions.get(f'Personalize Load {value}', [])
             if label == 'AI Module' and value == 'Yes':
-                selected_inclusions.extend(inclusions.get('AI Module Yes', []))
-                has_additional = True
+                final_inclusions += inclusions.get('AI Module Yes', [])
             if label == 'Human Agents' and value in ['20+', '50+', '100+']:
-                selected_inclusions.extend(inclusions.get(f'Human Agents {value}', []))
-                has_additional = True
+                final_inclusions += inclusions.get(f'Human Agents {value}', [])
             if label == 'Smart CPaaS' and value == 'Yes':
-                selected_inclusions.extend(inclusions.get('Smart CPaaS Yes', []))
-                has_additional = True
+                final_inclusions += inclusions.get('Smart CPaaS Yes', [])
             if label == 'Increased TPS' and value in ['250', '1000']:
-                selected_inclusions.extend(inclusions.get(f'Increased TPS {value}', []))
-                has_additional = True
-        if has_additional:
-            inclusions['Platform Fee Used for Margin Calculation'] = selected_inclusions
-        else:
-            inclusions['Platform Fee Used for Margin Calculation'] = [
-                '80 TPS',
-                'Journey Builder Lite',
-                'Campaign Manager',
-                'CTWA - (Meta/Tiktok)',
-                'Agent Assist < 20 Agents',
-                'Personalize upto 1 Million profiles and external events not supported',
-            ]
+                final_inclusions += inclusions.get(f'Increased TPS {value}', [])
 
         session['results'] = results
         session['chosen_platform_fee'] = chosen_platform_fee
@@ -426,7 +407,8 @@ def index():
             platform_fee_used=platform_fee_used,
             user_selections=user_selections,
             inclusions=inclusions,
-            bundle_details=bundle_details
+            bundle_details=bundle_details,
+            final_inclusions=final_inclusions
         )
 
     # Default: show volume input form
