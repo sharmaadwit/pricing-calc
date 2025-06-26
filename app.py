@@ -160,6 +160,16 @@ def index():
         suggested_advanced = get_suggested_price(country, 'advanced', advanced_volume)
         suggested_marketing = get_suggested_price(country, 'basic_marketing', basic_marketing_volume)
         suggested_utility = get_suggested_price(country, 'basic_utility', basic_utility_volume)
+        # Calculate rate card platform fee for discount check
+        rate_card_platform_fee, _ = calculate_platform_fee(
+            country,
+            inputs.get('bfsi_tier', 'NA'),
+            inputs.get('personalize_load', 'NA'),
+            inputs.get('human_agents', 'NA'),
+            inputs.get('ai_module', 'NA'),
+            inputs.get('smart_cpaas', 'No'),
+            inputs.get('increased_tps', 'NA')
+        )
         discount_errors = []
         if ai_price < 0.5 * suggested_ai:
             discount_errors.append("AI Message price is less than 50% of the rate card.")
@@ -169,6 +179,9 @@ def index():
             discount_errors.append("Basic Marketing Message price is less than 50% of the rate card.")
         if basic_utility_price < 0.5 * suggested_utility:
             discount_errors.append("Basic Utility/Authentication Message price is less than 50% of the rate card.")
+        # Platform fee discount check
+        if platform_fee < 0.5 * rate_card_platform_fee:
+            discount_errors.append("Platform Fee is less than 50% of the rate card platform fee.")
         if discount_errors:
             for msg in discount_errors:
                 flash(msg, 'error')
