@@ -92,7 +92,7 @@
             <option value="250" {% if inputs and inputs.increased_tps == '250' %}selected{% endif %}>250 (upto 250 Messages per Second)</option>
             <option value="1000" {% if inputs and inputs.increased_tps == '1000' %}selected{% endif %}>1000 (upto 1000 Messages per Second)</option>
         </select><br>
-        <small>Required to support high colume campaigns</small><br><br>
+        <small>Required to support high volume campaigns</small><br><br>
         <label>Number of Human Agents (Agent Assist):</label>
         <select name="human_agents">
             <option value="NA" {% if inputs and inputs.human_agents == 'NA' %}selected{% endif %}>NA</option>
@@ -238,6 +238,8 @@
         
         <h3>Section 2: Internal - Not to be shared</h3>
         <h4>Margin and Cost Details</h4>
+        <p><b>Chosen Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</p>
+        <p><b>Rate Card Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(rate_card_platform_fee or 0) if ((rate_card_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(rate_card_platform_fee or 0) }}</p>
         <table>
             <tr>
                 <th>Line Item</th>
