@@ -314,15 +314,15 @@
     {% endif %}
 
     {% if step != 'volumes' %}
-    <form method="post" style="display:inline;">
+    <form method="post" style="display:inline;" onsubmit="event.preventDefault(); alert('Coming soon'); return false;">
         <input type="hidden" name="step" value="volumes">
-        <input type="submit" value="Edit Volumes">
+        <input type="submit" value="Edit Volumes" disabled style="opacity:0.5; cursor:not-allowed;">
     </form>
     {% endif %}
     {% if step != 'prices' %}
-    <form method="post" style="display:inline;">
+    <form method="post" style="display:inline;" onsubmit="event.preventDefault(); alert('Coming soon'); return false;">
         <input type="hidden" name="step" value="prices">
-        <input type="submit" value="Edit Prices">
+        <input type="submit" value="Edit Prices" disabled style="opacity:0.5; cursor:not-allowed;">
     </form>
     {% endif %}
 </body>

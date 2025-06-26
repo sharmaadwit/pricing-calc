@@ -5,6 +5,9 @@ import os
 # from googleapiclient.discovery import build
 # from google.oauth2.credentials import Credentials
 import re
+import datetime
+from collections import Counter, defaultdict
+import statistics
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
@@ -22,6 +25,21 @@ COUNTRY_CURRENCY = {
 }
 
 SECRET_ANALYTICS_KEYWORD = "letmein123"
+
+# Module-level global for analytics
+analytics_data = {
+    'calculations': 0,
+    'calculations_by_day': defaultdict(int),
+    'calculations_by_week': defaultdict(int),
+    'country_counter': Counter(),
+    'platform_fee_options': Counter(),
+    'platform_fee_entries': [],
+    'message_volumes': {'ai': [], 'advanced': [], 'basic_marketing': [], 'basic_utility': []},
+    'discount_warnings': Counter(),
+    'platform_fee_discount_triggered': 0,
+    'margin_chosen': [],
+    'margin_rate_card': [],
+}
 
 def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas, increased_tps='NA'):
     # 1. Minimum platform fee
@@ -500,6 +518,37 @@ def index():
         except Exception:
             results['revenue'] = 0.0
 
+        # Before analytics tracking, ensure discount_errors is always defined
+        if 'discount_errors' not in locals():
+            discount_errors = []
+        # In-memory analytics (resets on restart)
+        now = datetime.datetime.now()
+        day_str = now.strftime('%Y-%m-%d')
+        week_str = now.strftime('%Y-W%U')
+        analytics_data['calculations'] += 1
+        analytics_data['calculations_by_day'][day_str] += 1
+        analytics_data['calculations_by_week'][week_str] += 1
+        analytics_data['country_counter'][inputs.get('country', 'Unknown')] += 1
+        analytics_data['platform_fee_options'][inputs.get('platform_fee', 'Unknown')] += 1
+        analytics_data['platform_fee_entries'].append(float(pricing_inputs.get('platform_fee', 0)))
+        analytics_data['message_volumes']['ai'].append(float(inputs.get('ai_volume', 0)))
+        analytics_data['message_volumes']['advanced'].append(float(inputs.get('advanced_volume', 0)))
+        analytics_data['message_volumes']['basic_marketing'].append(float(inputs.get('basic_marketing_volume', 0)))
+        analytics_data['message_volumes']['basic_utility'].append(float(inputs.get('basic_utility_volume', 0)))
+        if discount_errors:
+            for msg in discount_errors:
+                analytics_data['discount_warnings'][msg] += 1
+                if 'platform fee' in msg.lower():
+                    analytics_data['platform_fee_discount_triggered'] += 1
+        # Track margin
+        try:
+            margin_chosen = float(results.get('margin', '0').replace('%',''))
+            margin_rate_card = float(results.get('suggested_margin', '0').replace('%',''))
+            analytics_data['margin_chosen'].append(margin_chosen)
+            analytics_data['margin_rate_card'].append(margin_rate_card)
+        except Exception:
+            pass
+
         return render_template(
             'index.html',
             step='results',
@@ -677,7 +726,7 @@ def analytics():
     if request.method == 'POST':
         keyword = request.form.get('keyword', '')
         if keyword == SECRET_ANALYTICS_KEYWORD:
-            return render_template('analytics.html', authorized=True)
+            return render_template('analytics.html', authorized=True, analytics=analytics_data)
         else:
             flash('Incorrect keyword.', 'error')
             return render_template('analytics.html', authorized=False)
