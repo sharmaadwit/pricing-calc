@@ -266,6 +266,50 @@ def index():
                 committed_amount = float(committed_amount.replace(',', '')) if committed_amount else 0.0
             except Exception:
                 committed_amount = 0.0
+            # Build line_items for display
+            line_items = []
+            for label, key, price_key in [
+                ("AI Message", 'ai_volume', 'ai_price'),
+                ("Advanced Message", 'advanced_volume', 'advanced_price'),
+                ("Basic Marketing Message", 'basic_marketing_volume', 'basic_marketing_price'),
+                ("Basic Utility/Authentication Message", 'basic_utility_volume', 'basic_utility_price'),
+            ]:
+                agreed_price = float(pricing_inputs.get(price_key, 0))
+                overage_price = round(agreed_price * 1.2, 4)
+                line_items.append({
+                    'label': label,
+                    'volume': 0,
+                    'chosen_price': agreed_price,
+                    'suggested_price': '',
+                    'overage_price': overage_price,
+                    'meta_cost': '',
+                    'final_price': '',
+                    'revenue': '',
+                    'suggested_revenue': ''
+                })
+            # Add platform fee as a line item
+            line_items.append({
+                'label': 'Platform Fee (Chosen)',
+                'volume': '',
+                'chosen_price': '',
+                'suggested_price': '',
+                'overage_price': '',
+                'meta_cost': '',
+                'final_price': '',
+                'revenue': committed_amount,
+                'suggested_revenue': ''
+            })
+            results = {
+                'line_items': line_items,
+                'platform_fee': committed_amount,
+                'revenue': committed_amount,
+                'suggested_revenue': committed_amount,
+                'channel_cost': 0,
+                'ai_costs': 0,
+                'total_costs': 0,
+                'margin': '',
+                'suggested_margin': ''
+            }
             bundle_details = {
                 'committed_amount': committed_amount,
                 'lines': [],
@@ -507,23 +551,14 @@ def index():
             except (ValueError, TypeError):
                 return str(val) if val is not None else '0'
         
-        # Format the main results
-        # Don't format revenue as string - let template handle formatting
-        # results['revenue'] = fmt(results.get('revenue', 0))
-        # results['suggested_revenue'] = fmt(results.get('suggested_revenue', 0))
-        results['channel_cost'] = fmt(results.get('channel_cost', 0))
-        results['ai_costs'] = fmt(results.get('ai_costs', 0))
-        results['total_costs'] = fmt(results.get('total_costs', 0))
-        
-        # Format line item numbers
+        # Format line item numbers (do not format revenue fields)
         for item in results.get('line_items', []):
             item['volume'] = fmt(item.get('volume', 0))
             item['chosen_price'] = fmt(item.get('chosen_price', 0))
             item['suggested_price'] = fmt(item.get('suggested_price', 0))
             item['overage_price'] = fmt(item.get('overage_price', 0))
-            item['revenue'] = fmt(item.get('revenue', 0))
-            item['suggested_revenue'] = fmt(item.get('suggested_revenue', 0))
-        
+            # Do NOT format item['revenue'] or item['suggested_revenue'] here
+
         # Ensure all numeric values are floats for template formatting
         try:
             chosen_platform_fee = float(chosen_platform_fee)

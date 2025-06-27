@@ -315,8 +315,8 @@
                 <td>{{ item.chosen_price }}</td>
                 <td>{{ item.suggested_price }}</td>
                 <td>{{ item.overage_price }}</td>
-                <td>{{ currency_symbol }}{% if item.revenue|float % 1 == 0 %}{{ '{:,.0f}'.format(item.revenue|float) }}{% else %}{{ '{:,.2f}'.format(item.revenue|float) }}{% endif %}</td>
-                <td>{{ currency_symbol }}{% if item.suggested_revenue|float % 1 == 0 %}{{ '{:,.0f}'.format(item.suggested_revenue|float) }}{% else %}{{ '{:,.2f}'.format(item.suggested_revenue|float) }}{% endif %}</td>
+                <td>{{ currency_symbol }}{% if item.revenue is not none and item.revenue % 1 == 0 %}{{ '{:,.0f}'.format(item.revenue) }}{% elif item.revenue is not none %}{{ '{:,.2f}'.format(item.revenue) }}{% else %}0{% endif %}</td>
+                <td>{{ currency_symbol }}{% if item.suggested_revenue is not none and item.suggested_revenue % 1 == 0 %}{{ '{:,.0f}'.format(item.suggested_revenue) }}{% elif item.suggested_revenue is not none %}{{ '{:,.2f}'.format(item.suggested_revenue) }}{% else %}0{% endif %}</td>
             </tr>
             {% endfor %}
         </table>
@@ -341,6 +341,7 @@
         <h4>Committed Amount</h4>
         <p><b>Committed Monthly Amount:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.committed_amount or 0) if ((bundle_details.committed_amount or 0) % 1) == 0 else '{:,.2f}'.format(bundle_details.committed_amount or 0) }}</p>
         <p>Your committed amount will be drawn down as you use the platform, based on the agreed rates for each message type.</p>
+        <p style="margin-top:1em; color:#333; font-size:1.05em;"><b>Note:</b> The committed bundle will be consumed as per message type and volumes consumed within the month. In case the consumption is over the committed amount, overage prices will apply.</p>
         {% endif %}
     {% endif %}
 
