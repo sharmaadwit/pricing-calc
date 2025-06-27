@@ -401,13 +401,15 @@ def index():
         # Personalize Load (show only the selected tier's inclusion, not base)
         personalize_load = inputs.get('personalize_load', 'NA')
         if personalize_load in ['Standard', 'Advanced']:
-            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Personalize') and not inc.startswith('Standard') and not inc.startswith('Advanced')]
+            # Remove all Personalize inclusions from final_inclusions
+            final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Standard') or inc.startswith('Advanced'))]
             final_inclusions += inclusions.get(f'Personalize Load {personalize_load}', [])
             selected_components.append(f"Personalize Load: {personalize_load}")
         # Human Agents (show only the selected tier's inclusion, not base)
         human_agents = inputs.get('human_agents', 'NA')
         if human_agents in ['20+', '50+', '100+']:
-            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Agent Assist') and not inc.startswith('Upto') and not inc.startswith('More than')]
+            # Remove all Human Agents inclusions from final_inclusions
+            final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Agent Assist') or inc.startswith('Upto') or inc.startswith('More than'))]
             final_inclusions += inclusions.get(f'Human Agents {human_agents}', [])
             selected_components.append(f"Human Agents: {human_agents}")
         # AI Module
@@ -420,9 +422,14 @@ def index():
         if smart_cpaas == 'Yes':
             final_inclusions += inclusions.get('Smart CPaaS Yes', [])
             selected_components.append("Smart CPaaS: Yes")
+        else:
+            # Remove 'Auto failover between channels' if Smart CPaaS is not Yes
+            final_inclusions = [inc for inc in final_inclusions if inc != 'Auto failover between channels']
         # Increased TPS
         increased_tps = inputs.get('increased_tps', 'NA')
         if increased_tps in ['250', '1000']:
+            # Remove '80 TPS' if a higher TPS is selected
+            final_inclusions = [inc for inc in final_inclusions if inc != '80 TPS']
             final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
             selected_components.append(f"Increased TPS: {increased_tps}")
         # Remove duplicates from inclusions
