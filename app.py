@@ -297,6 +297,13 @@ def index():
                 'overage_price': '',
                 'revenue': chosen_platform_fee
             })
+            line_items.append({
+                'line_item': 'Committed Amount',
+                'volume': '',
+                'chosen_price': '',
+                'overage_price': '',
+                'revenue': committed_amount
+            })
             results = {
                 'line_items': line_items,
                 'platform_fee': chosen_platform_fee,
@@ -606,6 +613,7 @@ def index():
             step='results',
             currency_symbol=currency_symbol,
             inclusions=final_inclusions,
+            final_inclusions=final_inclusions,
             results=results,
             bundle_details=bundle_details,
             expected_invoice_amount=expected_invoice_amount,
