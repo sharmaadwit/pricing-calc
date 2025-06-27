@@ -369,6 +369,11 @@
             <div style="font-size:1.08em; margin-top:12px;">
               <b>Note:</b> This section is for internal use only and should not be shared with the customer.
             </div>
+            {% if bundle_details and bundle_details.committed_amount is defined %}
+            <div style="font-size:1.15em; margin-top:18px; color:#1a2a3a;">
+              <b>Total Margin (as per formula above):</b> {{ results.margin }}
+            </div>
+            {% endif %}
           </div>
         </div>
     {% endif %}

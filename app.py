@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, session, redirect, url_for, flash
-from calculator import calculate_pricing, get_suggested_price, price_tiers
+from calculator import calculate_pricing, get_suggested_price, price_tiers, meta_costs_table
 import os
 # from google_auth_oauthlib.flow import Flow
 # from googleapiclient.discovery import build
@@ -624,6 +624,49 @@ def index():
             analytics_data['margin_rate_card'].append(margin_rate_card)
         except Exception:
             pass
+
+        # Calculate margin for committed path using the provided formula
+        # Platform Fee + (AI Fee × AI Volume) + (Advanced Fee × Advanced Volume) + (Basic Marketing Fee × Basic Marketing Volume) + (Basic Utility Fee × Basic Utility Volume) + (Marketing Cost × Basic Marketing Volume) + (Utility Cost × Basic Utility Volume)
+        # Numerator: above - [Marketing Cost × Basic Marketing Volume + Utility Cost × Basic Utility Volume + AI Unit Cost × AI Volume]
+        # Denominator: Platform Fee + (AI Fee × AI Volume) + (Advanced Fee × Advanced Volume) + (Basic Marketing Fee × Basic Marketing Volume) + (Basic Utility Fee × Basic Utility Volume) + (Marketing Cost × Basic Marketing Volume) + (Utility Cost × Basic Utility Volume)
+        ai_fee = float(pricing_inputs.get('ai_price', 0))
+        advanced_fee = float(pricing_inputs.get('advanced_price', 0))
+        basic_marketing_fee = float(pricing_inputs.get('basic_marketing_price', 0))
+        basic_utility_fee = float(pricing_inputs.get('basic_utility_price', 0))
+        ai_vol = float(inputs.get('ai_volume', 0))
+        adv_vol = float(inputs.get('advanced_volume', 0))
+        basic_marketing_vol = float(inputs.get('basic_marketing_volume', 0))
+        basic_utility_vol = float(inputs.get('basic_utility_volume', 0))
+        country = inputs.get('country', 'India')
+        meta_costs = meta_costs_table.get(country, meta_costs_table['India'])
+        marketing_cost = meta_costs['marketing']
+        utility_cost = meta_costs['utility']
+        ai_unit_cost = meta_costs['ai']
+        platform_fee_val = float(pricing_inputs.get('platform_fee', 0))
+        numerator = (
+            platform_fee_val
+            + (ai_fee * ai_vol)
+            + (advanced_fee * adv_vol)
+            + (basic_marketing_fee * basic_marketing_vol)
+            + (basic_utility_fee * basic_utility_vol)
+            + (marketing_cost * basic_marketing_vol)
+            + (utility_cost * basic_utility_vol)
+        ) - (
+            (marketing_cost * basic_marketing_vol)
+            + (utility_cost * basic_utility_vol)
+            + (ai_unit_cost * ai_vol)
+        )
+        denominator = (
+            platform_fee_val
+            + (ai_fee * ai_vol)
+            + (advanced_fee * adv_vol)
+            + (basic_marketing_fee * basic_marketing_vol)
+            + (basic_utility_fee * basic_utility_vol)
+            + (marketing_cost * basic_marketing_vol)
+            + (utility_cost * basic_utility_vol)
+        )
+        margin_percent = (numerator / denominator * 100) if denominator > 0 else 0
+        results['margin'] = f"{margin_percent:.2f}%"
 
         return render_template(
             'index.html',
