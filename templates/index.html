@@ -369,7 +369,7 @@
             <div style="font-size:1.08em; margin-top:12px;">
               <b>Note:</b> This section is for internal use only and should not be shared with the customer.
             </div>
-            {% if results.margin %}
+            {% if results.margin and (inputs.ai_volume|float > 0 or inputs.advanced_volume|float > 0 or inputs.basic_marketing_volume|float > 0 or inputs.basic_utility_volume|float > 0) %}
             <div style="font-size:1.15em; margin-top:18px; color:#1a2a3a;">
               <b>Total Margin (as per formula above):</b> {{ results.margin }}
             </div>
