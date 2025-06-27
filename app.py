@@ -45,69 +45,56 @@ def initialize_inclusions():
     """Initialize the inclusions dictionary with actual inclusion data."""
     inclusions = {
         'Platform Fee Used for Margin Calculation': [
-            'Platform infrastructure and support',
-            'Basic API access and documentation',
-            'Standard SLA and uptime guarantees'
+            '80 TPS,',
+            'Journey Builder Lite,',
+            'Campaign Manager,',
+            'CTWA - (Meta, Tiktok),',
+            'Agent Assist < 20 Agents,',
+            'personalize lite upto 1 million records - no advanced events'
         ],
         'BFSI Tier 1': [
-            'Audit trail for 6 months',
-            'Conversational Data Encryption',
-            'Data Encryption at rest'
+            'Auditing to be stored for XX days for JB PRO+Flows',
+            'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs)'
         ],
         'BFSI Tier 2': [
-            'Audit trail for 12 months',
-            'Conversational Data Encryption',
-            'Data Encryption at rest',
-            'Enhanced compliance reporting'
+            'Auditing to be stored for XX days for JB PRO+Flows',
+            'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) on Agent Assist',
+            'Conversational Data Encryption, Logging,Auditing,Purging (Data and Logs) on AI Agents',
+            'Encryption, Auditing,Logging on Campaign Manager'
         ],
         'BFSI Tier 3': [
-            'Audit trail for 24 months',
-            'Conversational Data Encryption',
-            'Data Encryption at rest',
-            'Enhanced compliance reporting',
-            'Dedicated compliance officer'
+            'Auditing to be stored for XX days for JB PRO+Flows',
+            'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) on Agent Assist',
+            'Conversational Data Encryption, Logging,Auditing,Purging (Data and Logs) on AI Agents',
+            'Encryption, Auditing,Logging on Campaign Manager',
+            'Data Encryption, Logging, Auditing, Purging (Logs) on  Reatargetting and Personalize'
         ],
         'Personalize Load Standard': [
-            'Standard personalization features',
-            'Basic template management',
-            'Standard load balancing'
+            'Standard - upto 5 million records, no external events supported'
         ],
         'Personalize Load Advanced': [
-            'Advanced personalization features',
-            'Advanced template management',
-            'Advanced load balancing',
-            'Real-time personalization engine'
-        ],
-        'Human Agents 20+': [
-            'Agent Assist for up to 20 agents',
-            'Basic agent management tools'
-        ],
-        'Human Agents 50+': [
-            'Agent Assist for up to 50 agents',
-            'Advanced agent management tools',
-            'Agent performance analytics'
-        ],
-        'Human Agents 100+': [
-            'Agent Assist for more than 100 agents',
-            'Advanced agent management tools',
-            'Agent performance analytics',
-            'Custom agent workflows'
+            'Advanced - upto 10 million records, external events supported'
         ],
         'AI Module Yes': [
-            'AI-powered message optimization',
-            'Smart routing and delivery',
-            'AI-driven analytics and insights'
-        ],
-        'Smart CPaaS Yes': [
-            'Auto failover between channels',
-            'Intelligent channel selection',
-            'Smart retry mechanisms'
+            'if yes, Workspace Configuration and Data retarining UI'
         ],
         'Increased TPS 250': [
-            '80 TPS with burst capability up to 250 TPS'
+            '250 - Upto 250 messages per second'
         ],
         'Increased TPS 1000': [
-            '80 TPS with burst capability up to 1000 TPS'
+            '1000 - upto 1000 messages per second'
+        ],
+        'Human Agents 20+': [
+            '20-50 agents'
+        ],
+        'Human Agents 50+': [
+            '50-100 agents'
+        ],
+        'Human Agents 100+': [
+            'More than 100 agents, advanced routing rules'
+        ],
+        'Smart CPaaS Yes': [
+            'Intelligent faiover between channels'
         ]
     }
     return inclusions
@@ -407,39 +394,37 @@ def index():
         # Platform base features (always included)
         final_inclusions += inclusions['Platform Fee Used for Margin Calculation']
 
-        # Personalize Load (contradiction handling)
+        # BFSI Tier (only the highest selected)
+        bfsi_tier = inputs.get('bfsi_tier', 'NA')
+        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
+            final_inclusions += inclusions[f'BFSI Tier {bfsi_tier.split(" ")[-1]}']
+
+        # Personalize Load (only one)
         personalize_load = inputs.get('personalize_load', 'NA')
         if personalize_load == 'Standard':
             final_inclusions += inclusions['Personalize Load Standard']
         elif personalize_load == 'Advanced':
             final_inclusions += inclusions['Personalize Load Advanced']
-        elif personalize_load not in ['NA', 'No', None]:
-            # If both Standard and Advanced are somehow selected, prioritize Advanced
-            contradiction_warning = 'Contradictory Personalize Load options selected. Showing Advanced inclusions only.'
-            final_inclusions += inclusions['Personalize Load Advanced']
 
-        # Smart CPaaS
-        if inputs.get('smart_cpaas', 'No') == 'Yes':
-            final_inclusions += inclusions['Smart CPaaS Yes']
+        # Human Agents (only the highest)
+        human_agents = inputs.get('human_agents', 'NA')
+        if human_agents in ['20+', '50+', '100+']:
+            final_inclusions += inclusions[f'Human Agents {human_agents}']
+
+        # Increased TPS (only the highest)
+        increased_tps = inputs.get('increased_tps', 'NA')
+        if increased_tps == '1000':
+            final_inclusions += inclusions['Increased TPS 1000']
+        elif increased_tps == '250':
+            final_inclusions += inclusions['Increased TPS 250']
 
         # AI Module
         if inputs.get('ai_module', 'No') == 'Yes':
             final_inclusions += inclusions['AI Module Yes']
 
-        # Human Agents
-        human_agents = inputs.get('human_agents', 'NA')
-        if human_agents in ['20+', '50+', '100+']:
-            final_inclusions += inclusions[f'Human Agents {human_agents}']
-
-        # BFSI Tier
-        bfsi_tier = inputs.get('bfsi_tier', 'NA')
-        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
-            final_inclusions += inclusions[f'BFSI Tier {bfsi_tier.split(" ")[-1]}']
-
-        # Increased TPS
-        increased_tps = inputs.get('increased_tps', 'NA')
-        if increased_tps in ['250', '1000']:
-            final_inclusions += inclusions[f'Increased TPS {increased_tps}']
+        # Smart CPaaS
+        if inputs.get('smart_cpaas', 'No') == 'Yes':
+            final_inclusions += inclusions['Smart CPaaS Yes']
 
         # Pass contradiction_warning to the template for display if needed
         session['selected_components'] = user_selections
@@ -662,38 +647,37 @@ def index():
         # Platform base features (always included)
         final_inclusions += inclusions['Platform Fee Used for Margin Calculation']
 
-        # Personalize Load (contradiction handling)
+        # BFSI Tier (only the highest selected)
+        bfsi_tier = inputs.get('bfsi_tier', 'NA')
+        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
+            final_inclusions += inclusions[f'BFSI Tier {bfsi_tier.split(" ")[-1]}']
+
+        # Personalize Load (only one)
+        personalize_load = inputs.get('personalize_load', 'NA')
         if personalize_load == 'Standard':
             final_inclusions += inclusions['Personalize Load Standard']
         elif personalize_load == 'Advanced':
             final_inclusions += inclusions['Personalize Load Advanced']
-        elif personalize_load not in ['NA', 'No', None]:
-            # If both Standard and Advanced are somehow selected, prioritize Advanced
-            contradiction_warning = 'Contradictory Personalize Load options selected. Showing Advanced inclusions only.'
-            final_inclusions += inclusions['Personalize Load Advanced']
 
-        # Smart CPaaS
-        if inputs.get('smart_cpaas', 'No') == 'Yes':
-            final_inclusions += inclusions['Smart CPaaS Yes']
+        # Human Agents (only the highest)
+        human_agents = inputs.get('human_agents', 'NA')
+        if human_agents in ['20+', '50+', '100+']:
+            final_inclusions += inclusions[f'Human Agents {human_agents}']
+
+        # Increased TPS (only the highest)
+        increased_tps = inputs.get('increased_tps', 'NA')
+        if increased_tps == '1000':
+            final_inclusions += inclusions['Increased TPS 1000']
+        elif increased_tps == '250':
+            final_inclusions += inclusions['Increased TPS 250']
 
         # AI Module
         if inputs.get('ai_module', 'No') == 'Yes':
             final_inclusions += inclusions['AI Module Yes']
 
-        # Human Agents
-        human_agents = inputs.get('human_agents', 'NA')
-        if human_agents in ['20+', '50+', '100+']:
-            final_inclusions += inclusions[f'Human Agents {human_agents}']
-
-        # BFSI Tier
-        bfsi_tier = inputs.get('bfsi_tier', 'NA')
-        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
-            final_inclusions += inclusions[f'BFSI Tier {bfsi_tier.split(" ")[-1]}']
-
-        # Increased TPS
-        increased_tps = inputs.get('increased_tps', 'NA')
-        if increased_tps in ['250', '1000']:
-            final_inclusions += inclusions[f'Increased TPS {increased_tps}']
+        # Smart CPaaS
+        if inputs.get('smart_cpaas', 'No') == 'Yes':
+            final_inclusions += inclusions['Smart CPaaS Yes']
 
         # Pass contradiction_warning to the template for display if needed
         session['selected_components'] = user_selections
