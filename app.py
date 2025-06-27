@@ -625,17 +625,17 @@ def index():
         return render_template(
             'index.html',
             step='results',
-            results=results,
-            inputs=inputs,
             currency_symbol=currency_symbol,
+            inclusions=final_inclusions,
+            results=results,
+            bundle_details=bundle_details,
+            expected_invoice_amount=expected_invoice_amount,
             chosen_platform_fee=chosen_platform_fee,
             rate_card_platform_fee=rate_card_platform_fee,
-            platform_fee_used=platform_fee_used,
-            user_selections=user_selections,
-            inclusions=inclusions,
-            bundle_details=bundle_details,
-            final_inclusions=final_inclusions,
-            expected_invoice_amount=expected_invoice_amount
+            platform_fee=chosen_platform_fee,
+            platform_fee_rate_card=rate_card_platform_fee,
+            pricing_table=results['line_items'],
+            user_selections=user_selections
         )
 
     # Defensive: handle GET or POST for edit actions
