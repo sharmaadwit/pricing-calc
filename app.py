@@ -265,13 +265,12 @@ def index():
         bundle_cost = 0
         committed_amount = None
         if all_volumes_zero:
-            # Ask for committed amount
             committed_amount = request.form.get('committed_amount', '')
             try:
                 committed_amount = float(committed_amount.replace(',', '')) if committed_amount else 0.0
             except Exception:
                 committed_amount = 0.0
-            # Build line_items for display
+            # Always build line_items for all message types, with revenue 0
             line_items = []
             for label, key, price_key in [
                 ("AI Message", 'ai_volume', 'ai_price'),
@@ -282,31 +281,40 @@ def index():
                 agreed_price = float(pricing_inputs.get(price_key, 0))
                 overage_price = round(agreed_price * 1.2, 4)
                 line_items.append({
-                    'label': label,
+                    'line_item': label,
                     'volume': 0,
                     'chosen_price': agreed_price,
-                    'suggested_price': '',
                     'overage_price': overage_price,
-                    'meta_cost': '',
-                    'final_price': '',
-                    'revenue': '',
-                    'suggested_revenue': ''
+                    'revenue': 0
                 })
-            # Add platform fee as a line item
+            # Add platform fee rows
+            chosen_platform_fee = float(pricing_inputs.get('platform_fee', 0))
+            rate_card_platform_fee, _ = calculate_platform_fee(
+                inputs['country'],
+                inputs.get('bfsi_tier', 'NA'),
+                inputs.get('personalize_load', 'NA'),
+                inputs.get('human_agents', 'NA'),
+                inputs.get('ai_module', 'NA'),
+                inputs.get('smart_cpaas', 'No'),
+                inputs.get('increased_tps', 'NA')
+            )
             line_items.append({
-                'label': 'Platform Fee (Chosen)',
+                'line_item': 'Platform Fee (Chosen)',
                 'volume': '',
                 'chosen_price': '',
-                'suggested_price': '',
                 'overage_price': '',
-                'meta_cost': '',
-                'final_price': '',
-                'revenue': committed_amount,
-                'suggested_revenue': ''
+                'revenue': chosen_platform_fee
+            })
+            line_items.append({
+                'line_item': 'Platform Fee (Rate Card)',
+                'volume': '',
+                'chosen_price': '',
+                'overage_price': '',
+                'revenue': rate_card_platform_fee
             })
             results = {
                 'line_items': line_items,
-                'platform_fee': committed_amount,
+                'platform_fee': chosen_platform_fee,
                 'revenue': committed_amount,
                 'suggested_revenue': committed_amount,
                 'channel_cost': 0,
@@ -322,7 +330,7 @@ def index():
                 'total_bundle_price': committed_amount,
                 'inclusion_text': 'Your committed amount will be drawn down as you use the platform, based on the agreed rates.'
             }
-            expected_invoice_amount = (committed_amount or 0) + (platform_fee or 0)
+            expected_invoice_amount = (committed_amount or 0) + (chosen_platform_fee or 0)
         else:
             bundle_lines = []
             for label, key, price in [
@@ -379,26 +387,18 @@ def index():
         # Add platform fee line items to results['line_items']
         if 'line_items' in results:
             results['line_items'].append({
-                'label': 'Platform Fee (Chosen)',
+                'line_item': 'Platform Fee (Chosen)',
                 'volume': '',
                 'chosen_price': '',
-                'suggested_price': '',
                 'overage_price': '',
-                'meta_cost': '',
-                'final_price': '',
-                'revenue': chosen_platform_fee,
-                'suggested_revenue': ''
+                'revenue': chosen_platform_fee
             })
             results['line_items'].append({
-                'label': 'Platform Fee (Rate Card)',
+                'line_item': 'Platform Fee (Rate Card)',
                 'volume': '',
                 'chosen_price': '',
-                'suggested_price': '',
                 'overage_price': '',
-                'meta_cost': '',
-                'final_price': '',
-                'revenue': '',
-                'suggested_revenue': rate_card_platform_fee
+                'revenue': rate_card_platform_fee
             })
 
         # Gather non-NA/No selections for display
@@ -557,7 +557,6 @@ def index():
         for item in results.get('line_items', []):
             item['volume'] = fmt(item.get('volume', 0))
             item['chosen_price'] = fmt(item.get('chosen_price', 0))
-            item['suggested_price'] = fmt(item.get('suggested_price', 0))
             item['overage_price'] = fmt(item.get('overage_price', 0))
             # Do NOT format item['revenue'] or item['suggested_revenue'] here
 
