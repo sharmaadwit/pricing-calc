@@ -68,6 +68,7 @@
     {% endwith %}
     <h1>Pricing Calculator</h1>
 
+    {% if step == 'volumes' %}
     <!-- How to Use Guide -->
     <div style="background: #f8fafd; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
       <h3 style="margin-top:0;">How to Use</h3>
@@ -79,28 +80,34 @@
       </ul>
       <h4 style="margin-top:18px;">User Flow Diagram</h4>
       <div style="margin: 18px 0; text-align: center;">
-        <!-- Mermaid SVG export for the user flow diagram -->
-        <svg width="600" height="260" viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg">
+        <!-- Horizontally aligned SVG user flow diagram -->
+        <svg width="900" height="160" viewBox="0 0 900 160" xmlns="http://www.w3.org/2000/svg">
           <g>
-            <rect x="40" y="10" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
-            <text x="130" y="35" text-anchor="middle" font-size="16" fill="#1a2a3a">User lands on Home Page</text>
-            <rect x="40" y="70" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
-            <text x="130" y="95" text-anchor="middle" font-size="16" fill="#1a2a3a">Enter Volumes & Prices</text>
-            <rect x="320" y="70" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
-            <text x="410" y="95" text-anchor="middle" font-size="16" fill="#1a2a3a">Bundle is always created</text>
-            <rect x="40" y="130" width="180" height="40" rx="8" fill="#fffbe6" stroke="#ffc107" stroke-width="2"/>
-            <text x="130" y="155" text-anchor="middle" font-size="16" fill="#7a5a00">Enter Committed Amount</text>
-            <rect x="180" y="190" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
-            <text x="270" y="215" text-anchor="middle" font-size="16" fill="#1a2a3a">Results Page</text>
-            <rect x="420" y="190" width="120" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
-            <text x="480" y="215" text-anchor="middle" font-size="16" fill="#1a2a3a">Start Over</text>
+            <!-- Home Page -->
+            <rect x="30" y="60" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
+            <text x="120" y="85" text-anchor="middle" font-size="16" fill="#1a2a3a">User lands on Home Page</text>
+            <!-- Volumes & Prices -->
+            <rect x="230" y="60" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
+            <text x="320" y="85" text-anchor="middle" font-size="16" fill="#1a2a3a">Enter Volumes & Prices</text>
+            <!-- Committed Amount -->
+            <rect x="430" y="10" width="180" height="40" rx="8" fill="#fffbe6" stroke="#ffc107" stroke-width="2"/>
+            <text x="520" y="35" text-anchor="middle" font-size="16" fill="#7a5a00">Enter Committed Amount</text>
+            <!-- Bundle always created -->
+            <rect x="430" y="110" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
+            <text x="520" y="135" text-anchor="middle" font-size="16" fill="#1a2a3a">Bundle is always created</text>
+            <!-- Results Page -->
+            <rect x="650" y="60" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
+            <text x="740" y="85" text-anchor="middle" font-size="16" fill="#1a2a3a">Results Page</text>
+            <!-- Start Over -->
+            <rect x="850" y="60" width="40" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
+            <text x="870" y="85" text-anchor="middle" font-size="14" fill="#1a2a3a">↺</text>
             <!-- Arrows -->
-            <line x1="130" y1="50" x2="130" y2="70" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
-            <line x1="130" y1="110" x2="130" y2="130" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
-            <line x1="130" y1="110" x2="410" y2="90" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
-            <line x1="130" y1="170" x2="270" y2="190" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
-            <line x1="410" y1="110" x2="410" y2="190" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
-            <line x1="360" y1="210" x2="420" y2="210" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="210" y1="80" x2="230" y2="80" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="410" y1="80" x2="430" y2="30" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="410" y1="80" x2="430" y2="130" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="610" y1="30" x2="650" y2="80" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="610" y1="130" x2="650" y2="80" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="830" y1="80" x2="850" y2="80" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
           </g>
           <defs>
             <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth">
@@ -110,6 +117,7 @@
         </svg>
       </div>
     </div>
+    {% endif %}
 
     {% if step == 'volumes' %}
     <div style="display: flex; flex-direction: row; align-items: flex-start;">
@@ -181,18 +189,6 @@
             <input type="submit" value="Next: Rate Card">
         </form>
       </div>
-      <aside style="width: 340px; margin-left: 32px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); position: sticky; top: 32px;">
-        <h3 style="margin-top: 0;">How to Use This Calculator</h3>
-        <ol style="font-size: 1em; padding-left: 1.2em;">
-          <li>Enter your <b>country</b> and (optionally) message volumes for each type.</li>
-          <li>Select platform fee options and other requirements.</li>
-          <li>Click <b>Next: Rate Card</b> to review and edit suggested prices.</li>
-          <li>Proceed to <b>Bundle</b> or <b>Committed Amount</b> step as needed.</li>
-          <li>View your detailed pricing breakdown and inclusions.</li>
-        </ol>
-        <p style="margin-top: 1.5em; font-size: 0.97em; color: #555;">You can leave message volumes blank if you only want to set a platform fee or get a quote based on committed spend.</p>
-        <a href="#" style="font-size: 0.97em; color: #007bff; text-decoration: underline;">Learn more</a>
-      </aside>
     </div>
     <script>
     function updateMinPlatformFee() {
