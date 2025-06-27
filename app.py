@@ -48,9 +48,13 @@ def initialize_inclusions():
             '80 TPS,',
             'Journey Builder Lite,',
             'Campaign Manager,',
-            'CTWA - (Meta, Tiktok),',
-            'Agent Assist < 20 Agents,',
+            'CTWA - (Meta, Tiktok)'
+        ],
+        'Personalize Load Lite': [
             'personalize lite upto 1 million records - no advanced events'
+        ],
+        'Human Agents <20': [
+            'Agent Assist < 20 Agents,'
         ],
         'BFSI Tier 1': [
             'Auditing to be stored for XX days for JB PRO+Flows',
@@ -394,24 +398,36 @@ def index():
         # Platform base features (always included)
         final_inclusions += inclusions['Platform Fee Used for Margin Calculation']
 
-        # BFSI Tier (only the highest selected)
-        bfsi_tier = inputs.get('bfsi_tier', 'NA')
-        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
-            final_inclusions += inclusions[f'BFSI Tier {bfsi_tier.split(" ")[-1]}']
-
-        # Personalize Load (only one)
+        # Personalize Load (highest only)
         personalize_load = inputs.get('personalize_load', 'NA')
-        if personalize_load == 'Standard':
-            final_inclusions += inclusions['Personalize Load Standard']
-        elif personalize_load == 'Advanced':
+        if personalize_load == 'Advanced':
             final_inclusions += inclusions['Personalize Load Advanced']
+        elif personalize_load == 'Standard':
+            final_inclusions += inclusions['Personalize Load Standard']
+        elif personalize_load == 'Lite' or personalize_load in ['NA', 'No', None]:
+            final_inclusions += inclusions['Personalize Load Lite']
 
-        # Human Agents (only the highest)
+        # BFSI Tier (highest only)
+        bfsi_tier = inputs.get('bfsi_tier', 'NA')
+        if bfsi_tier == 'Tier 3':
+            final_inclusions += inclusions['BFSI Tier 3']
+        elif bfsi_tier == 'Tier 2':
+            final_inclusions += inclusions['BFSI Tier 2']
+        elif bfsi_tier == 'Tier 1':
+            final_inclusions += inclusions['BFSI Tier 1']
+
+        # Human Agents (highest only)
         human_agents = inputs.get('human_agents', 'NA')
-        if human_agents in ['20+', '50+', '100+']:
-            final_inclusions += inclusions[f'Human Agents {human_agents}']
+        if human_agents == '100+':
+            final_inclusions += inclusions['Human Agents 100+']
+        elif human_agents == '50+':
+            final_inclusions += inclusions['Human Agents 50+']
+        elif human_agents == '20+':
+            final_inclusions += inclusions['Human Agents 20+']
+        elif human_agents == '<20' or human_agents in ['NA', 'No', None]:
+            final_inclusions += inclusions['Human Agents <20']
 
-        # Increased TPS (only the highest)
+        # Increased TPS (highest only)
         increased_tps = inputs.get('increased_tps', 'NA')
         if increased_tps == '1000':
             final_inclusions += inclusions['Increased TPS 1000']
@@ -647,24 +663,36 @@ def index():
         # Platform base features (always included)
         final_inclusions += inclusions['Platform Fee Used for Margin Calculation']
 
-        # BFSI Tier (only the highest selected)
-        bfsi_tier = inputs.get('bfsi_tier', 'NA')
-        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
-            final_inclusions += inclusions[f'BFSI Tier {bfsi_tier.split(" ")[-1]}']
-
-        # Personalize Load (only one)
+        # Personalize Load (highest only)
         personalize_load = inputs.get('personalize_load', 'NA')
-        if personalize_load == 'Standard':
-            final_inclusions += inclusions['Personalize Load Standard']
-        elif personalize_load == 'Advanced':
+        if personalize_load == 'Advanced':
             final_inclusions += inclusions['Personalize Load Advanced']
+        elif personalize_load == 'Standard':
+            final_inclusions += inclusions['Personalize Load Standard']
+        elif personalize_load == 'Lite' or personalize_load in ['NA', 'No', None]:
+            final_inclusions += inclusions['Personalize Load Lite']
 
-        # Human Agents (only the highest)
+        # BFSI Tier (highest only)
+        bfsi_tier = inputs.get('bfsi_tier', 'NA')
+        if bfsi_tier == 'Tier 3':
+            final_inclusions += inclusions['BFSI Tier 3']
+        elif bfsi_tier == 'Tier 2':
+            final_inclusions += inclusions['BFSI Tier 2']
+        elif bfsi_tier == 'Tier 1':
+            final_inclusions += inclusions['BFSI Tier 1']
+
+        # Human Agents (highest only)
         human_agents = inputs.get('human_agents', 'NA')
-        if human_agents in ['20+', '50+', '100+']:
-            final_inclusions += inclusions[f'Human Agents {human_agents}']
+        if human_agents == '100+':
+            final_inclusions += inclusions['Human Agents 100+']
+        elif human_agents == '50+':
+            final_inclusions += inclusions['Human Agents 50+']
+        elif human_agents == '20+':
+            final_inclusions += inclusions['Human Agents 20+']
+        elif human_agents == '<20' or human_agents in ['NA', 'No', None]:
+            final_inclusions += inclusions['Human Agents <20']
 
-        # Increased TPS (only the highest)
+        # Increased TPS (highest only)
         increased_tps = inputs.get('increased_tps', 'NA')
         if increased_tps == '1000':
             final_inclusions += inclusions['Increased TPS 1000']

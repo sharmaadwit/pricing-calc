@@ -300,7 +300,7 @@
                       <td class="right">{{ row.overage_price }}</td>
                       <td class="right">
                           {% if row.line_item == 'Platform Fee (Chosen)' %}
-                              {{ currency_symbol }}{{ '{:,.0f}'.format(row.revenue or 0) if ((row.revenue or 0) % 1) == 0 else '{:,.2f}'.format(row.revenue or 0) }}
+                              {{ currency_symbol }}{{ row.revenue }}
                               {% if user_selections and user_selections|length > 0 %}<br>
                                   <span style="font-size:0.92em; color:#888;">
                                       {% for label, value in user_selections %}
@@ -309,7 +309,7 @@
                                   </span>
                               {% endif %}
                           {% elif row.line_item == 'Committed Amount' %}
-                              {{ currency_symbol }}{{ '{:,.0f}'.format(row.revenue or 0) if ((row.revenue or 0) % 1) == 0 else '{:,.2f}'.format(row.revenue or 0) }}
+                              {{ currency_symbol }}{{ row.revenue }}
                           {% else %}
                               &nbsp;
                           {% endif %}
