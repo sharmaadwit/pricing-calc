@@ -342,6 +342,7 @@ def index():
             expected_invoice_amount = (committed_amount or 0) + (chosen_platform_fee or 0)
             skip_platform_fee_append = True
         else:
+            # Always create a bundle for volume path
             bundle_lines = []
             for label, key, price in [
                 ("AI Message", 'ai_volume', ai_price),

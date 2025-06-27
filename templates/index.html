@@ -68,6 +68,49 @@
     {% endwith %}
     <h1>Pricing Calculator</h1>
 
+    <!-- How to Use Guide -->
+    <div style="background: #f8fafd; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+      <h3 style="margin-top:0;">How to Use</h3>
+      <ul style="margin:0 0 0 18px; padding:0; font-size:1.08em;">
+        <li>Enter your expected monthly message volumes and select platform options.</li>
+        <li>If you do not enter any volumes, you will be asked to enter a committed monthly amount.</li>
+        <li>Click 'Continue' to see the detailed pricing and inclusions.</li>
+        <li>Review the results. The internal section is for your reference only.</li>
+      </ul>
+      <h4 style="margin-top:18px;">User Flow Diagram</h4>
+      <div style="margin: 18px 0; text-align: center;">
+        <!-- Mermaid SVG export for the user flow diagram -->
+        <svg width="600" height="260" viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg">
+          <g>
+            <rect x="40" y="10" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
+            <text x="130" y="35" text-anchor="middle" font-size="16" fill="#1a2a3a">User lands on Home Page</text>
+            <rect x="40" y="70" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
+            <text x="130" y="95" text-anchor="middle" font-size="16" fill="#1a2a3a">Enter Volumes & Prices</text>
+            <rect x="320" y="70" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
+            <text x="410" y="95" text-anchor="middle" font-size="16" fill="#1a2a3a">Bundle is always created</text>
+            <rect x="40" y="130" width="180" height="40" rx="8" fill="#fffbe6" stroke="#ffc107" stroke-width="2"/>
+            <text x="130" y="155" text-anchor="middle" font-size="16" fill="#7a5a00">Enter Committed Amount</text>
+            <rect x="180" y="190" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
+            <text x="270" y="215" text-anchor="middle" font-size="16" fill="#1a2a3a">Results Page</text>
+            <rect x="420" y="190" width="120" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
+            <text x="480" y="215" text-anchor="middle" font-size="16" fill="#1a2a3a">Start Over</text>
+            <!-- Arrows -->
+            <line x1="130" y1="50" x2="130" y2="70" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="130" y1="110" x2="130" y2="130" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="130" y1="110" x2="410" y2="90" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="130" y1="170" x2="270" y2="190" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="410" y1="110" x2="410" y2="190" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="360" y1="210" x2="420" y2="210" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
+          </g>
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L10,5 L0,10 L2,5 z" fill="#2196f3" />
+            </marker>
+          </defs>
+        </svg>
+      </div>
+    </div>
+
     {% if step == 'volumes' %}
     <div style="display: flex; flex-direction: row; align-items: flex-start;">
       <div style="flex: 1; min-width: 0;">
@@ -223,26 +266,16 @@
 
     {% if step == 'bundle' %}
     {% set all_volumes_zero = (inputs.ai_volume|float == 0 and inputs.advanced_volume|float == 0 and inputs.basic_marketing_volume|float == 0 and inputs.basic_utility_volume|float == 0) %}
+    {% if all_volumes_zero %}
     <form method="post">
-        {% if all_volumes_zero %}
         <h2>Enter Committed Monthly Amount</h2>
         <p>You have not entered any message volumes. Please enter the amount you wish to commit per month. This amount will be drawn down as you use the platform, based on the agreed rates for each message type.</p>
         <label>Committed Amount ({{ currency_symbol }}):</label>
         <input type="text" name="committed_amount" class="comma-number" required><br><br>
-        {% else %}
-        <h2>Create a Messaging Bundle?</h2>
-        <p>Would you like to create a messaging bundle and lock in a fixed price for your monthly messaging volume?</p>
-        <label>
-            <input type="radio" name="bundle_choice" value="Yes" required> Yes
-        </label>
-        <label>
-            <input type="radio" name="bundle_choice" value="No" required> No
-        </label>
-        <br><br>
-        {% endif %}
         <input type="hidden" name="step" value="bundle">
         <input type="submit" value="Continue">
     </form>
+    {% endif %}
     {% endif %}
 
     {% if step == 'results' %}
