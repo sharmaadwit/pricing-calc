@@ -246,85 +246,72 @@
     {% endif %}
 
     {% if step == 'results' %}
-        <h2>Results</h2>
-        <h3>Section 1: Pricing</h3>
-        <p><b>Expected Invoice Amount (Meta charges + Gupshup fee + Platform fee):</b> {{ currency_symbol }}{{ '{:,.2f}'.format(expected_invoice_amount|float or 0) }}</p>
-        <h4>Inclusions</h4>
-        <ul>
+        <div style="max-width: 1100px; margin: 0 auto;">
+        <!-- Top Summary Box -->
+        <div style="background: #f5f7fa; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px; display: flex; align-items: center;">
+          <div style="flex:1;">
+            <h2 style="margin:0; font-size: 1.5em;">Expected Invoice Amount</h2>
+            <div style="font-size: 2.2em; font-weight: bold; color: #1a2a3a; margin-top: 2px;">{{ currency_symbol }}{{ '{:,.0f}'.format(expected_invoice_amount or 0) if ((expected_invoice_amount or 0) % 1) == 0 else '{:,.2f}'.format(expected_invoice_amount or 0) }}</div>
+          </div>
+          {% if bundle_details and bundle_details.committed_amount is defined %}
+          <div style="background: #eaf6ff; border-left: 4px solid #2196f3; padding: 12px 18px; border-radius: 6px; margin-left: 32px; font-size: 1.08em;">
+            <b>Committed Deal:</b> Bundle Commitment + Platform Fee<br>
+            <span style="color:#333;">Your committed amount will be drawn down as you use the platform, based on the agreed rates for each message type. Overage prices apply if you exceed the commitment.</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Inclusions -->
+        <div style="margin-bottom: 18px;">
+          <h3 style="margin-bottom: 8px;">Inclusions</h3>
+          <ul style="margin:0 0 0 18px; padding:0; font-size:1.08em;">
             {% for inc in final_inclusions %}
-                <li>{{ inc }}</li>
+              <li style="margin-bottom:2px;">{{ inc }}</li>
             {% endfor %}
-        </ul>
-        <hr>
-        <table>
-            <tr>
-                <th>Line Item</th>
-                <th>Volume</th>
-                <th>Chosen Price/message</th>
-                <th>Rate Card Price/message</th>
-                <th>Overage Price/message</th>
-                <th>Revenue (Chosen) {{ currency_symbol }}/month</th>
-                <th>Revenue (Rate Card) {{ currency_symbol }}/month</th>
+          </ul>
+        </div>
+
+        <!-- Pricing Table -->
+        <div style="margin-bottom: 24px;">
+          <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
+            <tr style="background: #f0f4f8;">
+              <th style="text-align:left;">Line Item</th>
+              <th style="text-align:right;">Volume</th>
+              <th style="text-align:right;">Chosen Price/message</th>
+              <th style="text-align:right;">Overage Price/message</th>
+              <th style="text-align:right;">Revenue (Chosen) {{ currency_symbol }}/month</th>
             </tr>
             {% for item in results.line_items %}
-            <tr>
+              {% if item.label.startswith('Platform Fee') or item.volume|float > 0 or (bundle_details and bundle_details.committed_amount is defined) %}
+              <tr style="background: {{ loop.index0 % 2 == 0 and '#fff' or '#f9fbfd' }};">
                 <td>{{ item.label }}</td>
-                <td>{{ item.volume if item.volume != '' else '—' }}</td>
-                <td>{{ item.chosen_price }}</td>
-                <td>{{ item.suggested_price }}</td>
-                <td>{{ item.overage_price }}</td>
-                <td>{{ currency_symbol }}
-                  {% if item.revenue is not none and item.revenue != '' %}
-                    {% set val = item.revenue %}
-                    {% if val is number and val % 1 == 0 %}
-                      {{ '{:,.0f}'.format(val) }}
-                    {% elif val is number %}
-                      {{ '{:,.2f}'.format(val) }}
-                    {% else %}
-                      0
-                    {% endif %}
-                  {% else %}
-                    0
-                  {% endif %}
-                </td>
-                <td>{{ currency_symbol }}
-                  {% if item.suggested_revenue is not none and item.suggested_revenue != '' %}
-                    {% set val = item.suggested_revenue %}
-                    {% if val is number and val % 1 == 0 %}
-                      {{ '{:,.0f}'.format(val) }}
-                    {% elif val is number %}
-                      {{ '{:,.2f}'.format(val) }}
-                    {% else %}
-                      0
-                    {% endif %}
-                  {% else %}
-                    0
-                  {% endif %}
-                </td>
-            </tr>
+                <td style="text-align:right;">{{ item.volume if item.volume != '' else '—' }}</td>
+                <td style="text-align:right;">{{ item.chosen_price }}</td>
+                <td style="text-align:right;">{{ item.overage_price }}</td>
+                <td style="text-align:right;">{{ currency_symbol }}{% set val = item.revenue %}{% if val is number and val % 1 == 0 %}{{ '{:,.0f}'.format(val) }}{% elif val is number %}{{ '{:,.2f}'.format(val) }}{% else %}0{% endif %}</td>
+              </tr>
+              {% endif %}
             {% endfor %}
-        </table>
-        {% if bundle_details and bundle_details.committed_amount is defined %}
-        <h4>Expected Invoice Amount (Bundle Commitment + Platform Fee)</h4>
-        <p><b>Expected Invoice Amount:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(expected_invoice_amount or 0) if ((expected_invoice_amount or 0) % 1) == 0 else '{:,.2f}'.format(expected_invoice_amount or 0) }}</p>
-        <p>Your committed amount will be drawn down as you use the platform, based on the agreed rates for each message type.</p>
-        <p style="margin-top:1em; color:#333; font-size:1.05em;"><b>Note:</b> The committed bundle will be consumed as per message type and volumes consumed within the month. In case the consumption is over the committed amount, overage prices will apply.</p>
-        {% endif %}
-        <hr>
-        <h3>Section 2: Internal - Not to be shared</h3>
-        <h4>Margin and Cost Details</h4>
-        <p><b>Chosen Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</p>
-        <p><b>Rate Card Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(rate_card_platform_fee or 0) if ((rate_card_platform_fee or 0) % 1 == 0) else '{:,.3f}'.format(rate_card_platform_fee or 0) }}</p>
-        <table>
-            <tr><td colspan="3"><small>Note: Margin is calculated using the chosen platform fee (editable in the previous step).</small></td></tr>
-            <tr><th>Total Revenue (Chosen) {{ currency_symbol }}/month</th><td colspan="2">{{ currency_symbol }}{% if (results.revenue or 0) % 1 == 0 %}{{ '{:,.0f}'.format(results.revenue or 0) }}{% else %}{{ '{:,.2f}'.format(results.revenue or 0) }}{% endif %}</td></tr>
-            <tr><th>Total Revenue (Rate Card) {{ currency_symbol }}/month</th><td colspan="2">{{ currency_symbol }}{% if (results.suggested_revenue or 0) % 1 == 0 %}{{ '{:,.0f}'.format(results.suggested_revenue or 0) }}{% else %}{{ '{:,.2f}'.format(results.suggested_revenue or 0) }}{% endif %}</td></tr>
-            <tr><th>Channel Cost</th><td colspan="2">{{ currency_symbol }}{% if results.channel_cost|float % 1 == 0 %}{{ '{:,.0f}'.format(results.channel_cost|float) }}{% else %}{{ '{:,.2f}'.format(results.channel_cost|float) }}{% endif %}</td></tr>
-            <tr><th>AI Costs {{ currency_symbol }}/month</th><td colspan="2">{{ currency_symbol }}{% if results.ai_costs|float % 1 == 0 %}{{ '{:,.0f}'.format(results.ai_costs|float) }}{% else %}{{ '{:,.2f}'.format(results.ai_costs|float) }}{% endif %}</td></tr>
-            <tr><th>Total Costs {{ currency_symbol }}/month</th><td colspan="2">{{ currency_symbol }}{% if results.total_costs|float % 1 == 0 %}{{ '{:,.0f}'.format(results.total_costs|float) }}{% else %}{{ '{:,.2f}'.format(results.total_costs|float) }}{% endif %}</td></tr>
-            <tr><th>Margin (User Chosen)</th><td colspan="2">{{ results.margin }}</td></tr>
-            <tr><th>Margin (Rate Card)</th><td colspan="2">{{ results.suggested_margin }}</td></tr>
-        </table>
+          </table>
+        </div>
+
+        <!-- Internal Section -->
+        <div style="background: #f8f8fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 18px 24px; margin-top: 32px;">
+          <h3 style="margin-top:0; color:#444;">Section 2: Internal - Not to be shared</h3>
+          <div style="font-size:1.08em;">
+            <b>Chosen Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}<br>
+            <b>Rate Card Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(rate_card_platform_fee or 0) if ((rate_card_platform_fee or 0) % 1 == 0) else '{:,.3f}'.format(rate_card_platform_fee or 0) }}<br>
+            <b>Total Revenue (Chosen):</b> {{ currency_symbol }}{% if (results.revenue or 0) % 1 == 0 %}{{ '{:,.0f}'.format(results.revenue or 0) }}{% else %}{{ '{:,.2f}'.format(results.revenue or 0) }}{% endif %}<br>
+            <b>Total Revenue (Rate Card):</b> {{ currency_symbol }}{% if (results.suggested_revenue or 0) % 1 == 0 %}{{ '{:,.0f}'.format(results.suggested_revenue or 0) }}{% else %}{{ '{:,.2f}'.format(results.suggested_revenue or 0) }}{% endif %}<br>
+            <b>Channel Cost:</b> {{ currency_symbol }}{% if results.channel_cost|float % 1 == 0 %}{{ '{:,.0f}'.format(results.channel_cost|float) }}{% else %}{{ '{:,.2f}'.format(results.channel_cost|float) }}{% endif %}<br>
+            <b>AI Costs:</b> {{ currency_symbol }}{% if results.ai_costs|float % 1 == 0 %}{{ '{:,.0f}'.format(results.ai_costs|float) }}{% else %}{{ '{:,.2f}'.format(results.ai_costs|float) }}{% endif %}<br>
+            <b>Total Costs:</b> {{ currency_symbol }}{% if results.total_costs|float % 1 == 0 %}{{ '{:,.0f}'.format(results.total_costs|float) }}{% else %}{{ '{:,.2f}'.format(results.total_costs|float) }}{% endif %}<br>
+            <b>Margin (User Chosen):</b> {{ results.margin }}<br>
+            <b>Margin (Rate Card):</b> {{ results.suggested_margin }}
+          </div>
+          <div style="font-size:0.98em; color:#888; margin-top:8px;">Note: Margin is calculated using the chosen platform fee (editable in the previous step).</div>
+        </div>
+        </div>
         <br>
         <form method="get">
             <input type="submit" value="Start Over">
