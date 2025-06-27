@@ -283,7 +283,7 @@ def index():
                 agreed_price = float(pricing_inputs.get(price_key, 0))
                 # Get rate card price for this type (lowest tier)
                 suggested_price = get_lowest_tier_price(inputs['country'], price_key.replace('_price', ''))
-                overage_price = round(agreed_price * 1.2, 4)
+                overage_price = round(agreed_price * 1.2, 4) if agreed_price else round(suggested_price * 1.2, 4)
                 line_items.append({
                     'line_item': label,
                     'volume': 0,
