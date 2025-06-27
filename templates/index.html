@@ -69,72 +69,88 @@
     <h1>Pricing Calculator</h1>
 
     {% if step == 'volumes' %}
-    <form method="post" id="volumes-form">
-        <input type="hidden" name="step" value="volumes">
-        <label>Country:</label>
-        <select name="country" id="country-select" onchange="updateMinPlatformFee()">
-            <option value="India" {% if inputs and inputs.country == 'India' %}selected{% endif %}>India</option>
-            <option value="MENA" {% if inputs and inputs.country == 'MENA' %}selected{% endif %}>MENA</option>
-            <option value="LATAM" {% if inputs and inputs.country == 'LATAM' %}selected{% endif %}>LATAM</option>
-            <option value="Africa" {% if inputs and inputs.country == 'Africa' %}selected{% endif %}>Africa</option>
-            <option value="Europe" {% if inputs and inputs.country == 'Europe' %}selected{% endif %}>Europe</option>
-            <option value="Rest of the World" {% if inputs and inputs.country == 'Rest of the World' %}selected{% endif %}>Rest of the World</option>
-        </select><br><br>
-        <label>AI Message Volume (per month):</label>
-        <input type="text" name="ai_volume" class="comma-number" required value="{{ inputs.ai_volume if inputs and inputs.ai_volume is defined else '' }}"><br><br>
-        <label>Advanced Message Volume (per month):</label>
-        <input type="text" name="advanced_volume" class="comma-number" required value="{{ inputs.advanced_volume if inputs and inputs.advanced_volume is defined else '' }}"><br><br>
-        <label>Basic Marketing Message Volume (per month):</label>
-        <input type="text" name="basic_marketing_volume" class="comma-number" required value="{{ inputs.basic_marketing_volume if inputs and inputs.basic_marketing_volume is defined else '' }}"><br><br>
-        <label>Basic Utility/Authentication Message Volume (per month):</label>
-        <input type="text" name="basic_utility_volume" class="comma-number" required value="{{ inputs.basic_utility_volume if inputs and inputs.basic_utility_volume is defined else '' }}"><br><br>
-        <label>Minimum Platform Fee:</label>
-        <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly><br>
-        <small>80 TPS, Journey Builder Lite, Campaign Manager, CTWA - (Meta/Tiktok), Agent Assist < 20 Agents, Personalize upto 1 Million profiles and external events not supported</small><br><br>
-        <label>Personalize Load:</label>
-        <select name="personalize_load">
-            <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>NA</option>
-            <option value="Standard" {% if inputs and inputs.personalize_load == 'Standard' %}selected{% endif %}>Standard - upto 5 million records, no external events</option>
-            <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced - 10 million records, external events supported</option>
-        </select><br>
-        <small>If the client requires large number of profiles and support for external events, select the appropriate tier.</small><br><br>
-        <label>BFSI Tier:</label>
-        <select name="bfsi_tier">
-            <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>NA</option>
-            <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1</option>
-            <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2</option>
-            <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3</option>
-        </select><br>
-        <small>Each tier comes with specific controls of privacy and security requirements. The exact inclusions of each tier will be displayed on the final pricing page.</small><br><br>
-        <label>AI Module (Yes/No):</label>
-        <select name="ai_module">
-            <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>NA</option>
-            <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
-            <option value="No" {% if inputs and inputs.ai_module == 'No' %}selected{% endif %}>No</option>
-        </select><br>
-        <small>Access to Workspace Configuration and data retraining screens</small><br><br>
-        <label>Smart CPaaS:</label>
-        <select name="smart_cpaas">
-            <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
-            <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes</option>
-        </select><br>
-        <small>Auto failover between channels</small><br><br>
-        <label>Increased TPS:</label>
-        <select name="increased_tps">
-            <option value="NA" {% if inputs and inputs.increased_tps == 'NA' %}selected{% endif %}>NA</option>
-            <option value="250" {% if inputs and inputs.increased_tps == '250' %}selected{% endif %}>250 (upto 250 Messages per Second)</option>
-            <option value="1000" {% if inputs and inputs.increased_tps == '1000' %}selected{% endif %}>1000 (upto 1000 Messages per Second)</option>
-        </select><br>
-        <small>Required to support high volume campaigns</small><br><br>
-        <label>Number of Human Agents (Agent Assist):</label>
-        <select name="human_agents">
-            <option value="NA" {% if inputs and inputs.human_agents == 'NA' %}selected{% endif %}>NA</option>
-            <option value="20+" {% if inputs and inputs.human_agents == '20+' %}selected{% endif %}>20+</option>
-            <option value="50+" {% if inputs and inputs.human_agents == '50+' %}selected{% endif %}>50+</option>
-            <option value="100+" {% if inputs and inputs.human_agents == '100+' %}selected{% endif %}>100+</option>
-        </select><br><br>
-        <input type="submit" value="Next: Rate Card">
-    </form>
+    <div style="display: flex; flex-direction: row; align-items: flex-start;">
+      <div style="flex: 1; min-width: 0;">
+        <form method="post" id="volumes-form">
+            <input type="hidden" name="step" value="volumes">
+            <label>Country:</label>
+            <select name="country" id="country-select" onchange="updateMinPlatformFee()">
+                <option value="India" {% if inputs and inputs.country == 'India' %}selected{% endif %}>India</option>
+                <option value="MENA" {% if inputs and inputs.country == 'MENA' %}selected{% endif %}>MENA</option>
+                <option value="LATAM" {% if inputs and inputs.country == 'LATAM' %}selected{% endif %}>LATAM</option>
+                <option value="Africa" {% if inputs and inputs.country == 'Africa' %}selected{% endif %}>Africa</option>
+                <option value="Europe" {% if inputs and inputs.country == 'Europe' %}selected{% endif %}>Europe</option>
+                <option value="Rest of the World" {% if inputs and inputs.country == 'Rest of the World' %}selected{% endif %}>Rest of the World</option>
+            </select><br><br>
+            <label>AI Message Volume (per month):</label>
+            <input type="text" name="ai_volume" class="comma-number" value="{{ inputs.ai_volume if inputs and inputs.ai_volume is defined else '' }}"><br><br>
+            <label>Advanced Message Volume (per month):</label>
+            <input type="text" name="advanced_volume" class="comma-number" value="{{ inputs.advanced_volume if inputs and inputs.advanced_volume is defined else '' }}"><br><br>
+            <label>Basic Marketing Message Volume (per month):</label>
+            <input type="text" name="basic_marketing_volume" class="comma-number" value="{{ inputs.basic_marketing_volume if inputs and inputs.basic_marketing_volume is defined else '' }}"><br><br>
+            <label>Basic Utility/Authentication Message Volume (per month):</label>
+            <input type="text" name="basic_utility_volume" class="comma-number" value="{{ inputs.basic_utility_volume if inputs and inputs.basic_utility_volume is defined else '' }}"><br><br>
+            <label>Minimum Platform Fee:</label>
+            <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly><br>
+            <small>80 TPS, Journey Builder Lite, Campaign Manager, CTWA - (Meta/Tiktok), Agent Assist < 20 Agents, Personalize upto 1 Million profiles and external events not supported</small><br><br>
+            <label>Personalize Load:</label>
+            <select name="personalize_load">
+                <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>NA</option>
+                <option value="Standard" {% if inputs and inputs.personalize_load == 'Standard' %}selected{% endif %}>Standard - upto 5 million records, no external events</option>
+                <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced - 10 million records, external events supported</option>
+            </select><br>
+            <small>If the client requires large number of profiles and support for external events, select the appropriate tier.</small><br><br>
+            <label>BFSI Tier:</label>
+            <select name="bfsi_tier">
+                <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>NA</option>
+                <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1</option>
+                <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2</option>
+                <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3</option>
+            </select><br>
+            <small>Each tier comes with specific controls of privacy and security requirements. The exact inclusions of each tier will be displayed on the final pricing page.</small><br><br>
+            <label>AI Module (Yes/No):</label>
+            <select name="ai_module">
+                <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>NA</option>
+                <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
+                <option value="No" {% if inputs and inputs.ai_module == 'No' %}selected{% endif %}>No</option>
+            </select><br>
+            <small>Access to Workspace Configuration and data retraining screens</small><br><br>
+            <label>Smart CPaaS:</label>
+            <select name="smart_cpaas">
+                <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
+                <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes</option>
+            </select><br>
+            <small>Auto failover between channels</small><br><br>
+            <label>Increased TPS:</label>
+            <select name="increased_tps">
+                <option value="NA" {% if inputs and inputs.increased_tps == 'NA' %}selected{% endif %}>NA</option>
+                <option value="250" {% if inputs and inputs.increased_tps == '250' %}selected{% endif %}>250 (upto 250 Messages per Second)</option>
+                <option value="1000" {% if inputs and inputs.increased_tps == '1000' %}selected{% endif %}>1000 (upto 1000 Messages per Second)</option>
+            </select><br>
+            <small>Required to support high volume campaigns</small><br><br>
+            <label>Number of Human Agents (Agent Assist):</label>
+            <select name="human_agents">
+                <option value="NA" {% if inputs and inputs.human_agents == 'NA' %}selected{% endif %}>NA</option>
+                <option value="20+" {% if inputs and inputs.human_agents == '20+' %}selected{% endif %}>20+</option>
+                <option value="50+" {% if inputs and inputs.human_agents == '50+' %}selected{% endif %}>50+</option>
+                <option value="100+" {% if inputs and inputs.human_agents == '100+' %}selected{% endif %}>100+</option>
+            </select><br><br>
+            <input type="submit" value="Next: Rate Card">
+        </form>
+      </div>
+      <aside style="width: 340px; margin-left: 32px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); position: sticky; top: 32px;">
+        <h3 style="margin-top: 0;">How to Use This Calculator</h3>
+        <ol style="font-size: 1em; padding-left: 1.2em;">
+          <li>Enter your <b>country</b> and (optionally) message volumes for each type.</li>
+          <li>Select platform fee options and other requirements.</li>
+          <li>Click <b>Next: Rate Card</b> to review and edit suggested prices.</li>
+          <li>Proceed to <b>Bundle</b> or <b>Committed Amount</b> step as needed.</li>
+          <li>View your detailed pricing breakdown and inclusions.</li>
+        </ol>
+        <p style="margin-top: 1.5em; font-size: 0.97em; color: #555;">You can leave message volumes blank if you only want to set a platform fee or get a quote based on committed spend.</p>
+        <a href="#" style="font-size: 0.97em; color: #007bff; text-decoration: underline;">Learn more</a>
+      </aside>
+    </div>
     <script>
     function updateMinPlatformFee() {
         var country = document.getElementById('country-select').value;
@@ -206,7 +222,14 @@
     {% endif %}
 
     {% if step == 'bundle' %}
+    {% set all_volumes_zero = (inputs.ai_volume|float == 0 and inputs.advanced_volume|float == 0 and inputs.basic_marketing_volume|float == 0 and inputs.basic_utility_volume|float == 0) %}
     <form method="post">
+        {% if all_volumes_zero %}
+        <h2>Enter Committed Monthly Amount</h2>
+        <p>You have not entered any message volumes. Please enter the amount you wish to commit per month. This amount will be drawn down as you use the platform, based on the agreed rates for each message type.</p>
+        <label>Committed Amount ({{ currency_symbol }}):</label>
+        <input type="text" name="committed_amount" class="comma-number" required><br><br>
+        {% else %}
         <h2>Create a Messaging Bundle?</h2>
         <p>Would you like to create a messaging bundle and lock in a fixed price for your monthly messaging volume?</p>
         <label>
@@ -216,6 +239,7 @@
             <input type="radio" name="bundle_choice" value="No" required> No
         </label>
         <br><br>
+        {% endif %}
         <input type="hidden" name="step" value="bundle">
         <input type="submit" value="Continue">
     </form>
@@ -312,6 +336,12 @@
         <form method="get">
             <input type="submit" value="Start Over">
         </form>
+
+        {% if bundle_details and bundle_details.committed_amount is defined %}
+        <h4>Committed Amount</h4>
+        <p><b>Committed Monthly Amount:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.committed_amount or 0) if ((bundle_details.committed_amount or 0) % 1) == 0 else '{:,.2f}'.format(bundle_details.committed_amount or 0) }}</p>
+        <p>Your committed amount will be drawn down as you use the platform, based on the agreed rates for each message type.</p>
+        {% endif %}
     {% endif %}
 
     {% if step != 'volumes' %}

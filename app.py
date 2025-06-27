@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, session, redirect, url_for, flash
-from calculator import calculate_pricing, get_suggested_price
+from calculator import calculate_pricing, get_suggested_price, price_tiers
 import os
 # from google_auth_oauthlib.flow import Flow
 # from googleapiclient.discovery import build
@@ -125,10 +125,15 @@ def index():
     if step == 'volumes' and request.method == 'POST':
         # Step 1: User submitted volumes and platform fee options
         country = request.form['country']
-        ai_volume = float(request.form['ai_volume'])
-        advanced_volume = float(request.form['advanced_volume'])
-        basic_marketing_volume = float(request.form['basic_marketing_volume'])
-        basic_utility_volume = float(request.form['basic_utility_volume'])
+        def parse_volume(val):
+            try:
+                return float(val.replace(',', '')) if val and str(val).strip() else 0.0
+            except Exception:
+                return 0.0
+        ai_volume = parse_volume(request.form.get('ai_volume', ''))
+        advanced_volume = parse_volume(request.form.get('advanced_volume', ''))
+        basic_marketing_volume = parse_volume(request.form.get('basic_marketing_volume', ''))
+        basic_utility_volume = parse_volume(request.form.get('basic_utility_volume', ''))
         bfsi_tier = request.form.get('bfsi_tier', 'NA')
         personalize_load = request.form.get('personalize_load', 'NA')
         human_agents = request.form.get('human_agents', 'NA')
@@ -153,22 +158,32 @@ def index():
             'increased_tps': increased_tps
         }
         # Suggest prices
+        def get_highest_tier_price(country, msg_type):
+            tiers = price_tiers.get(country, {}).get(msg_type, [])
+            if tiers:
+                return tiers[-1][2]
+            return 0.0
         suggested_prices = {
-            'ai_price': get_suggested_price(country, 'ai', ai_volume),
-            'advanced_price': get_suggested_price(country, 'advanced', advanced_volume),
-            'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume),
-            'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume),
+            'ai_price': get_suggested_price(country, 'ai', ai_volume) if ai_volume else get_highest_tier_price(country, 'ai'),
+            'advanced_price': get_suggested_price(country, 'advanced', advanced_volume) if advanced_volume else get_highest_tier_price(country, 'advanced'),
+            'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if basic_marketing_volume else get_highest_tier_price(country, 'basic_marketing'),
+            'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if basic_utility_volume else get_highest_tier_price(country, 'basic_utility'),
         }
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session['inputs'], currency_symbol=currency_symbol, platform_fee=platform_fee)
 
     elif step == 'prices' and request.method == 'POST':
         # Step 2: User submitted prices
         inputs = session.get('inputs', {})
-        ai_price = float(request.form['ai_price'])
-        advanced_price = float(request.form['advanced_price'])
-        basic_marketing_price = float(request.form['basic_marketing_price'])
-        basic_utility_price = float(request.form['basic_utility_price'])
-        platform_fee = float(request.form['platform_fee'])
+        def parse_price(val):
+            try:
+                return float(val.replace(',', '')) if val and str(val).strip() else None
+            except Exception:
+                return None
+        ai_price = parse_price(request.form.get('ai_price', ''))
+        advanced_price = parse_price(request.form.get('advanced_price', ''))
+        basic_marketing_price = parse_price(request.form.get('basic_marketing_price', ''))
+        basic_utility_price = parse_price(request.form.get('basic_utility_price', ''))
+        platform_fee = parse_price(request.form.get('platform_fee', '')) or 0.0
 
         # Get suggested prices for validation
         country = inputs.get('country', 'India')
@@ -191,13 +206,13 @@ def index():
             inputs.get('increased_tps', 'NA')
         )
         discount_errors = []
-        if ai_price < 0.5 * suggested_ai:
+        if ai_price is not None and (suggested_ai or 0) and ai_price < 0.5 * (suggested_ai or 0):
             discount_errors.append("AI Message price is less than 50% of the rate card.")
-        if advanced_price < 0.5 * suggested_advanced:
+        if advanced_price is not None and (suggested_advanced or 0) and advanced_price < 0.5 * (suggested_advanced or 0):
             discount_errors.append("Advanced Message price is less than 50% of the rate card.")
-        if basic_marketing_price < 0.5 * suggested_marketing:
+        if basic_marketing_price is not None and (suggested_marketing or 0) and basic_marketing_price < 0.5 * (suggested_marketing or 0):
             discount_errors.append("Basic Marketing Message price is less than 50% of the rate card.")
-        if basic_utility_price < 0.5 * suggested_utility:
+        if basic_utility_price is not None and (suggested_utility or 0) and basic_utility_price < 0.5 * (suggested_utility or 0):
             discount_errors.append("Basic Utility/Authentication Message price is less than 50% of the rate card.")
         # Platform fee discount check
         if platform_fee < 0.5 * rate_card_platform_fee:
@@ -236,9 +251,29 @@ def index():
         basic_marketing_price = pricing_inputs.get('basic_marketing_price', 0)
         basic_utility_price = pricing_inputs.get('basic_utility_price', 0)
         platform_fee = pricing_inputs.get('platform_fee', 0)
+        ai_volume = inputs.get('ai_volume', 0)
+        advanced_volume = inputs.get('advanced_volume', 0)
+        basic_marketing_volume = inputs.get('basic_marketing_volume', 0)
+        basic_utility_volume = inputs.get('basic_utility_volume', 0)
+        all_volumes_zero = all(float(v) == 0 for v in [ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume])
         bundle_details = None
         bundle_cost = 0
-        if bundle_choice == 'Yes':
+        committed_amount = None
+        if all_volumes_zero:
+            # Ask for committed amount
+            committed_amount = request.form.get('committed_amount', '')
+            try:
+                committed_amount = float(committed_amount.replace(',', '')) if committed_amount else 0.0
+            except Exception:
+                committed_amount = 0.0
+            bundle_details = {
+                'committed_amount': committed_amount,
+                'lines': [],
+                'bundle_cost': 0,
+                'total_bundle_price': committed_amount,
+                'inclusion_text': 'Your committed amount will be drawn down as you use the platform, based on the agreed rates.'
+            }
+        else:
             # Show each type of message, volume, and overage price
             bundle_lines = []
             for label, key, price in [
