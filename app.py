@@ -684,7 +684,8 @@ def index():
             platform_fee=chosen_platform_fee,
             platform_fee_rate_card=rate_card_platform_fee,
             pricing_table=results['line_items'],
-            user_selections=user_selections
+            user_selections=user_selections,
+            inputs=inputs
         )
 
     # Defensive: handle GET or POST for edit actions
