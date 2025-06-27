@@ -375,6 +375,8 @@ def index():
                 basic_marketing_price=basic_marketing_price,
                 basic_utility_price=basic_utility_price
             )
+            # Always set total margin for volume commitment path
+            results['margin'] = results.get('margin', '')
             expected_invoice_amount = results.get('revenue', 0)
 
         # Call calculation logic with updated platform fee (do not add bundle_cost to platform_fee)
