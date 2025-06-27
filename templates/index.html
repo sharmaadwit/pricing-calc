@@ -271,11 +271,9 @@
     {% if step == 'bundle' %}
     <!-- DEBUG: In bundle section -->
     {% set all_volumes_zero = (inputs.ai_volume|float == 0 and inputs.advanced_volume|float == 0 and inputs.basic_marketing_volume|float == 0 and inputs.basic_utility_volume|float == 0) %}
-    <!-- DEBUG: all_volumes_zero: {{ all_volumes_zero }} -->
     {% if all_volumes_zero %}
     <form method="post">
         <h2>Enter Committed Monthly Amount</h2>
-        <p>You have not entered any message volumes. Please enter the amount you wish to commit per month. This amount will be drawn down as you use the platform, based on the agreed rates for each message type.</p>
         <label>Committed Amount ({{ currency_symbol }}):</label>
         <input type="text" name="committed_amount" class="comma-number" required><br><br>
         <input type="hidden" name="step" value="bundle">
