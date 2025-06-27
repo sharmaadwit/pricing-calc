@@ -122,7 +122,6 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    print('DEBUG: method:', request.method, 'form:', dict(request.form), 'session:', dict(session))
     # Defensive: always use .get() for form/session data
     step = request.form.get('step', 'volumes')
     results = None
@@ -194,10 +193,12 @@ def index():
 
         # Get suggested prices for validation
         country = inputs.get('country', 'India')
-        ai_volume = float(inputs.get('ai_volume', 0))
-        advanced_volume = float(inputs.get('advanced_volume', 0))
-        basic_marketing_volume = float(inputs.get('basic_marketing_volume', 0))
-        basic_utility_volume = float(inputs.get('basic_utility_volume', 0))
+        ai_volume = float(inputs.get('ai_volume', 0) or 0)
+        advanced_volume = float(inputs.get('advanced_volume', 0) or 0)
+        basic_marketing_volume = float(inputs.get('basic_marketing_volume', 0) or 0)
+        basic_utility_volume = float(inputs.get('basic_utility_volume', 0) or 0)
+        all_volumes_zero = (ai_volume == 0 and advanced_volume == 0 and basic_marketing_volume == 0 and basic_utility_volume == 0)
+
         suggested_ai = get_suggested_price(country, 'ai', ai_volume)
         suggested_advanced = get_suggested_price(country, 'advanced', advanced_volume)
         suggested_marketing = get_suggested_price(country, 'basic_marketing', basic_marketing_volume)
@@ -245,106 +246,21 @@ def index():
             'basic_utility_price': basic_utility_price,
             'platform_fee': platform_fee
         }
-        return render_template('index.html', step='bundle', inputs=inputs, currency_symbol=currency_symbol)
-
-    elif step == 'bundle' and request.method == 'POST':
-        bundle_choice = request.form.get('bundle_choice', 'No')
-        session['bundle_choice'] = bundle_choice
-        # Retrieve previous inputs
-        inputs = session.get('inputs', {})
-        pricing_inputs = session.get('pricing_inputs', {})
-        ai_price = pricing_inputs.get('ai_price', 0)
-        advanced_price = pricing_inputs.get('advanced_price', 0)
-        basic_marketing_price = pricing_inputs.get('basic_marketing_price', 0)
-        basic_utility_price = pricing_inputs.get('basic_utility_price', 0)
-        platform_fee = pricing_inputs.get('platform_fee', 0)
-        ai_volume = inputs.get('ai_volume', 0)
-        advanced_volume = inputs.get('advanced_volume', 0)
-        basic_marketing_volume = inputs.get('basic_marketing_volume', 0)
-        basic_utility_volume = inputs.get('basic_utility_volume', 0)
-        all_volumes_zero = all(float(v) == 0 for v in [ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume])
-        bundle_details = None
-        bundle_cost = 0
-        committed_amount = None
-        skip_platform_fee_append = False
+        currency_symbol = COUNTRY_CURRENCY.get(country, '$')
         if all_volumes_zero:
-            committed_amount = request.form.get('committed_amount', '')
-            try:
-                committed_amount = float(committed_amount.replace(',', '')) if committed_amount else 0.0
-            except Exception:
-                committed_amount = 0.0
-            # Always build line_items for all message types, with revenue 0, and include suggested_price (rate card)
-            line_items = []
-            for label, key, price_key in [
-                ("AI Message", 'ai_volume', 'ai_price'),
-                ("Advanced Message", 'advanced_volume', 'advanced_price'),
-                ("Basic Marketing Message", 'basic_marketing_volume', 'basic_marketing_price'),
-                ("Basic Utility/Authentication Message", 'basic_utility_volume', 'basic_utility_price'),
-            ]:
-                agreed_price = float(pricing_inputs.get(price_key, 0))
-                # Get rate card price for this type (lowest tier)
-                suggested_price = get_lowest_tier_price(inputs['country'], price_key.replace('_price', ''))
-                overage_price = round(agreed_price * 1.2, 4) if agreed_price else round(suggested_price * 1.2, 4)
-                line_items.append({
-                    'line_item': label,
-                    'volume': 0,
-                    'chosen_price': agreed_price,
-                    'suggested_price': suggested_price,
-                    'overage_price': overage_price,
-                    'revenue': 0
-                })
-            # Add platform fee row with both chosen and rate card
-            chosen_platform_fee = float(pricing_inputs.get('platform_fee', 0))
-            rate_card_platform_fee, _ = calculate_platform_fee(
-                inputs['country'],
-                inputs.get('bfsi_tier', 'NA'),
-                inputs.get('personalize_load', 'NA'),
-                inputs.get('human_agents', 'NA'),
-                inputs.get('ai_module', 'NA'),
-                inputs.get('smart_cpaas', 'No'),
-                inputs.get('increased_tps', 'NA')
-            )
-            line_items.append({
-                'line_item': 'Platform Fee (Chosen)',
-                'volume': '',
-                'chosen_price': chosen_platform_fee,
-                'suggested_price': rate_card_platform_fee,
-                'overage_price': '',
-                'revenue': chosen_platform_fee
-            })
-            # Only add Committed Amount once
-            if not any(item.get('line_item') == 'Committed Amount' for item in line_items):
-                line_items.append({
-                    'line_item': 'Committed Amount',
-                    'volume': '',
-                    'chosen_price': committed_amount,
-                    'suggested_price': '',
-                    'overage_price': '',
-                    'revenue': committed_amount
-                })
-            results = {
-                'line_items': line_items,
-                'platform_fee': chosen_platform_fee,
-                'revenue': committed_amount,
-                'suggested_revenue': committed_amount,
-                'channel_cost': 0,
-                'ai_costs': 0,
-                'total_costs': 0,
-                'margin': '',
-                'suggested_margin': ''
-            }
-            bundle_details = {
-                'committed_amount': committed_amount,
-                'lines': [],
-                'bundle_cost': 0,
-                'total_bundle_price': committed_amount,
-                'inclusion_text': 'Your committed amount will be drawn down as you use the platform, based on the agreed rates.'
-            }
-            expected_invoice_amount = (committed_amount or 0) + (chosen_platform_fee or 0)
-            skip_platform_fee_append = True
+            return render_template('index.html', step='bundle', inputs=inputs, currency_symbol=currency_symbol)
         else:
-            # Always create a bundle for volume path
+            # Directly call the bundle logic for nonzero volumes (simulate POST to bundle step)
+            # Copy the relevant code from the bundle POST handler for nonzero volumes
+            bundle_choice = 'No'
+            session['bundle_choice'] = bundle_choice
+            ai_price = session['pricing_inputs'].get('ai_price', 0)
+            advanced_price = session['pricing_inputs'].get('advanced_price', 0)
+            basic_marketing_price = session['pricing_inputs'].get('basic_marketing_price', 0)
+            basic_utility_price = session['pricing_inputs'].get('basic_utility_price', 0)
+            platform_fee = session['pricing_inputs'].get('platform_fee', 0)
             bundle_lines = []
+            bundle_cost = 0
             for label, key, price in [
                 ("AI Message", 'ai_volume', ai_price),
                 ("Advanced Message", 'advanced_volume', advanced_price),
@@ -360,7 +276,7 @@ def index():
                     'overage_price': overage_price
                 })
                 bundle_cost += volume * float(price)
-            total_bundle_price = float(pricing_inputs.get('platform_fee', 0)) + bundle_cost
+            total_bundle_price = float(platform_fee) + bundle_cost
             bundle_details = {
                 'lines': bundle_lines,
                 'bundle_cost': bundle_cost,
@@ -373,7 +289,7 @@ def index():
                 inputs['advanced_volume'],
                 inputs['basic_marketing_volume'],
                 inputs['basic_utility_volume'],
-                float(pricing_inputs.get('platform_fee', 0)),
+                float(platform_fee),
                 ai_price=ai_price,
                 advanced_price=advanced_price,
                 basic_marketing_price=basic_marketing_price,
@@ -388,334 +304,80 @@ def index():
                     unique_line_items.append(item)
                     seen.add(key)
             results['line_items'] = unique_line_items
-            # Always set total margin for volume commitment path
             results['margin'] = results.get('margin', '')
             expected_invoice_amount = results.get('revenue', 0)
-
-        # Call calculation logic with updated platform fee (do not add bundle_cost to platform_fee)
-        currency_symbol = COUNTRY_CURRENCY.get(inputs['country'], '$')
-        # Pass both chosen and rate card platform fee to results page
-        chosen_platform_fee = float(pricing_inputs.get('platform_fee', 0))
-        rate_card_platform_fee, _ = calculate_platform_fee(
-            inputs['country'],
-            inputs.get('bfsi_tier', 'NA'),
-            inputs.get('personalize_load', 'NA'),
-            inputs.get('human_agents', 'NA'),
-            inputs.get('ai_module', 'NA'),
-            inputs.get('smart_cpaas', 'No'),
-            inputs.get('increased_tps', 'NA')
-        )
-        platform_fee_used = 'chosen'  # always use the chosen (editable) platform fee for margin calculation
-
-        # Add platform fee line items to results['line_items'] only if not already added
-        if 'line_items' in results and not skip_platform_fee_append:
-            results['line_items'].append({
-                'line_item': 'Platform Fee (Chosen)',
-                'volume': '',
-                'chosen_price': '',
-                'suggested_price': '',
-                'overage_price': '',
-                'revenue': chosen_platform_fee
-            })
-
-        # Gather non-NA/No selections for display
-        user_selections = []
-        if inputs.get('bfsi_tier', 'NA') not in ['NA', 'No']:
-            user_selections.append(('BFSI Tier', inputs['bfsi_tier']))
-        if inputs.get('personalize_load', 'NA') not in ['NA', 'No']:
-            user_selections.append(('Personalize Load', inputs['personalize_load']))
-        if inputs.get('human_agents', 'NA') not in ['NA', 'No']:
-            user_selections.append(('Human Agents', inputs['human_agents']))
-        if inputs.get('ai_module', 'NA') not in ['NA', 'No']:
-            user_selections.append(('AI Module', inputs['ai_module']))
-        if inputs.get('smart_cpaas', 'No') == 'Yes':
-            user_selections.append(('Smart CPaaS', 'Yes'))
-        if inputs.get('increased_tps', 'NA') not in ['NA', 'No']:
-            user_selections.append(('Increased TPS', inputs['increased_tps']))
-
-        # Inclusions mapping
-        inclusions = {
-            'Platform Fee Used for Margin Calculation': [
-                '80 TPS',
-                'Journey Builder Lite',
-                'Campaign Manager',
-                'CTWA - (Meta/Tiktok)',
-                'Agent Assist < 20 Agents',
-                'Personalize upto 1 Million profiles and external events not supported',
-            ],
-            'BFSI Tier 1': [
-                'Audit trail to be stored for 60 days from JB Pro+Flows',
-                'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) from Agent Assist',
-            ],
-            'BFSI Tier 2': [
-                'Audit trail to be stored for 60 days from JB Pro+Flows',
-                'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) from Agent Assist',
-                'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) for AI Conversations',
-            ],
-            'BFSI Tier 3': [
-                'Audit trail to be stored for 60 days from JB Pro+Flows',
-                'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) from Agent Assist',
-                'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) for AI Conversations',
-                'Data Encryption, Logging, Auditing, Purging (Logs) from Campaign Manager, Retargetting and Personalize layers',
-            ],
-            'Personalize Load Standard': [
-                'Standard - upto 5 million records, no external events',
-            ],
-            'Personalize Load Advanced': [
-                'Advanced - 10 million records, external events supported',
-            ],
-            'AI Module Yes': [
-                'Access to Workspace Configuration and data retraining screens',
-            ],
-            'Human Agents 20+': [
-                'Upto 50 agents',
-            ],
-            'Human Agents 50+': [
-                'Upto 100 agents',
-            ],
-            'Human Agents 100+': [
-                'More than 100 agents',
-            ],
-            'Smart CPaaS Yes': [
-                'Auto failover between channels',
-            ],
-            'Increased TPS 250': [
-                'Upto 250 Messages per Second',
-            ],
-            'Increased TPS 1000': [
-                'Upto 1000 Messages per Second',
-            ],
-        }
-
-        # Build dynamic inclusions list (no duplicate/contradictory inclusions)
-        final_inclusions = inclusions['Platform Fee Used for Margin Calculation'][:]
-        selected_components = []
-        # BFSI Tier (show only the selected tier's inclusions, not lower tiers)
-        bfsi_tier = inputs.get('bfsi_tier', 'NA')
-        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
-            # Remove all BFSI inclusions from final_inclusions
-            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Audit trail') and not inc.startswith('Conversational Data Encryption') and not inc.startswith('Data Encryption')]
-            final_inclusions += inclusions.get(f'BFSI Tier {bfsi_tier.split(" ")[-1]}', [])
-            selected_components.append(f"BFSI Tier: {bfsi_tier}")
-        # Personalize Load (show only the selected tier's inclusion, not base)
-        personalize_load = inputs.get('personalize_load', 'NA')
-        if personalize_load in ['Standard', 'Advanced']:
-            # Remove all Personalize inclusions from final_inclusions
-            final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Standard') or inc.startswith('Advanced'))]
-            final_inclusions += inclusions.get(f'Personalize Load {personalize_load}', [])
-            selected_components.append(f"Personalize Load: {personalize_load}")
-        # Human Agents (show only the selected tier's inclusion, not base)
-        human_agents = inputs.get('human_agents', 'NA')
-        if human_agents in ['20+', '50+', '100+']:
-            # Remove all Human Agents inclusions from final_inclusions
-            final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Agent Assist') or inc.startswith('Upto') or inc.startswith('More than'))]
-            final_inclusions += inclusions.get(f'Human Agents {human_agents}', [])
-            selected_components.append(f"Human Agents: {human_agents}")
-        # AI Module
-        ai_module = inputs.get('ai_module', 'NA')
-        if ai_module == 'Yes':
-            final_inclusions += inclusions.get('AI Module Yes', [])
-            selected_components.append("AI Module: Yes")
-        # Smart CPaaS
-        if inputs.get('smart_cpaas', 'No') == 'Yes':
-            final_inclusions += inclusions.get('Smart CPaaS Yes', [])
-            selected_components.append("Smart CPaaS: Yes")
-        else:
-            # Remove 'Auto failover between channels' if Smart CPaaS is not Yes
-            final_inclusions = [inc for inc in final_inclusions if inc != 'Auto failover between channels']
-        # Increased TPS
-        increased_tps = inputs.get('increased_tps', 'NA')
-        if increased_tps in ['250', '1000']:
-            # Remove '80 TPS' if a higher TPS is selected
-            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('80 TPS')]
-            final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
-            selected_components.append(f"Increased TPS: {increased_tps}")
-        # Remove duplicates from inclusions
-        final_inclusions = list(dict.fromkeys(final_inclusions))
-        session['selected_components'] = selected_components
-
-        session['results'] = results
-        session['chosen_platform_fee'] = chosen_platform_fee
-        session['rate_card_platform_fee'] = rate_card_platform_fee
-        session['user_selections'] = user_selections
-        session['inclusions'] = inclusions
-
-        # Format all numbers with commas for display
-        def fmt(val):
-            try:
-                # Handle None values
-                if val is None:
-                    return '0'
-                # Handle string values that might already be formatted
-                if isinstance(val, str):
-                    # Remove any existing commas and try to convert
-                    val = val.replace(',', '')
-                    if not val.strip():  # Handle empty strings
-                        return '0'
-                    # Check if it's already a formatted number (e.g., "123.45")
-                    if val.replace('.', '').replace('-', '').isdigit():
-                        float_val = float(val)
-                        if float_val == int(float_val):
-                            return '{:,}'.format(int(float_val))
-                        else:
-                            return '{:,.2f}'.format(float_val)
-                    else:
-                        return val  # Return as-is if not a number
-                # Convert to float first to handle decimals properly
-                float_val = float(val)
-                if float_val == int(float_val):
-                    return '{:,}'.format(int(float_val))
-                else:
-                    return '{:,.2f}'.format(float_val)
-            except (ValueError, TypeError):
-                return str(val) if val is not None else '0'
-        
-        # Format line item numbers (do not format revenue fields)
-        for item in results.get('line_items', []):
-            item['volume'] = fmt(item.get('volume', 0))
-            item['chosen_price'] = fmt(item.get('chosen_price', 0))
-            item['suggested_price'] = fmt(item.get('suggested_price', 0))
-            item['overage_price'] = fmt(item.get('overage_price', 0))
-            # Do NOT format item['revenue'] or item['suggested_revenue'] here
-
-        # Ensure all numeric values are floats for template formatting
-        try:
-            chosen_platform_fee = float(chosen_platform_fee)
-        except Exception:
-            chosen_platform_fee = 0.0
-        try:
-            rate_card_platform_fee = float(rate_card_platform_fee)
-        except Exception:
-            rate_card_platform_fee = 0.0
-        if bundle_details:
-            try:
-                bundle_details['bundle_cost'] = float(bundle_details.get('bundle_cost', 0))
-            except Exception:
-                bundle_details['bundle_cost'] = 0.0
-            try:
-                bundle_details['total_bundle_price'] = float(bundle_details.get('total_bundle_price', 0))
-            except Exception:
-                bundle_details['total_bundle_price'] = 0.0
-            for line in bundle_details.get('lines', []):
-                try:
-                    line['volume'] = float(line.get('volume', 0))
-                except Exception:
-                    line['volume'] = 0.0
-                try:
-                    line['price'] = float(line.get('price', 0))
-                except Exception:
-                    line['price'] = 0.0
-                try:
-                    line['overage_price'] = float(line.get('overage_price', 0))
-                except Exception:
-                    line['overage_price'] = 0.0
-        # Before analytics tracking, ensure discount_errors is always defined
-        if 'discount_errors' not in locals():
-            discount_errors = []
-        # In-memory analytics (resets on restart)
-        now = datetime.datetime.now()
-        day_str = now.strftime('%Y-%m-%d')
-        week_str = now.strftime('%Y-W%U')
-        analytics_data['calculations'] += 1
-        analytics_data['calculations_by_day'][day_str] += 1
-        analytics_data['calculations_by_week'][week_str] += 1
-        analytics_data['country_counter'][inputs.get('country', 'Unknown')] += 1
-        analytics_data['platform_fee_options'][inputs.get('platform_fee', 'Unknown')] += 1
-        analytics_data['platform_fee_entries'].append(float(pricing_inputs.get('platform_fee', 0)))
-        analytics_data['message_volumes']['ai'].append(float(inputs.get('ai_volume', 0)))
-        analytics_data['message_volumes']['advanced'].append(float(inputs.get('advanced_volume', 0)))
-        analytics_data['message_volumes']['basic_marketing'].append(float(inputs.get('basic_marketing_volume', 0)))
-        analytics_data['message_volumes']['basic_utility'].append(float(inputs.get('basic_utility_volume', 0)))
-        if discount_errors:
-            for msg in discount_errors:
-                analytics_data['discount_warnings'][msg] += 1
-                if 'platform fee' in msg.lower():
-                    analytics_data['platform_fee_discount_triggered'] += 1
-        # Track margin
-        try:
-            margin_chosen = float(results.get('margin', '0').replace('%',''))
-            margin_rate_card = float(results.get('suggested_margin', '0').replace('%',''))
-            analytics_data['margin_chosen'].append(margin_chosen)
-            analytics_data['margin_rate_card'].append(margin_rate_card)
-        except Exception:
-            pass
-
-        # Calculate margin for committed path using the provided formula
-        # Platform Fee + (AI Fee × AI Volume) + (Advanced Fee × Advanced Volume) + (Basic Marketing Fee × Basic Marketing Volume) + (Basic Utility Fee × Basic Utility Volume) + (Marketing Cost × Basic Marketing Volume) + (Utility Cost × Basic Utility Volume)
-        # Numerator: above - [Marketing Cost × Basic Marketing Volume + Utility Cost × Basic Utility Volume + AI Unit Cost × AI Volume]
-        # Denominator: Platform Fee + (AI Fee × AI Volume) + (Advanced Fee × Advanced Volume) + (Basic Marketing Fee × Basic Marketing Volume) + (Basic Utility Fee × Basic Utility Volume) + (Marketing Cost × Basic Marketing Volume) + (Utility Cost × Basic Utility Volume)
-        ai_fee = float(pricing_inputs.get('ai_price', 0))
-        advanced_fee = float(pricing_inputs.get('advanced_price', 0))
-        basic_marketing_fee = float(pricing_inputs.get('basic_marketing_price', 0))
-        basic_utility_fee = float(pricing_inputs.get('basic_utility_price', 0))
-        ai_vol = float(inputs.get('ai_volume', 0))
-        adv_vol = float(inputs.get('advanced_volume', 0))
-        basic_marketing_vol = float(inputs.get('basic_marketing_volume', 0))
-        basic_utility_vol = float(inputs.get('basic_utility_volume', 0))
-        country = inputs.get('country', 'India')
-        meta_costs = meta_costs_table.get(country, meta_costs_table['India'])
-        marketing_cost = meta_costs['marketing']
-        utility_cost = meta_costs['utility']
-        ai_unit_cost = meta_costs['ai']
-        platform_fee_val = float(pricing_inputs.get('platform_fee', 0))
-        numerator = (
-            platform_fee_val
-            + (ai_fee * ai_vol)
-            + (advanced_fee * adv_vol)
-            + (basic_marketing_fee * basic_marketing_vol)
-            + (basic_utility_fee * basic_utility_vol)
-            + (marketing_cost * basic_marketing_vol)
-            + (utility_cost * basic_utility_vol)
-        ) - (
-            (marketing_cost * basic_marketing_vol)
-            + (utility_cost * basic_utility_vol)
-            + (ai_unit_cost * ai_vol)
-        )
-        denominator = (
-            platform_fee_val
-            + (ai_fee * ai_vol)
-            + (advanced_fee * adv_vol)
-            + (basic_marketing_fee * basic_marketing_vol)
-            + (basic_utility_fee * basic_utility_vol)
-            + (marketing_cost * basic_marketing_vol)
-            + (utility_cost * basic_utility_vol)
-        )
-        margin_percent = (numerator / denominator * 100) if denominator > 0 else 0
-        results['margin'] = f"{margin_percent:.2f}%"
-
-        print("DEBUG volume path context:", {
-            "step": "results",
-            "currency_symbol": currency_symbol,
-            "final_inclusions": final_inclusions,
-            "results": results,
-            "bundle_details": bundle_details,
-            "expected_invoice_amount": expected_invoice_amount,
-            "chosen_platform_fee": chosen_platform_fee,
-            "rate_card_platform_fee": rate_card_platform_fee,
-            "platform_fee": chosen_platform_fee,
-            "platform_fee_rate_card": rate_card_platform_fee,
-            "pricing_table": results['line_items'],
-            "user_selections": user_selections,
-            "inputs": inputs
-        })
-
-        return render_template(
-            'index.html',
-            step='results',
-            currency_symbol=currency_symbol,
-            inclusions=final_inclusions,
-            final_inclusions=final_inclusions,
-            results=results,
-            bundle_details=bundle_details,
-            expected_invoice_amount=expected_invoice_amount,
-            chosen_platform_fee=chosen_platform_fee,
-            rate_card_platform_fee=rate_card_platform_fee,
-            platform_fee=chosen_platform_fee,
-            platform_fee_rate_card=rate_card_platform_fee,
-            pricing_table=results['line_items'],
-            user_selections=user_selections,
-            inputs=inputs
-        )
+            chosen_platform_fee = float(platform_fee)
+            rate_card_platform_fee, _ = calculate_platform_fee(
+                inputs['country'],
+                inputs.get('bfsi_tier', 'NA'),
+                inputs.get('personalize_load', 'NA'),
+                inputs.get('human_agents', 'NA'),
+                inputs.get('ai_module', 'NA'),
+                inputs.get('smart_cpaas', 'No'),
+                inputs.get('increased_tps', 'NA')
+            )
+            user_selections = []
+            if inputs.get('bfsi_tier', 'NA') not in ['NA', 'No']:
+                user_selections.append(('BFSI Tier', inputs['bfsi_tier']))
+            if inputs.get('personalize_load', 'NA') not in ['NA', 'No']:
+                user_selections.append(('Personalize Load', inputs['personalize_load']))
+            if inputs.get('human_agents', 'NA') not in ['NA', 'No']:
+                user_selections.append(('Human Agents', inputs['human_agents']))
+            if inputs.get('ai_module', 'NA') not in ['NA', 'No']:
+                user_selections.append(('AI Module', inputs['ai_module']))
+            if inputs.get('smart_cpaas', 'No') == 'Yes':
+                user_selections.append(('Smart CPaaS', 'Yes'))
+            if inputs.get('increased_tps', 'NA') not in ['NA', 'No']:
+                user_selections.append(('Increased TPS', inputs['increased_tps']))
+            inclusions = session.get('inclusions', {})
+            final_inclusions = inclusions['Platform Fee Used for Margin Calculation'][:]
+            bfsi_tier = inputs.get('bfsi_tier', 'NA')
+            if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
+                final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Audit trail') and not inc.startswith('Conversational Data Encryption') and not inc.startswith('Data Encryption')]
+                final_inclusions += inclusions.get(f'BFSI Tier {bfsi_tier.split(" ")[-1]}', [])
+            personalize_load = inputs.get('personalize_load', 'NA')
+            if personalize_load in ['Standard', 'Advanced']:
+                final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Standard') or inc.startswith('Advanced'))]
+                final_inclusions += inclusions.get(f'Personalize Load {personalize_load}', [])
+            human_agents = inputs.get('human_agents', 'NA')
+            if human_agents in ['20+', '50+', '100+']:
+                final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Agent Assist') or inc.startswith('Upto') or inc.startswith('More than'))]
+                final_inclusions += inclusions.get(f'Human Agents {human_agents}', [])
+            ai_module = inputs.get('ai_module', 'NA')
+            if ai_module == 'Yes':
+                final_inclusions += inclusions.get('AI Module Yes', [])
+            if inputs.get('smart_cpaas', 'No') == 'Yes':
+                final_inclusions += inclusions.get('Smart CPaaS Yes', [])
+            else:
+                final_inclusions = [inc for inc in final_inclusions if inc != 'Auto failover between channels']
+            increased_tps = inputs.get('increased_tps', 'NA')
+            if increased_tps in ['250', '1000']:
+                final_inclusions = [inc for inc in final_inclusions if not inc.startswith('80 TPS')]
+                final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
+            final_inclusions = list(dict.fromkeys(final_inclusions))
+            session['selected_components'] = user_selections
+            session['results'] = results
+            session['chosen_platform_fee'] = chosen_platform_fee
+            session['rate_card_platform_fee'] = rate_card_platform_fee
+            session['user_selections'] = user_selections
+            session['inclusions'] = inclusions
+            return render_template(
+                'index.html',
+                step='results',
+                currency_symbol=currency_symbol,
+                inclusions=final_inclusions,
+                final_inclusions=final_inclusions,
+                results=results,
+                bundle_details=bundle_details,
+                expected_invoice_amount=expected_invoice_amount,
+                chosen_platform_fee=chosen_platform_fee,
+                rate_card_platform_fee=rate_card_platform_fee,
+                platform_fee=chosen_platform_fee,
+                platform_fee_rate_card=rate_card_platform_fee,
+                pricing_table=results['line_items'],
+                user_selections=user_selections,
+                inputs=inputs
+            )
 
     # Defensive: handle GET or POST for edit actions
     elif step == 'volumes':
