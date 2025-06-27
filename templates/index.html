@@ -247,57 +247,15 @@
 
     {% if step == 'results' %}
         <h2>Results</h2>
-        
         <h3>Section 1: Pricing</h3>
-        {% if bundle_details and bundle_details.lines %}
-        <h4>Messaging Bundle (Committed Credits)</h4>
-        <table>
-            <tr>
-                <th>Charge Type</th>
-                <th>Volume Included</th>
-                <th>Bundle Price (per message)</th>
-                <th>Overage Price (per message)</th>
-            </tr>
-            {% for line in bundle_details.lines %}
-            <tr>
-                <td>{{ line.label or 'N/A' }}</td>
-                <td>{{ '{:,.0f}'.format(line.volume or 0) if ((line.volume or 0) % 1) == 0 else '{:,.3f}'.format(line.volume or 0) }}</td>
-                <td>{{ currency_symbol }}{{ '{:,.0f}'.format(line.price or 0) if ((line.price or 0) % 1) == 0 else '{:,.3f}'.format(line.price or 0) }}</td>
-                <td>{{ currency_symbol }}{{ '{:,.0f}'.format(line.overage_price or 0) if ((line.overage_price or 0) % 1) == 0 else '{:,.3f}'.format(line.overage_price or 0) }}</td>
-            </tr>
-            {% endfor %}
-            <tr>
-                <td>Platform Fee</td>
-                <td>
-                    <ul style="margin:0; padding-left:18px;">
-                        {% for comp in session.selected_components %}
-                            <li>{{ comp }}</li>
-                        {% endfor %}
-                    </ul>
-                </td>
-                <td colspan="2" style="text-align:right;">{{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</td>
-            </tr>
-        </table>
-        <p><b>Total Bundle Cost (messages only):</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.bundle_cost or 0) if ((bundle_details.bundle_cost or 0) % 1) == 0 else '{:,.3f}'.format(bundle_details.bundle_cost or 0) }}</p>
-        <p><b>Total Bundle Price (Platform Fee + Bundle):</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.total_bundle_price or 0) if ((bundle_details.total_bundle_price or 0) % 1) == 0 else '{:,.3f}'.format(bundle_details.total_bundle_price or 0) }}</p>
-        <p><b>Inclusion:</b> {{ bundle_details.inclusion_text or 'N/A' }}</p>
-        <p><i>When committed credits run out, overage charges will apply at the agreed overage rates.</i></p>
-        {% endif %}
         <p><b>Expected Invoice Amount (Meta charges + Gupshup fee + Platform fee):</b> {{ currency_symbol }}{{ '{:,.2f}'.format(expected_invoice_amount|float or 0) }}</p>
-        
         <h4>Inclusions</h4>
         <ul>
             {% for inc in final_inclusions %}
                 <li>{{ inc }}</li>
             {% endfor %}
         </ul>
-        
         <hr>
-        
-        <h3>Section 2: Internal - Not to be shared</h3>
-        <h4>Margin and Cost Details</h4>
-        <p><b>Chosen Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</p>
-        <p><b>Rate Card Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(rate_card_platform_fee or 0) if ((rate_card_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(rate_card_platform_fee or 0) }}</p>
         <table>
             <tr>
                 <th>Line Item</th>
@@ -311,7 +269,7 @@
             {% for item in results.line_items %}
             <tr>
                 <td>{{ item.label }}</td>
-                <td>{{ item.volume }}</td>
+                <td>{{ item.volume if item.volume != '' else '—' }}</td>
                 <td>{{ item.chosen_price }}</td>
                 <td>{{ item.suggested_price }}</td>
                 <td>{{ item.overage_price }}</td>
@@ -346,7 +304,17 @@
             </tr>
             {% endfor %}
         </table>
-        <br>
+        {% if bundle_details and bundle_details.committed_amount is defined %}
+        <h4>Committed Amount</h4>
+        <p><b>Committed Monthly Amount:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.committed_amount or 0) if ((bundle_details.committed_amount or 0) % 1) == 0 else '{:,.2f}'.format(bundle_details.committed_amount or 0) }}</p>
+        <p>Your committed amount will be drawn down as you use the platform, based on the agreed rates for each message type.</p>
+        <p style="margin-top:1em; color:#333; font-size:1.05em;"><b>Note:</b> The committed bundle will be consumed as per message type and volumes consumed within the month. In case the consumption is over the committed amount, overage prices will apply.</p>
+        {% endif %}
+        <hr>
+        <h3>Section 2: Internal - Not to be shared</h3>
+        <h4>Margin and Cost Details</h4>
+        <p><b>Chosen Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}</p>
+        <p><b>Rate Card Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(rate_card_platform_fee or 0) if ((rate_card_platform_fee or 0) % 1 == 0) else '{:,.3f}'.format(rate_card_platform_fee or 0) }}</p>
         <table>
             <tr><td colspan="3"><small>Note: Margin is calculated using the chosen platform fee (editable in the previous step).</small></td></tr>
             <tr><th>Total Revenue (Chosen) {{ currency_symbol }}/month</th><td colspan="2">{{ currency_symbol }}{% if (results.revenue or 0) % 1 == 0 %}{{ '{:,.0f}'.format(results.revenue or 0) }}{% else %}{{ '{:,.2f}'.format(results.revenue or 0) }}{% endif %}</td></tr>
@@ -357,18 +325,10 @@
             <tr><th>Margin (User Chosen)</th><td colspan="2">{{ results.margin }}</td></tr>
             <tr><th>Margin (Rate Card)</th><td colspan="2">{{ results.suggested_margin }}</td></tr>
         </table>
-        
         <br>
         <form method="get">
             <input type="submit" value="Start Over">
         </form>
-
-        {% if bundle_details and bundle_details.committed_amount is defined %}
-        <h4>Committed Amount</h4>
-        <p><b>Committed Monthly Amount:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.committed_amount or 0) if ((bundle_details.committed_amount or 0) % 1) == 0 else '{:,.2f}'.format(bundle_details.committed_amount or 0) }}</p>
-        <p>Your committed amount will be drawn down as you use the platform, based on the agreed rates for each message type.</p>
-        <p style="margin-top:1em; color:#333; font-size:1.05em;"><b>Note:</b> The committed bundle will be consumed as per message type and volumes consumed within the month. In case the consumption is over the committed amount, overage prices will apply.</p>
-        {% endif %}
     {% endif %}
 
     {% if step != 'volumes' %}

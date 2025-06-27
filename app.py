@@ -158,10 +158,10 @@ def index():
             'increased_tps': increased_tps
         }
         # Suggest prices
-        def get_highest_tier_price(country, msg_type):
+        def get_lowest_tier_price(country, msg_type):
             tiers = price_tiers.get(country, {}).get(msg_type, [])
             if tiers:
-                return tiers[-1][2]
+                return tiers[0][2]
             return 0.0
         def is_zero(val):
             try:
@@ -169,10 +169,10 @@ def index():
             except Exception:
                 return True
         suggested_prices = {
-            'ai_price': get_suggested_price(country, 'ai', ai_volume) if not is_zero(ai_volume) else get_highest_tier_price(country, 'ai'),
-            'advanced_price': get_suggested_price(country, 'advanced', advanced_volume) if not is_zero(advanced_volume) else get_highest_tier_price(country, 'advanced'),
-            'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if not is_zero(basic_marketing_volume) else get_highest_tier_price(country, 'basic_marketing'),
-            'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_highest_tier_price(country, 'basic_utility'),
+            'ai_price': get_suggested_price(country, 'ai', ai_volume) if not is_zero(ai_volume) else get_lowest_tier_price(country, 'ai'),
+            'advanced_price': get_suggested_price(country, 'advanced', advanced_volume) if not is_zero(advanced_volume) else get_lowest_tier_price(country, 'advanced'),
+            'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if not is_zero(basic_marketing_volume) else get_lowest_tier_price(country, 'basic_marketing'),
+            'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_lowest_tier_price(country, 'basic_utility'),
         }
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session['inputs'], currency_symbol=currency_symbol, platform_fee=platform_fee)
 
@@ -322,6 +322,7 @@ def index():
                 'total_bundle_price': committed_amount,
                 'inclusion_text': 'Your committed amount will be drawn down as you use the platform, based on the agreed rates.'
             }
+            expected_invoice_amount = (committed_amount or 0) + (platform_fee or 0)
         else:
             # Show each type of message, volume, and overage price
             bundle_lines = []
@@ -348,19 +349,20 @@ def index():
                 'total_bundle_price': total_bundle_price,
                 'inclusion_text': 'See table below for included volumes and overage prices.'
             }
+            results = calculate_pricing(
+                inputs['country'],
+                inputs['ai_volume'],
+                inputs['advanced_volume'],
+                inputs['basic_marketing_volume'],
+                inputs['basic_utility_volume'],
+                float(pricing_inputs.get('platform_fee', 0)),
+                ai_price=ai_price,
+                advanced_price=advanced_price,
+                basic_marketing_price=basic_marketing_price,
+                basic_utility_price=basic_utility_price
+            )
+            expected_invoice_amount = results.get('revenue', 0)
         # Call calculation logic with updated platform fee (do not add bundle_cost to platform_fee)
-        results = calculate_pricing(
-            inputs['country'],
-            inputs['ai_volume'],
-            inputs['advanced_volume'],
-            inputs['basic_marketing_volume'],
-            inputs['basic_utility_volume'],
-            float(pricing_inputs.get('platform_fee', 0)),
-            ai_price=ai_price,
-            advanced_price=advanced_price,
-            basic_marketing_price=basic_marketing_price,
-            basic_utility_price=basic_utility_price
-        )
         currency_symbol = COUNTRY_CURRENCY.get(inputs['country'], '$')
         # Pass both chosen and rate card platform fee to results page
         chosen_platform_fee = float(pricing_inputs.get('platform_fee', 0))
@@ -399,9 +401,6 @@ def index():
                 'revenue': '',
                 'suggested_revenue': rate_card_platform_fee
             })
-
-        # Pass expected_invoice_amount to template
-        expected_invoice_amount = results.get('revenue', 0)
 
         # Gather non-NA/No selections for display
         user_selections = []
@@ -666,10 +665,10 @@ def index():
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
     else:
-        # Default: show volume input form
-        country = session.get('inputs', {}).get('country', 'India')
-        currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
-        return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
+    # Default: show volume input form
+    country = session.get('inputs', {}).get('country', 'India')
+    currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
+    return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
 
 @app.route('/authorize')
 def authorize():
