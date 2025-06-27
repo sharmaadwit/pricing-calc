@@ -80,7 +80,7 @@ def initialize_inclusions():
             'Advanced - upto 10 million records, external events supported'
         ],
         'AI Module Yes': [
-            'if yes, Workspace Configuration and Data retarining UI'
+            'AI- Workspace Configuration and Data retarining UI'
         ],
         'Increased TPS 250': [
             '250 - Upto 250 messages per second'
@@ -98,7 +98,7 @@ def initialize_inclusions():
             'More than 100 agents, advanced routing rules'
         ],
         'Smart CPaaS Yes': [
-            'Intelligent faiover between channels'
+            'Smart CPaaS - Intelligent failover between channels'
         ]
     }
     return inclusions
