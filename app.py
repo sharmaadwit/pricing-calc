@@ -290,28 +290,12 @@ def index():
                 })
             # Add platform fee rows
             chosen_platform_fee = float(pricing_inputs.get('platform_fee', 0))
-            rate_card_platform_fee, _ = calculate_platform_fee(
-                inputs['country'],
-                inputs.get('bfsi_tier', 'NA'),
-                inputs.get('personalize_load', 'NA'),
-                inputs.get('human_agents', 'NA'),
-                inputs.get('ai_module', 'NA'),
-                inputs.get('smart_cpaas', 'No'),
-                inputs.get('increased_tps', 'NA')
-            )
             line_items.append({
                 'line_item': 'Platform Fee (Chosen)',
                 'volume': '',
                 'chosen_price': '',
                 'overage_price': '',
                 'revenue': chosen_platform_fee
-            })
-            line_items.append({
-                'line_item': 'Platform Fee (Rate Card)',
-                'volume': '',
-                'chosen_price': '',
-                'overage_price': '',
-                'revenue': rate_card_platform_fee
             })
             results = {
                 'line_items': line_items,
@@ -394,13 +378,6 @@ def index():
                 'chosen_price': '',
                 'overage_price': '',
                 'revenue': chosen_platform_fee
-            })
-            results['line_items'].append({
-                'line_item': 'Platform Fee (Rate Card)',
-                'volume': '',
-                'chosen_price': '',
-                'overage_price': '',
-                'revenue': rate_card_platform_fee
             })
 
         # Gather non-NA/No selections for display
