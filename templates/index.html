@@ -259,7 +259,7 @@
         <p><b>Inclusion:</b> {{ bundle_details.inclusion_text or 'N/A' }}</p>
         <p><i>When committed credits run out, overage charges will apply at the agreed overage rates.</i></p>
         {% endif %}
-        <p><b>Expected Invoice Amount (Meta charges + Gupshup fee + Platform fee):</b> {{ currency_symbol }}{{ expected_invoice_amount }}</p>
+        <p><b>Expected Invoice Amount (Meta charges + Gupshup fee + Platform fee):</b> {{ currency_symbol }}{{ '{:,.2f}'.format(expected_invoice_amount|float or 0) }}</p>
         
         <h4>Inclusions</h4>
         <ul>
@@ -291,19 +291,19 @@
                 <td>{{ item.chosen_price }}</td>
                 <td>{{ item.suggested_price }}</td>
                 <td>{{ item.overage_price }}</td>
-                <td>{{ item.revenue }}</td>
-                <td>{{ item.suggested_revenue }}</td>
+                <td>{{ currency_symbol }}{% if item.revenue|float % 1 == 0 %}{{ '{:,.0f}'.format(item.revenue|float) }}{% else %}{{ '{:,.2f}'.format(item.revenue|float) }}{% endif %}</td>
+                <td>{{ currency_symbol }}{% if item.suggested_revenue|float % 1 == 0 %}{{ '{:,.0f}'.format(item.suggested_revenue|float) }}{% else %}{{ '{:,.2f}'.format(item.suggested_revenue|float) }}{% endif %}</td>
             </tr>
             {% endfor %}
         </table>
         <br>
         <table>
             <tr><td colspan="3"><small>Note: Margin is calculated using the chosen platform fee (editable in the previous step).</small></td></tr>
-            <tr><th>Total Revenue (Chosen) {{ currency_symbol }}/month</th><td colspan="2">{{ '{:,.2f}'.format(results.revenue|float or 0) }}</td></tr>
-            <tr><th>Total Revenue (Rate Card) {{ currency_symbol }}/month</th><td colspan="2">{{ '{:,.2f}'.format(results.suggested_revenue|float or 0) }}</td></tr>
-            <tr><th>Channel Cost</th><td colspan="2">{{ results.channel_cost }}</td></tr>
-            <tr><th>AI Costs {{ currency_symbol }}/month</th><td colspan="2">{{ results.ai_costs }}</td></tr>
-            <tr><th>Total Costs {{ currency_symbol }}/month</th><td colspan="2">{{ results.total_costs }}</td></tr>
+            <tr><th>Total Revenue (Chosen) {{ currency_symbol }}/month</th><td colspan="2">{{ currency_symbol }}{% if (results.revenue or 0) % 1 == 0 %}{{ '{:,.0f}'.format(results.revenue or 0) }}{% else %}{{ '{:,.2f}'.format(results.revenue or 0) }}{% endif %}</td></tr>
+            <tr><th>Total Revenue (Rate Card) {{ currency_symbol }}/month</th><td colspan="2">{{ currency_symbol }}{% if (results.suggested_revenue or 0) % 1 == 0 %}{{ '{:,.0f}'.format(results.suggested_revenue or 0) }}{% else %}{{ '{:,.2f}'.format(results.suggested_revenue or 0) }}{% endif %}</td></tr>
+            <tr><th>Channel Cost</th><td colspan="2">{{ currency_symbol }}{% if results.channel_cost|float % 1 == 0 %}{{ '{:,.0f}'.format(results.channel_cost|float) }}{% else %}{{ '{:,.2f}'.format(results.channel_cost|float) }}{% endif %}</td></tr>
+            <tr><th>AI Costs {{ currency_symbol }}/month</th><td colspan="2">{{ currency_symbol }}{% if results.ai_costs|float % 1 == 0 %}{{ '{:,.0f}'.format(results.ai_costs|float) }}{% else %}{{ '{:,.2f}'.format(results.ai_costs|float) }}{% endif %}</td></tr>
+            <tr><th>Total Costs {{ currency_symbol }}/month</th><td colspan="2">{{ currency_symbol }}{% if results.total_costs|float % 1 == 0 %}{{ '{:,.0f}'.format(results.total_costs|float) }}{% else %}{{ '{:,.2f}'.format(results.total_costs|float) }}{% endif %}</td></tr>
             <tr><th>Margin (User Chosen)</th><td colspan="2">{{ results.margin }}</td></tr>
             <tr><th>Margin (Rate Card)</th><td colspan="2">{{ results.suggested_margin }}</td></tr>
         </table>

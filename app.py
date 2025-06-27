@@ -466,8 +466,9 @@ def index():
                 return str(val) if val is not None else '0'
         
         # Format the main results
-        results['revenue'] = fmt(results.get('revenue', 0))
-        results['suggested_revenue'] = fmt(results.get('suggested_revenue', 0))
+        # Don't format revenue as string - let template handle formatting
+        # results['revenue'] = fmt(results.get('revenue', 0))
+        # results['suggested_revenue'] = fmt(results.get('suggested_revenue', 0))
         results['channel_cost'] = fmt(results.get('channel_cost', 0))
         results['ai_costs'] = fmt(results.get('ai_costs', 0))
         results['total_costs'] = fmt(results.get('total_costs', 0))
