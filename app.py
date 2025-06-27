@@ -377,6 +377,15 @@ def index():
                 basic_marketing_price=basic_marketing_price,
                 basic_utility_price=basic_utility_price
             )
+            # Remove duplicate Committed Amount if present
+            seen = set()
+            unique_line_items = []
+            for item in results['line_items']:
+                key = (item.get('line_item'), item.get('chosen_price'), item.get('suggested_price'))
+                if key not in seen:
+                    unique_line_items.append(item)
+                    seen.add(key)
+            results['line_items'] = unique_line_items
             # Always set total margin for volume commitment path
             results['margin'] = results.get('margin', '')
             expected_invoice_amount = results.get('revenue', 0)
