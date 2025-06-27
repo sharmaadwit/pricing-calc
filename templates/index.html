@@ -57,10 +57,6 @@
     </script>
 </head>
 <body>
-    <!-- DEBUG: Template loaded -->
-    <!-- DEBUG: Step value: {{ step }} -->
-    <!-- DEBUG: Step type: {{ step.__class__.__name__ if step else 'None' }} -->
-    
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul class="flashes">
@@ -73,7 +69,6 @@
     <h1>Pricing Calculator</h1>
 
     {% if step == 'volumes' %}
-    <!-- DEBUG: In volumes section -->
     <!-- How to Use Guide -->
     <div style="background: #f8fafd; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
       <h3 style="margin-top:0;">How to Use</h3>
@@ -140,13 +135,13 @@
                 <option value="Rest of the World" {% if inputs and inputs.country == 'Rest of the World' %}selected{% endif %}>Rest of the World</option>
             </select><br><br>
             <label>AI Message Volume (per month):</label>
-            <input type="text" name="ai_volume" class="comma-number" value="{{ inputs.ai_volume if inputs and inputs.ai_volume is defined else '' }}"><br><br>
+            <input type="text" name="ai_volume" class="comma-number" value="{{ inputs.get('ai_volume', '') }}"><br><br>
             <label>Advanced Message Volume (per month):</label>
-            <input type="text" name="advanced_volume" class="comma-number" value="{{ inputs.advanced_volume if inputs and inputs.advanced_volume is defined else '' }}"><br><br>
+            <input type="text" name="advanced_volume" class="comma-number" value="{{ inputs.get('advanced_volume', '') }}"><br><br>
             <label>Basic Marketing Message Volume (per month):</label>
-            <input type="text" name="basic_marketing_volume" class="comma-number" value="{{ inputs.basic_marketing_volume if inputs and inputs.basic_marketing_volume is defined else '' }}"><br><br>
+            <input type="text" name="basic_marketing_volume" class="comma-number" value="{{ inputs.get('basic_marketing_volume', '') }}"><br><br>
             <label>Basic Utility/Authentication Message Volume (per month):</label>
-            <input type="text" name="basic_utility_volume" class="comma-number" value="{{ inputs.basic_utility_volume if inputs and inputs.basic_utility_volume is defined else '' }}"><br><br>
+            <input type="text" name="basic_utility_volume" class="comma-number" value="{{ inputs.get('basic_utility_volume', '') }}"><br><br>
             <label>Minimum Platform Fee:</label>
             <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly><br>
             <small>80 TPS, Journey Builder Lite, Campaign Manager, CTWA - (Meta/Tiktok), Agent Assist < 20 Agents, Personalize upto 1 Million profiles and external events not supported</small><br><br>
@@ -227,7 +222,6 @@
     {% endif %}
 
     {% if step == 'prices' %}
-    <!-- DEBUG: In prices section -->
     <form method="post" id="prices-form">
         <input type="hidden" name="step" value="prices">
         <h2>Rate Card Pricing</h2>
@@ -269,8 +263,7 @@
     {% endif %}
 
     {% if step == 'bundle' %}
-    <!-- DEBUG: In bundle section -->
-    {% set all_volumes_zero = (inputs.ai_volume|float == 0 and inputs.advanced_volume|float == 0 and inputs.basic_marketing_volume|float == 0 and inputs.basic_utility_volume|float == 0) %}
+    {% set all_volumes_zero = (inputs.get('ai_volume', 0)|float == 0 and inputs.get('advanced_volume', 0)|float == 0 and inputs.get('basic_marketing_volume', 0)|float == 0 and inputs.get('basic_utility_volume', 0)|float == 0) %}
     {% if all_volumes_zero %}
     <form method="post">
         <h2>Enter Committed Monthly Amount</h2>
@@ -363,50 +356,20 @@
                 </tr>
               </thead>
               <tbody>
-                {% for row in pricing_table %}
-                  {% if row.line_item or row.label in ['AI Message', 'Advanced Message', 'Basic Marketing Message', 'Basic Utility/Authentication Message'] %}
-                    {% if row.line_item != 'Platform Fee (Chosen)' %}
-                    <tr>
-                      <td>{{ row.line_item or row.label }}</td>
-                      <td class="right">{{ currency_symbol }}{{ row.chosen_price }}</td>
-                      <td class="right">{{ currency_symbol }}{{ row.suggested_price if row.suggested_price is defined else 'N/A' }}</td>
-                      <td class="right">
-                        {% if row.chosen_price and row.suggested_price and row.suggested_price|float != 0 %}
-                          {{ '{:.2f}'.format(((row.chosen_price|float - row.suggested_price|float) / row.suggested_price|float) * 100) }}%
-                        {% else %}
-                          N/A
-                        {% endif %}
-                      </td>
-                    </tr>
-                    {% endif %}
-                  {% endif %}
+                {% for row in margin_table %}
+                  <tr>
+                    <td>{{ row.line_item }}</td>
+                    <td class="right">{{ row.chosen_price }}</td>
+                    <td class="right">{{ row.rate_card_price }}</td>
+                    <td class="right">{{ row.margin_change }}</td>
+                  </tr>
                 {% endfor %}
-                <tr>
-                  <td>Platform Fee</td>
-                  <td class="right">{{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) }}</td>
-                  <td class="right">{{ currency_symbol }}{{ '{:,.0f}'.format(rate_card_platform_fee or 0) }}</td>
-                  <td class="right">
-                    {% if chosen_platform_fee and rate_card_platform_fee and rate_card_platform_fee != 0 %}
-                      {{ '{:.2f}'.format(((chosen_platform_fee - rate_card_platform_fee) / rate_card_platform_fee) * 100) }}%
-                    {% else %}
-                      N/A
-                    {% endif %}
-                  </td>
-                </tr>
-                {% if bundle_details and bundle_details.committed_amount is defined %}
-                <tr>
-                  <td>Committed Amount</td>
-                  <td class="right">{{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.committed_amount or 0) }}</td>
-                  <td class="right">N/A</td>
-                  <td class="right">N/A</td>
-                </tr>
-                {% endif %}
               </tbody>
             </table>
             <div style="font-size:1.08em; margin-top:12px;">
               <b>Note:</b> This section is for internal use only and should not be shared with the customer.
             </div>
-            {% if results.margin and (inputs.ai_volume|float > 0 or inputs.advanced_volume|float > 0 or inputs.basic_marketing_volume|float > 0 or inputs.basic_utility_volume|float > 0) %}
+            {% if results.margin and (inputs.get('ai_volume', 0)|float > 0 or inputs.get('advanced_volume', 0)|float > 0 or inputs.get('basic_marketing_volume', 0)|float > 0 or inputs.get('basic_utility_volume', 0)|float > 0) %}
             <div style="font-size:1.15em; margin-top:18px; color:#1a2a3a;">
               <b>Total Margin (as per formula above):</b> {{ results.margin }}
             </div>

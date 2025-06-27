@@ -41,6 +41,77 @@ analytics_data = {
     'margin_rate_card': [],
 }
 
+def initialize_inclusions():
+    """Initialize the inclusions dictionary with actual inclusion data."""
+    inclusions = {
+        'Platform Fee Used for Margin Calculation': [
+            'Platform infrastructure and support',
+            'Basic API access and documentation',
+            'Standard SLA and uptime guarantees'
+        ],
+        'BFSI Tier 1': [
+            'Audit trail for 6 months',
+            'Conversational Data Encryption',
+            'Data Encryption at rest'
+        ],
+        'BFSI Tier 2': [
+            'Audit trail for 12 months',
+            'Conversational Data Encryption',
+            'Data Encryption at rest',
+            'Enhanced compliance reporting'
+        ],
+        'BFSI Tier 3': [
+            'Audit trail for 24 months',
+            'Conversational Data Encryption',
+            'Data Encryption at rest',
+            'Enhanced compliance reporting',
+            'Dedicated compliance officer'
+        ],
+        'Personalize Load Standard': [
+            'Standard personalization features',
+            'Basic template management',
+            'Standard load balancing'
+        ],
+        'Personalize Load Advanced': [
+            'Advanced personalization features',
+            'Advanced template management',
+            'Advanced load balancing',
+            'Real-time personalization engine'
+        ],
+        'Human Agents 20+': [
+            'Agent Assist for up to 20 agents',
+            'Basic agent management tools'
+        ],
+        'Human Agents 50+': [
+            'Agent Assist for up to 50 agents',
+            'Advanced agent management tools',
+            'Agent performance analytics'
+        ],
+        'Human Agents 100+': [
+            'Agent Assist for more than 100 agents',
+            'Advanced agent management tools',
+            'Agent performance analytics',
+            'Custom agent workflows'
+        ],
+        'AI Module Yes': [
+            'AI-powered message optimization',
+            'Smart routing and delivery',
+            'AI-driven analytics and insights'
+        ],
+        'Smart CPaaS Yes': [
+            'Auto failover between channels',
+            'Intelligent channel selection',
+            'Smart retry mechanisms'
+        ],
+        'Increased TPS 250': [
+            '80 TPS with burst capability up to 250 TPS'
+        ],
+        'Increased TPS 1000': [
+            '80 TPS with burst capability up to 1000 TPS'
+        ]
+    }
+    return inclusions
+
 def get_lowest_tier_price(country, msg_type):
     tiers = price_tiers.get(country, {}).get(msg_type.replace('_price', ''), [])
     if tiers:
@@ -122,7 +193,6 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    print('DEBUG: method:', request.method, 'form:', dict(request.form), 'session:', dict(session))
     # Defensive: always use .get() for form/session data
     step = request.form.get('step', 'volumes')
     results = None
@@ -284,112 +354,143 @@ def index():
                 'total_bundle_price': total_bundle_price,
                 'inclusion_text': 'See table below for included volumes and overage prices.'
             }
-            results = calculate_pricing(
-                inputs['country'],
-                inputs['ai_volume'],
-                inputs['advanced_volume'],
-                inputs['basic_marketing_volume'],
-                inputs['basic_utility_volume'],
-                float(platform_fee),
-                ai_price=ai_price,
-                advanced_price=advanced_price,
-                basic_marketing_price=basic_marketing_price,
-                basic_utility_price=basic_utility_price
-            )
-            # Remove duplicate Committed Amount if present
-            seen = set()
-            unique_line_items = []
-            for item in results['line_items']:
-                key = (item.get('line_item'), item.get('chosen_price'), item.get('suggested_price'))
-                if key not in seen:
-                    unique_line_items.append(item)
-                    seen.add(key)
-            results['line_items'] = unique_line_items
-            results['margin'] = results.get('margin', '')
-            expected_invoice_amount = results.get('revenue', 0)
-            chosen_platform_fee = float(platform_fee)
-            rate_card_platform_fee, _ = calculate_platform_fee(
-                inputs['country'],
-                inputs.get('bfsi_tier', 'NA'),
-                inputs.get('personalize_load', 'NA'),
-                inputs.get('human_agents', 'NA'),
-                inputs.get('ai_module', 'NA'),
-                inputs.get('smart_cpaas', 'No'),
-                inputs.get('increased_tps', 'NA')
-            )
-            user_selections = []
-            if inputs.get('bfsi_tier', 'NA') not in ['NA', 'No']:
-                user_selections.append(('BFSI Tier', inputs['bfsi_tier']))
-            if inputs.get('personalize_load', 'NA') not in ['NA', 'No']:
-                user_selections.append(('Personalize Load', inputs['personalize_load']))
-            if inputs.get('human_agents', 'NA') not in ['NA', 'No']:
-                user_selections.append(('Human Agents', inputs['human_agents']))
-            if inputs.get('ai_module', 'NA') not in ['NA', 'No']:
-                user_selections.append(('AI Module', inputs['ai_module']))
-            if inputs.get('smart_cpaas', 'No') == 'Yes':
-                user_selections.append(('Smart CPaaS', 'Yes'))
-            if inputs.get('increased_tps', 'NA') not in ['NA', 'No']:
-                user_selections.append(('Increased TPS', inputs['increased_tps']))
-            inclusions = session.get('inclusions', {})
-            final_inclusions = inclusions['Platform Fee Used for Margin Calculation'][:]
-            bfsi_tier = inputs.get('bfsi_tier', 'NA')
-            if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
-                final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Audit trail') and not inc.startswith('Conversational Data Encryption') and not inc.startswith('Data Encryption')]
-                final_inclusions += inclusions.get(f'BFSI Tier {bfsi_tier.split(" ")[-1]}', [])
-            personalize_load = inputs.get('personalize_load', 'NA')
-            if personalize_load in ['Standard', 'Advanced']:
-                final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Standard') or inc.startswith('Advanced'))]
-                final_inclusions += inclusions.get(f'Personalize Load {personalize_load}', [])
-            human_agents = inputs.get('human_agents', 'NA')
-            if human_agents in ['20+', '50+', '100+']:
-                final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Agent Assist') or inc.startswith('Upto') or inc.startswith('More than'))]
-                final_inclusions += inclusions.get(f'Human Agents {human_agents}', [])
-            ai_module = inputs.get('ai_module', 'NA')
-            if ai_module == 'Yes':
-                final_inclusions += inclusions.get('AI Module Yes', [])
-            if inputs.get('smart_cpaas', 'No') == 'Yes':
-                final_inclusions += inclusions.get('Smart CPaaS Yes', [])
-            else:
-                final_inclusions = [inc for inc in final_inclusions if inc != 'Auto failover between channels']
-            increased_tps = inputs.get('increased_tps', 'NA')
-            if increased_tps in ['250', '1000']:
-                final_inclusions = [inc for inc in final_inclusions if not inc.startswith('80 TPS')]
-                final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
-            final_inclusions = list(dict.fromkeys(final_inclusions))
-            session['selected_components'] = user_selections
-            session['results'] = results
-            session['chosen_platform_fee'] = chosen_platform_fee
-            session['rate_card_platform_fee'] = rate_card_platform_fee
-            session['user_selections'] = user_selections
-            session['inclusions'] = inclusions
-            # Add platform fee as a line item if not already present (for volume path)
-            platform_fee_line = {
-                'line_item': 'Platform Fee (Chosen)',
-                'volume': '',
-                'chosen_price': '',
-                'suggested_price': '',
-                'overage_price': '',
-                'revenue': float(platform_fee)
-            }
-            if not any(item.get('line_item') == 'Platform Fee (Chosen)' for item in results['line_items']):
-                results['line_items'].append(platform_fee_line)
-            return render_template(
-                'index.html',
-                step='results',
-                currency_symbol=currency_symbol,
-                inclusions=final_inclusions,
-                final_inclusions=final_inclusions,
-                results=results,
-                bundle_details=bundle_details,
-                expected_invoice_amount=expected_invoice_amount,
-                chosen_platform_fee=chosen_platform_fee,
-                rate_card_platform_fee=rate_card_platform_fee,
-                platform_fee=chosen_platform_fee,
-                platform_fee_rate_card=rate_card_platform_fee,
-                pricing_table=results['line_items'],
-                user_selections=user_selections,
-                inputs=inputs
-            )
+        results = calculate_pricing(
+            inputs['country'],
+            inputs['ai_volume'],
+            inputs['advanced_volume'],
+            inputs['basic_marketing_volume'],
+            inputs['basic_utility_volume'],
+            float(platform_fee),
+            ai_price=ai_price,
+            advanced_price=advanced_price,
+            basic_marketing_price=basic_marketing_price,
+            basic_utility_price=basic_utility_price
+        )
+        # Remove duplicate Committed Amount if present
+        seen = set()
+        unique_line_items = []
+        for item in results['line_items']:
+            key = (item.get('line_item'), item.get('chosen_price'), item.get('suggested_price'))
+            if key not in seen:
+                unique_line_items.append(item)
+                seen.add(key)
+        results['line_items'] = unique_line_items
+        results['margin'] = results.get('margin', '')
+        expected_invoice_amount = results.get('revenue', 0)
+        chosen_platform_fee = float(platform_fee)
+        rate_card_platform_fee, _ = calculate_platform_fee(
+            inputs['country'],
+            inputs.get('bfsi_tier', 'NA'),
+            inputs.get('personalize_load', 'NA'),
+            inputs.get('human_agents', 'NA'),
+            inputs.get('ai_module', 'NA'),
+            inputs.get('smart_cpaas', 'No'),
+            inputs.get('increased_tps', 'NA')
+        )
+        user_selections = []
+        if inputs.get('bfsi_tier', 'NA') not in ['NA', 'No']:
+            user_selections.append(('BFSI Tier', inputs['bfsi_tier']))
+        if inputs.get('personalize_load', 'NA') not in ['NA', 'No']:
+            user_selections.append(('Personalize Load', inputs['personalize_load']))
+        if inputs.get('human_agents', 'NA') not in ['NA', 'No']:
+            user_selections.append(('Human Agents', inputs['human_agents']))
+        if inputs.get('ai_module', 'NA') not in ['NA', 'No']:
+            user_selections.append(('AI Module', inputs['ai_module']))
+        if inputs.get('smart_cpaas', 'No') == 'Yes':
+            user_selections.append(('Smart CPaaS', 'Yes'))
+        if inputs.get('increased_tps', 'NA') not in ['NA', 'No']:
+            user_selections.append(('Increased TPS', inputs['increased_tps']))
+        inclusions = initialize_inclusions()
+        final_inclusions = inclusions.get('Platform Fee Used for Margin Calculation', [])[:]
+        bfsi_tier = inputs.get('bfsi_tier', 'NA')
+        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
+            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Audit trail') and not inc.startswith('Conversational Data Encryption') and not inc.startswith('Data Encryption')]
+            final_inclusions += inclusions.get(f'BFSI Tier {bfsi_tier.split(" ")[-1]}', [])
+        personalize_load = inputs.get('personalize_load', 'NA')
+        if personalize_load in ['Standard', 'Advanced']:
+            final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Standard') or inc.startswith('Advanced'))]
+            final_inclusions += inclusions.get(f'Personalize Load {personalize_load}', [])
+        human_agents = inputs.get('human_agents', 'NA')
+        if human_agents in ['20+', '50+', '100+']:
+            final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Agent Assist') or inc.startswith('Upto') or inc.startswith('More than'))]
+            final_inclusions += inclusions.get(f'Human Agents {human_agents}', [])
+        ai_module = inputs.get('ai_module', 'NA')
+        if ai_module == 'Yes':
+            final_inclusions += inclusions.get('AI Module Yes', [])
+        if inputs.get('smart_cpaas', 'No') == 'Yes':
+            final_inclusions += inclusions.get('Smart CPaaS Yes', [])
+        else:
+            final_inclusions = [inc for inc in final_inclusions if inc != 'Auto failover between channels']
+        increased_tps = inputs.get('increased_tps', 'NA')
+        if increased_tps in ['250', '1000']:
+            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('80 TPS')]
+            final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
+        final_inclusions = list(dict.fromkeys(final_inclusions))
+        session['selected_components'] = user_selections
+        session['results'] = results
+        session['chosen_platform_fee'] = chosen_platform_fee
+        session['rate_card_platform_fee'] = rate_card_platform_fee
+        session['user_selections'] = user_selections
+        session['inclusions'] = inclusions
+        # Add platform fee as a line item if not already present (for volume path)
+        platform_fee_line = {
+            'line_item': 'Platform Fee (Chosen)',
+            'volume': '',
+            'chosen_price': '',
+            'suggested_price': '',
+            'overage_price': '',
+            'revenue': float(platform_fee)
+        }
+        if not any(item.get('line_item') == 'Platform Fee (Chosen)' for item in results['line_items']):
+            results['line_items'].append(platform_fee_line)
+        
+        # Create margin table for volume-based path
+        margin_line_items = []
+        for item in results['line_items']:
+            if item.get('line_item') != 'Platform Fee (Chosen)':
+                chosen_price = item.get('chosen_price', 0)
+                suggested_price = item.get('suggested_price', 0)
+                margin_change = ''
+                if chosen_price and suggested_price and suggested_price > 0:
+                    try:
+                        margin_change = f"{((float(chosen_price) - float(suggested_price)) / float(suggested_price) * 100):.2f}%"
+                    except Exception:
+                        margin_change = '0.00%'
+                else:
+                    margin_change = '0.00%'
+                margin_line_items.append({
+                    'line_item': item.get('line_item') or item.get('label', ''),
+                    'chosen_price': chosen_price,
+                    'rate_card_price': suggested_price,
+                    'margin_change': margin_change
+                })
+        
+        # Add platform fee to margin table
+        margin_line_items.append({
+            'line_item': 'Platform Fee',
+            'chosen_price': f"₹{int(platform_fee):,}",
+            'rate_card_price': f"₹{int(rate_card_platform_fee):,}",
+            'margin_change': '0.00%'
+        })
+        
+        return render_template(
+            'index.html',
+            step='results',
+            currency_symbol=currency_symbol,
+            inclusions=final_inclusions,
+            final_inclusions=final_inclusions,
+            results=results,
+            bundle_details=bundle_details,
+            expected_invoice_amount=expected_invoice_amount,
+            chosen_platform_fee=chosen_platform_fee,
+            rate_card_platform_fee=rate_card_platform_fee,
+            platform_fee=chosen_platform_fee,
+            platform_fee_rate_card=rate_card_platform_fee,
+            pricing_table=results['line_items'],
+            margin_table=margin_line_items,
+            user_selections=user_selections,
+            inputs=inputs
+        )
 
     elif step == 'bundle' and request.method == 'POST':
         # Step 3: User submitted committed amount (for zero volumes path)
@@ -482,7 +583,13 @@ def index():
             'line_items': pricing_line_items,
             'revenue': committed_amount + float(platform_fee),
             'margin': 'N/A',
-            'margin_table': margin_line_items
+            'margin_table': margin_line_items,
+            'platform_fee': float(platform_fee),
+            'total_costs': 0.0,
+            'channel_cost': 0.0,
+            'ai_costs': 0.0,
+            'suggested_revenue': float(platform_fee),
+            'suggested_margin': '100.00%'
         }
         # Calculate expected invoice amount
         expected_invoice_amount = committed_amount + float(platform_fee)
@@ -511,8 +618,8 @@ def index():
         if inputs.get('increased_tps', 'NA') not in ['NA', 'No']:
             user_selections.append(('Increased TPS', inputs['increased_tps']))
         # Build inclusions
-        inclusions = session.get('inclusions', {})
-        final_inclusions = inclusions['Platform Fee Used for Margin Calculation'][:]
+        inclusions = initialize_inclusions()
+        final_inclusions = inclusions.get('Platform Fee Used for Margin Calculation', [])[:]
         bfsi_tier = inputs.get('bfsi_tier', 'NA')
         if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
             final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Audit trail') and not inc.startswith('Conversational Data Encryption') and not inc.startswith('Data Encryption')]
@@ -544,7 +651,7 @@ def index():
             'total_bundle_price': committed_amount + float(platform_fee),
             'inclusion_text': f'Committed amount of {COUNTRY_CURRENCY.get(country, '₹')}{committed_amount:,.0f} for messaging services.'
         }
-        # Update session
+        # Update session with complete results
         session['selected_components'] = user_selections
         session['results'] = results
         session['chosen_platform_fee'] = float(platform_fee)
@@ -553,7 +660,6 @@ def index():
         session['inclusions'] = inclusions
         session['committed_amount'] = committed_amount
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
-        print("DEBUG: Calculated results after committed amount:", results)
         return render_template(
             'index.html',
             step='results',
@@ -567,8 +673,8 @@ def index():
             rate_card_platform_fee=rate_card_platform_fee,
             platform_fee=float(platform_fee),
             platform_fee_rate_card=rate_card_platform_fee,
-            pricing_table=results['line_items'],
-            margin_table=results['margin_table'],
+            pricing_table=pricing_line_items,
+            margin_table=margin_line_items,
             user_selections=user_selections,
             inputs=inputs
         )
