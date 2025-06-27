@@ -226,7 +226,7 @@
         
         <h3>Section 1: Pricing</h3>
         {% if bundle_details and bundle_details.lines %}
-        <h4>Message Bundle</h4>
+        <h4>Messaging Bundle (Committed Credits)</h4>
         <table>
             <tr>
                 <th>Charge Type</th>
@@ -257,6 +257,7 @@
         <p><b>Total Bundle Cost (messages only):</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.bundle_cost or 0) if ((bundle_details.bundle_cost or 0) % 1) == 0 else '{:,.3f}'.format(bundle_details.bundle_cost or 0) }}</p>
         <p><b>Total Bundle Price (Platform Fee + Bundle):</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.total_bundle_price or 0) if ((bundle_details.total_bundle_price or 0) % 1) == 0 else '{:,.3f}'.format(bundle_details.total_bundle_price or 0) }}</p>
         <p><b>Inclusion:</b> {{ bundle_details.inclusion_text or 'N/A' }}</p>
+        <p><i>When committed credits run out, overage charges will apply at the agreed overage rates.</i></p>
         {% endif %}
         <p><b>Expected Invoice Amount (Meta charges + Gupshup fee + Platform fee):</b> {{ currency_symbol }}{{ expected_invoice_amount }}</p>
         
