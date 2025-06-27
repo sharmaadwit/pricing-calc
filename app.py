@@ -682,6 +682,22 @@ def index():
         margin_percent = (numerator / denominator * 100) if denominator > 0 else 0
         results['margin'] = f"{margin_percent:.2f}%"
 
+        print("DEBUG volume path context:", {
+            "step": "results",
+            "currency_symbol": currency_symbol,
+            "final_inclusions": final_inclusions,
+            "results": results,
+            "bundle_details": bundle_details,
+            "expected_invoice_amount": expected_invoice_amount,
+            "chosen_platform_fee": chosen_platform_fee,
+            "rate_card_platform_fee": rate_card_platform_fee,
+            "platform_fee": chosen_platform_fee,
+            "platform_fee_rate_card": rate_card_platform_fee,
+            "pricing_table": results['line_items'],
+            "user_selections": user_selections,
+            "inputs": inputs
+        })
+
         return render_template(
             'index.html',
             step='results',
