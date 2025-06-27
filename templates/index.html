@@ -298,8 +298,8 @@
         <br>
         <table>
             <tr><td colspan="3"><small>Note: Margin is calculated using the chosen platform fee (editable in the previous step).</small></td></tr>
-            <tr><th>Total Revenue (Chosen) {{ currency_symbol }}/month</th><td colspan="2">{{ results.revenue }}</td></tr>
-            <tr><th>Total Revenue (Rate Card) {{ currency_symbol }}/month</th><td colspan="2">{{ results.suggested_revenue }}</td></tr>
+            <tr><th>Total Revenue (Chosen) {{ currency_symbol }}/month</th><td colspan="2">{{ '{:,.2f}'.format(results.revenue or 0) }}</td></tr>
+            <tr><th>Total Revenue (Rate Card) {{ currency_symbol }}/month</th><td colspan="2">{{ '{:,.2f}'.format(results.suggested_revenue or 0) }}</td></tr>
             <tr><th>Channel Cost</th><td colspan="2">{{ results.channel_cost }}</td></tr>
             <tr><th>AI Costs {{ currency_symbol }}/month</th><td colspan="2">{{ results.ai_costs }}</td></tr>
             <tr><th>Total Costs {{ currency_symbol }}/month</th><td colspan="2">{{ results.total_costs }}</td></tr>

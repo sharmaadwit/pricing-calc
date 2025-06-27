@@ -295,11 +295,11 @@ def calculate_pricing(
     return {
         'line_items': line_items,
         'platform_fee': platform_fee,
-        'revenue': f"{(revenue + platform_fee):.2f}",
-        'suggested_revenue': f"{(suggested_revenue + platform_fee):.2f}",
-        'channel_cost': f"{channel_cost:.2f}",
-        'ai_costs': f"{ai_costs:.2f}",
-        'total_costs': f"{total_costs:.2f}",
+        'revenue': revenue + platform_fee,
+        'suggested_revenue': suggested_revenue + platform_fee if suggested_revenue is not None else None,
+        'channel_cost': channel_cost,
+        'ai_costs': ai_costs,
+        'total_costs': total_costs,
         'margin': f"{margin_percentage:.2f}%",
         'suggested_margin': f"{suggested_margin_percentage:.2f}%"
     }

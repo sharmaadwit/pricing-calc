@@ -512,12 +512,6 @@ def index():
                     line['overage_price'] = float(line.get('overage_price', 0))
                 except Exception:
                     line['overage_price'] = 0.0
-        # Also ensure results.revenue, etc. are floats if needed
-        try:
-            results['revenue'] = float(results.get('revenue', 0))
-        except Exception:
-            results['revenue'] = 0.0
-
         # Before analytics tracking, ensure discount_errors is always defined
         if 'discount_errors' not in locals():
             discount_errors = []
