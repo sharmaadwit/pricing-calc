@@ -361,6 +361,17 @@ def index():
             session['rate_card_platform_fee'] = rate_card_platform_fee
             session['user_selections'] = user_selections
             session['inclusions'] = inclusions
+            # Add platform fee as a line item if not already present (for volume path)
+            platform_fee_line = {
+                'line_item': 'Platform Fee (Chosen)',
+                'volume': '',
+                'chosen_price': '',
+                'suggested_price': '',
+                'overage_price': '',
+                'revenue': float(platform_fee)
+            }
+            if not any(item.get('line_item') == 'Platform Fee (Chosen)' for item in results['line_items']):
+                results['line_items'].append(platform_fee_line)
             return render_template(
                 'index.html',
                 step='results',
