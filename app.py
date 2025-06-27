@@ -644,7 +644,8 @@ def index():
         inputs = session.get('inputs', {})
         if not inputs:
             flash('Session expired or missing. Please start again.', 'error')
-            return redirect(url_for('index'))
+            currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
+            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={})
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
         return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs)
     elif step == 'prices':
@@ -652,7 +653,8 @@ def index():
         pricing_inputs = session.get('pricing_inputs', {})
         if not inputs or not pricing_inputs:
             flash('Session expired or missing. Please start again.', 'error')
-            return redirect(url_for('index'))
+            currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
+            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={})
         suggested_prices = {
             'ai_price': pricing_inputs.get('ai_price', ''),
             'advanced_price': pricing_inputs.get('advanced_price', ''),
