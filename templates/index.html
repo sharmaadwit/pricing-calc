@@ -305,8 +305,8 @@
             {% endfor %}
         </table>
         {% if bundle_details and bundle_details.committed_amount is defined %}
-        <h4>Committed Amount</h4>
-        <p><b>Committed Monthly Amount:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.committed_amount or 0) if ((bundle_details.committed_amount or 0) % 1) == 0 else '{:,.2f}'.format(bundle_details.committed_amount or 0) }}</p>
+        <h4>Expected Invoice Amount (Bundle Commitment + Platform Fee)</h4>
+        <p><b>Expected Invoice Amount:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(expected_invoice_amount or 0) if ((expected_invoice_amount or 0) % 1) == 0 else '{:,.2f}'.format(expected_invoice_amount or 0) }}</p>
         <p>Your committed amount will be drawn down as you use the platform, based on the agreed rates for each message type.</p>
         <p style="margin-top:1em; color:#333; font-size:1.05em;"><b>Note:</b> The committed bundle will be consumed as per message type and volumes consumed within the month. In case the consumption is over the committed amount, overage prices will apply.</p>
         {% endif %}
