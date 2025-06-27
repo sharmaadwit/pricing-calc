@@ -807,4 +807,6 @@ def analytics():
     return render_template('analytics.html', authorized=False)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    import os
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
