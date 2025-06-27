@@ -413,49 +413,79 @@ def index():
         basic_marketing_price = pricing_inputs.get('basic_marketing_price', 0)
         basic_utility_price = pricing_inputs.get('basic_utility_price', 0)
         platform_fee = pricing_inputs.get('platform_fee', 0)
+        country = inputs.get('country', 'India')
         
-        # Calculate results for committed amount path
-        results = calculate_pricing(
-            inputs['country'],
-            0,  # ai_volume
-            0,  # advanced_volume
-            0,  # basic_marketing_volume
-            0,  # basic_utility_volume
-            float(platform_fee),
-            ai_price=ai_price,
-            advanced_price=advanced_price,
-            basic_marketing_price=basic_marketing_price,
-            basic_utility_price=basic_utility_price
-        )
+        # Get rate card prices for margin table
+        def get_rate_card(msg_type):
+            return get_suggested_price(country, msg_type, 0)
         
-        # Add committed amount as a line item
-        committed_line = {
+        # Build line items for all message types (even if volume is zero)
+        message_types = [
+            ('AI Message', 'ai', ai_price, get_rate_card('ai')),
+            ('Advanced Message', 'advanced', advanced_price, get_rate_card('advanced')),
+            ('Basic Marketing Message', 'basic_marketing', basic_marketing_price, get_rate_card('basic_marketing')),
+            ('Basic Utility/Authentication Message', 'basic_utility', basic_utility_price, get_rate_card('basic_utility')),
+        ]
+        pricing_line_items = []
+        margin_line_items = []
+        for label, key, chosen, rate_card in message_types:
+            overage = float(chosen) * 1.2 if chosen else ''
+            pricing_line_items.append({
+                'line_item': label,
+                'volume': 0,
+                'chosen_price': chosen,
+                'overage_price': overage,
+                'revenue': '',
+            })
+            # Margin calculation (N/A for committed, but show prices)
+            margin_change = ''
+            if chosen and rate_card:
+                try:
+                    margin_change = f"{((float(chosen) - float(rate_card)) / float(rate_card) * 100):.2f}%"
+                except Exception:
+                    margin_change = ''
+            margin_line_items.append({
+                'line_item': label,
+                'chosen_price': chosen,
+                'rate_card_price': rate_card,
+                'margin_change': margin_change or '0.00%'
+            })
+        # Add committed amount and platform fee as line items
+        pricing_line_items.append({
             'line_item': 'Committed Amount',
             'volume': '',
             'chosen_price': '',
-            'suggested_price': '',
             'overage_price': '',
             'revenue': committed_amount
-        }
-        
-        # Add platform fee as a line item
-        platform_fee_line = {
+        })
+        pricing_line_items.append({
             'line_item': 'Platform Fee (Chosen)',
             'volume': '',
             'chosen_price': '',
-            'suggested_price': '',
             'overage_price': '',
             'revenue': float(platform_fee)
+        })
+        margin_line_items.append({
+            'line_item': 'Committed Amount',
+            'chosen_price': '₹',
+            'rate_card_price': '₹',
+            'margin_change': 'N/A'
+        })
+        margin_line_items.append({
+            'line_item': 'Platform Fee',
+            'chosen_price': f"₹{int(platform_fee):,}",
+            'rate_card_price': f"₹{int(platform_fee):,}",
+            'margin_change': '0.00%'
+        })
+        # Calculate results for committed amount path
+        results = {
+            'line_items': pricing_line_items,
+            'revenue': committed_amount + float(platform_fee),
+            'margin': 'N/A',
+            'margin_table': margin_line_items
         }
-        
-        # Update results with committed amount
-        results['line_items'] = [committed_line, platform_fee_line]
-        results['revenue'] = committed_amount + float(platform_fee)
-        results['margin'] = 'N/A'  # Margin calculation not applicable for committed amount
-        
         # Calculate expected invoice amount
         expected_invoice_amount = committed_amount + float(platform_fee)
-        
         # Get rate card platform fee for margin calculation
         rate_card_platform_fee, _ = calculate_platform_fee(
             inputs['country'],
@@ -466,7 +496,6 @@ def index():
             inputs.get('smart_cpaas', 'No'),
             inputs.get('increased_tps', 'NA')
         )
-        
         # Build user selections
         user_selections = []
         if inputs.get('bfsi_tier', 'NA') not in ['NA', 'No']:
@@ -481,7 +510,6 @@ def index():
             user_selections.append(('Smart CPaaS', 'Yes'))
         if inputs.get('increased_tps', 'NA') not in ['NA', 'No']:
             user_selections.append(('Increased TPS', inputs['increased_tps']))
-        
         # Build inclusions
         inclusions = session.get('inclusions', {})
         final_inclusions = inclusions['Platform Fee Used for Margin Calculation'][:]
@@ -509,15 +537,13 @@ def index():
             final_inclusions = [inc for inc in final_inclusions if not inc.startswith('80 TPS')]
             final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
         final_inclusions = list(dict.fromkeys(final_inclusions))
-        
         # Create bundle details for committed amount
         bundle_details = {
             'lines': [],
             'bundle_cost': committed_amount,
             'total_bundle_price': committed_amount + float(platform_fee),
-            'inclusion_text': f'Committed amount of {currency_symbol}{committed_amount:,.0f} for messaging services.'
+            'inclusion_text': f'Committed amount of {COUNTRY_CURRENCY.get(country, '₹')}{committed_amount:,.0f} for messaging services.'
         }
-        
         # Update session
         session['selected_components'] = user_selections
         session['results'] = results
@@ -526,11 +552,8 @@ def index():
         session['user_selections'] = user_selections
         session['inclusions'] = inclusions
         session['committed_amount'] = committed_amount
-        
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
-        
         print("DEBUG: Calculated results after committed amount:", results)
-        
         return render_template(
             'index.html',
             step='results',
@@ -545,6 +568,7 @@ def index():
             platform_fee=float(platform_fee),
             platform_fee_rate_card=rate_card_platform_fee,
             pricing_table=results['line_items'],
+            margin_table=results['margin_table'],
             user_selections=user_selections,
             inputs=inputs
         )
