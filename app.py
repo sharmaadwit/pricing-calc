@@ -41,6 +41,12 @@ analytics_data = {
     'margin_rate_card': [],
 }
 
+def get_lowest_tier_price(country, msg_type):
+    tiers = price_tiers.get(country, {}).get(msg_type.replace('_price', ''), [])
+    if tiers:
+        return tiers[0][2]
+    return 0.0
+
 def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas, increased_tps='NA'):
     # 1. Minimum platform fee
     if country == 'India':
@@ -158,11 +164,6 @@ def index():
             'increased_tps': increased_tps
         }
         # Suggest prices
-        def get_lowest_tier_price(country, msg_type):
-            tiers = price_tiers.get(country, {}).get(msg_type, [])
-            if tiers:
-                return tiers[0][2]
-            return 0.0
         def is_zero(val):
             try:
                 return float(val) == 0.0
@@ -271,7 +272,7 @@ def index():
                 committed_amount = float(committed_amount.replace(',', '')) if committed_amount else 0.0
             except Exception:
                 committed_amount = 0.0
-            # Always build line_items for all message types, with revenue 0
+            # Always build line_items for all message types, with revenue 0, and include suggested_price (rate card)
             line_items = []
             for label, key, price_key in [
                 ("AI Message", 'ai_volume', 'ai_price'),
@@ -280,27 +281,41 @@ def index():
                 ("Basic Utility/Authentication Message", 'basic_utility_volume', 'basic_utility_price'),
             ]:
                 agreed_price = float(pricing_inputs.get(price_key, 0))
+                # Get rate card price for this type (lowest tier)
+                suggested_price = get_lowest_tier_price(inputs['country'], price_key.replace('_price', ''))
                 overage_price = round(agreed_price * 1.2, 4)
                 line_items.append({
                     'line_item': label,
                     'volume': 0,
                     'chosen_price': agreed_price,
+                    'suggested_price': suggested_price,
                     'overage_price': overage_price,
                     'revenue': 0
                 })
-            # Add platform fee rows
+            # Add platform fee row with both chosen and rate card
             chosen_platform_fee = float(pricing_inputs.get('platform_fee', 0))
+            rate_card_platform_fee, _ = calculate_platform_fee(
+                inputs['country'],
+                inputs.get('bfsi_tier', 'NA'),
+                inputs.get('personalize_load', 'NA'),
+                inputs.get('human_agents', 'NA'),
+                inputs.get('ai_module', 'NA'),
+                inputs.get('smart_cpaas', 'No'),
+                inputs.get('increased_tps', 'NA')
+            )
             line_items.append({
                 'line_item': 'Platform Fee (Chosen)',
                 'volume': '',
-                'chosen_price': '',
+                'chosen_price': chosen_platform_fee,
+                'suggested_price': rate_card_platform_fee,
                 'overage_price': '',
                 'revenue': chosen_platform_fee
             })
             line_items.append({
                 'line_item': 'Committed Amount',
                 'volume': '',
-                'chosen_price': '',
+                'chosen_price': committed_amount,
+                'suggested_price': '',
                 'overage_price': '',
                 'revenue': committed_amount
             })
@@ -383,6 +398,7 @@ def index():
                 'line_item': 'Platform Fee (Chosen)',
                 'volume': '',
                 'chosen_price': '',
+                'suggested_price': '',
                 'overage_price': '',
                 'revenue': chosen_platform_fee
             })
@@ -543,6 +559,7 @@ def index():
         for item in results.get('line_items', []):
             item['volume'] = fmt(item.get('volume', 0))
             item['chosen_price'] = fmt(item.get('chosen_price', 0))
+            item['suggested_price'] = fmt(item.get('suggested_price', 0))
             item['overage_price'] = fmt(item.get('overage_price', 0))
             # Do NOT format item['revenue'] or item['suggested_revenue'] here
 
