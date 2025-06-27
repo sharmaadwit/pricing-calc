@@ -401,33 +401,47 @@ def index():
         if inputs.get('increased_tps', 'NA') not in ['NA', 'No']:
             user_selections.append(('Increased TPS', inputs['increased_tps']))
         inclusions = initialize_inclusions()
-        personalize_load = inputs.get('personalize_load', 'NA')
         final_inclusions = []
-        # Always include platform base features
-        final_inclusions += inclusions.get('Platform Fee Used for Margin Calculation', [])
-        # Add personalize load inclusions
+        contradiction_warning = None
+
+        # Platform base features (always included)
+        final_inclusions += inclusions['Platform Fee Used for Margin Calculation']
+
+        # Personalize Load (contradiction handling)
+        personalize_load = inputs.get('personalize_load', 'NA')
         if personalize_load == 'Standard':
-            final_inclusions += inclusions.get('Personalize Load Standard', [])
+            final_inclusions += inclusions['Personalize Load Standard']
         elif personalize_load == 'Advanced':
-            final_inclusions += inclusions.get('Personalize Load Advanced', [])
-        # Add Smart CPaaS inclusions only if selected
+            final_inclusions += inclusions['Personalize Load Advanced']
+        elif personalize_load not in ['NA', 'No', None]:
+            # If both Standard and Advanced are somehow selected, prioritize Advanced
+            contradiction_warning = 'Contradictory Personalize Load options selected. Showing Advanced inclusions only.'
+            final_inclusions += inclusions['Personalize Load Advanced']
+
+        # Smart CPaaS
         if inputs.get('smart_cpaas', 'No') == 'Yes':
-            final_inclusions += inclusions.get('Smart CPaaS Yes', [])
-        # Add other inclusions as needed (BFSI, Human Agents, AI Module, Increased TPS)
-        bfsi_tier = inputs.get('bfsi_tier', 'NA')
-        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
-            final_inclusions += inclusions.get(f'BFSI Tier {bfsi_tier.split(" ")[-1]}', [])
+            final_inclusions += inclusions['Smart CPaaS Yes']
+
+        # AI Module
+        if inputs.get('ai_module', 'No') == 'Yes':
+            final_inclusions += inclusions['AI Module Yes']
+
+        # Human Agents
         human_agents = inputs.get('human_agents', 'NA')
         if human_agents in ['20+', '50+', '100+']:
-            final_inclusions += inclusions.get(f'Human Agents {human_agents}', [])
-        ai_module = inputs.get('ai_module', 'NA')
-        if ai_module == 'Yes':
-            final_inclusions += inclusions.get('AI Module Yes', [])
+            final_inclusions += inclusions[f'Human Agents {human_agents}']
+
+        # BFSI Tier
+        bfsi_tier = inputs.get('bfsi_tier', 'NA')
+        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
+            final_inclusions += inclusions[f'BFSI Tier {bfsi_tier.split(" ")[-1]}']
+
+        # Increased TPS
         increased_tps = inputs.get('increased_tps', 'NA')
         if increased_tps in ['250', '1000']:
-            final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
-        # Remove duplicates while preserving order
-        final_inclusions = list(dict.fromkeys(final_inclusions))
+            final_inclusions += inclusions[f'Increased TPS {increased_tps}']
+
+        # Pass contradiction_warning to the template for display if needed
         session['selected_components'] = user_selections
         session['results'] = results
         session['chosen_platform_fee'] = chosen_platform_fee
@@ -509,7 +523,8 @@ def index():
             pricing_table=results['line_items'],
             margin_table=margin_line_items,
             user_selections=user_selections,
-            inputs=inputs
+            inputs=inputs,
+            contradiction_warning=contradiction_warning
         )
 
     elif step == 'bundle' and request.method == 'POST':
@@ -642,39 +657,45 @@ def index():
         inclusions = initialize_inclusions()
         personalize_load = inputs.get('personalize_load', 'NA')
         final_inclusions = []
-        # Always include platform base features
-        final_inclusions += inclusions.get('Platform Fee Used for Margin Calculation', [])
-        # Add personalize load inclusions
+        contradiction_warning = None
+
+        # Platform base features (always included)
+        final_inclusions += inclusions['Platform Fee Used for Margin Calculation']
+
+        # Personalize Load (contradiction handling)
         if personalize_load == 'Standard':
-            final_inclusions += inclusions.get('Personalize Load Standard', [])
+            final_inclusions += inclusions['Personalize Load Standard']
         elif personalize_load == 'Advanced':
-            final_inclusions += inclusions.get('Personalize Load Advanced', [])
-        # Add Smart CPaaS inclusions only if selected
+            final_inclusions += inclusions['Personalize Load Advanced']
+        elif personalize_load not in ['NA', 'No', None]:
+            # If both Standard and Advanced are somehow selected, prioritize Advanced
+            contradiction_warning = 'Contradictory Personalize Load options selected. Showing Advanced inclusions only.'
+            final_inclusions += inclusions['Personalize Load Advanced']
+
+        # Smart CPaaS
         if inputs.get('smart_cpaas', 'No') == 'Yes':
-            final_inclusions += inclusions.get('Smart CPaaS Yes', [])
-        # Add other inclusions as needed (BFSI, Human Agents, AI Module, Increased TPS)
-        bfsi_tier = inputs.get('bfsi_tier', 'NA')
-        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
-            final_inclusions += inclusions.get(f'BFSI Tier {bfsi_tier.split(" ")[-1]}', [])
+            final_inclusions += inclusions['Smart CPaaS Yes']
+
+        # AI Module
+        if inputs.get('ai_module', 'No') == 'Yes':
+            final_inclusions += inclusions['AI Module Yes']
+
+        # Human Agents
         human_agents = inputs.get('human_agents', 'NA')
         if human_agents in ['20+', '50+', '100+']:
-            final_inclusions += inclusions.get(f'Human Agents {human_agents}', [])
-        ai_module = inputs.get('ai_module', 'NA')
-        if ai_module == 'Yes':
-            final_inclusions += inclusions.get('AI Module Yes', [])
+            final_inclusions += inclusions[f'Human Agents {human_agents}']
+
+        # BFSI Tier
+        bfsi_tier = inputs.get('bfsi_tier', 'NA')
+        if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
+            final_inclusions += inclusions[f'BFSI Tier {bfsi_tier.split(" ")[-1]}']
+
+        # Increased TPS
         increased_tps = inputs.get('increased_tps', 'NA')
         if increased_tps in ['250', '1000']:
-            final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
-        # Remove duplicates while preserving order
-        final_inclusions = list(dict.fromkeys(final_inclusions))
-        # Create bundle details for committed amount
-        bundle_details = {
-            'lines': [],
-            'bundle_cost': committed_amount,
-            'total_bundle_price': committed_amount + float(platform_fee),
-            'inclusion_text': f'Committed amount of {COUNTRY_CURRENCY.get(country, '₹')}{committed_amount:,.0f} for messaging services.'
-        }
-        # Update session with complete results
+            final_inclusions += inclusions[f'Increased TPS {increased_tps}']
+
+        # Pass contradiction_warning to the template for display if needed
         session['selected_components'] = user_selections
         session['results'] = results
         session['chosen_platform_fee'] = float(platform_fee)
@@ -683,6 +704,13 @@ def index():
         session['inclusions'] = inclusions
         session['committed_amount'] = committed_amount
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
+        # Create bundle details for committed amount
+        bundle_details = {
+            'lines': [],
+            'bundle_cost': committed_amount,
+            'total_bundle_price': committed_amount + float(platform_fee),
+            'inclusion_text': f'Committed amount of {COUNTRY_CURRENCY.get(country, "₹")}{committed_amount:,.0f} for messaging services.'
+        }
         return render_template(
             'index.html',
             step='results',
@@ -699,7 +727,8 @@ def index():
             pricing_table=pricing_line_items,
             margin_table=margin_line_items,
             user_selections=user_selections,
-            inputs=inputs
+            inputs=inputs,
+            contradiction_warning=contradiction_warning
         )
 
     # Defensive: handle GET or POST for edit actions
