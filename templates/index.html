@@ -301,7 +301,7 @@
           <!-- Expected Invoice Amount block -->
           <div style="background: #f5f7fa; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px; display: flex; align-items: center;">
             <div style="flex:1;">
-              <h2 style="margin:0; font-size: 1.3em;">Expected Invoice Amount</h2>
+              <h2 style="margin:0; font-size: 1.3em;">Expected Invoice Amount = Meta Cost + Messaging Bundle + Platform Cost</h2>
               <div style="font-size: 2em; font-weight: bold; color: #1a2a3a; margin-top: 2px;">{{ currency_symbol }}{{ '{:,.0f}'.format(expected_invoice_amount or 0) if ((expected_invoice_amount or 0) % 1) == 0 else '{:,.2f}'.format(expected_invoice_amount or 0) }}</div>
             </div>
             {% if bundle_details and bundle_details.committed_amount is defined %}
@@ -328,6 +328,7 @@
               <tbody>
                 {% for row in pricing_table %}
                   {% if row.line_item or row.label in ['AI Message', 'Advanced Message', 'Basic Marketing Message', 'Basic Utility/Authentication Message'] %}
+                    {% if row.line_item != 'Platform Fee (Chosen)' %}
                     <tr>
                       <td>{{ row.line_item or row.label }}</td>
                       <td class="right">{{ currency_symbol }}{{ row.chosen_price }}</td>
@@ -340,6 +341,7 @@
                         {% endif %}
                       </td>
                     </tr>
+                    {% endif %}
                   {% endif %}
                 {% endfor %}
                 <tr>
