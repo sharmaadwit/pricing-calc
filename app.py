@@ -264,6 +264,7 @@ def index():
         bundle_details = None
         bundle_cost = 0
         committed_amount = None
+        skip_platform_fee_append = False
         if all_volumes_zero:
             committed_amount = request.form.get('committed_amount', '')
             try:
@@ -331,6 +332,7 @@ def index():
                 'inclusion_text': 'Your committed amount will be drawn down as you use the platform, based on the agreed rates.'
             }
             expected_invoice_amount = (committed_amount or 0) + (chosen_platform_fee or 0)
+            skip_platform_fee_append = True
         else:
             bundle_lines = []
             for label, key, price in [
@@ -384,8 +386,8 @@ def index():
         )
         platform_fee_used = 'chosen'  # always use the chosen (editable) platform fee for margin calculation
 
-        # Add platform fee line items to results['line_items']
-        if 'line_items' in results:
+        # Add platform fee line items to results['line_items'] only if not already added
+        if 'line_items' in results and not skip_platform_fee_append:
             results['line_items'].append({
                 'line_item': 'Platform Fee (Chosen)',
                 'volume': '',
