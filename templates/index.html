@@ -311,6 +311,57 @@
                 <span style="color:#333;">Your committed amount will be drawn down as you use the platform, based on the agreed rates for each message type. Overage prices apply if you exceed the commitment.</span>
               </div>
             </div>
+            <!-- Margin Table for Committed Path -->
+            <div style="margin-bottom: 24px;">
+              <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
+                <thead>
+                  <tr style="background: #f0f4f8;">
+                    <th style="text-align:left;">Item</th>
+                    <th style="text-align:right;">Chosen Price</th>
+                    <th style="text-align:right;">Rate Card Price</th>
+                    <th style="text-align:right;">Margin Change (%)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in pricing_table %}
+                    {% if row.line_item or row.label in ['AI Message', 'Advanced Message', 'Basic Marketing Message', 'Basic Utility/Authentication Message'] %}
+                      <tr>
+                        <td>{{ row.line_item or row.label }}</td>
+                        <td class="right">{{ currency_symbol }}{{ row.chosen_price }}</td>
+                        <td class="right">{{ currency_symbol }}{{ row.suggested_price if row.suggested_price is defined else 'N/A' }}</td>
+                        <td class="right">
+                          {% if row.chosen_price and row.suggested_price and row.suggested_price|float != 0 %}
+                            {{ '{:.2f}'.format(((row.chosen_price|float - row.suggested_price|float) / row.suggested_price|float) * 100) }}%
+                          {% else %}
+                            N/A
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endif %}
+                  {% endfor %}
+                  <!-- Platform Fee Row -->
+                  <tr>
+                    <td>Platform Fee</td>
+                    <td class="right">{{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) }}</td>
+                    <td class="right">{{ currency_symbol }}{{ '{:,.0f}'.format(rate_card_platform_fee or 0) }}</td>
+                    <td class="right">
+                      {% if chosen_platform_fee and rate_card_platform_fee and rate_card_platform_fee != 0 %}
+                        {{ '{:.2f}'.format(((chosen_platform_fee - rate_card_platform_fee) / rate_card_platform_fee) * 100) }}%
+                      {% else %}
+                        N/A
+                      {% endif %}
+                    </td>
+                  </tr>
+                  <!-- Committed Amount Row -->
+                  <tr>
+                    <td>Committed Amount</td>
+                    <td class="right">{{ currency_symbol }}{{ '{:,.0f}'.format(bundle_details.committed_amount or 0) }}</td>
+                    <td class="right">N/A</td>
+                    <td class="right">N/A</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
         {% else %}
             <!-- Volume-based UI: Expected Invoice Amount block and Internal/Margin section -->
             <div style="background: #f5f7fa; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px; display: flex; align-items: center;">
