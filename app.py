@@ -163,11 +163,16 @@ def index():
             if tiers:
                 return tiers[-1][2]
             return 0.0
+        def is_zero(val):
+            try:
+                return float(val) == 0.0
+            except Exception:
+                return True
         suggested_prices = {
-            'ai_price': get_suggested_price(country, 'ai', ai_volume) if ai_volume else get_highest_tier_price(country, 'ai'),
-            'advanced_price': get_suggested_price(country, 'advanced', advanced_volume) if advanced_volume else get_highest_tier_price(country, 'advanced'),
-            'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if basic_marketing_volume else get_highest_tier_price(country, 'basic_marketing'),
-            'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if basic_utility_volume else get_highest_tier_price(country, 'basic_utility'),
+            'ai_price': get_suggested_price(country, 'ai', ai_volume) if not is_zero(ai_volume) else get_highest_tier_price(country, 'ai'),
+            'advanced_price': get_suggested_price(country, 'advanced', advanced_volume) if not is_zero(advanced_volume) else get_highest_tier_price(country, 'advanced'),
+            'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if not is_zero(basic_marketing_volume) else get_highest_tier_price(country, 'basic_marketing'),
+            'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_highest_tier_price(country, 'basic_utility'),
         }
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session['inputs'], currency_symbol=currency_symbol, platform_fee=platform_fee)
 
