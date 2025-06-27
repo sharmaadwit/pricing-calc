@@ -311,6 +311,25 @@
           </div>
           {% endif %}
         </div>
+
+        {% if not (bundle_details and bundle_details.committed_amount is defined) %}
+        <!-- Internal Section: Margin and Costs (only for volume-based deals) -->
+        <div style="background: #f8f8fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 18px 24px; margin-top: 32px;">
+          <h3 style="margin-top:0; color:#444;">Section 2: Internal - Not to be shared</h3>
+          <div style="font-size:1.08em;">
+            <b>Chosen Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(chosen_platform_fee or 0) if ((chosen_platform_fee or 0) % 1) == 0 else '{:,.3f}'.format(chosen_platform_fee or 0) }}<br>
+            <b>Rate Card Platform Fee:</b> {{ currency_symbol }}{{ '{:,.0f}'.format(rate_card_platform_fee or 0) if ((rate_card_platform_fee or 0) % 1 == 0) else '{:,.3f}'.format(rate_card_platform_fee or 0) }}<br>
+            <b>Total Revenue (Chosen):</b> {{ currency_symbol }}{% if (results.revenue or 0) % 1 == 0 %}{{ '{:,.0f}'.format(results.revenue or 0) }}{% else %}{{ '{:,.2f}'.format(results.revenue or 0) }}{% endif %}<br>
+            <b>Total Revenue (Rate Card):</b> {{ currency_symbol }}{% if (results.suggested_revenue or 0) % 1 == 0 %}{{ '{:,.0f}'.format(results.suggested_revenue or 0) }}{% else %}{{ '{:,.2f}'.format(results.suggested_revenue or 0) }}{% endif %}<br>
+            <b>Channel Cost:</b> {{ currency_symbol }}{% if results.channel_cost|float % 1 == 0 %}{{ '{:,.0f}'.format(results.channel_cost|float) }}{% else %}{{ '{:,.2f}'.format(results.channel_cost|float) }}{% endif %}<br>
+            <b>AI Costs:</b> {{ currency_symbol }}{% if results.ai_costs|float % 1 == 0 %}{{ '{:,.0f}'.format(results.ai_costs|float) }}{% else %}{{ '{:,.2f}'.format(results.ai_costs|float) }}{% endif %}<br>
+            <b>Total Costs:</b> {{ currency_symbol }}{% if results.total_costs|float % 1 == 0 %}{{ '{:,.0f}'.format(results.total_costs|float) }}{% else %}{{ '{:,.2f}'.format(results.total_costs|float) }}{% endif %}<br>
+            <b>Margin (User Chosen):</b> {{ results.margin }}<br>
+            <b>Margin (Rate Card):</b> {{ results.suggested_margin }}
+          </div>
+          <div style="font-size:0.98em; color:#888; margin-top:8px;">Note: Margin is calculated using the chosen platform fee (editable in the previous step).</div>
+        </div>
+        {% endif %}
         </div>
         <br>
         <form method="get">
