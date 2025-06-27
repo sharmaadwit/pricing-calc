@@ -366,18 +366,18 @@ def index():
                 'total_bundle_price': total_bundle_price,
                 'inclusion_text': 'See table below for included volumes and overage prices.'
             }
-        results = calculate_pricing(
-            inputs['country'],
-            inputs['ai_volume'],
-            inputs['advanced_volume'],
-            inputs['basic_marketing_volume'],
-            inputs['basic_utility_volume'],
+            results = calculate_pricing(
+                inputs['country'],
+                inputs['ai_volume'],
+                inputs['advanced_volume'],
+                inputs['basic_marketing_volume'],
+                inputs['basic_utility_volume'],
                 float(pricing_inputs.get('platform_fee', 0)),
-            ai_price=ai_price,
-            advanced_price=advanced_price,
-            basic_marketing_price=basic_marketing_price,
-            basic_utility_price=basic_utility_price
-        )
+                ai_price=ai_price,
+                advanced_price=advanced_price,
+                basic_marketing_price=basic_marketing_price,
+                basic_utility_price=basic_utility_price
+            )
             # Remove duplicate Committed Amount if present
             seen = set()
             unique_line_items = []
