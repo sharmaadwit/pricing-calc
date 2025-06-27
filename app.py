@@ -311,14 +311,16 @@ def index():
                 'overage_price': '',
                 'revenue': chosen_platform_fee
             })
-            line_items.append({
-                'line_item': 'Committed Amount',
-                'volume': '',
-                'chosen_price': committed_amount,
-                'suggested_price': '',
-                'overage_price': '',
-                'revenue': committed_amount
-            })
+            # Only add Committed Amount once
+            if not any(item.get('line_item') == 'Committed Amount' for item in line_items):
+                line_items.append({
+                    'line_item': 'Committed Amount',
+                    'volume': '',
+                    'chosen_price': committed_amount,
+                    'suggested_price': '',
+                    'overage_price': '',
+                    'revenue': committed_amount
+                })
             results = {
                 'line_items': line_items,
                 'platform_fee': chosen_platform_fee,
