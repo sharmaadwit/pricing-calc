@@ -401,30 +401,32 @@ def index():
         if inputs.get('increased_tps', 'NA') not in ['NA', 'No']:
             user_selections.append(('Increased TPS', inputs['increased_tps']))
         inclusions = initialize_inclusions()
-        final_inclusions = inclusions.get('Platform Fee Used for Margin Calculation', [])[:]
+        personalize_load = inputs.get('personalize_load', 'NA')
+        final_inclusions = []
+        # Always include platform base features
+        final_inclusions += inclusions.get('Platform Fee Used for Margin Calculation', [])
+        # Add personalize load inclusions
+        if personalize_load == 'Standard':
+            final_inclusions += inclusions.get('Personalize Load Standard', [])
+        elif personalize_load == 'Advanced':
+            final_inclusions += inclusions.get('Personalize Load Advanced', [])
+        # Add Smart CPaaS inclusions only if selected
+        if inputs.get('smart_cpaas', 'No') == 'Yes':
+            final_inclusions += inclusions.get('Smart CPaaS Yes', [])
+        # Add other inclusions as needed (BFSI, Human Agents, AI Module, Increased TPS)
         bfsi_tier = inputs.get('bfsi_tier', 'NA')
         if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
-            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Audit trail') and not inc.startswith('Conversational Data Encryption') and not inc.startswith('Data Encryption')]
             final_inclusions += inclusions.get(f'BFSI Tier {bfsi_tier.split(" ")[-1]}', [])
-        personalize_load = inputs.get('personalize_load', 'NA')
-        if personalize_load in ['Standard', 'Advanced']:
-            final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Standard') or inc.startswith('Advanced'))]
-            final_inclusions += inclusions.get(f'Personalize Load {personalize_load}', [])
         human_agents = inputs.get('human_agents', 'NA')
         if human_agents in ['20+', '50+', '100+']:
-            final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Agent Assist') or inc.startswith('Upto') or inc.startswith('More than'))]
             final_inclusions += inclusions.get(f'Human Agents {human_agents}', [])
         ai_module = inputs.get('ai_module', 'NA')
         if ai_module == 'Yes':
             final_inclusions += inclusions.get('AI Module Yes', [])
-        if inputs.get('smart_cpaas', 'No') == 'Yes':
-            final_inclusions += inclusions.get('Smart CPaaS Yes', [])
-        else:
-            final_inclusions = [inc for inc in final_inclusions if inc != 'Auto failover between channels']
         increased_tps = inputs.get('increased_tps', 'NA')
         if increased_tps in ['250', '1000']:
-            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('80 TPS')]
             final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
+        # Remove duplicates while preserving order
         final_inclusions = list(dict.fromkeys(final_inclusions))
         session['selected_components'] = user_selections
         session['results'] = results
@@ -473,6 +475,24 @@ def index():
             'margin_change': '0.00%'
         })
         
+        # Helper to format numbers for display
+        def fmt(val):
+            if isinstance(val, (int, float)):
+                s = f"{val:.2f}"
+                return s.rstrip('0').rstrip('.') if '.' in s else s
+            return val
+
+        # Format pricing_line_items
+        for item in results['line_items']:
+            for key in ['chosen_price', 'overage_price', 'suggested_price', 'revenue']:
+                if key in item and isinstance(item[key], (int, float)) and item[key] != '':
+                    item[key] = fmt(item[key])
+        # Format margin_line_items
+        for item in margin_line_items:
+            for key in ['chosen_price', 'rate_card_price']:
+                if key in item and isinstance(item[key], (int, float)) and item[key] != '':
+                    item[key] = fmt(item[key])
+        
         return render_template(
             'index.html',
             step='results',
@@ -518,7 +538,8 @@ def index():
         
         # Get rate card prices for margin table
         def get_rate_card(msg_type):
-            return get_suggested_price(country, msg_type, 0)
+            # Use the lowest tier price if volume is zero
+            return get_lowest_tier_price(country, msg_type)
         
         # Build line items for all message types (even if volume is zero)
         message_types = [
@@ -619,30 +640,32 @@ def index():
             user_selections.append(('Increased TPS', inputs['increased_tps']))
         # Build inclusions
         inclusions = initialize_inclusions()
-        final_inclusions = inclusions.get('Platform Fee Used for Margin Calculation', [])[:]
+        personalize_load = inputs.get('personalize_load', 'NA')
+        final_inclusions = []
+        # Always include platform base features
+        final_inclusions += inclusions.get('Platform Fee Used for Margin Calculation', [])
+        # Add personalize load inclusions
+        if personalize_load == 'Standard':
+            final_inclusions += inclusions.get('Personalize Load Standard', [])
+        elif personalize_load == 'Advanced':
+            final_inclusions += inclusions.get('Personalize Load Advanced', [])
+        # Add Smart CPaaS inclusions only if selected
+        if inputs.get('smart_cpaas', 'No') == 'Yes':
+            final_inclusions += inclusions.get('Smart CPaaS Yes', [])
+        # Add other inclusions as needed (BFSI, Human Agents, AI Module, Increased TPS)
         bfsi_tier = inputs.get('bfsi_tier', 'NA')
         if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
-            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('Audit trail') and not inc.startswith('Conversational Data Encryption') and not inc.startswith('Data Encryption')]
             final_inclusions += inclusions.get(f'BFSI Tier {bfsi_tier.split(" ")[-1]}', [])
-        personalize_load = inputs.get('personalize_load', 'NA')
-        if personalize_load in ['Standard', 'Advanced']:
-            final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Standard') or inc.startswith('Advanced'))]
-            final_inclusions += inclusions.get(f'Personalize Load {personalize_load}', [])
         human_agents = inputs.get('human_agents', 'NA')
         if human_agents in ['20+', '50+', '100+']:
-            final_inclusions = [inc for inc in final_inclusions if not (inc.startswith('Agent Assist') or inc.startswith('Upto') or inc.startswith('More than'))]
             final_inclusions += inclusions.get(f'Human Agents {human_agents}', [])
         ai_module = inputs.get('ai_module', 'NA')
         if ai_module == 'Yes':
             final_inclusions += inclusions.get('AI Module Yes', [])
-        if inputs.get('smart_cpaas', 'No') == 'Yes':
-            final_inclusions += inclusions.get('Smart CPaaS Yes', [])
-        else:
-            final_inclusions = [inc for inc in final_inclusions if inc != 'Auto failover between channels']
         increased_tps = inputs.get('increased_tps', 'NA')
         if increased_tps in ['250', '1000']:
-            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('80 TPS')]
             final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
+        # Remove duplicates while preserving order
         final_inclusions = list(dict.fromkeys(final_inclusions))
         # Create bundle details for committed amount
         bundle_details = {
