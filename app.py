@@ -122,6 +122,7 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    print('DEBUG: method:', request.method, 'form:', dict(request.form), 'session:', dict(session))
     # Defensive: always use .get() for form/session data
     step = request.form.get('step', 'volumes')
     results = None
@@ -762,5 +763,5 @@ def analytics():
 
 if __name__ == '__main__':
     import os
-    port = int(os.environ.get("PORT", 8080))
+    port = int(os.environ.get("PORT", 8081))
     app.run(host="0.0.0.0", port=port)
