@@ -285,21 +285,19 @@
             </thead>
             <tbody>
             {% for row in pricing_table %}
-                {% if not (row.line_item == 'Platform Fee (Chosen)' and not loop.first) %}
-                    <tr>
-                        <td>{{ row.line_item }}</td>
-                        <td class="right">{{ row.volume }}</td>
-                        <td class="right">{{ row.chosen_price }}</td>
-                        <td class="right">{{ row.overage_price }}</td>
-                        <td class="right">
-                            {% if row.line_item == 'Platform Fee (Chosen)' or row.line_item == 'Committed Amount' %}
-                                {{ currency_symbol }}{{ '{:,.0f}'.format(row.revenue or 0) if ((row.revenue or 0) % 1) == 0 else '{:,.2f}'.format(row.revenue or 0) }}
-                            {% else %}
-                                &nbsp;
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endif %}
+                <tr>
+                    <td>{{ row.line_item }}</td>
+                    <td class="right">{{ row.volume }}</td>
+                    <td class="right">{{ row.chosen_price }}</td>
+                    <td class="right">{{ row.overage_price }}</td>
+                    <td class="right">
+                        {% if row.line_item == 'Platform Fee (Chosen)' or row.line_item == 'Committed Amount' %}
+                            {{ currency_symbol }}{{ '{:,.0f}'.format(row.revenue or 0) if ((row.revenue or 0) % 1) == 0 else '{:,.2f}'.format(row.revenue or 0) }}
+                        {% else %}
+                            &nbsp;
+                        {% endif %}
+                    </td>
+                </tr>
             {% endfor %}
             </tbody>
           </table>
