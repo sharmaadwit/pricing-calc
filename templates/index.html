@@ -285,34 +285,32 @@
             </thead>
             <tbody>
             {% for row in pricing_table %}
-                {% if row.line_item == 'Platform Fee (Chosen)' and not loop.first %}
-                    {# Skip duplicate Platform Fee (Chosen) rows #}
-                    {% continue %}
-                {% endif %}
-                {% if row.line_item == 'Platform Fee (Rate Card)' %}
-                    <tr>
-                        <td>{{ row.line_item }}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td class="right">{{ currency_symbol }}{{ '{:,.0f}'.format(platform_fee_rate_card or 0) }}</td>
-                    </tr>
-                {% elif row.line_item == 'Platform Fee (Chosen)' %}
-                    <tr>
-                        <td>{{ row.line_item }}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td class="right">{{ currency_symbol }}{{ '{:,.0f}'.format(platform_fee or 0) }}</td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td>{{ row.line_item }}</td>
-                        <td class="right">{{ row.volume }}</td>
-                        <td class="right">{{ row.chosen_price }}</td>
-                        <td class="right">{{ row.overage_price }}</td>
-                        <td class="right">{{ row.revenue }}</td>
-                    </tr>
+                {% if not (row.line_item == 'Platform Fee (Chosen)' and not loop.first) %}
+                    {% if row.line_item == 'Platform Fee (Rate Card)' %}
+                        <tr>
+                            <td>{{ row.line_item }}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td class="right">{{ currency_symbol }}{{ '{:,.0f}'.format(platform_fee_rate_card or 0) }}</td>
+                        </tr>
+                    {% elif row.line_item == 'Platform Fee (Chosen)' %}
+                        <tr>
+                            <td>{{ row.line_item }}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td class="right">{{ currency_symbol }}{{ '{:,.0f}'.format(platform_fee or 0) }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td>{{ row.line_item }}</td>
+                            <td class="right">{{ row.volume }}</td>
+                            <td class="right">{{ row.chosen_price }}</td>
+                            <td class="right">{{ row.overage_price }}</td>
+                            <td class="right">{{ row.revenue }}</td>
+                        </tr>
+                    {% endif %}
                 {% endif %}
             {% endfor %}
             </tbody>
