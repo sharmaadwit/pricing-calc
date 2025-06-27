@@ -324,7 +324,6 @@ def index():
             }
             expected_invoice_amount = (committed_amount or 0) + (platform_fee or 0)
         else:
-            # Show each type of message, volume, and overage price
             bundle_lines = []
             for label, key, price in [
                 ("AI Message", 'ai_volume', ai_price),
@@ -341,7 +340,6 @@ def index():
                     'overage_price': overage_price
                 })
                 bundle_cost += volume * float(price)
-            # Fix: total_bundle_price is platform_fee + bundle_cost (do not add bundle_cost to platform_fee)
             total_bundle_price = float(pricing_inputs.get('platform_fee', 0)) + bundle_cost
             bundle_details = {
                 'lines': bundle_lines,
@@ -362,6 +360,7 @@ def index():
                 basic_utility_price=basic_utility_price
             )
             expected_invoice_amount = results.get('revenue', 0)
+
         # Call calculation logic with updated platform fee (do not add bundle_cost to platform_fee)
         currency_symbol = COUNTRY_CURRENCY.get(inputs['country'], '$')
         # Pass both chosen and rate card platform fee to results page
@@ -501,8 +500,7 @@ def index():
             final_inclusions += inclusions.get('AI Module Yes', [])
             selected_components.append("AI Module: Yes")
         # Smart CPaaS
-        smart_cpaas = inputs.get('smart_cpaas', 'No')
-        if smart_cpaas == 'Yes':
+        if inputs.get('smart_cpaas', 'No') == 'Yes':
             final_inclusions += inclusions.get('Smart CPaaS Yes', [])
             selected_components.append("Smart CPaaS: Yes")
         else:
@@ -512,7 +510,7 @@ def index():
         increased_tps = inputs.get('increased_tps', 'NA')
         if increased_tps in ['250', '1000']:
             # Remove '80 TPS' if a higher TPS is selected
-            final_inclusions = [inc for inc in final_inclusions if inc != '80 TPS']
+            final_inclusions = [inc for inc in final_inclusions if not inc.startswith('80 TPS')]
             final_inclusions += inclusions.get(f'Increased TPS {increased_tps}', [])
             selected_components.append(f"Increased TPS: {increased_tps}")
         # Remove duplicates from inclusions
@@ -665,10 +663,10 @@ def index():
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
     else:
-    # Default: show volume input form
-    country = session.get('inputs', {}).get('country', 'India')
-    currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
-    return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
+        # Default: show volume input form
+        country = session.get('inputs', {}).get('country', 'India')
+        currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
+        return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
 
 @app.route('/authorize')
 def authorize():
