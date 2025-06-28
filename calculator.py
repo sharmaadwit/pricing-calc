@@ -1,6 +1,10 @@
 # calculator.py
 
+# --- Pricing and Cost Calculation Module ---
+# This module provides pricing tiers, cost tables, and functions for calculating suggested prices, overage prices, and total pricing for the messaging calculator app.
+
 # --- Price Tiers by Country and Message Type ---
+# Each country has a set of volume-based price tiers for each message type.
 price_tiers = {
     'India': {
         'ai': [
@@ -131,6 +135,7 @@ price_tiers = {
 }
 
 # --- Cost Table by Country ---
+# Meta costs for each country and message type.
 meta_costs_table = {
     'India': {'marketing': 0.78, 'utility': 0.12, 'ai': 0.30},
     'MENA': {'marketing': 0.0455 * 3.67, 'utility': 0.0115 * 3.67, 'ai': 0.0036 * 3.67},
@@ -141,7 +146,10 @@ meta_costs_table = {
 }
 
 def get_suggested_price(country, msg_type, volume, currency=None):
-    """Return the suggested price for a message type, country, and volume."""
+    """
+    Return the suggested price for a message type, country, and volume.
+    Looks up the correct tier based on volume.
+    """
     tiers = price_tiers.get(country, {}).get(msg_type, [])
     for lower, upper, price in tiers:
         if lower < volume <= upper:
@@ -149,7 +157,9 @@ def get_suggested_price(country, msg_type, volume, currency=None):
     return 0.0
 
 def get_next_tier_price(country, msg_type, volume):
-    """Return the next tier price for a message type, country, and volume (overage price)."""
+    """
+    Return the next tier price for a message type, country, and volume (overage price).
+    """
     tiers = price_tiers.get(country, {}).get(msg_type, [])
     found = False
     for i, (lower, upper, price) in enumerate(tiers):
@@ -167,6 +177,10 @@ def calculate_pricing(
     country, ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume, platform_fee,
     ai_price=None, advanced_price=None, basic_marketing_price=None, basic_utility_price=None
 ):
+    """
+    Calculate all pricing, revenue, costs, and margin for the given inputs.
+    Returns a dictionary with detailed line items and summary values.
+    """
     costs = meta_costs_table.get(country, meta_costs_table['India'])
 
     # Get suggested and overage prices for each type

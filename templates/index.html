@@ -1,3 +1,8 @@
+<!--
+  index.html - Main template for the Pricing Calculator app
+  Sections: How to Use, Volumes Form, Prices Form, Bundle Form, Results, Inclusions, Internal Margin Table
+  Comments added for clarity for future developers.
+-->
 <!DOCTYPE html>
 <html>
 <head>
@@ -57,6 +62,7 @@
     </script>
 </head>
 <body>
+    <!-- Flash messages for errors and notifications -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul class="flashes">
@@ -68,8 +74,8 @@
     {% endwith %}
     <h1>Pricing Calculator</h1>
 
+    <!-- How to Use and User Flow Diagram -->
     {% if step == 'volumes' %}
-    <!-- How to Use Guide -->
     <div style="background: #f8fafd; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
       <h3 style="margin-top:0;">How to Use</h3>
       <ul style="margin:0 0 0 18px; padding:0; font-size:1.08em;">
@@ -80,7 +86,7 @@
       </ul>
       <h4 style="margin-top:18px;">User Flow Diagram</h4>
       <div style="margin: 18px 0; text-align: center;">
-        <!-- Horizontally aligned SVG user flow diagram -->
+        <!-- SVG user flow diagram for visualizing the user journey -->
         <svg width="900" height="160" viewBox="0 0 900 160" xmlns="http://www.w3.org/2000/svg">
           <g>
             <!-- Home Page -->
@@ -119,8 +125,8 @@
     </div>
     {% endif %}
 
+    <!-- Volumes Form Section -->
     {% if step == 'volumes' %}
-    <!-- DEBUG: Rendering volumes form -->
     <div style="display: flex; flex-direction: row; align-items: flex-start;">
       <div style="flex: 1; min-width: 0;">
         <form method="post" id="volumes-form">
@@ -221,6 +227,7 @@
     </script>
     {% endif %}
 
+    <!-- Prices Form Section -->
     {% if step == 'prices' %}
     <form method="post" id="prices-form">
         <input type="hidden" name="step" value="prices">
@@ -262,6 +269,7 @@
     </script>
     {% endif %}
 
+    <!-- Bundle Form Section (for committed amount path) -->
     {% if step == 'bundle' %}
     {% set all_volumes_zero = (inputs.get('ai_volume', 0)|float == 0 and inputs.get('advanced_volume', 0)|float == 0 and inputs.get('basic_marketing_volume', 0)|float == 0 and inputs.get('basic_utility_volume', 0)|float == 0) %}
     {% if all_volumes_zero %}
@@ -275,8 +283,8 @@
     {% endif %}
     {% endif %}
 
+    <!-- Results Section: Pricing Table, Inclusions, Invoice Amount, Margin Table -->
     {% if step == 'results' %}
-        <!-- Section 1: Pricing -->
         <div style="max-width: 1100px; margin: 0 auto;">
           <h2 style="margin-top:0;">Section 1: Pricing</h2>
           <!-- Pricing Table -->
@@ -319,7 +327,7 @@
               </tbody>
             </table>
           </div>
-          <!-- Inclusions -->
+          <!-- Inclusions Section -->
           <div style="margin-bottom: 18px;">
             <h3 style="margin-bottom: 8px;">Inclusions</h3>
             <ul style="margin:0 0 0 18px; padding:0; font-size:1.08em;">
@@ -342,7 +350,7 @@
             {% endif %}
           </div>
         </div>
-        <!-- Section 2: Internal - Not to be shared -->
+        <!-- Internal Section: Margin Table for Internal Use Only -->
         <div style="max-width: 1100px; margin: 0 auto;">
           <div style="background: #f8f8fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 18px 24px; margin-top: 32px;">
             <h2 style="margin-top:0; color:#444;">Section 2: Internal - Not to be shared</h2>
@@ -381,6 +389,7 @@
         </form>
     {% endif %}
 
+    <!-- Disabled Edit Buttons for Future Features -->
     {% if step != 'volumes' %}
     <form method="post" style="display:inline;" onsubmit="event.preventDefault(); alert('Coming soon'); return false;">
         <input type="hidden" name="step" value="volumes">

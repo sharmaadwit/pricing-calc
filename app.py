@@ -1,3 +1,7 @@
+# --- Flask Pricing Calculator Application ---
+# This app provides a pricing calculator for messaging services with dynamic inclusions, platform fees, and analytics.
+# Key features: dynamic inclusions, robust error handling, session management, and professional UI.
+
 from flask import Flask, render_template, request, session, redirect, url_for, flash
 from calculator import calculate_pricing, get_suggested_price, price_tiers, meta_costs_table
 import os
@@ -26,7 +30,7 @@ COUNTRY_CURRENCY = {
 
 SECRET_ANALYTICS_KEYWORD = "letmein123"
 
-# Module-level global for analytics
+# Analytics data (for internal dashboard)
 analytics_data = {
     'calculations': 0,
     'calculations_by_day': defaultdict(int),
@@ -42,7 +46,10 @@ analytics_data = {
 }
 
 def initialize_inclusions():
-    """Initialize the inclusions dictionary with actual inclusion data."""
+    """
+    Returns a dictionary of all possible inclusions for each feature/tier.
+    Only the inclusions for the highest/most specific tier in each category should be shown.
+    """
     inclusions = {
         'Platform Fee Used for Margin Calculation': [
             '80 TPS,',
@@ -104,12 +111,20 @@ def initialize_inclusions():
     return inclusions
 
 def get_lowest_tier_price(country, msg_type):
+    """
+    Returns the lowest tier price for a given country and message type.
+    Used for rate card price display when volume is zero.
+    """
     tiers = price_tiers.get(country, {}).get(msg_type.replace('_price', ''), [])
     if tiers:
         return tiers[0][2]
     return 0.0
 
 def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas, increased_tps='NA'):
+    """
+    Calculates the platform fee based on country and selected options.
+    Returns (fee, currency).
+    """
     # 1. Minimum platform fee
     if country == 'India':
         min_fee = 100000
@@ -184,6 +199,10 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    """
+    Main route for the pricing calculator. Handles all user steps (volumes, prices, bundle, results).
+    Manages session data, input validation, pricing logic, and inclusions logic.
+    """
     # Defensive: always use .get() for form/session data
     step = request.form.get('step', 'volumes')
     results = None
@@ -276,17 +295,18 @@ def index():
             inputs.get('increased_tps', 'NA')
         )
         discount_errors = []
-        if ai_price is not None and (suggested_ai or 0) and ai_price < 0.5 * (suggested_ai or 0):
-            discount_errors.append("AI Message price is less than 50% of the rate card.")
-        if advanced_price is not None and (suggested_advanced or 0) and advanced_price < 0.5 * (suggested_advanced or 0):
-            discount_errors.append("Advanced Message price is less than 50% of the rate card.")
-        if basic_marketing_price is not None and (suggested_marketing or 0) and basic_marketing_price < 0.5 * (suggested_marketing or 0):
-            discount_errors.append("Basic Marketing Message price is less than 50% of the rate card.")
-        if basic_utility_price is not None and (suggested_utility or 0) and basic_utility_price < 0.5 * (suggested_utility or 0):
-            discount_errors.append("Basic Utility/Authentication Message price is less than 50% of the rate card.")
+        # Discount checks: allow up to 90% discount for basic marketing, 70% for all others
+        if ai_price is not None and (suggested_ai or 0) and ai_price < 0.3 * (suggested_ai or 0):
+            discount_errors.append("AI Message price is less than 30% of the rate card.")
+        if advanced_price is not None and (suggested_advanced or 0) and advanced_price < 0.3 * (suggested_advanced or 0):
+            discount_errors.append("Advanced Message price is less than 30% of the rate card.")
+        if basic_marketing_price is not None and (suggested_marketing or 0) and basic_marketing_price < 0.1 * (suggested_marketing or 0):
+            discount_errors.append("Basic Marketing Message price is less than 10% of the rate card.")
+        if basic_utility_price is not None and (suggested_utility or 0) and basic_utility_price < 0.3 * (suggested_utility or 0):
+            discount_errors.append("Basic Utility/Authentication Message price is less than 30% of the rate card.")
         # Platform fee discount check
-        if platform_fee < 0.5 * rate_card_platform_fee:
-            discount_errors.append("Platform Fee is less than 50% of the rate card platform fee.")
+        if platform_fee < 0.3 * rate_card_platform_fee:
+            discount_errors.append("Platform Fee is less than 30% of the rate card platform fee.")
         if discount_errors:
             for msg in discount_errors:
                 flash(msg, 'error')
