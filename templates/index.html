@@ -86,41 +86,8 @@
       </ul>
       <h4 style="margin-top:18px;">User Flow Diagram</h4>
       <div style="margin: 18px 0; text-align: center;">
-        <!-- SVG user flow diagram for visualizing the user journey -->
-        <svg width="900" height="160" viewBox="0 0 900 160" xmlns="http://www.w3.org/2000/svg">
-          <g>
-            <!-- Home Page -->
-            <rect x="30" y="60" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
-            <text x="120" y="85" text-anchor="middle" font-size="16" fill="#1a2a3a">User lands on Home Page</text>
-            <!-- Volumes & Prices -->
-            <rect x="230" y="60" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
-            <text x="320" y="85" text-anchor="middle" font-size="16" fill="#1a2a3a">Enter Volumes & Prices</text>
-            <!-- Committed Amount -->
-            <rect x="430" y="10" width="180" height="40" rx="8" fill="#fffbe6" stroke="#ffc107" stroke-width="2"/>
-            <text x="520" y="35" text-anchor="middle" font-size="16" fill="#7a5a00">Enter Committed Amount</text>
-            <!-- Bundle always created -->
-            <rect x="430" y="110" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
-            <text x="520" y="135" text-anchor="middle" font-size="16" fill="#1a2a3a">Bundle is always created</text>
-            <!-- Results Page -->
-            <rect x="650" y="60" width="180" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
-            <text x="740" y="85" text-anchor="middle" font-size="16" fill="#1a2a3a">Results Page</text>
-            <!-- Start Over -->
-            <rect x="850" y="60" width="40" height="40" rx="8" fill="#eaf6ff" stroke="#2196f3" stroke-width="2"/>
-            <text x="870" y="85" text-anchor="middle" font-size="14" fill="#1a2a3a">↺</text>
-            <!-- Arrows -->
-            <line x1="210" y1="80" x2="230" y2="80" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
-            <line x1="410" y1="80" x2="430" y2="30" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
-            <line x1="410" y1="80" x2="430" y2="130" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
-            <line x1="610" y1="30" x2="650" y2="80" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
-            <line x1="610" y1="130" x2="650" y2="80" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
-            <line x1="830" y1="80" x2="850" y2="80" stroke="#2196f3" stroke-width="2" marker-end="url(#arrow)"/>
-          </g>
-          <defs>
-            <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L10,5 L0,10 L2,5 z" fill="#2196f3" />
-            </marker>
-          </defs>
-        </svg>
+        <!-- User Flow Diagram (Option 1: Linear with Branch for Committed Amount) -->
+        <img src="{{ url_for('static', filename='user-flow.svg') }}" alt="User Flow Diagram" style="width:700px; height:250px; border:1.5px solid #dbe2ea; border-radius:8px; background:#fff; padding:8px;">
       </div>
     </div>
     {% endif %}
