@@ -512,20 +512,26 @@ def index():
         
         # Helper to format numbers for display
         def fmt(val):
-            if isinstance(val, (int, float)):
-                s = f"{val:.2f}"
-                return s.rstrip('0').rstrip('.') if '.' in s else s
+            # Format numbers: no decimals if .00, else show up to 2 decimals
+            try:
+                if isinstance(val, str) and val.replace('.', '', 1).isdigit():
+                    val = float(val)
+                if isinstance(val, (int, float)):
+                    s = f"{val:.2f}"
+                    return s.rstrip('0').rstrip('.') if '.' in s else s
+            except Exception:
+                pass
             return val
 
         # Format pricing_line_items
         for item in results['line_items']:
-            for key in ['chosen_price', 'overage_price', 'suggested_price', 'revenue']:
-                if key in item and isinstance(item[key], (int, float)) and item[key] != '':
+            for key in ['chosen_price', 'overage_price', 'suggested_price', 'revenue', 'volume']:
+                if key in item and (isinstance(item[key], (int, float)) or (isinstance(item[key], str) and item[key].replace('.', '', 1).isdigit())) and item[key] != '':
                     item[key] = fmt(item[key])
         # Format margin_line_items
         for item in margin_line_items:
             for key in ['chosen_price', 'rate_card_price']:
-                if key in item and isinstance(item[key], (int, float)) and item[key] != '':
+                if key in item and (isinstance(item[key], (int, float)) or (isinstance(item[key], str) and item[key].replace('.', '', 1).isdigit())) and item[key] != '':
                     item[key] = fmt(item[key])
         
         return render_template(
