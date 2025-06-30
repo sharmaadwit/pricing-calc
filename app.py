@@ -217,6 +217,7 @@ def index():
 
     # Defensive: ensure session data exists for edit actions
     if step == 'volumes' and request.method == 'POST':
+        user_name = request.form.get('user_name', '')
         # Step 1: User submitted volumes and platform fee options
         country = request.form['country']
         def parse_volume(val):
@@ -238,6 +239,7 @@ def index():
         currency_symbol = COUNTRY_CURRENCY.get(country, '$')
         # Store in session for next step
         session['inputs'] = {
+            'user_name': user_name,
             'country': country,
             'ai_volume': ai_volume,
             'advanced_volume': advanced_volume,
@@ -866,7 +868,9 @@ def analytics():
                 func.to_char(Analytics.timestamp, 'IYYY-"W"IW')
             ).all()}
             # Most common countries
-            country_counter = dict(db.session.query(Analytics.country, func.count()).group_by(Analytics.country).all())
+            from collections import Counter
+            country_list = [row[0] for row in db.session.query(Analytics.country).all() if row[0] is not None]
+            country_counter = Counter(country_list).most_common(5)
             # Platform fee stats
             platform_fees = [row[0] for row in db.session.query(Analytics.platform_fee).all() if row[0] is not None]
             if platform_fees:
@@ -877,7 +881,7 @@ def analytics():
             else:
                 avg_platform_fee = min_platform_fee = max_platform_fee = median_platform_fee = 0
             # Platform fee options (most common platform_fee values)
-            platform_fee_options = Counter(platform_fees)
+            platform_fee_options = Counter(platform_fees).most_common(5)
             # Message price stats by type
             def get_stats(field):
                 vals = [getattr(a, field) for a in Analytics.query.all() if getattr(a, field) is not None]
@@ -894,17 +898,67 @@ def analytics():
             advanced_stats = get_stats('advanced_price')
             marketing_stats = get_stats('basic_marketing_price')
             utility_stats = get_stats('basic_utility_price')
-            # Message volumes (count of records with non-null price for each type)
-            ai_vol = Analytics.query.filter(Analytics.ai_price.isnot(None)).count()
-            advanced_vol = Analytics.query.filter(Analytics.advanced_price.isnot(None)).count()
-            basic_marketing_vol = Analytics.query.filter(Analytics.basic_marketing_price.isnot(None)).count()
-            basic_utility_vol = Analytics.query.filter(Analytics.basic_utility_price.isnot(None)).count()
+            # Message volume distribution (sum, min, max, median for each type)
+            def get_volume_stats(field):
+                vals = [getattr(a, field) for a in Analytics.query.all() if getattr(a, field) is not None]
+                if vals:
+                    return [sum(vals), min(vals), max(vals), sorted(vals)[len(vals)//2]]
+                else:
+                    return [0, 0, 0, 0]
             message_volumes = {
-                'ai': ai_vol,
-                'advanced': advanced_vol,
-                'basic_marketing': basic_marketing_vol,
-                'basic_utility': basic_utility_vol
+                'ai': get_volume_stats('ai_price'),
+                'advanced': get_volume_stats('advanced_price'),
+                'basic_marketing': get_volume_stats('basic_marketing_price'),
+                'basic_utility': get_volume_stats('basic_utility_price')
             }
+            # Platform fee discount triggered (count)
+            platform_fee_discount_triggered = db.session.query(Analytics).filter(Analytics.platform_fee < 0.3 * avg_platform_fee).count() if avg_platform_fee else 0
+            # Margin chosen and rate card (dummy values for now, replace with real if available)
+            margin_chosen = [95.825]  # Example value, replace with real calculation if available
+            margin_rate_card = [0.0]  # Example value, replace with real calculation if available
+            # Per-country stats for table
+            stats = {}
+            countries = set(country_list)
+            for country in countries:
+                country_fees = [a.platform_fee for a in Analytics.query.filter_by(country=country).all() if a.platform_fee is not None]
+                country_ai = [a.ai_price for a in Analytics.query.filter_by(country=country).all() if a.ai_price is not None]
+                country_adv = [a.advanced_price for a in Analytics.query.filter_by(country=country).all() if a.advanced_price is not None]
+                country_mark = [a.basic_marketing_price for a in Analytics.query.filter_by(country=country).all() if a.basic_marketing_price is not None]
+                country_util = [a.basic_utility_price for a in Analytics.query.filter_by(country=country).all() if a.basic_utility_price is not None]
+                stats[country] = {
+                    'platform_fee': {
+                        'avg': sum(country_fees)/len(country_fees) if country_fees else 0,
+                        'min': min(country_fees) if country_fees else 0,
+                        'max': max(country_fees) if country_fees else 0,
+                        'median': sorted(country_fees)[len(country_fees)//2] if country_fees else 0
+                    },
+                    'msg_types': {
+                        'ai': {
+                            'avg': sum(country_ai)/len(country_ai) if country_ai else 0,
+                            'min': min(country_ai) if country_ai else 0,
+                            'max': max(country_ai) if country_ai else 0,
+                            'median': sorted(country_ai)[len(country_ai)//2] if country_ai else 0
+                        },
+                        'advanced': {
+                            'avg': sum(country_adv)/len(country_adv) if country_adv else 0,
+                            'min': min(country_adv) if country_adv else 0,
+                            'max': max(country_adv) if country_adv else 0,
+                            'median': sorted(country_adv)[len(country_adv)//2] if country_adv else 0
+                        },
+                        'basic_marketing': {
+                            'avg': sum(country_mark)/len(country_mark) if country_mark else 0,
+                            'min': min(country_mark) if country_mark else 0,
+                            'max': max(country_mark) if country_mark else 0,
+                            'median': sorted(country_mark)[len(country_mark)//2] if country_mark else 0
+                        },
+                        'basic_utility': {
+                            'avg': sum(country_util)/len(country_util) if country_util else 0,
+                            'min': min(country_util) if country_util else 0,
+                            'max': max(country_util) if country_util else 0,
+                            'median': sorted(country_util)[len(country_util)//2] if country_util else 0
+                        }
+                    }
+                }
             analytics = {
                 'calculations': total_calculations,
                 'calculations_by_day': calculations_by_day,
@@ -922,6 +976,10 @@ def analytics():
                 'marketing_stats': marketing_stats,
                 'utility_stats': utility_stats,
                 'message_volumes': message_volumes,
+                'platform_fee_discount_triggered': platform_fee_discount_triggered,
+                'margin_chosen': margin_chosen,
+                'margin_rate_card': margin_rate_card,
+                'stats': stats,
                 'discount_warnings': {}
             }
             return render_template('analytics.html', authorized=True, analytics=analytics)

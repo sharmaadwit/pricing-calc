@@ -81,8 +81,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   {% if analytics.stats %}
-    {% set countries = analytics.stats.keys() %}
-    {% for country in countries %}
+    {% for country, stat in analytics.stats.items() %}
       <h3>Country: {{ country }}</h3>
       <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
         <thead>
@@ -97,38 +96,38 @@
         <tbody>
           <tr>
             <td><b>Platform Fee</b></td>
-            <td>{{ analytics.stats[country]['platform_fee']['avg'] }}</td>
-            <td>{{ analytics.stats[country]['platform_fee']['min'] }}</td>
-            <td>{{ analytics.stats[country]['platform_fee']['max'] }}</td>
-            <td>{{ analytics.stats[country]['platform_fee']['median'] }}</td>
+            <td>{{ stat['platform_fee']['avg'] }}</td>
+            <td>{{ stat['platform_fee']['min'] }}</td>
+            <td>{{ stat['platform_fee']['max'] }}</td>
+            <td>{{ stat['platform_fee']['median'] }}</td>
           </tr>
           <tr>
             <td>AI Message</td>
-            <td>{{ analytics.stats[country]['msg_types']['ai']['avg'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['ai']['min'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['ai']['max'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['ai']['median'] }}</td>
+            <td>{{ stat['msg_types']['ai']['avg'] }}</td>
+            <td>{{ stat['msg_types']['ai']['min'] }}</td>
+            <td>{{ stat['msg_types']['ai']['max'] }}</td>
+            <td>{{ stat['msg_types']['ai']['median'] }}</td>
           </tr>
           <tr>
             <td>Advanced Message</td>
-            <td>{{ analytics.stats[country]['msg_types']['advanced']['avg'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['advanced']['min'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['advanced']['max'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['advanced']['median'] }}</td>
+            <td>{{ stat['msg_types']['advanced']['avg'] }}</td>
+            <td>{{ stat['msg_types']['advanced']['min'] }}</td>
+            <td>{{ stat['msg_types']['advanced']['max'] }}</td>
+            <td>{{ stat['msg_types']['advanced']['median'] }}</td>
           </tr>
           <tr>
             <td>Basic Marketing Message</td>
-            <td>{{ analytics.stats[country]['msg_types']['basic_marketing']['avg'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['basic_marketing']['min'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['basic_marketing']['max'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['basic_marketing']['median'] }}</td>
+            <td>{{ stat['msg_types']['basic_marketing']['avg'] }}</td>
+            <td>{{ stat['msg_types']['basic_marketing']['min'] }}</td>
+            <td>{{ stat['msg_types']['basic_marketing']['max'] }}</td>
+            <td>{{ stat['msg_types']['basic_marketing']['median'] }}</td>
           </tr>
           <tr>
             <td>Basic Utility</td>
-            <td>{{ analytics.stats[country]['msg_types']['basic_utility']['avg'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['basic_utility']['min'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['basic_utility']['max'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types']['basic_utility']['median'] }}</td>
+            <td>{{ stat['msg_types']['basic_utility']['avg'] }}</td>
+            <td>{{ stat['msg_types']['basic_utility']['min'] }}</td>
+            <td>{{ stat['msg_types']['basic_utility']['max'] }}</td>
+            <td>{{ stat['msg_types']['basic_utility']['median'] }}</td>
           </tr>
         </tbody>
       </table>
