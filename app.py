@@ -865,6 +865,17 @@ def analytics():
             advanced_stats = get_stats('advanced_price')
             marketing_stats = get_stats('basic_marketing_price')
             utility_stats = get_stats('basic_utility_price')
+            # Message volumes (count of records with non-null price for each type)
+            ai_vol = Analytics.query.filter(Analytics.ai_price.isnot(None)).count()
+            advanced_vol = Analytics.query.filter(Analytics.advanced_price.isnot(None)).count()
+            basic_marketing_vol = Analytics.query.filter(Analytics.basic_marketing_price.isnot(None)).count()
+            basic_utility_vol = Analytics.query.filter(Analytics.basic_utility_price.isnot(None)).count()
+            message_volumes = {
+                'ai': ai_vol,
+                'advanced': advanced_vol,
+                'basic_marketing': basic_marketing_vol,
+                'basic_utility': basic_utility_vol
+            }
             analytics = {
                 'calculations': total_calculations,
                 'calculations_by_day': calculations_by_day,
@@ -880,7 +891,8 @@ def analytics():
                 'ai_stats': ai_stats,
                 'advanced_stats': advanced_stats,
                 'marketing_stats': marketing_stats,
-                'utility_stats': utility_stats
+                'utility_stats': utility_stats,
+                'message_volumes': message_volumes
             }
             return render_template('analytics.html', authorized=True, analytics=analytics)
         else:
