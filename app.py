@@ -676,7 +676,8 @@ def index():
         
         if not inputs or not pricing_inputs:
             flash('Session expired or missing. Please start again.', 'error')
-            return redirect(url_for('index'))
+            currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
+            return render_template('index.html', step='bundle', inputs=inputs, currency_symbol=currency_symbol)
         
         # Parse committed amount
         committed_amount = float(request.form.get('committed_amount', '0').replace(',', ''))
@@ -1030,10 +1031,10 @@ def index():
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
         return render_template('index.html', step='bundle', inputs=inputs, currency_symbol=currency_symbol)
     else:
-    # Default: show volume input form
-    country = session.get('inputs', {}).get('country', 'India')
-    currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
-    return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
+        # Default: show volume input form
+        country = session.get('inputs', {}).get('country', 'India')
+        currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
+        return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
