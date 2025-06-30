@@ -85,10 +85,10 @@
         var ctx_{{ country|replace(' ', '_') }} = document.getElementById('msgPriceChart_{{ country|replace(' ', '_') }}').getContext('2d');
         var msgTypes_{{ country|replace(' ', '_') }} = ['AI', 'Advanced', 'Basic Marketing', 'Basic Utility'];
         var avgPrices_{{ country|replace(' ', '_') }} = {{ [
-            (analytics.avg_price_data[country]['ai']['sum'] / (analytics.avg_price_data[country]['ai']['count'] or 1))|round(4),
-            (analytics.avg_price_data[country]['advanced']['sum'] / (analytics.avg_price_data[country]['advanced']['count'] or 1))|round(4),
-            (analytics.avg_price_data[country]['basic_marketing']['sum'] / (analytics.avg_price_data[country]['basic_marketing']['count'] or 1))|round(4),
-            (analytics.avg_price_data[country]['basic_utility']['sum'] / (analytics.avg_price_data[country]['basic_utility']['count'] or 1))|round(4)
+            analytics.stats[country]['msg_types']['ai']['avg']|round(4),
+            analytics.stats[country]['msg_types']['advanced']['avg']|round(4),
+            analytics.stats[country]['msg_types']['basic_marketing']['avg']|round(4),
+            analytics.stats[country]['msg_types']['basic_utility']['avg']|round(4)
           ]|tojson }};
         new Chart(ctx_{{ country|replace(' ', '_') }}, {
           type: 'bar',
@@ -106,18 +106,26 @@
           }
         });
       </script>
-      <p>
-        <b>Avg AI:</b> {{ (analytics.avg_price_data[country]['ai']['sum'] / (analytics.avg_price_data[country]['ai']['count'] or 1))|round(4) }}<br>
-        <b>Avg Advanced:</b> {{ (analytics.avg_price_data[country]['advanced']['sum'] / (analytics.avg_price_data[country]['advanced']['count'] or 1))|round(4) }}<br>
-        <b>Avg Basic Marketing:</b> {{ (analytics.avg_price_data[country]['basic_marketing']['sum'] / (analytics.avg_price_data[country]['basic_marketing']['count'] or 1))|round(4) }}<br>
-        <b>Avg Basic Utility:</b> {{ (analytics.avg_price_data[country]['basic_utility']['sum'] / (analytics.avg_price_data[country]['basic_utility']['count'] or 1))|round(4) }}
-      </p>
+      <table border="1" cellpadding="4" style="margin: 1em 0; border-collapse: collapse;">
+        <tr><th>Type</th><th>Avg</th><th>Min</th><th>Max</th><th>Median</th></tr>
+        {% set types = ['ai', 'advanced', 'basic_marketing', 'basic_utility'] %}
+        {% set labels = ['AI', 'Advanced', 'Basic Marketing', 'Basic Utility'] %}
+        {% for t, label in types|zip(labels) %}
+          <tr>
+            <td>{{ label }}</td>
+            <td>{{ analytics.stats[country]['msg_types'][t]['avg']|round(4) }}</td>
+            <td>{{ analytics.stats[country]['msg_types'][t]['min'] }}</td>
+            <td>{{ analytics.stats[country]['msg_types'][t]['max'] }}</td>
+            <td>{{ analytics.stats[country]['msg_types'][t]['median'] }}</td>
+          </tr>
+        {% endfor %}
+      </table>
     </div>
     <div>
       <canvas id="platformFeeChart_{{ country|replace(' ', '_') }}" width="400" height="100"></canvas>
       <script>
         var ctx2_{{ country|replace(' ', '_') }} = document.getElementById('platformFeeChart_{{ country|replace(' ', '_') }}').getContext('2d');
-        var avgPlatformFee_{{ country|replace(' ', '_') }} = {{ (analytics.avg_platform_fee_data[country]['sum'] / (analytics.avg_platform_fee_data[country]['count'] or 1))|round(2) }};
+        var avgPlatformFee_{{ country|replace(' ', '_') }} = {{ analytics.stats[country]['platform_fee']['avg']|round(2) }};
         new Chart(ctx2_{{ country|replace(' ', '_') }}, {
           type: 'bar',
           data: {
@@ -134,7 +142,16 @@
           }
         });
       </script>
-      <p><b>Avg Platform Fee:</b> {{ (analytics.avg_platform_fee_data[country]['sum'] / (analytics.avg_platform_fee_data[country]['count'] or 1))|round(2) }}</p>
+      <table border="1" cellpadding="4" style="margin: 1em 0; border-collapse: collapse;">
+        <tr><th>Platform Fee</th><th>Avg</th><th>Min</th><th>Max</th><th>Median</th></tr>
+        <tr>
+          <td>Platform Fee</td>
+          <td>{{ analytics.stats[country]['platform_fee']['avg']|round(2) }}</td>
+          <td>{{ analytics.stats[country]['platform_fee']['min'] }}</td>
+          <td>{{ analytics.stats[country]['platform_fee']['max'] }}</td>
+          <td>{{ analytics.stats[country]['platform_fee']['median'] }}</td>
+        </tr>
+      </table>
     </div>
     <hr>
   {% endfor %}
