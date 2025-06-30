@@ -101,6 +101,8 @@
       <div style="flex: 1; min-width: 0;">
         <form method="post" id="volumes-form">
             <input type="hidden" name="step" value="volumes">
+            <label for="user_name">Enter your name:</label>
+            <input type="text" name="user_name" id="user_name" value="{{ inputs.get('user_name', '') }}" required><br><br>
             <label>Country:</label>
             <select name="country" id="country-select" onchange="updateMinPlatformFee()">
                 <option value="India" {% if inputs and inputs.country == 'India' %}selected{% endif %}>India</option>

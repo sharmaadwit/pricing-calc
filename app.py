@@ -30,6 +30,7 @@ migrate = Migrate(app, db)
 class Analytics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, nullable=False)
+    user_name = db.Column(db.String(128))
     country = db.Column(db.String(64))
     platform_fee = db.Column(db.Float)
     ai_price = db.Column(db.Float)
@@ -661,8 +662,10 @@ def index():
         basic_marketing_price_val = basic_marketing_price if 'basic_marketing_price' in locals() else pricing_inputs.get('basic_marketing_price', 0)
         basic_utility_price_val = basic_utility_price if 'basic_utility_price' in locals() else pricing_inputs.get('basic_utility_price', 0)
         # Save analytics to the database
+        user_name = request.form.get('user_name', '') if request.method == 'POST' else session.get('user_name', '')
         new_entry = Analytics(
             timestamp=datetime.utcnow(),
+            user_name=user_name,
             country=inputs.get('country', 'India'),
             platform_fee=platform_fee,
             ai_price=ai_price_val,
@@ -1006,8 +1009,10 @@ def index():
         basic_marketing_price_val = basic_marketing_price if 'basic_marketing_price' in locals() else pricing_inputs.get('basic_marketing_price', 0)
         basic_utility_price_val = basic_utility_price if 'basic_utility_price' in locals() else pricing_inputs.get('basic_utility_price', 0)
         # Save analytics to the database
+        user_name = request.form.get('user_name', '') if request.method == 'POST' else session.get('user_name', '')
         new_entry = Analytics(
             timestamp=datetime.utcnow(),
+            user_name=user_name,
             country=inputs.get('country', 'India'),
             platform_fee=platform_fee,
             ai_price=ai_price_val,
@@ -1091,7 +1096,12 @@ def analytics():
             # Calculations by day
             calculations_by_day = dict(db.session.query(func.date(Analytics.timestamp), func.count()).group_by(func.date(Analytics.timestamp)).all())
             # Calculations by week
-            calculations_by_week = dict(db.session.query(func.strftime('%Y-W%W', Analytics.timestamp), func.count()).group_by(func.strftime('%Y-W%W', Analytics.timestamp)).all())
+            calculations_by_week = dict(db.session.query(
+                func.to_char(Analytics.timestamp, 'IYYY-"W"IW'),
+                func.count()
+            ).group_by(
+                func.to_char(Analytics.timestamp, 'IYYY-"W"IW')
+            ).all())
             # Most common countries
             country_counter = dict(db.session.query(Analytics.country, func.count()).group_by(Analytics.country).all())
             # Platform fee stats
