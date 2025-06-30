@@ -56,7 +56,6 @@ def initialize_inclusions():
     """
     inclusions = {
         'Platform Fee Used for Margin Calculation': [
-            '80 TPS,',
             'Journey Builder Lite,',
             'Campaign Manager,',
             'CTWA - (Meta, Tiktok)'
@@ -1031,10 +1030,10 @@ def index():
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
         return render_template('index.html', step='bundle', inputs=inputs, currency_symbol=currency_symbol)
     else:
-        # Default: show volume input form
-        country = session.get('inputs', {}).get('country', 'India')
-        currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
-        return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
+    # Default: show volume input form
+    country = session.get('inputs', {}).get('country', 'India')
+    currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
+    return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
@@ -1046,6 +1045,31 @@ def analytics():
             flash('Incorrect keyword.', 'error')
             return render_template('analytics.html', authorized=False)
     return render_template('analytics.html', authorized=False)
+
+@app.route('/reset-analytics', methods=['POST'])
+def reset_analytics():
+    """
+    Resets the analytics_data dictionary to its initial state.
+    """
+    global analytics_data
+    analytics_data = {
+        'calculations': 0,
+        'calculations_by_day': defaultdict(int),
+        'calculations_by_week': defaultdict(int),
+        'country_counter': Counter(),
+        'platform_fee_options': Counter(),
+        'platform_fee_entries': [],
+        'message_volumes': {'ai': [], 'advanced': [], 'basic_marketing': [], 'basic_utility': []},
+        'discount_warnings': Counter(),
+        'platform_fee_discount_triggered': 0,
+        'margin_chosen': [],
+        'margin_rate_card': [],
+        'avg_price_data': {},
+        'avg_platform_fee_data': {},
+        'price_history': {},
+        'platform_fee_history': {},
+    }
+    return 'Analytics reset successfully', 200
 
 if __name__ == '__main__':
     import os
