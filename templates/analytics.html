@@ -40,7 +40,7 @@
     </li>
     <li><b>Most Common Platform Fee Options:</b>
       <ul>
-        {% for fee, count in analytics.platform_fee_options.most_common(5) %}
+        {% for fee, count in analytics.platform_fee_options %}
           <li>{{ fee }}: {{ count }}</li>
         {% endfor %}
       </ul>
