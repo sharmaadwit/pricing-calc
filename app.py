@@ -9,12 +9,34 @@ import os
 # from googleapiclient.discovery import build
 # from google.oauth2.credentials import Credentials
 import re
-import datetime
 from collections import Counter, defaultdict
 import statistics
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from datetime import datetime
+from sqlalchemy import func
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:prdeuXwtBzpLZaOGpxgRspfjfLNEQrys@gondola.proxy.rlwy.net:25504/railway')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+# Example Analytics model (expand as needed)
+class Analytics(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, nullable=False)
+    country = db.Column(db.String(64))
+    platform_fee = db.Column(db.Float)
+    ai_price = db.Column(db.Float)
+    advanced_price = db.Column(db.Float)
+    basic_marketing_price = db.Column(db.Float)
+    basic_utility_price = db.Column(db.Float)
+    # Add more fields as needed
 
 # os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
 
@@ -29,25 +51,6 @@ COUNTRY_CURRENCY = {
 }
 
 SECRET_ANALYTICS_KEYWORD = "letmein123"
-
-# Analytics data (for internal dashboard)
-analytics_data = {
-    'calculations': 0,
-    'calculations_by_day': defaultdict(int),
-    'calculations_by_week': defaultdict(int),
-    'country_counter': Counter(),
-    'platform_fee_options': Counter(),
-    'platform_fee_entries': [],
-    'message_volumes': {'ai': [], 'advanced': [], 'basic_marketing': [], 'basic_utility': []},
-    'discount_warnings': Counter(),
-    'platform_fee_discount_triggered': 0,
-    'margin_chosen': [],
-    'margin_rate_card': [],
-    'avg_price_data': {},
-    'avg_platform_fee_data': {},
-    'price_history': {},  # country: {msg_type: [prices]}
-    'platform_fee_history': {},  # country: [fees]
-}
 
 def initialize_inclusions():
     """
@@ -539,8 +542,8 @@ def index():
         
         # --- Analytics Update ---
         analytics_data['calculations'] += 1
-        today = datetime.datetime.now().strftime('%Y-%m-%d')
-        week = datetime.datetime.now().strftime('%Y-W%U')
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+        week = datetime.utcnow().strftime('%Y-W%U')
         analytics_data['calculations_by_day'][today] += 1
         analytics_data['calculations_by_week'][week] += 1
         analytics_data['country_counter'][inputs.get('country', 'India')] += 1
@@ -648,6 +651,27 @@ def index():
                 'max': 'N/A',
                 'median': 'N/A'
             }
+
+        # Ensure pricing_inputs is always defined
+        if 'pricing_inputs' not in locals():
+            pricing_inputs = {}
+        # Ensure all price variables are defined for Analytics model
+        ai_price_val = ai_price if 'ai_price' in locals() else pricing_inputs.get('ai_price', 0)
+        advanced_price_val = advanced_price if 'advanced_price' in locals() else pricing_inputs.get('advanced_price', 0)
+        basic_marketing_price_val = basic_marketing_price if 'basic_marketing_price' in locals() else pricing_inputs.get('basic_marketing_price', 0)
+        basic_utility_price_val = basic_utility_price if 'basic_utility_price' in locals() else pricing_inputs.get('basic_utility_price', 0)
+        # Save analytics to the database
+        new_entry = Analytics(
+            timestamp=datetime.utcnow(),
+            country=inputs.get('country', 'India'),
+            platform_fee=platform_fee,
+            ai_price=ai_price_val,
+            advanced_price=advanced_price_val,
+            basic_marketing_price=basic_marketing_price_val,
+            basic_utility_price=basic_utility_price_val
+        )
+        db.session.add(new_entry)
+        db.session.commit()
 
         return render_template(
             'index.html',
@@ -868,8 +892,8 @@ def index():
         # --- Analytics Update for committed amount path ---
         # Use same logic as in the volume-based path
         analytics_data['calculations'] += 1
-        today = datetime.datetime.now().strftime('%Y-%m-%d')
-        week = datetime.datetime.now().strftime('%Y-W%U')
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+        week = datetime.utcnow().strftime('%Y-W%U')
         analytics_data['calculations_by_day'][today] += 1
         analytics_data['calculations_by_week'][week] += 1
         analytics_data['country_counter'][country] += 1
@@ -973,6 +997,27 @@ def index():
                 'median': 'N/A'
             }
 
+        # Ensure pricing_inputs is always defined
+        if 'pricing_inputs' not in locals():
+            pricing_inputs = {}
+        # Ensure all price variables are defined for Analytics model
+        ai_price_val = ai_price if 'ai_price' in locals() else pricing_inputs.get('ai_price', 0)
+        advanced_price_val = advanced_price if 'advanced_price' in locals() else pricing_inputs.get('advanced_price', 0)
+        basic_marketing_price_val = basic_marketing_price if 'basic_marketing_price' in locals() else pricing_inputs.get('basic_marketing_price', 0)
+        basic_utility_price_val = basic_utility_price if 'basic_utility_price' in locals() else pricing_inputs.get('basic_utility_price', 0)
+        # Save analytics to the database
+        new_entry = Analytics(
+            timestamp=datetime.utcnow(),
+            country=inputs.get('country', 'India'),
+            platform_fee=platform_fee,
+            ai_price=ai_price_val,
+            advanced_price=advanced_price_val,
+            basic_marketing_price=basic_marketing_price_val,
+            basic_utility_price=basic_utility_price_val
+        )
+        db.session.add(new_entry)
+        db.session.commit()
+
         return render_template(
             'index.html',
             step='results',
@@ -1041,14 +1086,59 @@ def analytics():
     if request.method == 'POST':
         keyword = request.form.get('keyword', '')
         if keyword == SECRET_ANALYTICS_KEYWORD:
-            if 'stats' not in analytics_data:
-                analytics_data['stats'] = {}
-            return render_template('analytics.html', authorized=True, analytics=analytics_data)
+            # Query the database for analytics
+            total_calculations = Analytics.query.count()
+            # Calculations by day
+            calculations_by_day = dict(db.session.query(func.date(Analytics.timestamp), func.count()).group_by(func.date(Analytics.timestamp)).all())
+            # Calculations by week
+            calculations_by_week = dict(db.session.query(func.strftime('%Y-W%W', Analytics.timestamp), func.count()).group_by(func.strftime('%Y-W%W', Analytics.timestamp)).all())
+            # Most common countries
+            country_counter = dict(db.session.query(Analytics.country, func.count()).group_by(Analytics.country).all())
+            # Platform fee stats
+            platform_fees = [row[0] for row in db.session.query(Analytics.platform_fee).all() if row[0] is not None]
+            if platform_fees:
+                avg_platform_fee = sum(platform_fees) / len(platform_fees)
+                min_platform_fee = min(platform_fees)
+                max_platform_fee = max(platform_fees)
+                median_platform_fee = sorted(platform_fees)[len(platform_fees)//2]
+            else:
+                avg_platform_fee = min_platform_fee = max_platform_fee = median_platform_fee = 0
+            # Message price stats by type
+            def get_stats(field):
+                vals = [getattr(a, field) for a in Analytics.query.all() if getattr(a, field) is not None]
+                if vals:
+                    return {
+                        'avg': sum(vals)/len(vals),
+                        'min': min(vals),
+                        'max': max(vals),
+                        'median': sorted(vals)[len(vals)//2]
+                    }
+                else:
+                    return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
+            ai_stats = get_stats('ai_price')
+            advanced_stats = get_stats('advanced_price')
+            marketing_stats = get_stats('basic_marketing_price')
+            utility_stats = get_stats('basic_utility_price')
+            analytics = {
+                'calculations': total_calculations,
+                'calculations_by_day': calculations_by_day,
+                'calculations_by_week': calculations_by_week,
+                'country_counter': country_counter,
+                'platform_fee_stats': {
+                    'avg': avg_platform_fee,
+                    'min': min_platform_fee,
+                    'max': max_platform_fee,
+                    'median': median_platform_fee
+                },
+                'ai_stats': ai_stats,
+                'advanced_stats': advanced_stats,
+                'marketing_stats': marketing_stats,
+                'utility_stats': utility_stats
+            }
+            return render_template('analytics.html', authorized=True, analytics=analytics)
         else:
             flash('Incorrect keyword.', 'error')
             return render_template('analytics.html', authorized=False)
-    if 'stats' not in analytics_data:
-        analytics_data['stats'] = {}
     return render_template('analytics.html', authorized=False)
 
 @app.route('/reset-analytics', methods=['POST'])
