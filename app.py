@@ -865,6 +865,114 @@ def index():
             'total_bundle_price': committed_amount + float(platform_fee),
             'inclusion_text': f'Committed amount of {COUNTRY_CURRENCY.get(country, "₹")}{committed_amount:,.0f} for messaging services.'
         }
+        # --- Analytics Update for committed amount path ---
+        # Use same logic as in the volume-based path
+        analytics_data['calculations'] += 1
+        today = datetime.datetime.now().strftime('%Y-%m-%d')
+        week = datetime.datetime.now().strftime('%Y-W%U')
+        analytics_data['calculations_by_day'][today] += 1
+        analytics_data['calculations_by_week'][week] += 1
+        analytics_data['country_counter'][country] += 1
+        analytics_data['platform_fee_entries'].append(platform_fee)
+        analytics_data['message_volumes']['ai'].append(0)
+        analytics_data['message_volumes']['advanced'].append(0)
+        analytics_data['message_volumes']['basic_marketing'].append(0)
+        analytics_data['message_volumes']['basic_utility'].append(0)
+        # Add margin if available
+        if results.get('margin') and results['margin'] != 'N/A':
+            try:
+                analytics_data['margin_chosen'].append(float(results['margin'].replace('%','')))
+            except Exception:
+                pass
+        # Update avg price/platform fee data
+        msg_types = ['ai', 'advanced', 'basic_marketing', 'basic_utility']
+        msg_labels = ['AI Message', 'Advanced Message', 'Basic Marketing Message', 'Basic Utility/Authentication Message']
+        if 'avg_price_data' not in analytics_data:
+            analytics_data['avg_price_data'] = {}
+        if 'avg_platform_fee_data' not in analytics_data:
+            analytics_data['avg_platform_fee_data'] = {}
+        if country not in analytics_data['avg_price_data']:
+            analytics_data['avg_price_data'][country] = {k: {'sum': 0.0, 'count': 0} for k in msg_types}
+        if country not in analytics_data['avg_platform_fee_data']:
+            analytics_data['avg_platform_fee_data'][country] = {'sum': 0.0, 'count': 0}
+        for label, key in zip(msg_labels, msg_types):
+            chosen_price = None
+            for item in pricing_line_items:
+                if (item.get('line_item') or item.get('label')) == label:
+                    try:
+                        chosen_price = float(item.get('chosen_price', 0) or 0)
+                    except Exception:
+                        chosen_price = 0.0
+                    break
+            if chosen_price is not None:
+                analytics_data['avg_price_data'][country][key]['sum'] += chosen_price
+                analytics_data['avg_price_data'][country][key]['count'] += 1
+        try:
+            analytics_data['avg_platform_fee_data'][country]['sum'] += float(platform_fee)
+            analytics_data['avg_platform_fee_data'][country]['count'] += 1
+        except Exception:
+            pass
+        # Update price/platform fee history for stats
+        if 'price_history' not in analytics_data:
+            analytics_data['price_history'] = {}
+        if 'platform_fee_history' not in analytics_data:
+            analytics_data['platform_fee_history'] = {}
+        if country not in analytics_data['price_history']:
+            analytics_data['price_history'][country] = {k: [] for k in msg_types}
+        if country not in analytics_data['platform_fee_history']:
+            analytics_data['platform_fee_history'][country] = []
+        for label, key in zip(msg_labels, msg_types):
+            chosen_price = None
+            for item in pricing_line_items:
+                if (item.get('line_item') or item.get('label')) == label:
+                    try:
+                        chosen_price = float(item.get('chosen_price', 0) or 0)
+                    except Exception:
+                        chosen_price = 0.0
+                    break
+            if chosen_price is not None:
+                analytics_data['price_history'][country][key].append(chosen_price)
+        try:
+            analytics_data['platform_fee_history'][country].append(float(platform_fee))
+        except Exception:
+            pass
+        # Pre-calculate stats for each country and store in analytics_data['stats']
+        if 'stats' not in analytics_data:
+            analytics_data['stats'] = {}
+        if country not in analytics_data['stats']:
+            analytics_data['stats'][country] = {'msg_types': {}, 'platform_fee': {}}
+        for key in msg_types:
+            vals = analytics_data['price_history'][country][key]
+            if vals:
+                analytics_data['stats'][country]['msg_types'][key] = {
+                    'avg': statistics.mean(vals),
+                    'min': min(vals),
+                    'max': max(vals),
+                    'median': statistics.median(vals)
+                }
+            else:
+                analytics_data['stats'][country]['msg_types'][key] = {
+                    'avg': 0,
+                    'min': 'N/A',
+                    'max': 'N/A',
+                    'median': 'N/A'
+                }
+        pf_vals = analytics_data['platform_fee_history'][country]
+        if pf_vals:
+            analytics_data['stats'][country]['platform_fee'] = {
+                'avg': statistics.mean(pf_vals),
+                'min': min(pf_vals),
+                'max': max(pf_vals),
+                'median': statistics.median(pf_vals)
+            }
+        else:
+            analytics_data['stats'][country]['platform_fee'] = {
+                'avg': 0,
+                'min': 'N/A',
+                'max': 'N/A',
+                'median': 'N/A'
+            }
+
         return render_template(
             'index.html',
             step='results',
