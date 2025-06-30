@@ -80,7 +80,7 @@
       <h3 style="margin-top:0;">How to Use</h3>
       <ul style="margin:0 0 0 18px; padding:0; font-size:1.08em;">
         <li>Enter your expected monthly message volumes and select platform options.</li>
-        <li>If you do not enter any volumes, you will be asked to enter a committed monthly amount.</li>
+        <li>You can enter 0 volumes in this step to go through credit bundle flow.</li>
         <li>Click 'Continue' to see the detailed pricing and inclusions.</li>
         <li>Review the results. The internal section is for your reference only.</li>
       </ul>
@@ -88,6 +88,9 @@
       <div style="margin: 18px 0; text-align: center;">
         <!-- User Flow Diagram (Option 1: Linear with Branch for Committed Amount) -->
         <img src="{{ url_for('static', filename='user-flow.svg') }}" alt="User Flow Diagram" style="width:700px; height:250px; border:1.5px solid #dbe2ea; border-radius:8px; background:#fff; padding:8px;">
+      </div>
+      <div style="text-align: center; margin-top: 18px;">
+        <a href="https://github.com/<your-repo-or-org>/<your-repo>/blob/main/README.md" target="_blank" style="display: inline-block; padding: 10px 24px; background: #1976d2; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 1.08em; box-shadow: 0 2px 6px rgba(25,118,210,0.08);">Learn More</a>
       </div>
     </div>
     {% endif %}
