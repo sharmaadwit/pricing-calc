@@ -1076,6 +1076,11 @@ def reset_analytics():
     }
     return 'Analytics reset successfully', 200
 
+@app.route('/readme')
+def readme():
+    """Render the native HTML documentation page."""
+    return render_template('readme.html')
+
 if __name__ == '__main__':
     import os
     port = int(os.environ.get("PORT", 8081))
