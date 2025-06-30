@@ -534,6 +534,25 @@ def index():
                 if key in item and (isinstance(item[key], (int, float)) or (isinstance(item[key], str) and item[key].replace('.', '', 1).isdigit())) and item[key] != '':
                     item[key] = fmt(item[key])
         
+        # --- Analytics Update ---
+        analytics_data['calculations'] += 1
+        today = datetime.datetime.now().strftime('%Y-%m-%d')
+        week = datetime.datetime.now().strftime('%Y-W%U')
+        analytics_data['calculations_by_day'][today] += 1
+        analytics_data['calculations_by_week'][week] += 1
+        analytics_data['country_counter'][inputs.get('country', 'India')] += 1
+        analytics_data['platform_fee_entries'].append(platform_fee)
+        analytics_data['message_volumes']['ai'].append(ai_volume)
+        analytics_data['message_volumes']['advanced'].append(advanced_volume)
+        analytics_data['message_volumes']['basic_marketing'].append(basic_marketing_volume)
+        analytics_data['message_volumes']['basic_utility'].append(basic_utility_volume)
+        # Add margin if available
+        if results.get('margin') and results['margin'] != 'N/A':
+            try:
+                analytics_data['margin_chosen'].append(float(results['margin'].replace('%','')))
+            except Exception:
+                pass
+
         return render_template(
             'index.html',
             step='results',
