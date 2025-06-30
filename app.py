@@ -892,7 +892,8 @@ def analytics():
                 'advanced_stats': advanced_stats,
                 'marketing_stats': marketing_stats,
                 'utility_stats': utility_stats,
-                'message_volumes': message_volumes
+                'message_volumes': message_volumes,
+                'discount_warnings': {}
             }
             return render_template('analytics.html', authorized=True, analytics=analytics)
         else:

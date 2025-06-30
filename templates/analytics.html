@@ -63,9 +63,13 @@
     </li>
     <li><b>Discount Warnings Triggered:</b>
       <ul>
-        {% for msg, count in analytics.discount_warnings.items() %}
-          <li>{{ msg }}: {{ count }}</li>
-        {% endfor %}
+        {% if analytics.discount_warnings and analytics.discount_warnings|length > 0 %}
+          {% for msg, count in analytics.discount_warnings.items() %}
+            <li>{{ msg }}: {{ count }}</li>
+          {% endfor %}
+        {% else %}
+          <li>No discount warnings.</li>
+        {% endif %}
       </ul>
     </li>
     <li><b>Platform Fee Discount Triggered:</b> {{ analytics.platform_fee_discount_triggered }}</li>
