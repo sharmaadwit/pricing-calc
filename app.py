@@ -558,6 +558,10 @@ def index():
         db.session.add(new_analytics)
         db.session.commit()
 
+        # Top 5 users by number of calculations
+        user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
+        top_users = Counter(user_names).most_common(5)
+
         return render_template(
             'index.html',
             step='results',
@@ -575,7 +579,8 @@ def index():
             margin_table=margin_line_items,
             user_selections=user_selections,
             inputs=inputs,
-            contradiction_warning=contradiction_warning
+            contradiction_warning=contradiction_warning,
+            top_users=top_users
         )
 
     elif step == 'bundle' and request.method == 'POST':
@@ -846,10 +851,10 @@ def index():
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
         return render_template('index.html', step='bundle', inputs=inputs, currency_symbol=currency_symbol)
     else:
-        # Default: show volume input form
-        country = session.get('inputs', {}).get('country', 'India')
-        currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
-        return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
+    # Default: show volume input form
+    country = session.get('inputs', {}).get('country', 'India')
+    currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
+    return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
@@ -986,6 +991,9 @@ def analytics():
                     'sum': sum(a.platform_fee or 0 for a in country_analytics),
                     'count': len([a for a in country_analytics if a.platform_fee is not None])
                 }
+            # Top 5 users by number of calculations
+            user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
+            top_users = Counter(user_names).most_common(5)
             analytics = {
                 'calculations': total_calculations,
                 'calculations_by_day': calculations_by_day,
@@ -1009,7 +1017,8 @@ def analytics():
                 'stats': stats,
                 'discount_warnings': {},
                 'avg_price_data': avg_price_data,
-                'avg_platform_fee_data': avg_platform_fee_data
+                'avg_platform_fee_data': avg_platform_fee_data,
+                'top_users': top_users
             }
             return render_template('analytics.html', authorized=True, analytics=analytics)
         else:

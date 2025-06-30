@@ -45,22 +45,6 @@
         {% endfor %}
       </ul>
     </li>
-    <li><b>Platform Fee Stats:</b>
-      <ul>
-        <li>Average: {{ analytics.platform_fee_entries|sum / (analytics.platform_fee_entries|length or 1) }}</li>
-        <li>Min: {{ analytics.platform_fee_entries|min }}</li>
-        <li>Max: {{ analytics.platform_fee_entries|max }}</li>
-        <li>Median: {% set sorted = analytics.platform_fee_entries|sort %}{{ sorted[sorted|length // 2] if sorted else 'N/A' }}</li>
-      </ul>
-    </li>
-    <li><b>Message Volume Distribution:</b>
-      <ul>
-        <li>AI: {{ analytics.message_volumes.ai }}</li>
-        <li>Advanced: {{ analytics.message_volumes.advanced }}</li>
-        <li>Basic Marketing: {{ analytics.message_volumes.basic_marketing }}</li>
-        <li>Basic Utility: {{ analytics.message_volumes.basic_utility }}</li>
-      </ul>
-    </li>
     <li><b>Discount Warnings Triggered:</b>
       <ul>
         {% if analytics.discount_warnings and analytics.discount_warnings|length > 0 %}
@@ -75,6 +59,13 @@
     <li><b>Platform Fee Discount Triggered:</b> {{ analytics.platform_fee_discount_triggered }}</li>
     <li><b>Average Margin (Chosen):</b> {{ analytics.margin_chosen|sum / (analytics.margin_chosen|length or 1) }}%</li>
     <li><b>Average Margin (Rate Card):</b> {{ analytics.margin_rate_card|sum / (analytics.margin_rate_card|length or 1) }}%</li>
+    <li><b>Top 5 Users (by Calculations):</b>
+      <ul>
+        {% for user, count in analytics.top_users %}
+          <li>{{ user }}: {{ count }}</li>
+        {% endfor %}
+      </ul>
+    </li>
   </ul>
 
   <!-- Chart.js CDN -->
@@ -132,7 +123,7 @@
         </tbody>
       </table>
       <div>
-        <canvas id="msgPriceChart_{{ country|replace(' ', '_') }}" width="400" height="200"></canvas>
+        <canvas id="msgPriceChart_{{ country|replace(' ', '_') }}" width="300" height="120"></canvas>
         <script>
           var ctx_{{ country|replace(' ', '_') }} = document.getElementById('msgPriceChart_{{ country|replace(' ', '_') }}').getContext('2d');
           var msgTypes_{{ country|replace(' ', '_') }} = ['AI', 'Advanced', 'Basic Marketing', 'Basic Utility'];
@@ -166,7 +157,7 @@
         </p>
       </div>
       <div>
-        <canvas id="platformFeeChart_{{ country|replace(' ', '_') }}" width="400" height="100"></canvas>
+        <canvas id="platformFeeChart_{{ country|replace(' ', '_') }}" width="300" height="120"></canvas>
         <script>
           var ctx2_{{ country|replace(' ', '_') }} = document.getElementById('platformFeeChart_{{ country|replace(' ', '_') }}').getContext('2d');
           var avgPlatformFee_{{ country|replace(' ', '_') }} = {{ (analytics.avg_platform_fee_data[country]['sum'] / (analytics.avg_platform_fee_data[country]['count'] or 1))|round(2) }};
