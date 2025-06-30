@@ -541,6 +541,21 @@ def index():
                 if key in item and (isinstance(item[key], (int, float)) or (isinstance(item[key], str) and item[key].replace('.', '', 1).isdigit())) and item[key] != '':
                     item[key] = fmt(item[key])
         
+        # Log analytics for volumes flow
+        analytics_kwargs = dict(
+            timestamp=datetime.utcnow(),
+            user_name=inputs.get('user_name', ''),
+            country=inputs.get('country', ''),
+            platform_fee=platform_fee,
+            ai_price=ai_price,
+            advanced_price=advanced_price,
+            basic_marketing_price=basic_marketing_price,
+            basic_utility_price=basic_utility_price
+        )
+        new_analytics = Analytics(**analytics_kwargs)
+        db.session.add(new_analytics)
+        db.session.commit()
+
         return render_template(
             'index.html',
             step='results',
@@ -757,6 +772,20 @@ def index():
             'total_bundle_price': committed_amount + float(platform_fee),
             'inclusion_text': f'Committed amount of {COUNTRY_CURRENCY.get(country, "₹")}{committed_amount:,.0f} for messaging services.'
         }
+        # Log analytics for bundle flow
+        analytics_kwargs = dict(
+            timestamp=datetime.utcnow(),
+            user_name=inputs.get('user_name', ''),
+            country=inputs.get('country', ''),
+            platform_fee=platform_fee,
+            ai_price=ai_price,
+            advanced_price=advanced_price,
+            basic_marketing_price=basic_marketing_price,
+            basic_utility_price=basic_utility_price
+        )
+        new_analytics = Analytics(**analytics_kwargs)
+        db.session.add(new_analytics)
+        db.session.commit()
         return render_template(
             'index.html',
             step='results',
