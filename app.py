@@ -541,141 +541,6 @@ def index():
                 if key in item and (isinstance(item[key], (int, float)) or (isinstance(item[key], str) and item[key].replace('.', '', 1).isdigit())) and item[key] != '':
                     item[key] = fmt(item[key])
         
-        # --- Analytics Update ---
-        analytics_data['calculations'] += 1
-        today = datetime.utcnow().strftime('%Y-%m-%d')
-        week = datetime.utcnow().strftime('%Y-W%U')
-        analytics_data['calculations_by_day'][today] += 1
-        analytics_data['calculations_by_week'][week] += 1
-        analytics_data['country_counter'][inputs.get('country', 'India')] += 1
-        analytics_data['platform_fee_entries'].append(platform_fee)
-        analytics_data['message_volumes']['ai'].append(ai_volume)
-        analytics_data['message_volumes']['advanced'].append(advanced_volume)
-        analytics_data['message_volumes']['basic_marketing'].append(basic_marketing_volume)
-        analytics_data['message_volumes']['basic_utility'].append(basic_utility_volume)
-        # Add margin if available
-        if results.get('margin') and results['margin'] != 'N/A':
-            try:
-                analytics_data['margin_chosen'].append(float(results['margin'].replace('%','')))
-            except Exception:
-                pass
-
-        # Update average per message price by type and country
-        msg_types = ['ai', 'advanced', 'basic_marketing', 'basic_utility']
-        msg_labels = ['AI Message', 'Advanced Message', 'Basic Marketing Message', 'Basic Utility/Authentication Message']
-        if 'avg_price_data' not in analytics_data:
-            analytics_data['avg_price_data'] = {}
-        if country not in analytics_data['avg_price_data']:
-            analytics_data['avg_price_data'][country] = {k: {'sum': 0.0, 'count': 0} for k in msg_types}
-        # Update per message type
-        for label, key in zip(msg_labels, msg_types):
-            chosen_price = None
-            for item in results['line_items']:
-                if (item.get('line_item') or item.get('label')) == label:
-                    try:
-                        chosen_price = float(item.get('chosen_price', 0) or 0)
-                    except Exception:
-                        chosen_price = 0.0
-                    break
-            if chosen_price is not None:
-                analytics_data['avg_price_data'][country][key]['sum'] += chosen_price
-                analytics_data['avg_price_data'][country][key]['count'] += 1
-        # Update platform fee
-        try:
-            analytics_data['avg_platform_fee_data'][country]['sum'] += float(platform_fee)
-            analytics_data['avg_platform_fee_data'][country]['count'] += 1
-        except Exception:
-            pass
-
-        # Update price history and platform fee history
-        if 'price_history' not in analytics_data:
-            analytics_data['price_history'] = {}
-        if 'platform_fee_history' not in analytics_data:
-            analytics_data['platform_fee_history'] = {}
-        if country not in analytics_data['price_history']:
-            analytics_data['price_history'][country] = {k: [] for k in msg_types}
-        if country not in analytics_data['platform_fee_history']:
-            analytics_data['platform_fee_history'][country] = []
-        # Update per message type
-        for label, key in zip(msg_labels, msg_types):
-            chosen_price = None
-            for item in results['line_items']:
-                if (item.get('line_item') or item.get('label')) == label:
-                    try:
-                        chosen_price = float(item.get('chosen_price', 0) or 0)
-                    except Exception:
-                        chosen_price = 0.0
-                    break
-            if chosen_price is not None:
-                analytics_data['price_history'][country][key].append(chosen_price)
-        # Update platform fee
-        try:
-            analytics_data['platform_fee_history'][country].append(float(platform_fee))
-        except Exception:
-            pass
-
-        # Pre-calculate stats for each country and store in analytics_data['stats']
-        if 'stats' not in analytics_data:
-            analytics_data['stats'] = {}
-        if country not in analytics_data['stats']:
-            analytics_data['stats'][country] = {'msg_types': {}, 'platform_fee': {}}
-        # For each message type
-        for key in msg_types:
-            vals = analytics_data['price_history'][country][key]
-            if vals:
-                analytics_data['stats'][country]['msg_types'][key] = {
-                    'avg': statistics.mean(vals),
-                    'min': min(vals),
-                    'max': max(vals),
-                    'median': statistics.median(vals)
-                }
-            else:
-                analytics_data['stats'][country]['msg_types'][key] = {
-                    'avg': 0,
-                    'min': 'N/A',
-                    'max': 'N/A',
-                    'median': 'N/A'
-                }
-        # For platform fee
-        pf_vals = analytics_data['platform_fee_history'][country]
-        if pf_vals:
-            analytics_data['stats'][country]['platform_fee'] = {
-                'avg': statistics.mean(pf_vals),
-                'min': min(pf_vals),
-                'max': max(pf_vals),
-                'median': statistics.median(pf_vals)
-            }
-        else:
-            analytics_data['stats'][country]['platform_fee'] = {
-                'avg': 0,
-                'min': 'N/A',
-                'max': 'N/A',
-                'median': 'N/A'
-            }
-
-        # Ensure pricing_inputs is always defined
-        if 'pricing_inputs' not in locals():
-            pricing_inputs = {}
-        # Ensure all price variables are defined for Analytics model
-        ai_price_val = ai_price if 'ai_price' in locals() else pricing_inputs.get('ai_price', 0)
-        advanced_price_val = advanced_price if 'advanced_price' in locals() else pricing_inputs.get('advanced_price', 0)
-        basic_marketing_price_val = basic_marketing_price if 'basic_marketing_price' in locals() else pricing_inputs.get('basic_marketing_price', 0)
-        basic_utility_price_val = basic_utility_price if 'basic_utility_price' in locals() else pricing_inputs.get('basic_utility_price', 0)
-        # Save analytics to the database
-        user_name = request.form.get('user_name', '') if request.method == 'POST' else session.get('user_name', '')
-        new_entry = Analytics(
-            timestamp=datetime.utcnow(),
-            user_name=user_name,
-            country=inputs.get('country', 'India'),
-            platform_fee=platform_fee,
-            ai_price=ai_price_val,
-            advanced_price=advanced_price_val,
-            basic_marketing_price=basic_marketing_price_val,
-            basic_utility_price=basic_utility_price_val
-        )
-        db.session.add(new_entry)
-        db.session.commit()
-
         return render_template(
             'index.html',
             step='results',
@@ -892,137 +757,6 @@ def index():
             'total_bundle_price': committed_amount + float(platform_fee),
             'inclusion_text': f'Committed amount of {COUNTRY_CURRENCY.get(country, "₹")}{committed_amount:,.0f} for messaging services.'
         }
-        # --- Analytics Update for committed amount path ---
-        # Use same logic as in the volume-based path
-        analytics_data['calculations'] += 1
-        today = datetime.utcnow().strftime('%Y-%m-%d')
-        week = datetime.utcnow().strftime('%Y-W%U')
-        analytics_data['calculations_by_day'][today] += 1
-        analytics_data['calculations_by_week'][week] += 1
-        analytics_data['country_counter'][country] += 1
-        analytics_data['platform_fee_entries'].append(platform_fee)
-        analytics_data['message_volumes']['ai'].append(0)
-        analytics_data['message_volumes']['advanced'].append(0)
-        analytics_data['message_volumes']['basic_marketing'].append(0)
-        analytics_data['message_volumes']['basic_utility'].append(0)
-        # Add margin if available
-        if results.get('margin') and results['margin'] != 'N/A':
-            try:
-                analytics_data['margin_chosen'].append(float(results['margin'].replace('%','')))
-            except Exception:
-                pass
-        # Update avg price/platform fee data
-        msg_types = ['ai', 'advanced', 'basic_marketing', 'basic_utility']
-        msg_labels = ['AI Message', 'Advanced Message', 'Basic Marketing Message', 'Basic Utility/Authentication Message']
-        if 'avg_price_data' not in analytics_data:
-            analytics_data['avg_price_data'] = {}
-        if 'avg_platform_fee_data' not in analytics_data:
-            analytics_data['avg_platform_fee_data'] = {}
-        if country not in analytics_data['avg_price_data']:
-            analytics_data['avg_price_data'][country] = {k: {'sum': 0.0, 'count': 0} for k in msg_types}
-        if country not in analytics_data['avg_platform_fee_data']:
-            analytics_data['avg_platform_fee_data'][country] = {'sum': 0.0, 'count': 0}
-        for label, key in zip(msg_labels, msg_types):
-            chosen_price = None
-            for item in pricing_line_items:
-                if (item.get('line_item') or item.get('label')) == label:
-                    try:
-                        chosen_price = float(item.get('chosen_price', 0) or 0)
-                    except Exception:
-                        chosen_price = 0.0
-                    break
-            if chosen_price is not None:
-                analytics_data['avg_price_data'][country][key]['sum'] += chosen_price
-                analytics_data['avg_price_data'][country][key]['count'] += 1
-        try:
-            analytics_data['avg_platform_fee_data'][country]['sum'] += float(platform_fee)
-            analytics_data['avg_platform_fee_data'][country]['count'] += 1
-        except Exception:
-            pass
-        # Update price/platform fee history for stats
-        if 'price_history' not in analytics_data:
-            analytics_data['price_history'] = {}
-        if 'platform_fee_history' not in analytics_data:
-            analytics_data['platform_fee_history'] = {}
-        if country not in analytics_data['price_history']:
-            analytics_data['price_history'][country] = {k: [] for k in msg_types}
-        if country not in analytics_data['platform_fee_history']:
-            analytics_data['platform_fee_history'][country] = []
-        for label, key in zip(msg_labels, msg_types):
-            chosen_price = None
-            for item in pricing_line_items:
-                if (item.get('line_item') or item.get('label')) == label:
-                    try:
-                        chosen_price = float(item.get('chosen_price', 0) or 0)
-                    except Exception:
-                        chosen_price = 0.0
-                    break
-            if chosen_price is not None:
-                analytics_data['price_history'][country][key].append(chosen_price)
-        try:
-            analytics_data['platform_fee_history'][country].append(float(platform_fee))
-        except Exception:
-            pass
-        # Pre-calculate stats for each country and store in analytics_data['stats']
-        if 'stats' not in analytics_data:
-            analytics_data['stats'] = {}
-        if country not in analytics_data['stats']:
-            analytics_data['stats'][country] = {'msg_types': {}, 'platform_fee': {}}
-        for key in msg_types:
-            vals = analytics_data['price_history'][country][key]
-            if vals:
-                analytics_data['stats'][country]['msg_types'][key] = {
-                    'avg': statistics.mean(vals),
-                    'min': min(vals),
-                    'max': max(vals),
-                    'median': statistics.median(vals)
-                }
-            else:
-                analytics_data['stats'][country]['msg_types'][key] = {
-                    'avg': 0,
-                    'min': 'N/A',
-                    'max': 'N/A',
-                    'median': 'N/A'
-                }
-        pf_vals = analytics_data['platform_fee_history'][country]
-        if pf_vals:
-            analytics_data['stats'][country]['platform_fee'] = {
-                'avg': statistics.mean(pf_vals),
-                'min': min(pf_vals),
-                'max': max(pf_vals),
-                'median': statistics.median(pf_vals)
-            }
-        else:
-            analytics_data['stats'][country]['platform_fee'] = {
-                'avg': 0,
-                'min': 'N/A',
-                'max': 'N/A',
-                'median': 'N/A'
-            }
-
-        # Ensure pricing_inputs is always defined
-        if 'pricing_inputs' not in locals():
-            pricing_inputs = {}
-        # Ensure all price variables are defined for Analytics model
-        ai_price_val = ai_price if 'ai_price' in locals() else pricing_inputs.get('ai_price', 0)
-        advanced_price_val = advanced_price if 'advanced_price' in locals() else pricing_inputs.get('advanced_price', 0)
-        basic_marketing_price_val = basic_marketing_price if 'basic_marketing_price' in locals() else pricing_inputs.get('basic_marketing_price', 0)
-        basic_utility_price_val = basic_utility_price if 'basic_utility_price' in locals() else pricing_inputs.get('basic_utility_price', 0)
-        # Save analytics to the database
-        user_name = request.form.get('user_name', '') if request.method == 'POST' else session.get('user_name', '')
-        new_entry = Analytics(
-            timestamp=datetime.utcnow(),
-            user_name=user_name,
-            country=inputs.get('country', 'India'),
-            platform_fee=platform_fee,
-            ai_price=ai_price_val,
-            advanced_price=advanced_price_val,
-            basic_marketing_price=basic_marketing_price_val,
-            basic_utility_price=basic_utility_price_val
-        )
-        db.session.add(new_entry)
-        db.session.commit()
-
         return render_template(
             'index.html',
             step='results',
@@ -1094,14 +828,14 @@ def analytics():
             # Query the database for analytics
             total_calculations = Analytics.query.count()
             # Calculations by day
-            calculations_by_day = dict(db.session.query(func.date(Analytics.timestamp), func.count()).group_by(func.date(Analytics.timestamp)).all())
+            calculations_by_day = {str(row[0]): row[1] for row in db.session.query(func.date(Analytics.timestamp), func.count()).group_by(func.date(Analytics.timestamp)).all()}
             # Calculations by week
-            calculations_by_week = dict(db.session.query(
+            calculations_by_week = {str(row[0]): row[1] for row in db.session.query(
                 func.to_char(Analytics.timestamp, 'IYYY-"W"IW'),
                 func.count()
             ).group_by(
                 func.to_char(Analytics.timestamp, 'IYYY-"W"IW')
-            ).all())
+            ).all()}
             # Most common countries
             country_counter = dict(db.session.query(Analytics.country, func.count()).group_by(Analytics.country).all())
             # Platform fee stats
@@ -1156,24 +890,8 @@ def reset_analytics():
     """
     Resets the analytics_data dictionary to its initial state.
     """
-    global analytics_data
-    analytics_data = {
-        'calculations': 0,
-        'calculations_by_day': defaultdict(int),
-        'calculations_by_week': defaultdict(int),
-        'country_counter': Counter(),
-        'platform_fee_options': Counter(),
-        'platform_fee_entries': [],
-        'message_volumes': {'ai': [], 'advanced': [], 'basic_marketing': [], 'basic_utility': []},
-        'discount_warnings': Counter(),
-        'platform_fee_discount_triggered': 0,
-        'margin_chosen': [],
-        'margin_rate_card': [],
-        'avg_price_data': {},
-        'avg_platform_fee_data': {},
-        'price_history': {},
-        'platform_fee_history': {},
-    }
+    db.session.query(Analytics).delete()
+    db.session.commit()
     return 'Analytics reset successfully', 200
 
 @app.route('/readme')
