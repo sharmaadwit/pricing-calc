@@ -110,13 +110,13 @@
         <tr><th>Type</th><th>Avg</th><th>Min</th><th>Max</th><th>Median</th></tr>
         {% set types = ['ai', 'advanced', 'basic_marketing', 'basic_utility'] %}
         {% set labels = ['AI', 'Advanced', 'Basic Marketing', 'Basic Utility'] %}
-        {% for t, label in types|zip(labels) %}
+        {% for i in range(types|length) %}
           <tr>
-            <td>{{ label }}</td>
-            <td>{{ analytics.stats[country]['msg_types'][t]['avg']|round(4) }}</td>
-            <td>{{ analytics.stats[country]['msg_types'][t]['min'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types'][t]['max'] }}</td>
-            <td>{{ analytics.stats[country]['msg_types'][t]['median'] }}</td>
+            <td>{{ labels[i] }}</td>
+            <td>{{ analytics.stats[country]['msg_types'][types[i]]['avg']|round(4) }}</td>
+            <td>{{ analytics.stats[country]['msg_types'][types[i]]['min'] }}</td>
+            <td>{{ analytics.stats[country]['msg_types'][types[i]]['max'] }}</td>
+            <td>{{ analytics.stats[country]['msg_types'][types[i]]['median'] }}</td>
           </tr>
         {% endfor %}
       </table>
