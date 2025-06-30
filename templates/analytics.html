@@ -33,8 +33,8 @@
     </li>
     <li><b>Most Common Countries:</b>
       <ul>
-        {% for country, count in analytics.country_counter.most_common(5) %}
-          <li>{{ country }}: {{ count }}</li>
+        {% for item in analytics.country_counter|dictsort(true, 'value')[:5] %}
+          <li>{{ item[0] }}: {{ item[1] }}</li>
         {% endfor %}
       </ul>
     </li>
