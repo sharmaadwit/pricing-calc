@@ -959,6 +959,33 @@ def analytics():
                         }
                     }
                 }
+            # Compute avg_price_data and avg_platform_fee_data for Chart.js graphs
+            avg_price_data = {}
+            avg_platform_fee_data = {}
+            for country in countries:
+                country_analytics = Analytics.query.filter_by(country=country).all()
+                avg_price_data[country] = {
+                    'ai': {
+                        'sum': sum(a.ai_price or 0 for a in country_analytics),
+                        'count': len([a for a in country_analytics if a.ai_price is not None])
+                    },
+                    'advanced': {
+                        'sum': sum(a.advanced_price or 0 for a in country_analytics),
+                        'count': len([a for a in country_analytics if a.advanced_price is not None])
+                    },
+                    'basic_marketing': {
+                        'sum': sum(a.basic_marketing_price or 0 for a in country_analytics),
+                        'count': len([a for a in country_analytics if a.basic_marketing_price is not None])
+                    },
+                    'basic_utility': {
+                        'sum': sum(a.basic_utility_price or 0 for a in country_analytics),
+                        'count': len([a for a in country_analytics if a.basic_utility_price is not None])
+                    }
+                }
+                avg_platform_fee_data[country] = {
+                    'sum': sum(a.platform_fee or 0 for a in country_analytics),
+                    'count': len([a for a in country_analytics if a.platform_fee is not None])
+                }
             analytics = {
                 'calculations': total_calculations,
                 'calculations_by_day': calculations_by_day,
@@ -980,7 +1007,9 @@ def analytics():
                 'margin_chosen': margin_chosen,
                 'margin_rate_card': margin_rate_card,
                 'stats': stats,
-                'discount_warnings': {}
+                'discount_warnings': {},
+                'avg_price_data': avg_price_data,
+                'avg_platform_fee_data': avg_platform_fee_data
             }
             return render_template('analytics.html', authorized=True, analytics=analytics)
         else:
