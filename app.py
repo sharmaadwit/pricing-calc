@@ -43,6 +43,8 @@ analytics_data = {
     'platform_fee_discount_triggered': 0,
     'margin_chosen': [],
     'margin_rate_card': [],
+    'avg_price_data': {},
+    'avg_platform_fee_data': {},
 }
 
 def initialize_inclusions():
@@ -552,6 +554,34 @@ def index():
                 analytics_data['margin_chosen'].append(float(results['margin'].replace('%','')))
             except Exception:
                 pass
+
+        # Update average per message price by type and country
+        msg_types = ['ai', 'advanced', 'basic_marketing', 'basic_utility']
+        msg_labels = ['AI Message', 'Advanced Message', 'Basic Marketing Message', 'Basic Utility/Authentication Message']
+        if 'avg_price_data' not in analytics_data:
+            analytics_data['avg_price_data'] = {}
+        if country not in analytics_data['avg_price_data']:
+            analytics_data['avg_price_data'][country] = {k: {'sum': 0.0, 'count': 0} for k in msg_types}
+        # Update per message type
+        for label, key in zip(msg_labels, msg_types):
+            # Find the chosen price for this type in results['line_items']
+            chosen_price = None
+            for item in results['line_items']:
+                if (item.get('line_item') or item.get('label')) == label:
+                    try:
+                        chosen_price = float(item.get('chosen_price', 0) or 0)
+                    except Exception:
+                        chosen_price = 0.0
+                    break
+            if chosen_price is not None:
+                analytics_data['avg_price_data'][country][key]['sum'] += chosen_price
+                analytics_data['avg_price_data'][country][key]['count'] += 1
+        # Update platform fee
+        try:
+            analytics_data['avg_platform_fee_data'][country]['sum'] += float(platform_fee)
+            analytics_data['avg_platform_fee_data'][country]['count'] += 1
+        except Exception:
+            pass
 
         return render_template(
             'index.html',

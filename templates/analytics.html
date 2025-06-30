@@ -72,4 +72,70 @@
     <li><b>Average Margin (Chosen):</b> {{ analytics.margin_chosen|sum / (analytics.margin_chosen|length or 1) }}%</li>
     <li><b>Average Margin (Rate Card):</b> {{ analytics.margin_rate_card|sum / (analytics.margin_rate_card|length or 1) }}%</li>
   </ul>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  {% set countries = analytics.avg_price_data.keys() %}
+  {% for country in countries %}
+    <h3>Country: {{ country }}</h3>
+    <div>
+      <canvas id="msgPriceChart_{{ country|replace(' ', '_') }}" width="400" height="200"></canvas>
+      <script>
+        var ctx_{{ country|replace(' ', '_') }} = document.getElementById('msgPriceChart_{{ country|replace(' ', '_') }}').getContext('2d');
+        var msgTypes_{{ country|replace(' ', '_') }} = ['AI', 'Advanced', 'Basic Marketing', 'Basic Utility'];
+        var avgPrices_{{ country|replace(' ', '_') }} = {{ [
+            (analytics.avg_price_data[country]['ai']['sum'] / (analytics.avg_price_data[country]['ai']['count'] or 1))|round(4),
+            (analytics.avg_price_data[country]['advanced']['sum'] / (analytics.avg_price_data[country]['advanced']['count'] or 1))|round(4),
+            (analytics.avg_price_data[country]['basic_marketing']['sum'] / (analytics.avg_price_data[country]['basic_marketing']['count'] or 1))|round(4),
+            (analytics.avg_price_data[country]['basic_utility']['sum'] / (analytics.avg_price_data[country]['basic_utility']['count'] or 1))|round(4)
+          ]|tojson }};
+        new Chart(ctx_{{ country|replace(' ', '_') }}, {
+          type: 'bar',
+          data: {
+            labels: msgTypes_{{ country|replace(' ', '_') }},
+            datasets: [{
+              label: 'Avg Price per Message',
+              data: avgPrices_{{ country|replace(' ', '_') }},
+              backgroundColor: ['#2196f3', '#4caf50', '#ff9800', '#9c27b0']
+            }]
+          },
+          options: {
+            scales: { y: { beginAtZero: true } },
+            plugins: { legend: { display: false } }
+          }
+        });
+      </script>
+      <p>
+        <b>Avg AI:</b> {{ (analytics.avg_price_data[country]['ai']['sum'] / (analytics.avg_price_data[country]['ai']['count'] or 1))|round(4) }}<br>
+        <b>Avg Advanced:</b> {{ (analytics.avg_price_data[country]['advanced']['sum'] / (analytics.avg_price_data[country]['advanced']['count'] or 1))|round(4) }}<br>
+        <b>Avg Basic Marketing:</b> {{ (analytics.avg_price_data[country]['basic_marketing']['sum'] / (analytics.avg_price_data[country]['basic_marketing']['count'] or 1))|round(4) }}<br>
+        <b>Avg Basic Utility:</b> {{ (analytics.avg_price_data[country]['basic_utility']['sum'] / (analytics.avg_price_data[country]['basic_utility']['count'] or 1))|round(4) }}
+      </p>
+    </div>
+    <div>
+      <canvas id="platformFeeChart_{{ country|replace(' ', '_') }}" width="400" height="100"></canvas>
+      <script>
+        var ctx2_{{ country|replace(' ', '_') }} = document.getElementById('platformFeeChart_{{ country|replace(' ', '_') }}').getContext('2d');
+        var avgPlatformFee_{{ country|replace(' ', '_') }} = {{ (analytics.avg_platform_fee_data[country]['sum'] / (analytics.avg_platform_fee_data[country]['count'] or 1))|round(2) }};
+        new Chart(ctx2_{{ country|replace(' ', '_') }}, {
+          type: 'bar',
+          data: {
+            labels: ['Platform Fee'],
+            datasets: [{
+              label: 'Avg Platform Fee',
+              data: [avgPlatformFee_{{ country|replace(' ', '_') }}],
+              backgroundColor: ['#f44336']
+            }]
+          },
+          options: {
+            scales: { y: { beginAtZero: true } },
+            plugins: { legend: { display: false } }
+          }
+        });
+      </script>
+      <p><b>Avg Platform Fee:</b> {{ (analytics.avg_platform_fee_data[country]['sum'] / (analytics.avg_platform_fee_data[country]['count'] or 1))|round(2) }}</p>
+    </div>
+    <hr>
+  {% endfor %}
 {% endif %} 
