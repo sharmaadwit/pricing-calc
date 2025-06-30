@@ -851,10 +851,10 @@ def index():
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
         return render_template('index.html', step='bundle', inputs=inputs, currency_symbol=currency_symbol)
     else:
-    # Default: show volume input form
-    country = session.get('inputs', {}).get('country', 'India')
-    currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
-    return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
+        # Default: show volume input form
+        country = session.get('inputs', {}).get('country', 'India')
+        currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
+        return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
