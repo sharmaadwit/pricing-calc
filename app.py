@@ -847,6 +847,8 @@ def analytics():
                 median_platform_fee = sorted(platform_fees)[len(platform_fees)//2]
             else:
                 avg_platform_fee = min_platform_fee = max_platform_fee = median_platform_fee = 0
+            # Platform fee options (most common platform_fee values)
+            platform_fee_options = Counter(platform_fees)
             # Message price stats by type
             def get_stats(field):
                 vals = [getattr(a, field) for a in Analytics.query.all() if getattr(a, field) is not None]
@@ -874,6 +876,7 @@ def analytics():
                     'max': max_platform_fee,
                     'median': median_platform_fee
                 },
+                'platform_fee_options': platform_fee_options,
                 'ai_stats': ai_stats,
                 'advanced_stats': advanced_stats,
                 'marketing_stats': marketing_stats,
