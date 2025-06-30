@@ -1041,10 +1041,14 @@ def analytics():
     if request.method == 'POST':
         keyword = request.form.get('keyword', '')
         if keyword == SECRET_ANALYTICS_KEYWORD:
+            if 'stats' not in analytics_data:
+                analytics_data['stats'] = {}
             return render_template('analytics.html', authorized=True, analytics=analytics_data)
         else:
             flash('Incorrect keyword.', 'error')
             return render_template('analytics.html', authorized=False)
+    if 'stats' not in analytics_data:
+        analytics_data['stats'] = {}
     return render_template('analytics.html', authorized=False)
 
 @app.route('/reset-analytics', methods=['POST'])
