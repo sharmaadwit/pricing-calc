@@ -1,3 +1,9 @@
+{% macro fmt_num(val) %}
+  {%- if val is number -%}
+    {%- if val % 1 == 0 -%}{{ '{:,}'.format(val|int) }}{%- else -%}{{ '{:,.2f}'.format(val) }}{%- endif -%}
+  {%- else -%}{{ val }}{%- endif -%}
+{% endmacro %}
+
 {% if not authorized %}
   <h2>Enter Analytics Access Keyword</h2>
   <form method="post">
@@ -209,10 +215,10 @@
             <tr>
               <td><b>{{ label }}</b></td>
               {% for (country, currency), stat in stats_by_group.items() %}
-                <td>{{ stat[key]['avg']|round(2)|int if stat[key]['avg'] % 1 == 0 else stat[key]['avg']|round(2) }}</td>
-                <td>{{ stat[key]['min']|round(2)|int if stat[key]['min'] % 1 == 0 else stat[key]['min']|round(2) }}</td>
-                <td>{{ stat[key]['max']|round(2)|int if stat[key]['max'] % 1 == 0 else stat[key]['max']|round(2) }}</td>
-                <td>{{ stat[key]['median']|round(2)|int if stat[key]['median'] % 1 == 0 else stat[key]['median']|round(2) }}</td>
+                <td>{{ fmt_num(stat[key]['avg']) }}</td>
+                <td>{{ fmt_num(stat[key]['min']) }}</td>
+                <td>{{ fmt_num(stat[key]['max']) }}</td>
+                <td>{{ fmt_num(stat[key]['median']) }}</td>
               {% endfor %}
             </tr>
           {% endfor %}
