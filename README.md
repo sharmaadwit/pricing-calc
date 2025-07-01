@@ -74,52 +74,52 @@ MIT License (or specify your license here)
 ### Message Type Prices (Rate Card Tiers)
 
 #### India
-| Message Type         | Volume Tiers (per month)         | Price (INR) | Base Margin (50%) |
-|----------------------|----------------------------------|-------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 1.00 / 0.90 / 0.80 / 0.70 / 0.60 | 0.50 / 0.45 / 0.40 / 0.35 / 0.30 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.50 / 0.45 / 0.40 / 0.35 | 0.25 / 0.225 / 0.20 / 0.175 |
-| Basic Marketing      | All volumes                      | 0.05        | 0.025             |
-| Basic Utility        | All volumes                      | 0.03        | 0.015             |
+| Message Type         | Volume Tiers (per month)         | Price (INR) | Margin (%) |
+|----------------------|----------------------------------|-------------|------------|
+| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 1.00 / 0.90 / 0.80 / 0.70 / 0.60 | 50.00 / 55.56 / 62.50 / 67.86 / 71.43 |
+| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.50 / 0.45 / 0.40 / 0.35 | 50.00 / 55.56 / 62.50 / 67.86 |
+| Basic Marketing      | All volumes                      | 0.05        | 50.00      |
+| Basic Utility        | All volumes                      | 0.03        | 50.00      |
 
 #### MENA
-| Message Type         | Volume Tiers (per month)         | Price (USD) | Base Margin (50%) |
-|----------------------|----------------------------------|-------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.084 / 0.076 / 0.067 / 0.059 / 0.050 | 0.042 / 0.038 / 0.0335 / 0.0295 / 0.025 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.042 / 0.038 / 0.034 / 0.029 | 0.021 / 0.019 / 0.017 / 0.0145 |
-| Basic Marketing      | All volumes                      | 0.0042      | 0.0021            |
-| Basic Utility        | All volumes                      | 0.003       | 0.0015            |
+| Message Type         | Volume Tiers (per month)         | Price (USD) | Margin (%) |
+|----------------------|----------------------------------|-------------|------------|
+| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.084 / 0.076 / 0.067 / 0.059 / 0.050 | 50.00 / 55.56 / 62.50 / 67.86 / 71.43 |
+| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.042 / 0.038 / 0.034 / 0.029 | 50.00 / 55.56 / 62.50 / 67.86 |
+| Basic Marketing      | All volumes                      | 0.0042      | 50.00      |
+| Basic Utility        | All volumes                      | 0.003       | 50.00      |
 
 #### LATAM
-| Message Type         | Volume Tiers (per month)         | Price (USD) | Base Margin (50%) |
-|----------------------|----------------------------------|-------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.120 / 0.108 / 0.096 / 0.084 / 0.072 | 0.060 / 0.054 / 0.048 / 0.042 / 0.036 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.060 / 0.054 / 0.048 / 0.042 | 0.030 / 0.027 / 0.024 / 0.021 |
-| Basic Marketing      | All volumes                      | 0.006       | 0.003             |
-| Basic Utility        | All volumes                      | 0.004       | 0.002             |
+| Message Type         | Volume Tiers (per month)         | Price (USD) | Margin (%) |
+|----------------------|----------------------------------|-------------|------------|
+| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.120 / 0.108 / 0.096 / 0.084 / 0.072 | 50.00 / 55.56 / 62.50 / 67.86 / 71.43 |
+| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.060 / 0.054 / 0.048 / 0.042 | 50.00 / 55.56 / 62.50 / 67.86 |
+| Basic Marketing      | All volumes                      | 0.006       | 50.00      |
+| Basic Utility        | All volumes                      | 0.004       | 50.00      |
 
 #### Africa
-| Message Type         | Volume Tiers (per month)         | Price (USD) | Base Margin (50%) |
-|----------------------|----------------------------------|-------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.048 / 0.043 / 0.038 / 0.034 / 0.029 | 0.024 / 0.0215 / 0.019 / 0.017 / 0.0145 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.024 / 0.022 / 0.019 / 0.017 | 0.012 / 0.011 / 0.0095 / 0.0085 |
-| Basic Marketing      | All volumes                      | 0.002       | 0.001             |
-| Basic Utility        | All volumes                      | 0.001       | 0.0005            |
+| Message Type         | Volume Tiers (per month)         | Price (USD) | Margin (%) |
+|----------------------|----------------------------------|-------------|------------|
+| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.048 / 0.043 / 0.038 / 0.034 / 0.029 | 50.00 / 55.56 / 62.50 / 67.86 / 71.43 |
+| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.024 / 0.022 / 0.019 / 0.017 | 50.00 / 55.56 / 62.50 / 67.86 |
+| Basic Marketing      | All volumes                      | 0.002       | 50.00      |
+| Basic Utility        | All volumes                      | 0.001       | 50.00      |
 
 #### Europe
-| Message Type         | Volume Tiers (per month)         | Price (USD) | Base Margin (50%) |
-|----------------------|----------------------------------|-------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.240 / 0.216 / 0.192 / 0.168 / 0.144 | 0.120 / 0.108 / 0.096 / 0.084 / 0.072 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.120 / 0.108 / 0.096 / 0.084 | 0.060 / 0.054 / 0.048 / 0.042 |
-| Basic Marketing      | All volumes                      | 0.012       | 0.006             |
-| Basic Utility        | All volumes                      | 0.007       | 0.0035            |
+| Message Type         | Volume Tiers (per month)         | Price (USD) | Margin (%) |
+|----------------------|----------------------------------|-------------|------------|
+| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.240 / 0.216 / 0.192 / 0.168 / 0.144 | 50.00 / 55.56 / 62.50 / 67.86 / 71.43 |
+| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.120 / 0.108 / 0.096 / 0.084 | 50.00 / 55.56 / 62.50 / 67.86 |
+| Basic Marketing      | All volumes                      | 0.012       | 50.00      |
+| Basic Utility        | All volumes                      | 0.007       | 50.00      |
 
 #### Rest of the World
-| Message Type         | Volume Tiers (per month)         | Price (USD) | Base Margin (50%) |
-|----------------------|----------------------------------|-------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.120 / 0.108 / 0.096 / 0.084 / 0.072 | 0.060 / 0.054 / 0.048 / 0.042 / 0.036 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.060 / 0.054 / 0.048 / 0.042 | 0.030 / 0.027 / 0.024 / 0.021 |
-| Basic Marketing      | All volumes                      | 0.006       | 0.003             |
-| Basic Utility        | All volumes                      | 0.007       | 0.0035            |
+| Message Type         | Volume Tiers (per month)         | Price (USD) | Margin (%) |
+|----------------------|----------------------------------|-------------|------------|
+| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.120 / 0.108 / 0.096 / 0.084 / 0.072 | 50.00 / 55.56 / 62.50 / 67.86 / 71.43 |
+| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.060 / 0.054 / 0.048 / 0.042 | 50.00 / 55.56 / 62.50 / 67.86 |
+| Basic Marketing      | All volumes                      | 0.006       | 50.00      |
+| Basic Utility        | All volumes                      | 0.007       | 50.00      |
 
 ### Blended Margin
 Blended margin is calculated as the weighted average margin across all line items (platform fee and message types), assuming 50% margin for each.
