@@ -37,6 +37,7 @@ class Analytics(db.Model):
     advanced_price = db.Column(db.Float)
     basic_marketing_price = db.Column(db.Float)
     basic_utility_price = db.Column(db.Float)
+    currency = db.Column(db.String(8))
     # Add more fields as needed
 
 # os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
@@ -552,7 +553,8 @@ def index():
             ai_price=ai_price,
             advanced_price=advanced_price,
             basic_marketing_price=basic_marketing_price,
-            basic_utility_price=basic_utility_price
+            basic_utility_price=basic_utility_price,
+            currency=COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
         )
         new_analytics = Analytics(**analytics_kwargs)
         db.session.add(new_analytics)
@@ -788,7 +790,8 @@ def index():
             ai_price=ai_price,
             advanced_price=advanced_price,
             basic_marketing_price=basic_marketing_price,
-            basic_utility_price=basic_utility_price
+            basic_utility_price=basic_utility_price,
+            currency=COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
         )
         new_analytics = Analytics(**analytics_kwargs)
         db.session.add(new_analytics)
@@ -966,9 +969,9 @@ def analytics():
                 }
             # Per-user stats for table
             user_stats = {}
-            user_name_list = [row[0] for row in db.session.query(Analytics.user_name).distinct().all() if row[0]]
-            for user in user_name_list:
-                user_entries = Analytics.query.filter_by(user_name=user).all()
+            user_country_currency_list = db.session.query(Analytics.user_name, Analytics.country, Analytics.currency).distinct().all()
+            for user, country, currency in user_country_currency_list:
+                user_entries = Analytics.query.filter_by(user_name=user, country=country, currency=currency).all()
                 def get_user_stats(field):
                     vals = [getattr(a, field) for a in user_entries if getattr(a, field) is not None]
                     if vals:
@@ -980,7 +983,7 @@ def analytics():
                         }
                     else:
                         return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
-                user_stats[user] = {
+                user_stats.setdefault(user, {})[(country, currency)] = {
                     'platform_fee': get_user_stats('platform_fee'),
                     'ai': get_user_stats('ai_price'),
                     'advanced': get_user_stats('advanced_price'),

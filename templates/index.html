@@ -90,7 +90,9 @@
         <img src="{{ url_for('static', filename='user-flow.svg') }}" alt="User Flow Diagram" style="width:700px; height:250px; border:1.5px solid #dbe2ea; border-radius:8px; background:#fff; padding:8px;">
       </div>
       <div style="text-align: center; margin-top: 18px;">
+        <!--
         <a href="{{ url_for('readme') }}" target="_blank" style="display: inline-block; padding: 10px 24px; background: #1976d2; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 1.08em; box-shadow: 0 2px 6px rgba(25,118,210,0.08);">Learn More</a>
+        -->
       </div>
     </div>
     {% endif %}
@@ -160,7 +162,7 @@
             <small>Required to support high volume campaigns</small><br><br>
             <label>Number of Human Agents (Agent Assist):</label>
             <select name="human_agents">
-                <option value="NA" {% if inputs and inputs.human_agents == 'NA' %}selected{% endif %}>NA</option>
+                <option value="NA" {% if inputs and inputs.human_agents == 'NA' %}selected{% endif %}><20 already part of standard platform fee</option>
                 <option value="20+" {% if inputs and inputs.human_agents == '20+' %}selected{% endif %}>20+</option>
                 <option value="50+" {% if inputs and inputs.human_agents == '50+' %}selected{% endif %}>50+</option>
                 <option value="100+" {% if inputs and inputs.human_agents == '100+' %}selected{% endif %}>100+</option>
