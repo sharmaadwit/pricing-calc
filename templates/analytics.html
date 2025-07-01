@@ -123,7 +123,7 @@
         </tbody>
       </table>
       <div>
-        <canvas id="msgPriceChart_{{ country|replace(' ', '_') }}" width="300" height="120"></canvas>
+        <canvas id="msgPriceChart_{{ country|replace(' ', '_') }}" width="150" height="60"></canvas>
         <script>
           var ctx_{{ country|replace(' ', '_') }} = document.getElementById('msgPriceChart_{{ country|replace(' ', '_') }}').getContext('2d');
           var msgTypes_{{ country|replace(' ', '_') }} = ['AI', 'Advanced', 'Basic Marketing', 'Basic Utility'];
@@ -157,7 +157,7 @@
         </p>
       </div>
       <div>
-        <canvas id="platformFeeChart_{{ country|replace(' ', '_') }}" width="300" height="120"></canvas>
+        <canvas id="platformFeeChart_{{ country|replace(' ', '_') }}" width="150" height="60"></canvas>
         <script>
           var ctx2_{{ country|replace(' ', '_') }} = document.getElementById('platformFeeChart_{{ country|replace(' ', '_') }}').getContext('2d');
           var avgPlatformFee_{{ country|replace(' ', '_') }} = {{ (analytics.avg_platform_fee_data[country]['sum'] / (analytics.avg_platform_fee_data[country]['count'] or 1))|round(2) }};
@@ -183,5 +183,60 @@
     {% endfor %}
   {% else %}
     <p>No analytics data available yet.</p>
+  {% endif %}
+
+  {% if analytics.user_stats %}
+    <h2>User-wise Statistics</h2>
+    {% for user, stat in analytics.user_stats.items() %}
+      <h3>User: {{ user }}</h3>
+      <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Average</th>
+            <th>Min</th>
+            <th>Max</th>
+            <th>Median</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Platform Fee</b></td>
+            <td>{{ stat['platform_fee']['avg'] }}</td>
+            <td>{{ stat['platform_fee']['min'] }}</td>
+            <td>{{ stat['platform_fee']['max'] }}</td>
+            <td>{{ stat['platform_fee']['median'] }}</td>
+          </tr>
+          <tr>
+            <td>AI Message</td>
+            <td>{{ stat['ai']['avg'] }}</td>
+            <td>{{ stat['ai']['min'] }}</td>
+            <td>{{ stat['ai']['max'] }}</td>
+            <td>{{ stat['ai']['median'] }}</td>
+          </tr>
+          <tr>
+            <td>Advanced Message</td>
+            <td>{{ stat['advanced']['avg'] }}</td>
+            <td>{{ stat['advanced']['min'] }}</td>
+            <td>{{ stat['advanced']['max'] }}</td>
+            <td>{{ stat['advanced']['median'] }}</td>
+          </tr>
+          <tr>
+            <td>Basic Marketing Message</td>
+            <td>{{ stat['basic_marketing']['avg'] }}</td>
+            <td>{{ stat['basic_marketing']['min'] }}</td>
+            <td>{{ stat['basic_marketing']['max'] }}</td>
+            <td>{{ stat['basic_marketing']['median'] }}</td>
+          </tr>
+          <tr>
+            <td>Basic Utility</td>
+            <td>{{ stat['basic_utility']['avg'] }}</td>
+            <td>{{ stat['basic_utility']['min'] }}</td>
+            <td>{{ stat['basic_utility']['max'] }}</td>
+            <td>{{ stat['basic_utility']['median'] }}</td>
+          </tr>
+        </tbody>
+      </table>
+    {% endfor %}
   {% endif %}
 {% endif %} 

@@ -496,19 +496,19 @@ def index():
             if item.get('line_item') != 'Platform Fee (Chosen)':
                 chosen_price = item.get('chosen_price', 0)
                 suggested_price = item.get('suggested_price', 0)
-                margin_change = ''
+                discount_percent = ''
                 if chosen_price and suggested_price and suggested_price > 0:
                     try:
-                        margin_change = f"{((float(chosen_price) - float(suggested_price)) / float(suggested_price) * 100):.2f}%"
+                        discount_percent = f"{((float(suggested_price) - float(chosen_price)) / float(suggested_price) * 100):.2f}%"
                     except Exception:
-                        margin_change = '0.00%'
+                        discount_percent = '0.00%'
                 else:
-                    margin_change = '0.00%'
+                    discount_percent = '0.00%'
                 margin_line_items.append({
                     'line_item': item.get('line_item') or item.get('label', ''),
                     'chosen_price': chosen_price,
                     'rate_card_price': suggested_price,
-                    'margin_change': margin_change
+                    'discount_percent': discount_percent
                 })
         
         # Add platform fee to margin table
@@ -516,7 +516,7 @@ def index():
             'line_item': 'Platform Fee',
             'chosen_price': f"₹{int(platform_fee):,}",
             'rate_card_price': f"₹{int(rate_card_platform_fee):,}",
-            'margin_change': '0.00%'
+            'discount_percent': '0.00%'
         })
         
         # Helper to format numbers for display
@@ -964,6 +964,29 @@ def analytics():
                         }
                     }
                 }
+            # Per-user stats for table
+            user_stats = {}
+            user_name_list = [row[0] for row in db.session.query(Analytics.user_name).distinct().all() if row[0]]
+            for user in user_name_list:
+                user_entries = Analytics.query.filter_by(user_name=user).all()
+                def get_user_stats(field):
+                    vals = [getattr(a, field) for a in user_entries if getattr(a, field) is not None]
+                    if vals:
+                        return {
+                            'avg': sum(vals)/len(vals),
+                            'min': min(vals),
+                            'max': max(vals),
+                            'median': sorted(vals)[len(vals)//2]
+                        }
+                    else:
+                        return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
+                user_stats[user] = {
+                    'platform_fee': get_user_stats('platform_fee'),
+                    'ai': get_user_stats('ai_price'),
+                    'advanced': get_user_stats('advanced_price'),
+                    'basic_marketing': get_user_stats('basic_marketing_price'),
+                    'basic_utility': get_user_stats('basic_utility_price')
+                }
             # Compute avg_price_data and avg_platform_fee_data for Chart.js graphs
             avg_price_data = {}
             avg_platform_fee_data = {}
@@ -1018,7 +1041,8 @@ def analytics():
                 'discount_warnings': {},
                 'avg_price_data': avg_price_data,
                 'avg_platform_fee_data': avg_platform_fee_data,
-                'top_users': top_users
+                'top_users': top_users,
+                'user_stats': user_stats
             }
             return render_template('analytics.html', authorized=True, analytics=analytics)
         else:

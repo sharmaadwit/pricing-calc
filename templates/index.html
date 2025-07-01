@@ -125,14 +125,14 @@
             <small>80 TPS, Journey Builder Lite, Campaign Manager, CTWA - (Meta/Tiktok), Agent Assist < 20 Agents, Personalize upto 1 Million profiles and external events not supported</small><br><br>
             <label>Personalize Load:</label>
             <select name="personalize_load">
-                <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>NA</option>
+                <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>- Not Applicable</option>
                 <option value="Standard" {% if inputs and inputs.personalize_load == 'Standard' %}selected{% endif %}>Standard - upto 5 million records, no external events</option>
                 <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced - 10 million records, external events supported</option>
             </select><br>
             <small>If the client requires large number of profiles and support for external events, select the appropriate tier.</small><br><br>
             <label>BFSI Tier:</label>
             <select name="bfsi_tier">
-                <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>NA</option>
+                <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>- Not Applicable</option>
                 <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1</option>
                 <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2</option>
                 <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3</option>
@@ -140,7 +140,7 @@
             <small>Each tier comes with specific controls of privacy and security requirements. The exact inclusions of each tier will be displayed on the final pricing page.</small><br><br>
             <label>AI Module (Yes/No):</label>
             <select name="ai_module">
-                <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>NA</option>
+                <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>- Not Applicable</option>
                 <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
                 <option value="No" {% if inputs and inputs.ai_module == 'No' %}selected{% endif %}>No</option>
             </select><br>
@@ -332,7 +332,7 @@
                   <th style="text-align:left;">Item</th>
                   <th style="text-align:right;">Chosen Price</th>
                   <th style="text-align:right;">Rate Card Price</th>
-                  <th style="text-align:right;">Margin Change (%)</th>
+                  <th style="text-align:right;">Discount (%)</th>
                 </tr>
               </thead>
               <tbody>
@@ -341,7 +341,7 @@
                     <td>{{ row.line_item }}</td>
                     <td class="right">{{ row.chosen_price }}</td>
                     <td class="right">{{ row.rate_card_price }}</td>
-                    <td class="right">{{ row.margin_change }}</td>
+                    <td class="right">{{ row.discount_percent }}</td>
                   </tr>
                 {% endfor %}
               </tbody>
