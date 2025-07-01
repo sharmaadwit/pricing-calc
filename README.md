@@ -35,19 +35,6 @@ This is a robust, production-ready pricing calculator web application built with
 - Access the analytics dashboard (with the secret keyword) to view usage stats and trends.
 - To reset analytics, send a POST request to `/reset-analytics`.
 
-## Discount Rules
-The following table summarizes the maximum discounts users can give for each item:
-
-| Item                              | Maximum Discount Allowed | Minimum Price (as % of Rate Card) |
-|------------------------------------|-------------------------|------------------------------------|
-| **AI Message**                    | 70%                     | 30%                                |
-| **Advanced Message**               | 70%                     | 30%                                |
-| **Basic Utility/Authentication**   | 70%                     | 30%                                |
-| **Basic Marketing Message**        | 90%                     | 10%                                |
-| **Platform Fee**                   | 70%                     | 30%                                |
-
-*If a user tries to enter a price lower than the minimum allowed, the app will show an error and block the calculation.*
-
 ## Analytics Dashboard
 - View total calculations, breakdowns by day/week/country, platform fee stats, message volume distributions, and more.
 - For each country, see a table of Average, Min, Max, and Median for platform fee and each message type, plus interactive graphs.
