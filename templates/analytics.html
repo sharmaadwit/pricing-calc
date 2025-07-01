@@ -87,38 +87,38 @@
         <tbody>
           <tr>
             <td><b>Platform Fee</b></td>
-            <td>{{ stat['platform_fee']['avg'] }}</td>
-            <td>{{ stat['platform_fee']['min'] }}</td>
-            <td>{{ stat['platform_fee']['max'] }}</td>
-            <td>{{ stat['platform_fee']['median'] }}</td>
+            <td>{{ stat['platform_fee']['avg']|round(2)|int if stat['platform_fee']['avg'] % 1 == 0 else stat['platform_fee']['avg']|round(2) }}</td>
+            <td>{{ stat['platform_fee']['min']|round(2)|int if stat['platform_fee']['min'] % 1 == 0 else stat['platform_fee']['min']|round(2) }}</td>
+            <td>{{ stat['platform_fee']['max']|round(2)|int if stat['platform_fee']['max'] % 1 == 0 else stat['platform_fee']['max']|round(2) }}</td>
+            <td>{{ stat['platform_fee']['median']|round(2)|int if stat['platform_fee']['median'] % 1 == 0 else stat['platform_fee']['median']|round(2) }}</td>
           </tr>
           <tr>
             <td>AI Message</td>
-            <td>{{ stat['msg_types']['ai']['avg'] }}</td>
-            <td>{{ stat['msg_types']['ai']['min'] }}</td>
-            <td>{{ stat['msg_types']['ai']['max'] }}</td>
-            <td>{{ stat['msg_types']['ai']['median'] }}</td>
+            <td>{{ stat['msg_types']['ai']['avg']|round(2)|int if stat['msg_types']['ai']['avg'] % 1 == 0 else stat['msg_types']['ai']['avg']|round(2) }}</td>
+            <td>{{ stat['msg_types']['ai']['min']|round(2)|int if stat['msg_types']['ai']['min'] % 1 == 0 else stat['msg_types']['ai']['min']|round(2) }}</td>
+            <td>{{ stat['msg_types']['ai']['max']|round(2)|int if stat['msg_types']['ai']['max'] % 1 == 0 else stat['msg_types']['ai']['max']|round(2) }}</td>
+            <td>{{ stat['msg_types']['ai']['median']|round(2)|int if stat['msg_types']['ai']['median'] % 1 == 0 else stat['msg_types']['ai']['median']|round(2) }}</td>
           </tr>
           <tr>
             <td>Advanced Message</td>
-            <td>{{ stat['msg_types']['advanced']['avg'] }}</td>
-            <td>{{ stat['msg_types']['advanced']['min'] }}</td>
-            <td>{{ stat['msg_types']['advanced']['max'] }}</td>
-            <td>{{ stat['msg_types']['advanced']['median'] }}</td>
+            <td>{{ stat['msg_types']['advanced']['avg']|round(2)|int if stat['msg_types']['advanced']['avg'] % 1 == 0 else stat['msg_types']['advanced']['avg']|round(2) }}</td>
+            <td>{{ stat['msg_types']['advanced']['min']|round(2)|int if stat['msg_types']['advanced']['min'] % 1 == 0 else stat['msg_types']['advanced']['min']|round(2) }}</td>
+            <td>{{ stat['msg_types']['advanced']['max']|round(2)|int if stat['msg_types']['advanced']['max'] % 1 == 0 else stat['msg_types']['advanced']['max']|round(2) }}</td>
+            <td>{{ stat['msg_types']['advanced']['median']|round(2)|int if stat['msg_types']['advanced']['median'] % 1 == 0 else stat['msg_types']['advanced']['median']|round(2) }}</td>
           </tr>
           <tr>
             <td>Basic Marketing Message</td>
-            <td>{{ stat['msg_types']['basic_marketing']['avg'] }}</td>
-            <td>{{ stat['msg_types']['basic_marketing']['min'] }}</td>
-            <td>{{ stat['msg_types']['basic_marketing']['max'] }}</td>
-            <td>{{ stat['msg_types']['basic_marketing']['median'] }}</td>
+            <td>{{ stat['msg_types']['basic_marketing']['avg']|round(2)|int if stat['msg_types']['basic_marketing']['avg'] % 1 == 0 else stat['msg_types']['basic_marketing']['avg']|round(2) }}</td>
+            <td>{{ stat['msg_types']['basic_marketing']['min']|round(2)|int if stat['msg_types']['basic_marketing']['min'] % 1 == 0 else stat['msg_types']['basic_marketing']['min']|round(2) }}</td>
+            <td>{{ stat['msg_types']['basic_marketing']['max']|round(2)|int if stat['msg_types']['basic_marketing']['max'] % 1 == 0 else stat['msg_types']['basic_marketing']['max']|round(2) }}</td>
+            <td>{{ stat['msg_types']['basic_marketing']['median']|round(2)|int if stat['msg_types']['basic_marketing']['median'] % 1 == 0 else stat['msg_types']['basic_marketing']['median']|round(2) }}</td>
           </tr>
           <tr>
             <td>Basic Utility</td>
-            <td>{{ stat['msg_types']['basic_utility']['avg'] }}</td>
-            <td>{{ stat['msg_types']['basic_utility']['min'] }}</td>
-            <td>{{ stat['msg_types']['basic_utility']['max'] }}</td>
-            <td>{{ stat['msg_types']['basic_utility']['median'] }}</td>
+            <td>{{ stat['msg_types']['basic_utility']['avg']|round(2)|int if stat['msg_types']['basic_utility']['avg'] % 1 == 0 else stat['msg_types']['basic_utility']['avg']|round(2) }}</td>
+            <td>{{ stat['msg_types']['basic_utility']['min']|round(2)|int if stat['msg_types']['basic_utility']['min'] % 1 == 0 else stat['msg_types']['basic_utility']['min']|round(2) }}</td>
+            <td>{{ stat['msg_types']['basic_utility']['max']|round(2)|int if stat['msg_types']['basic_utility']['max'] % 1 == 0 else stat['msg_types']['basic_utility']['max']|round(2) }}</td>
+            <td>{{ stat['msg_types']['basic_utility']['median']|round(2)|int if stat['msg_types']['basic_utility']['median'] % 1 == 0 else stat['msg_types']['basic_utility']['median']|round(2) }}</td>
           </tr>
         </tbody>
       </table>
@@ -202,38 +202,38 @@
         <tbody>
           <tr>
             <td><b>Platform Fee</b></td>
-            <td>{{ stat['platform_fee']['avg'] }}</td>
-            <td>{{ stat['platform_fee']['min'] }}</td>
-            <td>{{ stat['platform_fee']['max'] }}</td>
-            <td>{{ stat['platform_fee']['median'] }}</td>
+            <td>{{ stat['platform_fee']['avg']|round(2)|int if stat['platform_fee']['avg'] % 1 == 0 else stat['platform_fee']['avg']|round(2) }}</td>
+            <td>{{ stat['platform_fee']['min']|round(2)|int if stat['platform_fee']['min'] % 1 == 0 else stat['platform_fee']['min']|round(2) }}</td>
+            <td>{{ stat['platform_fee']['max']|round(2)|int if stat['platform_fee']['max'] % 1 == 0 else stat['platform_fee']['max']|round(2) }}</td>
+            <td>{{ stat['platform_fee']['median']|round(2)|int if stat['platform_fee']['median'] % 1 == 0 else stat['platform_fee']['median']|round(2) }}</td>
           </tr>
           <tr>
             <td>AI Message</td>
-            <td>{{ stat['ai']['avg'] }}</td>
-            <td>{{ stat['ai']['min'] }}</td>
-            <td>{{ stat['ai']['max'] }}</td>
-            <td>{{ stat['ai']['median'] }}</td>
+            <td>{{ stat['ai']['avg']|round(2)|int if stat['ai']['avg'] % 1 == 0 else stat['ai']['avg']|round(2) }}</td>
+            <td>{{ stat['ai']['min']|round(2)|int if stat['ai']['min'] % 1 == 0 else stat['ai']['min']|round(2) }}</td>
+            <td>{{ stat['ai']['max']|round(2)|int if stat['ai']['max'] % 1 == 0 else stat['ai']['max']|round(2) }}</td>
+            <td>{{ stat['ai']['median']|round(2)|int if stat['ai']['median'] % 1 == 0 else stat['ai']['median']|round(2) }}</td>
           </tr>
           <tr>
             <td>Advanced Message</td>
-            <td>{{ stat['advanced']['avg'] }}</td>
-            <td>{{ stat['advanced']['min'] }}</td>
-            <td>{{ stat['advanced']['max'] }}</td>
-            <td>{{ stat['advanced']['median'] }}</td>
+            <td>{{ stat['advanced']['avg']|round(2)|int if stat['advanced']['avg'] % 1 == 0 else stat['advanced']['avg']|round(2) }}</td>
+            <td>{{ stat['advanced']['min']|round(2)|int if stat['advanced']['min'] % 1 == 0 else stat['advanced']['min']|round(2) }}</td>
+            <td>{{ stat['advanced']['max']|round(2)|int if stat['advanced']['max'] % 1 == 0 else stat['advanced']['max']|round(2) }}</td>
+            <td>{{ stat['advanced']['median']|round(2)|int if stat['advanced']['median'] % 1 == 0 else stat['advanced']['median']|round(2) }}</td>
           </tr>
           <tr>
             <td>Basic Marketing Message</td>
-            <td>{{ stat['basic_marketing']['avg'] }}</td>
-            <td>{{ stat['basic_marketing']['min'] }}</td>
-            <td>{{ stat['basic_marketing']['max'] }}</td>
-            <td>{{ stat['basic_marketing']['median'] }}</td>
+            <td>{{ stat['basic_marketing']['avg']|round(2)|int if stat['basic_marketing']['avg'] % 1 == 0 else stat['basic_marketing']['avg']|round(2) }}</td>
+            <td>{{ stat['basic_marketing']['min']|round(2)|int if stat['basic_marketing']['min'] % 1 == 0 else stat['basic_marketing']['min']|round(2) }}</td>
+            <td>{{ stat['basic_marketing']['max']|round(2)|int if stat['basic_marketing']['max'] % 1 == 0 else stat['basic_marketing']['max']|round(2) }}</td>
+            <td>{{ stat['basic_marketing']['median']|round(2)|int if stat['basic_marketing']['median'] % 1 == 0 else stat['basic_marketing']['median']|round(2) }}</td>
           </tr>
           <tr>
             <td>Basic Utility</td>
-            <td>{{ stat['basic_utility']['avg'] }}</td>
-            <td>{{ stat['basic_utility']['min'] }}</td>
-            <td>{{ stat['basic_utility']['max'] }}</td>
-            <td>{{ stat['basic_utility']['median'] }}</td>
+            <td>{{ stat['basic_utility']['avg']|round(2)|int if stat['basic_utility']['avg'] % 1 == 0 else stat['basic_utility']['avg']|round(2) }}</td>
+            <td>{{ stat['basic_utility']['min']|round(2)|int if stat['basic_utility']['min'] % 1 == 0 else stat['basic_utility']['min']|round(2) }}</td>
+            <td>{{ stat['basic_utility']['max']|round(2)|int if stat['basic_utility']['max'] % 1 == 0 else stat['basic_utility']['max']|round(2) }}</td>
+            <td>{{ stat['basic_utility']['median']|round(2)|int if stat['basic_utility']['median'] % 1 == 0 else stat['basic_utility']['median']|round(2) }}</td>
           </tr>
         </tbody>
       </table>
