@@ -349,6 +349,10 @@
               </tbody>
             </table>
             <div style="font-size:1.08em; margin-top:12px;">
+              <b>Total Chosen Revenue:</b> {{ currency_symbol }}{{ results.revenue }}<br>
+              <b>Total Rate Card Revenue:</b> {{ currency_symbol }}{{ results.suggested_revenue }}
+            </div>
+            <div style="font-size:1.08em; margin-top:12px;">
               <b>Note:</b> This section is for internal use only and should not be shared with the customer.
             </div>
             {% if results.margin and (inputs.get('ai_volume', 0)|float > 0 or inputs.get('advanced_volume', 0)|float > 0 or inputs.get('basic_marketing_volume', 0)|float > 0 or inputs.get('basic_utility_volume', 0)|float > 0) %}
