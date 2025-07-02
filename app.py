@@ -512,12 +512,18 @@ def index():
                     'discount_percent': discount_percent
                 })
         
-        # Add platform fee to margin table
+        # Add platform fee to margin table with correct discount percent
+        pf_discount = '0.00%'
+        try:
+            if rate_card_platform_fee and float(rate_card_platform_fee) > 0:
+                pf_discount = f"{((float(rate_card_platform_fee) - float(platform_fee)) / float(rate_card_platform_fee) * 100):.2f}%"
+        except Exception:
+            pf_discount = '0.00%'
         margin_line_items.append({
             'line_item': 'Platform Fee',
             'chosen_price': f"₹{int(platform_fee):,}",
             'rate_card_price': f"₹{int(rate_card_platform_fee):,}",
-            'discount_percent': '0.00%'
+            'discount_percent': pf_discount
         })
         
         # Helper to format numbers for display
@@ -563,6 +569,9 @@ def index():
         # Top 5 users by number of calculations
         user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
         top_users = Counter(user_names).most_common(5)
+
+        # When setting results['suggested_revenue'], use rate_card_platform_fee instead of platform_fee
+        results['suggested_revenue'] = (results.get('suggested_revenue', 0) - platform_fee) + rate_card_platform_fee
 
         return render_template(
             'index.html',

@@ -101,29 +101,29 @@
     {% if step == 'volumes' %}
     <div style="display: flex; flex-direction: row; align-items: flex-start;">
       <div style="flex: 1; min-width: 0;">
-        <form method="post" id="volumes-form">
-            <input type="hidden" name="step" value="volumes">
+    <form method="post" id="volumes-form">
+        <input type="hidden" name="step" value="volumes">
             <label for="user_name">Enter your name:</label>
             <input type="text" name="user_name" id="user_name" value="{{ inputs.get('user_name', '') }}" required><br><br>
-            <label>Country:</label>
-            <select name="country" id="country-select" onchange="updateMinPlatformFee()">
+        <label>Country:</label>
+        <select name="country" id="country-select" onchange="updateMinPlatformFee()">
                 <option value="India" {% if inputs and inputs.country == 'India' %}selected{% endif %}>India</option>
                 <option value="MENA" {% if inputs and inputs.country == 'MENA' %}selected{% endif %}>MENA</option>
                 <option value="LATAM" {% if inputs and inputs.country == 'LATAM' %}selected{% endif %}>LATAM</option>
                 <option value="Africa" {% if inputs and inputs.country == 'Africa' %}selected{% endif %}>Africa</option>
                 <option value="Europe" {% if inputs and inputs.country == 'Europe' %}selected{% endif %}>Europe</option>
                 <option value="Rest of the World" {% if inputs and inputs.country == 'Rest of the World' %}selected{% endif %}>Rest of the World</option>
-            </select><br><br>
-            <label>AI Message Volume (per month):</label>
+        </select><br><br>
+        <label>AI Message Volume (per month):</label>
             <input type="text" name="ai_volume" class="comma-number" value="{{ inputs.get('ai_volume', '') }}"><br><br>
-            <label>Advanced Message Volume (per month):</label>
+        <label>Advanced Message Volume (per month):</label>
             <input type="text" name="advanced_volume" class="comma-number" value="{{ inputs.get('advanced_volume', '') }}"><br><br>
-            <label>Basic Marketing Message Volume (per month):</label>
+        <label>Basic Marketing Message Volume (per month):</label>
             <input type="text" name="basic_marketing_volume" class="comma-number" value="{{ inputs.get('basic_marketing_volume', '') }}"><br><br>
-            <label>Basic Utility/Authentication Message Volume (per month):</label>
+        <label>Basic Utility/Authentication Message Volume (per month):</label>
             <input type="text" name="basic_utility_volume" class="comma-number" value="{{ inputs.get('basic_utility_volume', '') }}"><br><br>
-            <label>Minimum Platform Fee:</label>
-            <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly><br>
+        <label>Minimum Platform Fee:</label>
+        <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly><br>
             <small>80 TPS, Journey Builder Lite, Campaign Manager, CTWA - (Meta/Tiktok), Agent Assist < 20 Agents, Personalize upto 1 Million profiles and external events not supported</small><br><br>
             <label>Personalize Load:</label>
             <select name="personalize_load">
@@ -132,23 +132,23 @@
                 <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced - 10 million records, external events supported</option>
             </select><br>
             <small>If the client requires large number of profiles and support for external events, select the appropriate tier.</small><br><br>
-            <label>BFSI Tier:</label>
-            <select name="bfsi_tier">
+        <label>BFSI Tier:</label>
+        <select name="bfsi_tier">
                 <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>- Not Applicable</option>
                 <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1</option>
                 <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2</option>
                 <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3</option>
             </select><br>
             <small>Each tier comes with specific controls of privacy and security requirements. The exact inclusions of each tier will be displayed on the final pricing page.</small><br><br>
-            <label>AI Module (Yes/No):</label>
-            <select name="ai_module">
+        <label>AI Module (Yes/No):</label>
+        <select name="ai_module">
                 <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>- Not Applicable</option>
                 <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
                 <option value="No" {% if inputs and inputs.ai_module == 'No' %}selected{% endif %}>No</option>
             </select><br>
             <small>Access to Workspace Configuration and data retraining screens</small><br><br>
-            <label>Smart CPaaS:</label>
-            <select name="smart_cpaas">
+        <label>Smart CPaaS:</label>
+        <select name="smart_cpaas">
                 <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
                 <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes</option>
             </select><br>
@@ -166,9 +166,9 @@
                 <option value="20+" {% if inputs and inputs.human_agents == '20+' %}selected{% endif %}>20+</option>
                 <option value="50+" {% if inputs and inputs.human_agents == '50+' %}selected{% endif %}>50+</option>
                 <option value="100+" {% if inputs and inputs.human_agents == '100+' %}selected{% endif %}>100+</option>
-            </select><br><br>
-            <input type="submit" value="Next: Rate Card">
-        </form>
+        </select><br><br>
+        <input type="submit" value="Next: Rate Card">
+    </form>
       </div>
     </div>
     <script>
@@ -275,7 +275,7 @@
               </thead>
               <tbody>
               {% for row in pricing_table %}
-                  <tr>
+                <tr>
                       <td>{{ row.line_item or row.label }}</td>
                       <td class="right">{{ row.volume }}</td>
                       <td class="right">{{ row.chosen_price }}</td>
@@ -287,7 +287,7 @@
                                   <span style="font-size:0.92em; color:#888;">
                                       {% for label, value in user_selections %}
                                           {{ label }}: {{ value }}{% if not loop.last %}, {% endif %}
-                                      {% endfor %}
+                        {% endfor %}
                                   </span>
                               {% endif %}
                           {% elif row.line_item == 'Committed Amount' %}
@@ -295,8 +295,8 @@
                           {% else %}
                               &nbsp;
                           {% endif %}
-                      </td>
-                  </tr>
+                    </td>
+                </tr>
               {% endfor %}
               </tbody>
             </table>
@@ -307,8 +307,8 @@
             <ul style="margin:0 0 0 18px; padding:0; font-size:1.08em;">
               {% for inc in final_inclusions %}
                 <li style="margin-bottom:2px;">{{ inc }}</li>
-              {% endfor %}
-            </ul>
+                        {% endfor %}
+                        </ul>
           </div>
           <!-- Expected Invoice Amount block -->
           <div style="background: #f5f7fa; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px; display: flex; align-items: center;">
@@ -321,7 +321,7 @@
               <b>Committed Deal:</b> Bundle Commitment + Platform Fee<br>
               <span style="color:#333;">Your committed amount will be drawn down as you use the platform, based on the agreed rates for each message type. Overage prices apply if you exceed the commitment.</span>
             </div>
-            {% endif %}
+                {% endif %}
           </div>
         </div>
         <!-- Internal Section: Margin Table for Internal Use Only -->
@@ -339,15 +339,15 @@
               </thead>
               <tbody>
                 {% for row in margin_table %}
-                  <tr>
+                <tr>
                     <td>{{ row.line_item }}</td>
                     <td class="right">{{ row.chosen_price }}</td>
                     <td class="right">{{ row.rate_card_price }}</td>
                     <td class="right">{{ row.discount_percent }}</td>
-                  </tr>
-                {% endfor %}
+                </tr>
+            {% endfor %}
               </tbody>
-            </table>
+        </table>
             <div style="font-size:1.08em; margin-top:12px;">
               <b>Total Chosen Revenue:</b> {{ currency_symbol }}{{ results.revenue }}<br>
               <b>Total Rate Card Revenue:</b> {{ currency_symbol }}{{ results.suggested_revenue }}
@@ -378,7 +378,7 @@
     <form method="post" style="display:inline;" onsubmit="event.preventDefault(); alert('Coming soon'); return false;">
         <input type="hidden" name="step" value="prices">
         <input type="submit" value="Edit Prices" disabled style="opacity:0.5; cursor:not-allowed;">
-    </form>
+        </form>
     {% endif %}
 </body>
 </html>
