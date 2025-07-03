@@ -93,15 +93,22 @@
 
   {% if analytics.stats %}
     {% for country, stat in analytics.stats.items() %}
-      {# Find the most common currency for this country #}
+      {# Find the most common currency for this country, fallback to default #}
       {% set country_currency = None %}
       {% for a in analytics.get('all_analytics', []) %}
         {% if a.country == country and a.currency %}
           {% set country_currency = a.currency %}
         {% endif %}
       {% endfor %}
+      {% if not country_currency %}
+        {% if country == 'India' %}
+          {% set country_currency = '₹' %}
+        {% else %}
+          {% set country_currency = '$' %}
+        {% endif %}
+      {% endif %}
       <h3>Country: {{ country }}</h3>
-      <div style="margin-bottom: 0.5em; font-size:1.08em; color:#444;">Currency: <b>{{ country_currency if country_currency else currency_symbol }}</b></div>
+      <div style="margin-bottom: 0.5em; font-size:1.08em; color:#444;">Currency: <b>{{ country_currency }}</b></div>
       <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
         <thead>
           <tr>
@@ -115,38 +122,38 @@
         <tbody>
           <tr>
             <td><b>Platform Fee</b></td>
-            <td>{{ fmt_num_currency(stat['platform_fee']['avg'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['platform_fee']['min'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['platform_fee']['max'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['platform_fee']['median'], country_currency if country_currency else currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['platform_fee']['avg'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['platform_fee']['min'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['platform_fee']['max'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['platform_fee']['median'], country_currency) }}</td>
           </tr>
           <tr>
             <td>AI Message</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['ai']['avg'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['ai']['min'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['ai']['max'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['ai']['median'], country_currency if country_currency else currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['ai']['avg'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['ai']['min'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['ai']['max'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['ai']['median'], country_currency) }}</td>
           </tr>
           <tr>
             <td>Advanced Message</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['avg'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['min'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['max'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['median'], country_currency if country_currency else currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['avg'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['min'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['max'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['median'], country_currency) }}</td>
           </tr>
           <tr>
             <td>Basic Marketing Message</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['avg'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['min'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['max'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['median'], country_currency if country_currency else currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['avg'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['min'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['max'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['median'], country_currency) }}</td>
           </tr>
           <tr>
             <td>Basic Utility</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['avg'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['min'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['max'], country_currency if country_currency else currency_symbol) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['median'], country_currency if country_currency else currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['avg'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['min'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['max'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['median'], country_currency) }}</td>
           </tr>
         </tbody>
       </table>
