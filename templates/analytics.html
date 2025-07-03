@@ -47,7 +47,7 @@
     <li><b>Most Common Platform Fee Options:</b>
       <ul>
         {% for fee, count in analytics.platform_fee_options %}
-          <li>{{ fee }}: {{ count }}</li>
+          <li>{{ currency_symbol }}{{ '{:,.2f}'.format(fee|float) }}: {{ count }}</li>
         {% endfor %}
       </ul>
     </li>
@@ -63,8 +63,12 @@
       </ul>
     </li>
     <li><b>Platform Fee Discount Triggered:</b> {{ analytics.platform_fee_discount_triggered }}</li>
-    <li><b>Average Margin (Chosen):</b> {{ analytics.margin_chosen|sum / (analytics.margin_chosen|length or 1) }}%</li>
-    <li><b>Average Margin (Rate Card):</b> {{ analytics.margin_rate_card|sum / (analytics.margin_rate_card|length or 1) }}%</li>
+    <li><b>Average Margin (Chosen):</b> {{ analytics.margin_chosen|sum / (analytics.margin_chosen|length or 1) }}%
+      <br><span style="font-size:0.97em; color:#444;">This is the average margin based on the actual prices you entered (Chosen Prices), including platform fee and all message types.</span>
+    </li>
+    <li><b>Average Margin (Rate Card):</b> {{ analytics.margin_rate_card|sum / (analytics.margin_rate_card|length or 1) }}%
+      <br><span style="font-size:0.97em; color:#444;">This is the average margin if all prices were set at the default rate card (no discounts), including platform fee and all message types.</span>
+    </li>
     <li><b>Top 5 Users (by Calculations):</b>
       <ul>
         {% for user, count in analytics.top_users %}
