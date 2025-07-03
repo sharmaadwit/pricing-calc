@@ -211,8 +211,13 @@ def index():
     Main route for the pricing calculator. Handles all user steps (volumes, prices, bundle, results).
     Manages session data, input validation, pricing logic, and inclusions logic.
     """
-    # Defensive: always use .get() for form/session data
+    # Debug: Log form data, session data, and current step
+    print("\n--- DEBUG ---")
+    print("Form data:", dict(request.form))
+    print("Session data:", dict(session))
     step = request.form.get('step', 'volumes')
+    print("Current step:", step)
+    print("--- END DEBUG ---\n")
     results = None
     currency_symbol = None
 
