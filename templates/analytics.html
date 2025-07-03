@@ -47,7 +47,15 @@
     <li><b>Most Common Platform Fee Options:</b>
       <ul>
         {% for fee, count in analytics.platform_fee_options %}
-          <li>{{ currency_symbol }}{{ '{:,.2f}'.format(fee|float) }}: {{ count }}</li>
+          {# Find the most common currency for this fee #}
+          {% set fee_currency = None %}
+          {% for a in analytics.get('all_analytics', []) %}
+            {% if a.platform_fee == fee and a.currency %}
+              {% set fee_currency = a.currency %}
+              {% break %}
+            {% endif %}
+          {% endfor %}
+          <li>{{ fee_currency if fee_currency else currency_symbol }}{{ '{:,.2f}'.format(fee|float) }}: {{ count }}</li>
         {% endfor %}
       </ul>
     </li>
