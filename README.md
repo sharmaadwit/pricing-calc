@@ -71,6 +71,19 @@ MIT License (or specify your license here)
 - **Human Agents 20+:** +₹50,000 (India), +$250 (Africa), +$1,000 (LATAM/Europe), +$500 (others)
 - ...and so on for other options.
 
+### Message Type Definitions
+
+- **Basic Messages:** Triggered messages via API, Bulk Upload (GS Media, Campaign Manager)
+
+- **Advanced Messages:**
+  - Bot platform usage: 2-way messages (JB/Solutions), Triggered messages, Interactive journeys
+  - Marketing: Triggered campaigns, Segmented Campaign on Personalize
+  - Agent: Agent Interactions, Triggered messages
+  - CTX: Retargeting messages
+  - Service messages (incoming won't be counted)
+
+- **AI Messages:** Any message that uses AI for responding to the customer
+
 ### Message Type Prices (Rate Card Tiers)
 
 #### India
