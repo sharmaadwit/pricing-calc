@@ -342,10 +342,6 @@ def index():
         if all_volumes_zero:
             return render_template('index.html', step='bundle', inputs=inputs, currency_symbol=currency_symbol)
         else:
-            # Debug print to check country value before currency lookup
-            debug_country = inputs.get('country', 'India')
-            print(f"DEBUG: country value before currency lookup: '{debug_country}'")
-            currency_symbol = COUNTRY_CURRENCY.get(debug_country, '$')
             return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs)
 
     elif step == 'bundle' and request.method == 'POST':
@@ -426,8 +422,8 @@ def index():
         })
         margin_line_items.append({
             'line_item': 'Committed Amount',
-            'chosen_price': '$',
-            'rate_card_price': '$',
+            'chosen_price': f"{currency_symbol}{committed_amount:,.0f}",
+            'rate_card_price': f"{currency_symbol}{committed_amount:,.0f}",
             'margin_change': 'N/A'
         })
         margin_line_items.append({
@@ -587,10 +583,7 @@ def index():
                 flash('Session expired or missing. Please start again.', 'error')
             currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
             return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={})
-        # Debug print to check country value before currency lookup
-        debug_country = inputs.get('country', 'India')
-        print(f"DEBUG: country value before currency lookup: '{debug_country}'")
-        currency_symbol = COUNTRY_CURRENCY.get(debug_country, '$')
+        currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
         return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs)
     elif step == 'prices':
         inputs = session.get('inputs', {})
