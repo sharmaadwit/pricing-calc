@@ -4,6 +4,12 @@
   {%- else -%}{{ val }}{%- endif -%}
 {% endmacro %}
 
+{% macro fmt_num_currency(val, currency) %}
+  {%- if val is number -%}
+    {{ currency }}{%- if val % 1 == 0 -%}{{ '{:,}'.format(val|int) }}{%- else -%}{{ '{:,.2f}'.format(val) }}{%- endif -%}
+  {%- else -%}{{ val }}{%- endif -%}
+{% endmacro %}
+
 {% if not authorized %}
   <h2>Enter Analytics Access Keyword</h2>
   <form method="post">
@@ -101,38 +107,38 @@
         <tbody>
           <tr>
             <td><b>Platform Fee</b></td>
-            <td>{{ stat['platform_fee']['avg']|round(2)|int if stat['platform_fee']['avg'] % 1 == 0 else stat['platform_fee']['avg']|round(2) }}</td>
-            <td>{{ stat['platform_fee']['min']|round(2)|int if stat['platform_fee']['min'] % 1 == 0 else stat['platform_fee']['min']|round(2) }}</td>
-            <td>{{ stat['platform_fee']['max']|round(2)|int if stat['platform_fee']['max'] % 1 == 0 else stat['platform_fee']['max']|round(2) }}</td>
-            <td>{{ stat['platform_fee']['median']|round(2)|int if stat['platform_fee']['median'] % 1 == 0 else stat['platform_fee']['median']|round(2) }}</td>
+            <td>{{ fmt_num_currency(stat['platform_fee']['avg'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['platform_fee']['min'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['platform_fee']['max'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['platform_fee']['median'], currency_symbol) }}</td>
           </tr>
           <tr>
             <td>AI Message</td>
-            <td>{{ stat['msg_types']['ai']['avg']|round(2)|int if stat['msg_types']['ai']['avg'] % 1 == 0 else stat['msg_types']['ai']['avg']|round(2) }}</td>
-            <td>{{ stat['msg_types']['ai']['min']|round(2)|int if stat['msg_types']['ai']['min'] % 1 == 0 else stat['msg_types']['ai']['min']|round(2) }}</td>
-            <td>{{ stat['msg_types']['ai']['max']|round(2)|int if stat['msg_types']['ai']['max'] % 1 == 0 else stat['msg_types']['ai']['max']|round(2) }}</td>
-            <td>{{ stat['msg_types']['ai']['median']|round(2)|int if stat['msg_types']['ai']['median'] % 1 == 0 else stat['msg_types']['ai']['median']|round(2) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['ai']['avg'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['ai']['min'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['ai']['max'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['ai']['median'], currency_symbol) }}</td>
           </tr>
           <tr>
             <td>Advanced Message</td>
-            <td>{{ stat['msg_types']['advanced']['avg']|round(2)|int if stat['msg_types']['advanced']['avg'] % 1 == 0 else stat['msg_types']['advanced']['avg']|round(2) }}</td>
-            <td>{{ stat['msg_types']['advanced']['min']|round(2)|int if stat['msg_types']['advanced']['min'] % 1 == 0 else stat['msg_types']['advanced']['min']|round(2) }}</td>
-            <td>{{ stat['msg_types']['advanced']['max']|round(2)|int if stat['msg_types']['advanced']['max'] % 1 == 0 else stat['msg_types']['advanced']['max']|round(2) }}</td>
-            <td>{{ stat['msg_types']['advanced']['median']|round(2)|int if stat['msg_types']['advanced']['median'] % 1 == 0 else stat['msg_types']['advanced']['median']|round(2) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['avg'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['min'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['max'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['median'], currency_symbol) }}</td>
           </tr>
           <tr>
             <td>Basic Marketing Message</td>
-            <td>{{ stat['msg_types']['basic_marketing']['avg']|round(2)|int if stat['msg_types']['basic_marketing']['avg'] % 1 == 0 else stat['msg_types']['basic_marketing']['avg']|round(2) }}</td>
-            <td>{{ stat['msg_types']['basic_marketing']['min']|round(2)|int if stat['msg_types']['basic_marketing']['min'] % 1 == 0 else stat['msg_types']['basic_marketing']['min']|round(2) }}</td>
-            <td>{{ stat['msg_types']['basic_marketing']['max']|round(2)|int if stat['msg_types']['basic_marketing']['max'] % 1 == 0 else stat['msg_types']['basic_marketing']['max']|round(2) }}</td>
-            <td>{{ stat['msg_types']['basic_marketing']['median']|round(2)|int if stat['msg_types']['basic_marketing']['median'] % 1 == 0 else stat['msg_types']['basic_marketing']['median']|round(2) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['avg'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['min'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['max'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['median'], currency_symbol) }}</td>
           </tr>
           <tr>
             <td>Basic Utility</td>
-            <td>{{ stat['msg_types']['basic_utility']['avg']|round(2)|int if stat['msg_types']['basic_utility']['avg'] % 1 == 0 else stat['msg_types']['basic_utility']['avg']|round(2) }}</td>
-            <td>{{ stat['msg_types']['basic_utility']['min']|round(2)|int if stat['msg_types']['basic_utility']['min'] % 1 == 0 else stat['msg_types']['basic_utility']['min']|round(2) }}</td>
-            <td>{{ stat['msg_types']['basic_utility']['max']|round(2)|int if stat['msg_types']['basic_utility']['max'] % 1 == 0 else stat['msg_types']['basic_utility']['max']|round(2) }}</td>
-            <td>{{ stat['msg_types']['basic_utility']['median']|round(2)|int if stat['msg_types']['basic_utility']['median'] % 1 == 0 else stat['msg_types']['basic_utility']['median']|round(2) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['avg'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['min'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['max'], currency_symbol) }}</td>
+            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['median'], currency_symbol) }}</td>
           </tr>
         </tbody>
       </table>
@@ -166,10 +172,10 @@
             <tr>
               <td><b>{{ label }}</b></td>
               {% for (country, currency), stat in stats_by_group.items() %}
-                <td>{{ fmt_num(stat[key]['avg']) }}</td>
-                <td>{{ fmt_num(stat[key]['min']) }}</td>
-                <td>{{ fmt_num(stat[key]['max']) }}</td>
-                <td>{{ fmt_num(stat[key]['median']) }}</td>
+                <td>{{ fmt_num_currency(stat[key]['avg'], currency) }}</td>
+                <td>{{ fmt_num_currency(stat[key]['min'], currency) }}</td>
+                <td>{{ fmt_num_currency(stat[key]['max'], currency) }}</td>
+                <td>{{ fmt_num_currency(stat[key]['median'], currency) }}</td>
               {% endfor %}
             </tr>
           {% endfor %}
@@ -236,11 +242,11 @@
           {%- if val % 1 == 0 -%}{{ '{:,}'.format(val|int) }}{%- else -%}{{ '{:,.2f}'.format(val) }}{%- endif -%}
         {%- else -%}{{ val }}{%- endif -%}
       {% endmacro %}
-      <li>AI: {{ get_currency('ai') }}{{ fmt_val(analytics.modes.ai) }}</li>
-      <li>Advanced: {{ get_currency('advanced') }}{{ fmt_val(analytics.modes.advanced) }}</li>
-      <li>Marketing: {{ get_currency('marketing') }}{{ fmt_val(analytics.modes.marketing) }}</li>
-      <li>Utility: {{ get_currency('utility') }}{{ fmt_val(analytics.modes.utility) }}</li>
-      <li>Platform Fee: {{ get_currency('platform_fee') }}{{ fmt_val(analytics.modes.platform_fee) }}</li>
+      <li>AI: {{ fmt_num_currency(analytics.modes.ai, get_currency('ai')) }}</li>
+      <li>Advanced: {{ fmt_num_currency(analytics.modes.advanced, get_currency('advanced')) }}</li>
+      <li>Marketing: {{ fmt_num_currency(analytics.modes.marketing, get_currency('marketing')) }}</li>
+      <li>Utility: {{ fmt_num_currency(analytics.modes.utility, get_currency('utility')) }}</li>
+      <li>Platform Fee: {{ fmt_num_currency(analytics.modes.platform_fee, get_currency('platform_fee')) }}</li>
     </ul>
   {% endif %}
 
@@ -260,7 +266,7 @@
             {%- set currency = a.currency -%}
           {%- endif -%}
         {%- endfor -%}
-        <li>{{ label }}: {{ currency if currency else currency_symbol }}{{ fmt_val(vol) }}</li>
+        <li>{{ label }}: {{ fmt_num_currency(vol, currency if currency else currency_symbol) }}</li>
       {% endfor %}
     </ul>
   {% endif %}
