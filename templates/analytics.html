@@ -50,9 +50,8 @@
           {# Find the most common currency for this fee #}
           {% set fee_currency = None %}
           {% for a in analytics.get('all_analytics', []) %}
-            {% if a.platform_fee == fee and a.currency %}
+            {% if a.platform_fee == fee and a.currency and not fee_currency %}
               {% set fee_currency = a.currency %}
-              {% break %}
             {% endif %}
           {% endfor %}
           <li>{{ fee_currency if fee_currency else currency_symbol }}{{ '{:,.2f}'.format(fee|float) }}: {{ count }}</li>
