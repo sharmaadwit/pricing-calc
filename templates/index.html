@@ -341,23 +341,23 @@
                 {% for row in margin_table %}
                 <tr>
                     <td>{{ row.line_item }}</td>
-                    <td class="right">{{ row.chosen_price }}</td>
-                    <td class="right">{{ row.rate_card_price }}</td>
+                    <td class="right">{{ currency_symbol }}{{ '{:,.2f}'.format(row.chosen_price|float) if row.chosen_price is not none and row.chosen_price != '' else '' }}</td>
+                    <td class="right">{{ currency_symbol }}{{ '{:,.2f}'.format(row.rate_card_price|float) if row.rate_card_price is not none and row.rate_card_price != '' else '' }}</td>
                     <td class="right">{{ row.discount_percent }}</td>
                 </tr>
             {% endfor %}
               </tbody>
         </table>
             <div style="font-size:1.08em; margin-top:12px;">
-              <b>Total Chosen Revenue:</b> {{ currency_symbol }}{{ results.revenue }}<br>
-              <b>Total Rate Card Revenue:</b> {{ currency_symbol }}{{ results.suggested_revenue }}
+              <b>Total Chosen Revenue:</b> {{ currency_symbol }}{{ '{:,.2f}'.format(results.revenue|float) }}<br>
+              <b>Total Rate Card Revenue:</b> {{ currency_symbol }}{{ '{:,.2f}'.format(results.suggested_revenue|float) }}
             </div>
             <div style="font-size:1.08em; margin-top:12px;">
               <b>Note:</b> This section is for internal use only and should not be shared with the customer.
             </div>
             {% if results.margin and (inputs.get('ai_volume', 0)|float > 0 or inputs.get('advanced_volume', 0)|float > 0 or inputs.get('basic_marketing_volume', 0)|float > 0 or inputs.get('basic_utility_volume', 0)|float > 0) %}
             <div style="font-size:1.15em; margin-top:18px; color:#1a2a3a;">
-              <b>Total Margin (as per formula above):</b> {{ results.margin }}
+              <b>Total Margin (as per formula above):</b> {{ results.margin if '%' in results.margin else results.margin ~ '%' }}
             </div>
             {% endif %}
           </div>
