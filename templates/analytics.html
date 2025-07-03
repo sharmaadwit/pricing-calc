@@ -213,11 +213,34 @@
   {% if analytics.modes %}
     <h2>Most Common Prices (Mode)</h2>
     <ul>
-      <li>AI: {{ analytics.modes.ai }}</li>
-      <li>Advanced: {{ analytics.modes.advanced }}</li>
-      <li>Marketing: {{ analytics.modes.marketing }}</li>
-      <li>Utility: {{ analytics.modes.utility }}</li>
-      <li>Platform Fee: {{ analytics.modes.platform_fee }}</li>
+      {% set all_analytics = analytics.get('all_analytics', []) %}
+      {% macro get_currency(type_key) %}
+        {%- set currency = None -%}
+        {%- for a in all_analytics -%}
+          {%- if type_key == 'ai' and a.ai_price == analytics.modes.ai and a.currency -%}
+            {%- set currency = a.currency -%}
+          {%- elif type_key == 'advanced' and a.advanced_price == analytics.modes.advanced and a.currency -%}
+            {%- set currency = a.currency -%}
+          {%- elif type_key == 'marketing' and a.basic_marketing_price == analytics.modes.marketing and a.currency -%}
+            {%- set currency = a.currency -%}
+          {%- elif type_key == 'utility' and a.basic_utility_price == analytics.modes.utility and a.currency -%}
+            {%- set currency = a.currency -%}
+          {%- elif type_key == 'platform_fee' and a.platform_fee == analytics.modes.platform_fee and a.currency -%}
+            {%- set currency = a.currency -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {{ currency if currency else currency_symbol }}
+      {% endmacro %}
+      {% macro fmt_val(val) %}
+        {%- if val is number -%}
+          {%- if val % 1 == 0 -%}{{ '{:,}'.format(val|int) }}{%- else -%}{{ '{:,.2f}'.format(val) }}{%- endif -%}
+        {%- else -%}{{ val }}{%- endif -%}
+      {% endmacro %}
+      <li>AI: {{ get_currency('ai') }}{{ fmt_val(analytics.modes.ai) }}</li>
+      <li>Advanced: {{ get_currency('advanced') }}{{ fmt_val(analytics.modes.advanced) }}</li>
+      <li>Marketing: {{ get_currency('marketing') }}{{ fmt_val(analytics.modes.marketing) }}</li>
+      <li>Utility: {{ get_currency('utility') }}{{ fmt_val(analytics.modes.utility) }}</li>
+      <li>Platform Fee: {{ get_currency('platform_fee') }}{{ fmt_val(analytics.modes.platform_fee) }}</li>
     </ul>
   {% endif %}
 
@@ -225,7 +248,19 @@
     <h2>Popular Message Types (by Total Volume)</h2>
     <ul>
       {% for label, vol in analytics.popular_types %}
-        <li>{{ label }}: {{ vol|int }}</li>
+        {%- set currency = None -%}
+        {%- for a in analytics.get('all_analytics', []) -%}
+          {%- if label == 'AI' and a.ai_volume == vol and a.currency -%}
+            {%- set currency = a.currency -%}
+          {%- elif label == 'Advanced' and a.advanced_volume == vol and a.currency -%}
+            {%- set currency = a.currency -%}
+          {%- elif label == 'Marketing' and a.basic_marketing_volume == vol and a.currency -%}
+            {%- set currency = a.currency -%}
+          {%- elif label == 'Utility' and a.basic_utility_volume == vol and a.currency -%}
+            {%- set currency = a.currency -%}
+          {%- endif -%}
+        {%- endfor -%}
+        <li>{{ label }}: {{ currency if currency else currency_symbol }}{{ fmt_val(vol) }}</li>
       {% endfor %}
     </ul>
   {% endif %}
