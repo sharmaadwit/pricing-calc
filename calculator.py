@@ -201,15 +201,10 @@ def calculate_pricing(
     user_basic_utility_price = basic_utility_price if basic_utility_price is not None else suggested_basic_utility_price
 
     # Revenue (user-chosen)
-    ai_final_price = costs['ai'] + user_ai_price
-    advanced_final_price = costs['ai'] + user_advanced_price
-    basic_marketing_final_price = costs['marketing'] + user_basic_marketing_price
-    basic_utility_final_price = costs['utility'] + user_basic_utility_price
-
-    ai_revenue = ai_final_price * ai_volume
-    advanced_revenue = advanced_final_price * advanced_volume
-    basic_marketing_revenue = basic_marketing_final_price * basic_marketing_volume
-    basic_utility_revenue = basic_utility_final_price * basic_utility_volume
+    ai_revenue = (costs['ai'] + user_ai_price) * ai_volume
+    advanced_revenue = (costs['ai'] + user_advanced_price) * advanced_volume
+    basic_marketing_revenue = (costs['marketing'] + user_basic_marketing_price) * basic_marketing_volume
+    basic_utility_revenue = (costs['utility'] + user_basic_utility_price) * basic_utility_volume
     revenue = ai_revenue + advanced_revenue + basic_marketing_revenue + basic_utility_revenue
 
     # Revenue (suggested)
@@ -267,7 +262,7 @@ def calculate_pricing(
             'suggested_price': suggested_ai_price,
             'overage_price': overage_ai_price,
             'meta_cost': costs['ai'],
-            'final_price': ai_final_price,
+            'final_price': costs['ai'] + user_ai_price,
             'revenue': ai_revenue,
             'suggested_revenue': ai_revenue_s
         },
@@ -278,7 +273,7 @@ def calculate_pricing(
             'suggested_price': suggested_advanced_price,
             'overage_price': overage_advanced_price,
             'meta_cost': costs['ai'],
-            'final_price': advanced_final_price,
+            'final_price': costs['ai'] + user_advanced_price,
             'revenue': advanced_revenue,
             'suggested_revenue': advanced_revenue_s
         },
@@ -289,7 +284,7 @@ def calculate_pricing(
             'suggested_price': suggested_basic_marketing_price,
             'overage_price': overage_basic_marketing_price,
             'meta_cost': costs['marketing'],
-            'final_price': basic_marketing_final_price,
+            'final_price': costs['marketing'] + user_basic_marketing_price,
             'revenue': basic_marketing_revenue,
             'suggested_revenue': basic_marketing_revenue_s
         },
@@ -300,7 +295,7 @@ def calculate_pricing(
             'suggested_price': suggested_basic_utility_price,
             'overage_price': overage_basic_utility_price,
             'meta_cost': costs['utility'],
-            'final_price': basic_utility_final_price,
+            'final_price': costs['utility'] + user_basic_utility_price,
             'revenue': basic_utility_revenue,
             'suggested_revenue': basic_utility_revenue_s
         },
