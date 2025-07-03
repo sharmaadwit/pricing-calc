@@ -801,6 +801,7 @@ def analytics():
             # Top 5 users by number of calculations
             user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
             top_users = Counter(user_names).most_common(5)
+            all_analytics = Analytics.query.all()
             analytics = {
                 'calculations': total_calculations,
                 'calculations_by_day': calculations_by_day,
@@ -826,7 +827,8 @@ def analytics():
                 'avg_price_data': avg_price_data,
                 'avg_platform_fee_data': avg_platform_fee_data,
                 'top_users': top_users,
-                'user_stats': user_stats
+                'user_stats': user_stats,
+                'all_analytics': all_analytics
             }
             return render_template('analytics.html', authorized=True, analytics=analytics)
         else:
