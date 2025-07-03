@@ -536,7 +536,7 @@ def index():
         session['user_selections'] = user_selections
         session['inclusions'] = inclusions
         session['committed_amount'] = committed_amount
-        currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
+        currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
         # Create bundle details for committed amount
         bundle_details = {
             'lines': [],
