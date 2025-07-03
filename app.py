@@ -525,8 +525,8 @@ def index():
                 pf_discount = '0.00%'
             margin_line_items.append({
                 'line_item': 'Platform Fee',
-                'chosen_price': f"${int(platform_fee):,}",
-                'rate_card_price': f"${int(rate_card_platform_fee):,}",
+                'chosen_price': platform_fee,
+                'rate_card_price': rate_card_platform_fee,
                 'discount_percent': pf_discount
             })
             
