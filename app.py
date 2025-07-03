@@ -426,14 +426,14 @@ def index():
         })
         margin_line_items.append({
             'line_item': 'Committed Amount',
-            'chosen_price': '₹',
-            'rate_card_price': '₹',
+            'chosen_price': '$',
+            'rate_card_price': '$',
             'margin_change': 'N/A'
         })
         margin_line_items.append({
             'line_item': 'Platform Fee',
-            'chosen_price': f"₹{int(platform_fee):,}",
-            'rate_card_price': f"₹{int(platform_fee):,}",
+            'chosen_price': f"${int(platform_fee):,}",
+            'rate_card_price': f"${int(platform_fee):,}",
             'margin_change': '0.00%'
         })
         # Calculate results for committed amount path
@@ -542,7 +542,7 @@ def index():
             'lines': [],
             'bundle_cost': committed_amount,
             'total_bundle_price': committed_amount + float(platform_fee),
-            'inclusion_text': f'Committed amount of {COUNTRY_CURRENCY.get(country, "₹")}{committed_amount:,.0f} for messaging services.'
+            'inclusion_text': f'Committed amount of {COUNTRY_CURRENCY.get(country, "$")}{committed_amount:,.0f} for messaging services.'
         }
         # Log analytics for bundle flow
         analytics_kwargs = dict(
@@ -554,7 +554,7 @@ def index():
             advanced_price=advanced_price,
             basic_marketing_price=basic_marketing_price,
             basic_utility_price=basic_utility_price,
-            currency=COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
+            currency=COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
         )
         new_analytics = Analytics(**analytics_kwargs)
         db.session.add(new_analytics)
@@ -607,7 +607,7 @@ def index():
             'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
         }
         platform_fee = pricing_inputs.get('platform_fee', inputs.get('platform_fee', ''))
-        currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
+        currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
     elif step == 'bundle':
         inputs = session.get('inputs', {})
@@ -617,11 +617,11 @@ def index():
                 flash('Session expired or missing. Please start again.', 'error')
             currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
             return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={})
-        currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '₹')
+        currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
         return render_template('index.html', step='bundle', inputs=inputs, currency_symbol=currency_symbol)
     # Default: show volume input form
     country = session.get('inputs', {}).get('country', 'India')
-    currency_symbol = COUNTRY_CURRENCY.get(country, '₹')
+    currency_symbol = COUNTRY_CURRENCY.get(country, '$')
     return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
 
 @app.route('/analytics', methods=['GET', 'POST'])
