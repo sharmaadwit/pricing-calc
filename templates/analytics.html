@@ -177,4 +177,70 @@
       </table>
     {% endfor %}
   {% endif %}
+
+  {% if analytics.discounts %}
+    <h2>Discount Analytics</h2>
+    <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Avg Discount (%)</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Median</th>
+          <th>Distribution (0-10%, 10-20%, ...)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for label, key in [('AI', 'ai'), ('Advanced', 'advanced'), ('Marketing', 'marketing'), ('Utility', 'utility')] %}
+        <tr>
+          <td>{{ label }}</td>
+          <td>{{ analytics.discounts[key].avg|round(2) }}</td>
+          <td>{{ analytics.discounts[key].min|round(2) }}</td>
+          <td>{{ analytics.discounts[key].max|round(2) }}</td>
+          <td>{{ analytics.discounts[key].median|round(2) }}</td>
+          <td>
+            {% for count in analytics.discounts[key].buckets %}
+              <span style="display:inline-block; width:18px; text-align:center;">{{ count }}</span>
+            {% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if analytics.modes %}
+    <h2>Most Common Prices (Mode)</h2>
+    <ul>
+      <li>AI: {{ analytics.modes.ai }}</li>
+      <li>Advanced: {{ analytics.modes.advanced }}</li>
+      <li>Marketing: {{ analytics.modes.marketing }}</li>
+      <li>Utility: {{ analytics.modes.utility }}</li>
+      <li>Platform Fee: {{ analytics.modes.platform_fee }}</li>
+    </ul>
+  {% endif %}
+
+  {% if analytics.popular_types %}
+    <h2>Popular Message Types (by Total Volume)</h2>
+    <ul>
+      {% for label, vol in analytics.popular_types %}
+        <li>{{ label }}: {{ vol|int }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if analytics.platform_fee_vs_deal_correlation is not none %}
+    <h2>Platform Fee vs. Deal Size Correlation</h2>
+    <p>Pearson correlation coefficient: <b>{{ analytics.platform_fee_vs_deal_correlation|round(3) }}</b> (1 = perfect positive, 0 = none, -1 = perfect negative)</p>
+  {% endif %}
+
+  {% if analytics.seasonality %}
+    <h2>Seasonality (Calculations by Month)</h2>
+    <ul>
+      {% for month, count in analytics.seasonality.items() %}
+        <li>{{ month }}: {{ count }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
 {% endif %} 

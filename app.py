@@ -38,6 +38,15 @@ class Analytics(db.Model):
     basic_marketing_price = db.Column(db.Float)
     basic_utility_price = db.Column(db.Float)
     currency = db.Column(db.String(8))
+    # New fields for advanced analytics
+    ai_rate_card_price = db.Column(db.Float)
+    advanced_rate_card_price = db.Column(db.Float)
+    basic_marketing_rate_card_price = db.Column(db.Float)
+    basic_utility_rate_card_price = db.Column(db.Float)
+    ai_volume = db.Column(db.Float)
+    advanced_volume = db.Column(db.Float)
+    basic_marketing_volume = db.Column(db.Float)
+    basic_utility_volume = db.Column(db.Float)
     # Add more fields as needed
 
 # os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
@@ -564,7 +573,15 @@ def index():
                 advanced_price=advanced_price,
                 basic_marketing_price=basic_marketing_price,
                 basic_utility_price=basic_utility_price,
-                currency=COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
+                currency=COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$'),
+                ai_rate_card_price=suggested_ai,
+                advanced_rate_card_price=suggested_advanced,
+                basic_marketing_rate_card_price=suggested_marketing,
+                basic_utility_rate_card_price=suggested_utility,
+                ai_volume=ai_volume,
+                advanced_volume=advanced_volume,
+                basic_marketing_volume=basic_marketing_volume,
+                basic_utility_volume=basic_utility_volume
             )
             new_analytics = Analytics(**analytics_kwargs)
             db.session.add(new_analytics)
@@ -830,6 +847,110 @@ def analytics():
                 'user_stats': user_stats,
                 'all_analytics': all_analytics
             }
+            # --- Advanced Analytics Calculations ---
+            # 1. Discount calculations (by type and platform fee)
+            def get_discount_stats(price_field, rate_card_field):
+                discounts = []
+                for a in Analytics.query.all():
+                    price = getattr(a, price_field, None)
+                    rate_card = getattr(a, rate_card_field, None)
+                    if price is not None and rate_card is not None and rate_card > 0:
+                        discount = (rate_card - price) / rate_card * 100
+                        discounts.append(discount)
+                if discounts:
+                    avg = sum(discounts) / len(discounts)
+                    minv = min(discounts)
+                    maxv = max(discounts)
+                    median = sorted(discounts)[len(discounts)//2]
+                else:
+                    avg = minv = maxv = median = 0
+                # Distribution buckets (0-10%, 10-20%, ...)
+                buckets = [0]*10
+                for d in discounts:
+                    idx = min(int(d // 10), 9)
+                    buckets[idx] += 1
+                return {'avg': avg, 'min': minv, 'max': maxv, 'median': median, 'buckets': buckets, 'count': len(discounts)}
+
+            ai_discount = get_discount_stats('ai_price', 'ai_rate_card_price')
+            advanced_discount = get_discount_stats('advanced_price', 'advanced_rate_card_price')
+            marketing_discount = get_discount_stats('basic_marketing_price', 'basic_marketing_rate_card_price')
+            utility_discount = get_discount_stats('basic_utility_price', 'basic_utility_rate_card_price')
+            platform_fee_discount = get_discount_stats('platform_fee', 'platform_fee')  # always 0, but for completeness
+
+            # 2. Most common prices (mode)
+            def get_mode(field):
+                vals = [getattr(a, field) for a in Analytics.query.all() if getattr(a, field) is not None]
+                if vals:
+                    return Counter(vals).most_common(1)[0][0]
+                return None
+            ai_mode = get_mode('ai_price')
+            advanced_mode = get_mode('advanced_price')
+            marketing_mode = get_mode('basic_marketing_price')
+            utility_mode = get_mode('basic_utility_price')
+            platform_fee_mode = get_mode('platform_fee')
+
+            # 3. Popular message types (by total volume)
+            def get_total_volume(field):
+                return sum(getattr(a, field) or 0 for a in Analytics.query.all())
+            total_ai_vol = get_total_volume('ai_volume')
+            total_adv_vol = get_total_volume('advanced_volume')
+            total_marketing_vol = get_total_volume('basic_marketing_volume')
+            total_utility_vol = get_total_volume('basic_utility_volume')
+            popular_types = sorted([
+                ('AI', total_ai_vol),
+                ('Advanced', total_adv_vol),
+                ('Marketing', total_marketing_vol),
+                ('Utility', total_utility_vol)
+            ], key=lambda x: x[1], reverse=True)
+
+            # 4. Platform fee vs. deal size (correlation)
+            import math
+            fees = [a.platform_fee for a in Analytics.query.all() if a.platform_fee is not None]
+            deal_sizes = [
+                (getattr(a, 'ai_volume') or 0) + (getattr(a, 'advanced_volume') or 0) +
+                (getattr(a, 'basic_marketing_volume') or 0) + (getattr(a, 'basic_utility_volume') or 0)
+                for a in Analytics.query.all()
+            ]
+            if fees and deal_sizes and len(fees) == len(deal_sizes):
+                n = len(fees)
+                mean_fee = sum(fees)/n
+                mean_deal = sum(deal_sizes)/n
+                cov = sum((fees[i]-mean_fee)*(deal_sizes[i]-mean_deal) for i in range(n)) / n
+                std_fee = math.sqrt(sum((f-mean_fee)**2 for f in fees)/n)
+                std_deal = math.sqrt(sum((d-mean_deal)**2 for d in deal_sizes)/n)
+                correlation = cov / (std_fee*std_deal) if std_fee and std_deal else 0
+            else:
+                correlation = 0
+
+            # 5. Seasonality (by month)
+            from collections import defaultdict
+            month_counts = defaultdict(int)
+            for a in Analytics.query.all():
+                if a.timestamp:
+                    month = a.timestamp.strftime('%Y-%m')
+                    month_counts[month] += 1
+            seasonality = dict(sorted(month_counts.items()))
+
+            # Add to analytics dict
+            analytics.update({
+                'discounts': {
+                    'ai': ai_discount,
+                    'advanced': advanced_discount,
+                    'marketing': marketing_discount,
+                    'utility': utility_discount,
+                    'platform_fee': platform_fee_discount
+                },
+                'modes': {
+                    'ai': ai_mode,
+                    'advanced': advanced_mode,
+                    'marketing': marketing_mode,
+                    'utility': utility_mode,
+                    'platform_fee': platform_fee_mode
+                },
+                'popular_types': popular_types,
+                'platform_fee_vs_deal_correlation': correlation,
+                'seasonality': seasonality
+            })
             return render_template('analytics.html', authorized=True, analytics=analytics)
         else:
             flash('Incorrect keyword.', 'error')
