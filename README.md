@@ -16,7 +16,7 @@ This is a robust, production-ready pricing calculator web application built with
 1. **Clone the repository:**
    ```bash
    git clone <repo-url>
-   cd pythonProject
+   cd pricing-calc
    ```
 2. **Install dependencies:**
    ```bash
