@@ -299,34 +299,15 @@
   {% if analytics.modes %}
     <h2>Most Common Prices (Mode)</h2>
     <ul>
-      {% set all_analytics = analytics.get('all_analytics', []) %}
-      {% macro get_currency(type_key) %}
-        {%- set currency = None -%}
-        {%- for a in all_analytics -%}
-          {%- if type_key == 'ai' and a.ai_price == analytics.modes.ai and a.currency -%}
-            {%- set currency = a.currency -%}
-          {%- elif type_key == 'advanced' and a.advanced_price == analytics.modes.advanced and a.currency -%}
-            {%- set currency = a.currency -%}
-          {%- elif type_key == 'marketing' and a.basic_marketing_price == analytics.modes.marketing and a.currency -%}
-            {%- set currency = a.currency -%}
-          {%- elif type_key == 'utility' and a.basic_utility_price == analytics.modes.utility and a.currency -%}
-            {%- set currency = a.currency -%}
-          {%- elif type_key == 'platform_fee' and a.platform_fee == analytics.modes.platform_fee and a.currency -%}
-            {%- set currency = a.currency -%}
-          {%- endif -%}
-        {%- endfor -%}
-        {{ currency if currency else currency_symbol }}
-      {% endmacro %}
-      {% macro fmt_val(val) %}
-        {%- if val is number -%}
-          {%- if val % 1 == 0 -%}{{ '{:,}'.format(val|int) }}{%- else -%}{{ '{:,.2f}'.format(val) }}{%- endif -%}
-        {%- else -%}{{ val }}{%- endif -%}
-      {% endmacro %}
-      <li>AI: {{ get_currency('ai') }}{{ fmt_val(analytics.modes.ai) }}</li>
-      <li>Advanced: {{ get_currency('advanced') }}{{ fmt_val(analytics.modes.advanced) }}</li>
-      <li>Marketing: {{ get_currency('marketing') }}{{ fmt_val(analytics.modes.marketing) }}</li>
-      <li>Utility: {{ get_currency('utility') }}{{ fmt_val(analytics.modes.utility) }}</li>
-      <li>Platform Fee: {{ get_currency('platform_fee') }}{{ fmt_val(analytics.modes.platform_fee) }}</li>
+      <li><b>Most Common Prices (Mode):</b>
+        <ul>
+          <li>AI: {% set ai_currency = None %}{% for a in analytics.get('all_analytics', []) %}{% if a.ai_price == analytics.ai_stats.get('avg') and a.currency and not ai_currency %}{% set ai_currency = a.currency %}{% endif %}{% endfor %}{{ ai_currency if ai_currency else currency_symbol }}{{ '{:,.2f}'.format(analytics.get('ai_stats', {}).get('mode', 0) or 0) }}</li>
+          <li>Advanced: {% set adv_currency = None %}{% for a in analytics.get('all_analytics', []) %}{% if a.advanced_price == analytics.advanced_stats.get('avg') and a.currency and not adv_currency %}{% set adv_currency = a.currency %}{% endif %}{% endfor %}{{ adv_currency if adv_currency else currency_symbol }}{{ '{:,.2f}'.format(analytics.get('advanced_stats', {}).get('mode', 0) or 0) }}</li>
+          <li>Marketing: {% set mark_currency = None %}{% for a in analytics.get('all_analytics', []) %}{% if a.basic_marketing_price == analytics.marketing_stats.get('avg') and a.currency and not mark_currency %}{% set mark_currency = a.currency %}{% endif %}{% endfor %}{{ mark_currency if mark_currency else currency_symbol }}{{ '{:,.2f}'.format(analytics.get('marketing_stats', {}).get('mode', 0) or 0) }}</li>
+          <li>Utility: {% set util_currency = None %}{% for a in analytics.get('all_analytics', []) %}{% if a.basic_utility_price == analytics.utility_stats.get('avg') and a.currency and not util_currency %}{% set util_currency = a.currency %}{% endif %}{% endfor %}{{ util_currency if util_currency else currency_symbol }}{{ '{:,.2f}'.format(analytics.get('utility_stats', {}).get('mode', 0) or 0) }}</li>
+          <li>Platform Fee: {% set pf_currency = None %}{% for a in analytics.get('all_analytics', []) %}{% if a.platform_fee == analytics.platform_fee_stats.get('avg') and a.currency and not pf_currency %}{% set pf_currency = a.currency %}{% endif %}{% endfor %}{{ pf_currency if pf_currency else currency_symbol }}{{ '{:,.2f}'.format(analytics.get('platform_fee_stats', {}).get('mode', 0) or 0) }}</li>
+        </ul>
+      </li>
     </ul>
   {% endif %}
 

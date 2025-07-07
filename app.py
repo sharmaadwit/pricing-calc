@@ -302,7 +302,7 @@ def index():
 
     elif step == 'prices' and request.method == 'POST':
         # Step 2: User submitted prices
-        inputs = session.get('inputs', {})
+        inputs = session.get('inputs', {}) or {}
         def parse_price(val):
             try:
                 return float(val.replace(',', '')) if val and str(val).strip() else None
@@ -400,35 +400,40 @@ def index():
             'total_bundle_price': total_bundle_price,
             'inclusion_text': 'See table below for included volumes and overage prices.'
         }
-        results = calculate_pricing(
-            inputs['country'],
-            inputs['ai_volume'],
-            inputs['advanced_volume'],
-            inputs['basic_marketing_volume'],
-            inputs['basic_utility_volume'],
-            float(platform_fee),
-            ai_price=ai_price,
-            advanced_price=advanced_price,
-            basic_marketing_price=basic_marketing_price,
-            basic_utility_price=basic_utility_price
-        )
-        # Calculate total mandays and dev cost for dev activities
-        manday_rates = session.get('manday_rates', None)
         # Use one-time dev activity fields from form if present, else from session
         dev_fields = [
             'onboarding_price', 'ux_price', 'testing_qa_price', 'aa_setup_price',
             'num_apis_price', 'num_journeys_price', 'num_ai_workspace_commerce_price', 'num_ai_workspace_faq_price'
         ]
-        patched_form = request.form.copy()
+        patched_form = (request.form.copy() if hasattr(request.form, 'copy') else dict(request.form)) or {}
         for field in dev_fields:
             if field not in patched_form and field in inputs:
                 patched_form[field] = inputs[field]
-        for k in patched_form:
+        for k in list(patched_form.keys()):
             if k.endswith('_price') or k.endswith('_rate') or k.endswith('_volume') or k.startswith('num_'):
                 try:
                     patched_form[k] = str(patched_form[k]).replace(',', '')
                 except Exception:
                     pass
+        # --- Ensure manday_rates is always set and complete ---
+        country = inputs.get('country', 'India')
+        dev_location = inputs.get('dev_location', 'India')
+        rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+        if country == 'LATAM':
+            default_bot_ui = rates['bot_ui'][dev_location]
+            default_custom_ai = rates['custom_ai'][dev_location]
+        else:
+            default_bot_ui = rates['bot_ui']
+            default_custom_ai = rates['custom_ai']
+        manday_rates = session.get('manday_rates', {}) or {}
+        # Fill missing keys with defaults
+        manday_rates['bot_ui'] = float(manday_rates.get('bot_ui', default_bot_ui))
+        manday_rates['custom_ai'] = float(manday_rates.get('custom_ai', default_custom_ai))
+        manday_rates['default_bot_ui'] = float(default_bot_ui)
+        manday_rates['default_custom_ai'] = float(default_custom_ai)
+        # Calculate discount percentages
+        manday_rates['bot_ui_discount'] = round(100 * (default_bot_ui - manday_rates['bot_ui']) / default_bot_ui, 2) if default_bot_ui else 0
+        manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 2) if default_custom_ai else 0
         total_mandays = calculate_total_mandays(patched_form)
         total_dev_cost, dev_cost_currency, manday_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
         # Remove duplicate Committed Amount if present
@@ -636,7 +641,7 @@ def index():
         )
     # Defensive: handle GET or POST for edit actions
     elif step == 'volumes':
-        inputs = session.get('inputs', {})
+        inputs = session.get('inputs', {}) or {}
         if not inputs:
             if request.method == 'POST':
                 flash('Session expired or missing. Please start again.', 'error')
@@ -645,8 +650,8 @@ def index():
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
         return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs)
     elif step == 'prices':
-        inputs = session.get('inputs', {})
-        pricing_inputs = session.get('pricing_inputs', {})
+        inputs = session.get('inputs', {}) or {}
+        pricing_inputs = session.get('pricing_inputs', {}) or {}
         country = inputs.get('country', 'India')
         dev_location = inputs.get('dev_location', 'India')
         # Get default rates
@@ -695,7 +700,7 @@ def index():
             }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')))
     elif step == 'bundle' and request.method == 'POST':
         # User submitted messaging bundle commitment (can be 0)
-        inputs = session.get('inputs', {})
+        inputs = session.get('inputs', {}) or {}
         committed_amount = request.form.get('committed_amount', '0')
         # Remove commas if present
         try:
@@ -705,7 +710,7 @@ def index():
         inputs['committed_amount'] = committed_amount
         session['inputs'] = inputs
         # Go to prices page
-        pricing_inputs = session.get('pricing_inputs', {})
+        pricing_inputs = session.get('pricing_inputs', {}) or {}
         country = inputs.get('country', 'India')
         dev_location = inputs.get('dev_location', 'India')
         rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
@@ -807,28 +812,12 @@ def analytics():
                 # --- One Time Dev Cost and Per Manday Cost Aggregation ---
                 dev_costs = []
                 per_manday_costs = []
+                bot_ui_rates = []
+                custom_ai_rates = []
                 for a in country_analytics:
-                    # Try to reconstruct dev cost using available info
-                    # Assume default dev_location for country if not present
                     dev_location = 'India'
                     if hasattr(a, 'dev_location') and a.dev_location:
                         dev_location = a.dev_location
-                    # Build a minimal input dict for calculator
-                    inputs = {
-                        'country': a.country,
-                        'dev_location': dev_location,
-                        # All other fields default to 0/No (so only country/dev_location rates used)
-                        'num_journeys_price': 0,
-                        'num_apis_price': 0,
-                        'num_ai_workspace_commerce_price': 0,
-                        'num_ai_workspace_faq_price': 0,
-                        'aa_setup_price': 'No',
-                        'onboarding_price': 'No',
-                        'testing_qa_price': 'No',
-                        'ux_price': 'No',
-                    }
-                    # If you ever store these fields in Analytics, use them here
-                    # For now, just compute per manday cost for the country
                     rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
                     if country == 'LATAM':
                         bot_ui_rate = rates['bot_ui'][dev_location]
@@ -836,30 +825,24 @@ def analytics():
                     else:
                         bot_ui_rate = rates['bot_ui']
                         custom_ai_rate = rates['custom_ai']
-                    # Per man day cost: average of bot_ui and custom_ai
+                    bot_ui_rates.append(bot_ui_rate)
+                    custom_ai_rates.append(custom_ai_rate)
                     per_manday_cost = (bot_ui_rate + custom_ai_rate) / 2
                     per_manday_costs.append(per_manday_cost)
-                    # One time dev cost: just use 1 bot_ui + 1 custom_ai as a proxy (since we don't have activity breakdown)
                     dev_cost = bot_ui_rate + custom_ai_rate
                     dev_costs.append(dev_cost)
                 def stat_dict(vals):
                     if vals:
-                        vals_sorted = sorted(vals)
                         return {
                             'avg': sum(vals)/len(vals),
                             'min': min(vals),
                             'max': max(vals),
-                            'median': vals_sorted[len(vals_sorted)//2]
+                            'median': sorted(vals)[len(vals)//2]
                         }
                     else:
                         return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
                 stats[country] = {
-                    'platform_fee': {
-                        'avg': sum(country_fees)/len(country_fees) if country_fees else 0,
-                        'min': min(country_fees) if country_fees else 0,
-                        'max': max(country_fees) if country_fees else 0,
-                        'median': sorted(country_fees)[len(country_fees)//2] if country_fees else 0
-                    },
+                    'platform_fee': stat_dict(country_fees),
                     'msg_types': {
                         'ai': {
                             'avg': sum(country_ai)/len(country_ai) if country_ai else 0,
@@ -887,7 +870,9 @@ def analytics():
                         }
                     },
                     'one_time_dev_cost': stat_dict(dev_costs),
-                    'per_manday_cost': stat_dict(per_manday_costs)
+                    'per_manday_cost': stat_dict(per_manday_costs),
+                    'bot_ui_manday_cost': stat_dict(bot_ui_rates),
+                    'custom_ai_manday_cost': stat_dict(custom_ai_rates)
                 }
             # Per-user stats for table
             user_stats = {}
