@@ -3,7 +3,7 @@
 # Key features: dynamic inclusions, robust error handling, session management, and professional UI.
 
 from flask import Flask, render_template, request, session, redirect, url_for, flash
-from calculator import calculate_pricing, get_suggested_price, price_tiers, meta_costs_table
+from calculator import calculate_pricing, get_suggested_price, price_tiers, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost
 import os
 # from google_auth_oauthlib.flow import Flow
 # from googleapiclient.discovery import build
@@ -400,6 +400,9 @@ def index():
                 basic_marketing_price=basic_marketing_price,
                 basic_utility_price=basic_utility_price
             )
+            # Calculate total mandays and dev cost for dev activities
+            total_mandays = calculate_total_mandays(request.form)
+            total_dev_cost, dev_cost_currency, manday_breakdown = calculate_total_manday_cost(request.form)
             # Remove duplicate Committed Amount if present
             seen = set()
             unique_line_items = []
@@ -612,7 +615,11 @@ def index():
                 user_selections=user_selections,
                 inputs=inputs,
                 contradiction_warning=contradiction_warning,
-                top_users=top_users
+                top_users=top_users,
+                total_mandays=total_mandays,
+                total_dev_cost=total_dev_cost,
+                dev_cost_currency=dev_cost_currency,
+                manday_breakdown=manday_breakdown
             )
 
     # Defensive: handle GET or POST for edit actions

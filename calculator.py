@@ -145,6 +145,58 @@ meta_costs_table = {
     'Rest of the World': {'marketing': 0.0604, 'utility': 0.0077, 'ai': 0.0036},
 }
 
+# --- Activity to Manday Mapping (applies to all countries) ---
+ACTIVITY_MANDAYS = {
+    "journey": 1,
+    "api": 1,
+    "ai_agents": 10,
+    "4_journey_4_api": 5,
+    "aa_setup": 1,
+    "onboarding": 0.5,
+    "testing": 1,
+    "ux": 1,
+}
+
+# --- Country-specific Manday Rates (Bot/UI and Custom/AI) ---
+COUNTRY_MANDAY_RATES = {
+    'India': {
+        'currency': 'INR',
+        'bot_ui': 27500,
+        'custom_ai': 44000,
+    },
+    'LATAM': {
+        'currency': 'USD',
+        'bot_ui': {
+            'LATAM': 825,
+            'India': 440,
+        },
+        'custom_ai': {
+            'LATAM': 1100,
+            'India': 605,
+        },
+    },
+    'MENA': {
+        'currency': 'AED',
+        'bot_ui': 1650,
+        'custom_ai': 2750,
+    },
+    'Africa': {
+        'currency': 'USD',
+        'bot_ui': 440,
+        'custom_ai': 605,
+    },
+    'Rest of the World': {
+        'currency': 'USD',
+        'bot_ui': 440,
+        'custom_ai': 605,
+    },
+    'Europe': {
+        'currency': 'USD',  # Not in table, fallback to Rest of the World?
+        'bot_ui': 440,
+        'custom_ai': 605,
+    },
+}
+
 def get_suggested_price(country, msg_type, volume, currency=None):
     """
     Return the suggested price for a message type, country, and volume.
@@ -312,3 +364,104 @@ def calculate_pricing(
         'margin': f"{margin_percentage:.2f}%",
         'suggested_margin': f"{suggested_margin_percentage:.2f}%"
     }
+
+def calculate_total_mandays(inputs):
+    """
+    Calculate the total mandays based on user inputs and the activity-to-manday mapping.
+    Applies the '4_journey_4_api' logic for all countries: for every set of 4 journeys and 4 apis, use 5 mandays;
+    for remaining journeys and apis, use 1 manday each.
+    """
+    total_mandays = 0
+    num_journeys = int(inputs.get('num_journeys_price', 0))
+    num_apis = int(inputs.get('num_apis_price', 0))
+
+    # Calculate sets of 4 journeys and 4 apis
+    sets_of_4 = min(num_journeys // 4, num_apis // 4)
+    total_mandays += sets_of_4 * ACTIVITY_MANDAYS['4_journey_4_api']
+
+    # Subtract used journeys and apis
+    remaining_journeys = num_journeys - sets_of_4 * 4
+    remaining_apis = num_apis - sets_of_4 * 4
+
+    # Add mandays for remaining journeys and apis
+    total_mandays += remaining_journeys * ACTIVITY_MANDAYS['journey']
+    total_mandays += remaining_apis * ACTIVITY_MANDAYS['api']
+
+    # AI Agents (Commerce + FAQ)
+    total_mandays += int(inputs.get('num_ai_workspace_commerce_price', 0)) * ACTIVITY_MANDAYS['ai_agents']
+    total_mandays += int(inputs.get('num_ai_workspace_faq_price', 0)) * ACTIVITY_MANDAYS['ai_agents']
+    # AA Setup
+    if inputs.get('aa_setup_price', 'No') == 'Yes':
+        total_mandays += ACTIVITY_MANDAYS['aa_setup']
+    # Onboarding
+    if inputs.get('onboarding_price', 'No') == 'Yes':
+        total_mandays += ACTIVITY_MANDAYS['onboarding']
+    # Testing
+    if inputs.get('testing_qa_price', 'No') == 'Yes':
+        total_mandays += ACTIVITY_MANDAYS['testing']
+    # UX
+    if inputs.get('ux_price', 'No') == 'Yes':
+        total_mandays += ACTIVITY_MANDAYS['ux']
+    return total_mandays
+
+def calculate_total_mandays_breakdown(inputs):
+    """
+    Returns a dict with mandays for bot_ui and custom_ai activities, ignoring items with 0 value.
+    """
+    num_journeys = int(inputs.get('num_journeys_price', 0))
+    num_apis = int(inputs.get('num_apis_price', 0))
+    num_ai_commerce = int(inputs.get('num_ai_workspace_commerce_price', 0))
+    num_ai_faq = int(inputs.get('num_ai_workspace_faq_price', 0))
+    # 4-journey-4-api logic
+    sets_of_4 = min(num_journeys // 4, num_apis // 4)
+    remaining_journeys = num_journeys - sets_of_4 * 4
+    remaining_apis = num_apis - sets_of_4 * 4
+    bot_ui_mandays = 0
+    custom_ai_mandays = 0
+    # Bot/UI: journeys, apis, 4-journey-4-api, AA Setup, Onboarding, Testing, UX
+    if sets_of_4 > 0:
+        bot_ui_mandays += sets_of_4 * ACTIVITY_MANDAYS['4_journey_4_api']
+    if remaining_journeys > 0:
+        bot_ui_mandays += remaining_journeys * ACTIVITY_MANDAYS['journey']
+    if remaining_apis > 0:
+        bot_ui_mandays += remaining_apis * ACTIVITY_MANDAYS['api']
+    if inputs.get('aa_setup_price', 'No') == 'Yes':
+        bot_ui_mandays += ACTIVITY_MANDAYS['aa_setup']
+    if inputs.get('onboarding_price', 'No') == 'Yes':
+        bot_ui_mandays += ACTIVITY_MANDAYS['onboarding']
+    if inputs.get('testing_qa_price', 'No') == 'Yes':
+        bot_ui_mandays += ACTIVITY_MANDAYS['testing']
+    if inputs.get('ux_price', 'No') == 'Yes':
+        bot_ui_mandays += ACTIVITY_MANDAYS['ux']
+    # Custom/AI: AI workspaces
+    if num_ai_commerce > 0:
+        custom_ai_mandays += num_ai_commerce * ACTIVITY_MANDAYS['ai_agents']
+    if num_ai_faq > 0:
+        custom_ai_mandays += num_ai_faq * ACTIVITY_MANDAYS['ai_agents']
+    return {
+        'bot_ui': bot_ui_mandays,
+        'custom_ai': custom_ai_mandays,
+        'total': bot_ui_mandays + custom_ai_mandays
+    }
+
+def calculate_total_manday_cost(inputs):
+    """
+    Calculate the total cost for mandays, using the correct rate for each activity and country/dev location.
+    Ignores items with 0 value.
+    Returns (total_cost, currency, breakdown_dict)
+    """
+    country = inputs.get('country', 'India')
+    dev_location = inputs.get('dev_location', 'India')
+    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+    breakdown = calculate_total_mandays_breakdown(inputs)
+    # Get rates
+    if country == 'LATAM':
+        bot_ui_rate = rates['bot_ui'][dev_location]
+        custom_ai_rate = rates['custom_ai'][dev_location]
+        currency = rates['currency']
+    else:
+        bot_ui_rate = rates['bot_ui']
+        custom_ai_rate = rates['custom_ai']
+        currency = rates['currency']
+    total_cost = breakdown['bot_ui'] * bot_ui_rate + breakdown['custom_ai'] * custom_ai_rate
+    return total_cost, currency, breakdown
