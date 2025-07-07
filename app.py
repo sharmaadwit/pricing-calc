@@ -3,7 +3,7 @@
 # Key features: dynamic inclusions, robust error handling, session management, and professional UI.
 
 from flask import Flask, render_template, request, session, redirect, url_for, flash
-from calculator import calculate_pricing, get_suggested_price, price_tiers, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost
+from calculator import calculate_pricing, get_suggested_price, price_tiers, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES
 import os
 # from google_auth_oauthlib.flow import Flow
 # from googleapiclient.discovery import build
@@ -401,8 +401,9 @@ def index():
                 basic_utility_price=basic_utility_price
             )
             # Calculate total mandays and dev cost for dev activities
+            manday_rates = session.get('manday_rates', None)
             total_mandays = calculate_total_mandays(request.form)
-            total_dev_cost, dev_cost_currency, manday_breakdown = calculate_total_manday_cost(request.form)
+            total_dev_cost, dev_cost_currency, manday_breakdown = calculate_total_manday_cost(request.form, manday_rates)
             # Remove duplicate Committed Amount if present
             seen = set()
             unique_line_items = []
@@ -619,7 +620,8 @@ def index():
                 total_mandays=total_mandays,
                 total_dev_cost=total_dev_cost,
                 dev_cost_currency=dev_cost_currency,
-                manday_breakdown=manday_breakdown
+                manday_breakdown=manday_breakdown,
+                manday_rates=manday_rates
             )
 
     # Defensive: handle GET or POST for edit actions
@@ -635,20 +637,58 @@ def index():
     elif step == 'prices':
         inputs = session.get('inputs', {})
         pricing_inputs = session.get('pricing_inputs', {})
-        if not inputs or not pricing_inputs:
-            if request.method == 'POST':
-                flash('Session expired or missing. Please start again.', 'error')
-            currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
-            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={})
-        suggested_prices = {
-            'ai_price': pricing_inputs.get('ai_price', ''),
-            'advanced_price': pricing_inputs.get('advanced_price', ''),
-            'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
-            'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
-        }
-        platform_fee = pricing_inputs.get('platform_fee', inputs.get('platform_fee', ''))
-        currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
-        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+        country = inputs.get('country', 'India')
+        dev_location = inputs.get('dev_location', 'India')
+        # Get default rates
+        rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+        if country == 'LATAM':
+            default_bot_ui = rates['bot_ui'][dev_location]
+            default_custom_ai = rates['custom_ai'][dev_location]
+        else:
+            default_bot_ui = rates['bot_ui']
+            default_custom_ai = rates['custom_ai']
+        if request.method == 'POST':
+            # Validate user rates
+            try:
+                user_bot_ui = float(request.form.get('bot_ui_manday_rate', default_bot_ui))
+                user_custom_ai = float(request.form.get('custom_ai_manday_rate', default_custom_ai))
+            except Exception:
+                flash('Invalid manday rate input.', 'error')
+                return render_template('index.html', step='prices', suggested={
+                    'ai_price': pricing_inputs.get('ai_price', ''),
+                    'advanced_price': pricing_inputs.get('advanced_price', ''),
+                    'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
+                    'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
+                    'bot_ui_manday_rate': default_bot_ui,
+                    'custom_ai_manday_rate': default_custom_ai,
+                }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')))
+            if user_bot_ui < 0.5 * default_bot_ui or user_custom_ai < 0.5 * default_custom_ai:
+                flash('Manday rates cannot be discounted by more than 50% from the default rate.', 'error')
+                return render_template('index.html', step='prices', suggested={
+                    'ai_price': pricing_inputs.get('ai_price', ''),
+                    'advanced_price': pricing_inputs.get('advanced_price', ''),
+                    'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
+                    'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
+                    'bot_ui_manday_rate': default_bot_ui,
+                    'custom_ai_manday_rate': default_custom_ai,
+                }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')))
+            # Save user rates for use in results
+            session['manday_rates'] = {
+                'bot_ui': user_bot_ui,
+                'custom_ai': user_custom_ai,
+                'default_bot_ui': default_bot_ui,
+                'default_custom_ai': default_custom_ai,
+            }
+        else:
+            # GET: pre-fill with defaults
+            return render_template('index.html', step='prices', suggested={
+                'ai_price': pricing_inputs.get('ai_price', ''),
+                'advanced_price': pricing_inputs.get('advanced_price', ''),
+                'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
+                'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
+                'bot_ui_manday_rate': default_bot_ui,
+                'custom_ai_manday_rate': default_custom_ai,
+            }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')))
     elif step == 'bundle':
         inputs = session.get('inputs', {})
         pricing_inputs = session.get('pricing_inputs', {})

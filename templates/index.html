@@ -272,6 +272,11 @@
         {{ currency_symbol }}<input type="text" name="basic_marketing_price" class="comma-number" value="{{ suggested.basic_marketing_price }}" required><br><br>
         <label>Basic Utility/Authentication Message Rate Card:</label>
         {{ currency_symbol }}<input type="text" name="basic_utility_price" class="comma-number" value="{{ suggested.basic_utility_price }}" required><br><br>
+        <!-- Manday Rate Inputs -->
+        <label>Bot/UI Manday Rate:</label>
+        <input type="number" name="bot_ui_manday_rate" id="bot_ui_manday_rate" min="0" value="{{ suggested.bot_ui_manday_rate }}" required><br><br>
+        <label>Custom/AI Manday Rate:</label>
+        <input type="number" name="custom_ai_manday_rate" id="custom_ai_manday_rate" min="0" value="{{ suggested.custom_ai_manday_rate }}" required><br><br>
         <input type="submit" value="Calculate Results">
     </form>
     <form method="get">
@@ -434,6 +439,21 @@
                     <td class="right">{{ row.discount_percent }}</td>
                 </tr>
             {% endfor %}
+            <!-- One Time Manday Discount Rows -->
+            {% if manday_rates %}
+            <tr>
+                <td>Bot/UI Manday</td>
+                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui) }}</td>
+                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_bot_ui) }}</td>
+                <td class="right">{{ '{:.2f}%'.format(100 * (manday_rates.default_bot_ui - manday_rates.bot_ui) / manday_rates.default_bot_ui) }}</td>
+            </tr>
+            <tr>
+                <td>Custom/AI Manday</td>
+                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai) }}</td>
+                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_custom_ai) }}</td>
+                <td class="right">{{ '{:.2f}%'.format(100 * (manday_rates.default_custom_ai - manday_rates.custom_ai) / manday_rates.default_custom_ai) }}</td>
+            </tr>
+            {% endif %}
               </tbody>
         </table>
             <div style="font-size:1.08em; margin-top:12px;">

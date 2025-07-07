@@ -444,10 +444,11 @@ def calculate_total_mandays_breakdown(inputs):
         'total': bot_ui_mandays + custom_ai_mandays
     }
 
-def calculate_total_manday_cost(inputs):
+def calculate_total_manday_cost(inputs, manday_rates=None):
     """
     Calculate the total cost for mandays, using the correct rate for each activity and country/dev location.
     Ignores items with 0 value.
+    If manday_rates is provided, use user-supplied rates for bot_ui and custom_ai.
     Returns (total_cost, currency, breakdown_dict)
     """
     country = inputs.get('country', 'India')
@@ -455,13 +456,16 @@ def calculate_total_manday_cost(inputs):
     rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
     breakdown = calculate_total_mandays_breakdown(inputs)
     # Get rates
-    if country == 'LATAM':
-        bot_ui_rate = rates['bot_ui'][dev_location]
-        custom_ai_rate = rates['custom_ai'][dev_location]
-        currency = rates['currency']
+    if manday_rates:
+        bot_ui_rate = manday_rates.get('bot_ui', rates['bot_ui'][dev_location] if country == 'LATAM' else rates['bot_ui'])
+        custom_ai_rate = manday_rates.get('custom_ai', rates['custom_ai'][dev_location] if country == 'LATAM' else rates['custom_ai'])
     else:
-        bot_ui_rate = rates['bot_ui']
-        custom_ai_rate = rates['custom_ai']
-        currency = rates['currency']
+        if country == 'LATAM':
+            bot_ui_rate = rates['bot_ui'][dev_location]
+            custom_ai_rate = rates['custom_ai'][dev_location]
+        else:
+            bot_ui_rate = rates['bot_ui']
+            custom_ai_rate = rates['custom_ai']
+    currency = rates['currency'] if not manday_rates else rates['currency']
     total_cost = breakdown['bot_ui'] * bot_ui_rate + breakdown['custom_ai'] * custom_ai_rate
     return total_cost, currency, breakdown
