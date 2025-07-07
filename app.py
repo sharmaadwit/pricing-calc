@@ -905,12 +905,26 @@ def analytics():
                         }
                     else:
                         return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
+                # Add one_time_dev_cost and per_manday_cost for user/country/currency
+                rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+                if country == 'LATAM':
+                    bot_ui_rate = rates['bot_ui'].get(country, rates['bot_ui']['India'])
+                    custom_ai_rate = rates['custom_ai'].get(country, rates['custom_ai']['India'])
+                else:
+                    bot_ui_rate = rates['bot_ui']
+                    custom_ai_rate = rates['custom_ai']
+                per_manday_cost = (bot_ui_rate + custom_ai_rate) / 2
+                dev_cost = bot_ui_rate + custom_ai_rate
+                one_time_dev_cost_stats = {'avg': dev_cost, 'min': dev_cost, 'max': dev_cost, 'median': dev_cost}
+                per_manday_cost_stats = {'avg': per_manday_cost, 'min': per_manday_cost, 'max': per_manday_cost, 'median': per_manday_cost}
                 user_stats.setdefault(user, {})[(country, currency)] = {
                     'platform_fee': get_user_stats('platform_fee'),
                     'ai': get_user_stats('ai_price'),
                     'advanced': get_user_stats('advanced_price'),
                     'basic_marketing': get_user_stats('basic_marketing_price'),
-                    'basic_utility': get_user_stats('basic_utility_price')
+                    'basic_utility': get_user_stats('basic_utility_price'),
+                    'one_time_dev_cost': one_time_dev_cost_stats,
+                    'per_manday_cost': per_manday_cost_stats
                 }
             # Compute avg_price_data and avg_platform_fee_data for Chart.js graphs
             avg_price_data = {}
