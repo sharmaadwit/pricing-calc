@@ -108,7 +108,9 @@
         {% endif %}
       {% endif %}
       <h3>Country: {{ country }}</h3>
-      <div style="margin-bottom: 0.5em; font-size:1.08em; color:#444;">Currency: <b>{{ country_currency }}</b></div>
+      <div style="margin-bottom: 0.5em; font-size:1.08em; color:#444;">
+        <b>Country:</b> {{ country }} &nbsp; <b>Currency:</b> {{ country_currency }}
+      </div>
       <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
         <thead>
           <tr>
@@ -169,6 +171,27 @@
             <td>{{ fmt_num_currency(stat['per_manday_cost']['max'], country_currency) }}</td>
             <td>{{ fmt_num_currency(stat['per_manday_cost']['median'], country_currency) }}</td>
           </tr>
+          {# Add Bot/UI and Custom/AI Manday Cost rows #}
+          {% set manday_rates = namespace(bot_ui=0, custom_ai=0) %}
+          {% set _ = manday_rates.update({'bot_ui': 0, 'custom_ai': 0}) %}
+          {% if country in COUNTRY_MANDAY_RATES %}
+            {% set rates = COUNTRY_MANDAY_RATES[country] %}
+            {% if country == 'LATAM' %}
+              {% set manday_rates.bot_ui = rates['bot_ui']['LATAM'] %}
+              {% set manday_rates.custom_ai = rates['custom_ai']['LATAM'] %}
+            {% else %}
+              {% set manday_rates.bot_ui = rates['bot_ui'] %}
+              {% set manday_rates.custom_ai = rates['custom_ai'] %}
+            {% endif %}
+          {% endif %}
+          <tr>
+            <td><b>Bot/UI Manday Cost</b></td>
+            <td colspan="4">{{ country_currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui) }}</td>
+          </tr>
+          <tr>
+            <td><b>Custom/AI Manday Cost</b></td>
+            <td colspan="4">{{ country_currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai) }}</td>
+          </tr>
         </tbody>
       </table>
       <hr>
@@ -181,53 +204,65 @@
     <h2>User-wise Statistics</h2>
     {% for user, stats_by_group in analytics.user_stats.items() %}
       <h3>User: {{ user }}</h3>
-      <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
-        <thead>
-          <tr>
-            <th>Type</th>
-            {% for (country, currency), stat in stats_by_group.items() %}
-              <th colspan="4">{{ country }} ({{ currency }})</th>
-            {% endfor %}
-          </tr>
-          <tr>
-            <th></th>
-            {% for (country, currency), stat in stats_by_group.items() %}
-              <th>Avg</th><th>Min</th><th>Max</th><th>Median</th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for label, key in [('Platform Fee', 'platform_fee'), ('AI Message', 'ai'), ('Advanced Message', 'advanced'), ('Basic Marketing Message', 'basic_marketing'), ('Basic Utility', 'basic_utility')] %}
+      {% for (country, currency), stat in stats_by_group.items() %}
+        <div style="margin-bottom: 0.5em; font-size:1.08em; color:#444;">
+          <b>Country:</b> {{ country }} &nbsp; <b>Currency:</b> {{ currency }}
+        </div>
+        <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
+          <thead>
             <tr>
-              <td><b>{{ label }}</b></td>
-              {% for (country, currency), stat in stats_by_group.items() %}
+              <th>Type</th>
+              <th>Avg</th><th>Min</th><th>Max</th><th>Median</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for label, key in [('Platform Fee', 'platform_fee'), ('AI Message', 'ai'), ('Advanced Message', 'advanced'), ('Basic Marketing Message', 'basic_marketing'), ('Basic Utility', 'basic_utility')] %}
+              <tr>
+                <td><b>{{ label }}</b></td>
                 <td>{{ fmt_num_currency(stat[key]['avg'], currency) }}</td>
                 <td>{{ fmt_num_currency(stat[key]['min'], currency) }}</td>
                 <td>{{ fmt_num_currency(stat[key]['max'], currency) }}</td>
                 <td>{{ fmt_num_currency(stat[key]['median'], currency) }}</td>
               {% endfor %}
             </tr>
-          {% endfor %}
-          <tr>
-            <td><b>One Time Dev Cost</b></td>
-            {% for (country, currency), stat in stats_by_group.items() %}
+            <tr>
+              <td><b>One Time Dev Cost</b></td>
               <td>{{ fmt_num_currency(stat['one_time_dev_cost']['avg'], currency) }}</td>
               <td>{{ fmt_num_currency(stat['one_time_dev_cost']['min'], currency) }}</td>
               <td>{{ fmt_num_currency(stat['one_time_dev_cost']['max'], currency) }}</td>
               <td>{{ fmt_num_currency(stat['one_time_dev_cost']['median'], currency) }}</td>
-            {% endfor %}
-          </tr>
-          <tr>
-            <td><b>Per Manday Cost</b></td>
-            {% for (country, currency), stat in stats_by_group.items() %}
+            </tr>
+            <tr>
+              <td><b>Per Manday Cost</b></td>
               <td>{{ fmt_num_currency(stat['per_manday_cost']['avg'], currency) }}</td>
               <td>{{ fmt_num_currency(stat['per_manday_cost']['min'], currency) }}</td>
               <td>{{ fmt_num_currency(stat['per_manday_cost']['max'], currency) }}</td>
               <td>{{ fmt_num_currency(stat['per_manday_cost']['median'], currency) }}</td>
-            {% endfor %}
-          </tr>
-        </tbody>
-      </table>
+            </tr>
+            {# Add Bot/UI and Custom/AI Manday Cost rows #}
+            {% set manday_rates = namespace(bot_ui=0, custom_ai=0) %}
+            {% set _ = manday_rates.update({'bot_ui': 0, 'custom_ai': 0}) %}
+            {% if country in COUNTRY_MANDAY_RATES %}
+              {% set rates = COUNTRY_MANDAY_RATES[country] %}
+              {% if country == 'LATAM' %}
+                {% set manday_rates.bot_ui = rates['bot_ui']['LATAM'] %}
+                {% set manday_rates.custom_ai = rates['custom_ai']['LATAM'] %}
+              {% else %}
+                {% set manday_rates.bot_ui = rates['bot_ui'] %}
+                {% set manday_rates.custom_ai = rates['custom_ai'] %}
+              {% endif %}
+            {% endif %}
+            <tr>
+              <td><b>Bot/UI Manday Cost</b></td>
+              <td colspan="4">{{ currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui) }}</td>
+            </tr>
+            <tr>
+              <td><b>Custom/AI Manday Cost</b></td>
+              <td colspan="4">{{ currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      {% endfor %}
     {% endfor %}
   {% endif %}
 
