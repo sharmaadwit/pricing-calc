@@ -250,6 +250,15 @@ def index():
         ai_module = request.form.get('ai_module', 'NA')
         smart_cpaas = request.form.get('smart_cpaas', 'No')
         increased_tps = request.form.get('increased_tps', 'NA')
+        # --- One Time Dev Activity Fields ---
+        onboarding_price = request.form.get('onboarding_price', 'No')
+        ux_price = request.form.get('ux_price', 'No')
+        testing_qa_price = request.form.get('testing_qa_price', 'No')
+        aa_setup_price = request.form.get('aa_setup_price', 'No')
+        num_apis_price = request.form.get('num_apis_price', '0')
+        num_journeys_price = request.form.get('num_journeys_price', '0')
+        num_ai_workspace_commerce_price = request.form.get('num_ai_workspace_commerce_price', '0')
+        num_ai_workspace_faq_price = request.form.get('num_ai_workspace_faq_price', '0')
         platform_fee, fee_currency = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas, increased_tps)
         currency_symbol = COUNTRY_CURRENCY.get(country, '$')
         # Store in session for next step
@@ -266,7 +275,16 @@ def index():
             'human_agents': human_agents,
             'ai_module': ai_module,
             'smart_cpaas': smart_cpaas,
-            'increased_tps': increased_tps
+            'increased_tps': increased_tps,
+            # One time dev fields
+            'onboarding_price': onboarding_price,
+            'ux_price': ux_price,
+            'testing_qa_price': testing_qa_price,
+            'aa_setup_price': aa_setup_price,
+            'num_apis_price': num_apis_price,
+            'num_journeys_price': num_journeys_price,
+            'num_ai_workspace_commerce_price': num_ai_workspace_commerce_price,
+            'num_ai_workspace_faq_price': num_ai_workspace_faq_price
         }
         # Suggest prices
         def is_zero(val):
