@@ -155,6 +155,20 @@
             <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['max'], country_currency) }}</td>
             <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['median'], country_currency) }}</td>
           </tr>
+          <tr>
+            <td><b>One Time Dev Cost</b></td>
+            <td>{{ fmt_num_currency(stat['one_time_dev_cost']['avg'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['one_time_dev_cost']['min'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['one_time_dev_cost']['max'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['one_time_dev_cost']['median'], country_currency) }}</td>
+          </tr>
+          <tr>
+            <td><b>Per Manday Cost</b></td>
+            <td>{{ fmt_num_currency(stat['per_manday_cost']['avg'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['per_manday_cost']['min'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['per_manday_cost']['max'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['per_manday_cost']['median'], country_currency) }}</td>
+          </tr>
         </tbody>
       </table>
       <hr>
@@ -194,6 +208,24 @@
               {% endfor %}
             </tr>
           {% endfor %}
+          <tr>
+            <td><b>One Time Dev Cost</b></td>
+            {% for (country, currency), stat in stats_by_group.items() %}
+              <td>{{ fmt_num_currency(stat['one_time_dev_cost']['avg'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['one_time_dev_cost']['min'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['one_time_dev_cost']['max'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['one_time_dev_cost']['median'], currency) }}</td>
+            {% endfor %}
+          </tr>
+          <tr>
+            <td><b>Per Manday Cost</b></td>
+            {% for (country, currency), stat in stats_by_group.items() %}
+              <td>{{ fmt_num_currency(stat['per_manday_cost']['avg'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['per_manday_cost']['min'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['per_manday_cost']['max'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['per_manday_cost']['median'], currency) }}</td>
+            {% endfor %}
+          </tr>
         </tbody>
       </table>
     {% endfor %}

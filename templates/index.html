@@ -259,37 +259,19 @@
     {% if step == 'prices' %}
     <form method="post" id="prices-form">
         <input type="hidden" name="step" value="prices">
-        <!-- One Time Dev Prices Section (VISIBLE & EDITABLE) -->
-        <div style="background: #eae6fa; border: 1px solid #bbaadd; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
-            <h3>One Time Dev Prices</h3>
-            <label for="onboarding_price">Onboarding:</label>
-            <select name="onboarding_price" id="onboarding_price">
-                <option value="Yes" {% if inputs and inputs.onboarding_price == 'Yes' %}selected{% endif %}>Yes</option>
-                <option value="No" {% if inputs and inputs.onboarding_price == 'No' %}selected{% endif %}>No</option>
-            </select><br>
-            <label for="ux_price">UX:</label>
-            <select name="ux_price" id="ux_price">
-                <option value="Yes" {% if inputs and inputs.ux_price == 'Yes' %}selected{% endif %}>Yes</option>
-                <option value="No" {% if inputs and inputs.ux_price == 'No' %}selected{% endif %}>No</option>
-            </select><br>
-            <label for="testing_qa_price">Testing/QA:</label>
-            <select name="testing_qa_price" id="testing_qa_price">
-                <option value="Yes" {% if inputs and inputs.testing_qa_price == 'Yes' %}selected{% endif %}>Yes</option>
-                <option value="No" {% if inputs and inputs.testing_qa_price == 'No' %}selected{% endif %}>No</option>
-            </select><br>
-            <label for="aa_setup_price">AA Setup:</label>
-            <select name="aa_setup_price" id="aa_setup_price">
-                <option value="Yes" {% if inputs and inputs.aa_setup_price == 'Yes' %}selected{% endif %}>Yes</option>
-                <option value="No" {% if inputs and inputs.aa_setup_price == 'No' %}selected{% endif %}>No</option>
-            </select><br>
-            <label for="num_apis_price">No of APIs:</label>
-            <input type="number" name="num_apis_price" id="num_apis_price" min="0" value="{{ inputs.get('num_apis_price', '') }}"><br>
-            <label for="num_journeys_price">No of Journeys:</label>
-            <input type="number" name="num_journeys_price" id="num_journeys_price" min="0" value="{{ inputs.get('num_journeys_price', '') }}"><br>
-            <label for="num_ai_workspace_commerce_price">No of AI Workspace - Commerce:</label>
-            <input type="number" name="num_ai_workspace_commerce_price" id="num_ai_workspace_commerce_price" min="0" value="{{ inputs.get('num_ai_workspace_commerce_price', '') }}"><br>
-            <label for="num_ai_workspace_faq_price">No of AI Workspace - FAQ:</label>
-            <input type="number" name="num_ai_workspace_faq_price" id="num_ai_workspace_faq_price" min="0" value="{{ inputs.get('num_ai_workspace_faq_price', '') }}"><br>
+        <!-- One Time Dev Prices Review (read-only, not editable) -->
+        <div style="background: #f5f5fa; border: 1px solid #bbaadd; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+            <h3>One Time Dev Prices (Review)</h3>
+            <ul style="list-style:none; padding:0; margin:0; font-size:1.08em;">
+                <li>Onboarding: <b>{{ inputs.get('onboarding_price', 'No') }}</b></li>
+                <li>UX: <b>{{ inputs.get('ux_price', 'No') }}</b></li>
+                <li>Testing/QA: <b>{{ inputs.get('testing_qa_price', 'No') }}</b></li>
+                <li>AA Setup: <b>{{ inputs.get('aa_setup_price', 'No') }}</b></li>
+                <li>No of APIs: <b>{{ inputs.get('num_apis_price', '0') }}</b></li>
+                <li>No of Journeys: <b>{{ inputs.get('num_journeys_price', '0') }}</b></li>
+                <li>No of AI Workspace - Commerce: <b>{{ inputs.get('num_ai_workspace_commerce_price', '0') }}</b></li>
+                <li>No of AI Workspace - FAQ: <b>{{ inputs.get('num_ai_workspace_faq_price', '0') }}</b></li>
+            </ul>
         </div>
         <!-- Existing pricing fields -->
         <h2>Rate Card Pricing</h2>

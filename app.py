@@ -778,12 +778,63 @@ def analytics():
             # Per-country stats for table
             stats = {}
             countries = set(country_list)
+            from calculator import calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES
             for country in countries:
-                country_fees = [a.platform_fee for a in Analytics.query.filter_by(country=country).all() if a.platform_fee is not None]
-                country_ai = [a.ai_price for a in Analytics.query.filter_by(country=country).all() if a.ai_price is not None]
-                country_adv = [a.advanced_price for a in Analytics.query.filter_by(country=country).all() if a.advanced_price is not None]
-                country_mark = [a.basic_marketing_price for a in Analytics.query.filter_by(country=country).all() if a.basic_marketing_price is not None]
-                country_util = [a.basic_utility_price for a in Analytics.query.filter_by(country=country).all() if a.basic_utility_price is not None]
+                country_analytics = Analytics.query.filter_by(country=country).all()
+                country_fees = [a.platform_fee for a in country_analytics if a.platform_fee is not None]
+                country_ai = [a.ai_price for a in country_analytics if a.ai_price is not None]
+                country_adv = [a.advanced_price for a in country_analytics if a.advanced_price is not None]
+                country_mark = [a.basic_marketing_price for a in country_analytics if a.basic_marketing_price is not None]
+                country_util = [a.basic_utility_price for a in country_analytics if a.basic_utility_price is not None]
+                # --- One Time Dev Cost and Per Manday Cost Aggregation ---
+                dev_costs = []
+                per_manday_costs = []
+                for a in country_analytics:
+                    # Try to reconstruct dev cost using available info
+                    # Assume default dev_location for country if not present
+                    dev_location = 'India'
+                    if hasattr(a, 'dev_location') and a.dev_location:
+                        dev_location = a.dev_location
+                    # Build a minimal input dict for calculator
+                    inputs = {
+                        'country': a.country,
+                        'dev_location': dev_location,
+                        # All other fields default to 0/No (so only country/dev_location rates used)
+                        'num_journeys_price': 0,
+                        'num_apis_price': 0,
+                        'num_ai_workspace_commerce_price': 0,
+                        'num_ai_workspace_faq_price': 0,
+                        'aa_setup_price': 'No',
+                        'onboarding_price': 'No',
+                        'testing_qa_price': 'No',
+                        'ux_price': 'No',
+                    }
+                    # If you ever store these fields in Analytics, use them here
+                    # For now, just compute per manday cost for the country
+                    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+                    if country == 'LATAM':
+                        bot_ui_rate = rates['bot_ui'][dev_location]
+                        custom_ai_rate = rates['custom_ai'][dev_location]
+                    else:
+                        bot_ui_rate = rates['bot_ui']
+                        custom_ai_rate = rates['custom_ai']
+                    # Per man day cost: average of bot_ui and custom_ai
+                    per_manday_cost = (bot_ui_rate + custom_ai_rate) / 2
+                    per_manday_costs.append(per_manday_cost)
+                    # One time dev cost: just use 1 bot_ui + 1 custom_ai as a proxy (since we don't have activity breakdown)
+                    dev_cost = bot_ui_rate + custom_ai_rate
+                    dev_costs.append(dev_cost)
+                def stat_dict(vals):
+                    if vals:
+                        vals_sorted = sorted(vals)
+                        return {
+                            'avg': sum(vals)/len(vals),
+                            'min': min(vals),
+                            'max': max(vals),
+                            'median': vals_sorted[len(vals_sorted)//2]
+                        }
+                    else:
+                        return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
                 stats[country] = {
                     'platform_fee': {
                         'avg': sum(country_fees)/len(country_fees) if country_fees else 0,
@@ -816,7 +867,9 @@ def analytics():
                             'max': max(country_util) if country_util else 0,
                             'median': sorted(country_util)[len(country_util)//2] if country_util else 0
                         }
-                    }
+                    },
+                    'one_time_dev_cost': stat_dict(dev_costs),
+                    'per_manday_cost': stat_dict(per_manday_costs)
                 }
             # Per-user stats for table
             user_stats = {}
