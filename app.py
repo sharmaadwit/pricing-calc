@@ -280,7 +280,16 @@ def index():
             'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if not is_zero(basic_marketing_volume) else get_lowest_tier_price(country, 'basic_marketing'),
             'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_lowest_tier_price(country, 'basic_utility'),
         }
-        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session['inputs'], currency_symbol=currency_symbol, platform_fee=platform_fee)
+        all_volumes_zero = (
+            ai_volume == 0 and
+            advanced_volume == 0 and
+            basic_marketing_volume == 0 and
+            basic_utility_volume == 0
+        )
+        if all_volumes_zero:
+            return render_template('index.html', step='bundle', inputs=session['inputs'], currency_symbol=currency_symbol)
+        else:
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session['inputs'], currency_symbol=currency_symbol, platform_fee=platform_fee)
 
     elif step == 'prices' and request.method == 'POST':
         # Step 2: User submitted prices
@@ -295,15 +304,12 @@ def index():
         basic_marketing_price = parse_price(request.form.get('basic_marketing_price', ''))
         basic_utility_price = parse_price(request.form.get('basic_utility_price', ''))
         platform_fee = parse_price(request.form.get('platform_fee', '')) or 0.0
-
         # Get suggested prices for validation
         country = inputs.get('country', 'India')
         ai_volume = float(inputs.get('ai_volume', 0) or 0)
         advanced_volume = float(inputs.get('advanced_volume', 0) or 0)
         basic_marketing_volume = float(inputs.get('basic_marketing_volume', 0) or 0)
         basic_utility_volume = float(inputs.get('basic_utility_volume', 0) or 0)
-        all_volumes_zero = (ai_volume == 0 and advanced_volume == 0 and basic_marketing_volume == 0 and basic_utility_volume == 0)
-
         suggested_ai = get_suggested_price(country, 'ai', ai_volume)
         suggested_advanced = get_suggested_price(country, 'advanced', advanced_volume)
         suggested_marketing = get_suggested_price(country, 'basic_marketing', basic_marketing_volume)
