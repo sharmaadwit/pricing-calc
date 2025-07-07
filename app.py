@@ -47,6 +47,9 @@ class Analytics(db.Model):
     advanced_volume = db.Column(db.Float)
     basic_marketing_volume = db.Column(db.Float)
     basic_utility_volume = db.Column(db.Float)
+    # New fields for user-submitted manday rates
+    bot_ui_manday_rate = db.Column(db.Float)
+    custom_ai_manday_rate = db.Column(db.Float)
     # Add more fields as needed
 
 # os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
@@ -604,7 +607,10 @@ def index():
             ai_volume=ai_volume,
             advanced_volume=advanced_volume,
             basic_marketing_volume=basic_marketing_volume,
-            basic_utility_volume=basic_utility_volume
+            basic_utility_volume=basic_utility_volume,
+            # Store user-submitted manday rates
+            bot_ui_manday_rate=manday_rates.get('bot_ui'),
+            custom_ai_manday_rate=manday_rates.get('custom_ai')
         )
         new_analytics = Analytics(**analytics_kwargs)
         db.session.add(new_analytics)
