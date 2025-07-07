@@ -453,15 +453,8 @@
             {% if manday_rates %}
             <tr>
                 <td>Bot/UI Manday</td>
-                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui) }}</td>
-                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_bot_ui) }}</td>
-                <td class="right">{{ '{:,.2f}%'.format(100 * (manday_rates.default_bot_ui - manday_rates.bot_ui) / manday_rates.default_bot_ui) }}</td>
-            </tr>
-            <tr>
-                <td>Custom/AI Manday</td>
-                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai) }}</td>
-                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_custom_ai) }}</td>
-                <td class="right">{{ '{:,.2f}%'.format(100 * (manday_rates.default_custom_ai - manday_rates.custom_ai) / manday_rates.default_custom_ai) }}</td>
+                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_bot_ui|default(0)) }}, Discount: {{ manday_rates.bot_ui_discount|default(0) }}%)<br>
+                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_custom_ai|default(0)) }}, Discount: {{ manday_rates.custom_ai_discount|default(0) }}%)<br>
             </tr>
             {% endif %}
               </tbody>
@@ -475,10 +468,8 @@
               <b>Total One Time Dev Cost:</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(total_dev_cost) }}<br>
               <b>Total Mandays:</b> {{ '{:,.0f}'.format(total_mandays) }}<br>
               <b>Manday Breakdown:</b> Bot/UI: {{ '{:,.0f}'.format(manday_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.0f}'.format(manday_breakdown.custom_ai) }}<br>
-              <b>Bot/UI Manday Rate:</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_bot_ui) }})
-              &mdash; Discount: {{ '{:,.2f}%'.format(100 * (manday_rates.default_bot_ui - manday_rates.bot_ui) / manday_rates.default_bot_ui) }}<br>
-              <b>Custom/AI Manday Rate:</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_custom_ai) }})
-              &mdash; Discount: {{ '{:,.2f}%'.format(100 * (manday_rates.default_custom_ai - manday_rates.custom_ai) / manday_rates.default_custom_ai) }}
+              <b>Bot/UI Manday Rate:</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_bot_ui|default(0)) }}, Discount: {{ manday_rates.bot_ui_discount|default(0) }}%)<br>
+              <b>Custom/AI Manday Rate:</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_custom_ai|default(0)) }}, Discount: {{ manday_rates.custom_ai_discount|default(0) }}%)<br>
             </div>
             <div style="font-size:1.08em; margin-top:12px;">
               <b>Note:</b> This section is for internal use only and should not be shared with the customer.

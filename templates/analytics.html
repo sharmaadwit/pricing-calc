@@ -173,7 +173,6 @@
           </tr>
           {# Add Bot/UI and Custom/AI Manday Cost rows #}
           {% set manday_rates = namespace(bot_ui=0, custom_ai=0) %}
-          {% set _ = manday_rates.update({'bot_ui': 0, 'custom_ai': 0}) %}
           {% if country in COUNTRY_MANDAY_RATES %}
             {% set rates = COUNTRY_MANDAY_RATES[country] %}
             {% if country == 'LATAM' %}
@@ -241,7 +240,6 @@
             </tr>
             {# Add Bot/UI and Custom/AI Manday Cost rows #}
             {% set manday_rates = namespace(bot_ui=0, custom_ai=0) %}
-            {% set _ = manday_rates.update({'bot_ui': 0, 'custom_ai': 0}) %}
             {% if country in COUNTRY_MANDAY_RATES %}
               {% set rates = COUNTRY_MANDAY_RATES[country] %}
               {% if country == 'LATAM' %}
