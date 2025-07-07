@@ -307,9 +307,9 @@
     {% set all_volumes_zero = (inputs.get('ai_volume', 0)|float == 0 and inputs.get('advanced_volume', 0)|float == 0 and inputs.get('basic_marketing_volume', 0)|float == 0 and inputs.get('basic_utility_volume', 0)|float == 0) %}
     {% if all_volumes_zero %}
     <form method="post">
-        <h2>Enter Committed Monthly Amount</h2>
-        <label>Committed Amount ({{ currency_symbol }}):</label>
-        <input type="text" name="committed_amount" class="comma-number" required><br><br>
+        <h2>Enter Messaging Bundle Commitment</h2>
+        <label>Messaging Bundle Commitment ({{ currency_symbol }}):</label>
+        <input type="text" name="committed_amount" class="comma-number" value="{{ inputs.get('committed_amount', '') }}"><br><br>
         <input type="hidden" name="step" value="bundle">
         <input type="submit" value="Continue">
     </form>
@@ -403,9 +403,9 @@
           <div style="background: #f5f7fa; border: 1.5px solid #bbaadd; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px; display: flex; align-items: center;">
             <div style="flex:1;">
               <h3 style="margin:0; font-size: 1.1em;">Total Mandays for One Time Dev Activities</h3>
-              <div style="font-size: 1.5em; font-weight: bold; color: #5a2a8a; margin-top: 2px;">{{ total_mandays }}</div>
+              <div style="font-size: 1.5em; font-weight: bold; color: #5a2a8a; margin-top: 2px;">{{ '{:,.0f}'.format(total_mandays) }}</div>
               <div style="margin-top: 10px; font-size: 1.08em;">
-                <b>Breakdown:</b> Bot/UI: {{ manday_breakdown.bot_ui }}, Custom/AI: {{ manday_breakdown.custom_ai }}
+                <b>Breakdown:</b> Bot/UI: {{ '{:,.0f}'.format(manday_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.0f}'.format(manday_breakdown.custom_ai) }}
               </div>
             </div>
           </div>
@@ -445,13 +445,13 @@
                 <td>Bot/UI Manday</td>
                 <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui) }}</td>
                 <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_bot_ui) }}</td>
-                <td class="right">{{ '{:.2f}%'.format(100 * (manday_rates.default_bot_ui - manday_rates.bot_ui) / manday_rates.default_bot_ui) }}</td>
+                <td class="right">{{ '{:,.2f}%'.format(100 * (manday_rates.default_bot_ui - manday_rates.bot_ui) / manday_rates.default_bot_ui) }}</td>
             </tr>
             <tr>
                 <td>Custom/AI Manday</td>
                 <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai) }}</td>
                 <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_custom_ai) }}</td>
-                <td class="right">{{ '{:.2f}%'.format(100 * (manday_rates.default_custom_ai - manday_rates.custom_ai) / manday_rates.default_custom_ai) }}</td>
+                <td class="right">{{ '{:,.2f}%'.format(100 * (manday_rates.default_custom_ai - manday_rates.custom_ai) / manday_rates.default_custom_ai) }}</td>
             </tr>
             {% endif %}
               </tbody>

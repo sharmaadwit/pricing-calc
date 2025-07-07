@@ -402,8 +402,16 @@ def index():
             )
             # Calculate total mandays and dev cost for dev activities
             manday_rates = session.get('manday_rates', None)
-            total_mandays = calculate_total_mandays(request.form)
-            total_dev_cost, dev_cost_currency, manday_breakdown = calculate_total_manday_cost(request.form, manday_rates)
+            # Patch request.form to remove commas from all relevant fields before calculation
+            patched_form = request.form.copy()
+            for k in patched_form:
+                if k.endswith('_price') or k.endswith('_rate') or k.endswith('_volume') or k.startswith('num_'):
+                    try:
+                        patched_form[k] = str(patched_form[k]).replace(',', '')
+                    except Exception:
+                        pass
+            total_mandays = calculate_total_mandays(patched_form)
+            total_dev_cost, dev_cost_currency, manday_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
             # Remove duplicate Committed Amount if present
             seen = set()
             unique_line_items = []
@@ -649,19 +657,13 @@ def index():
             default_custom_ai = rates['custom_ai']
         if request.method == 'POST':
             # Validate user rates
-            try:
-                user_bot_ui = float(request.form.get('bot_ui_manday_rate', default_bot_ui))
-                user_custom_ai = float(request.form.get('custom_ai_manday_rate', default_custom_ai))
-            except Exception:
-                flash('Invalid manday rate input.', 'error')
-                return render_template('index.html', step='prices', suggested={
-                    'ai_price': pricing_inputs.get('ai_price', ''),
-                    'advanced_price': pricing_inputs.get('advanced_price', ''),
-                    'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
-                    'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
-                    'bot_ui_manday_rate': default_bot_ui,
-                    'custom_ai_manday_rate': default_custom_ai,
-                }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')))
+            def parse_number(val):
+                try:
+                    return float(str(val).replace(',', '')) if val and str(val).strip() else 0.0
+                except Exception:
+                    return 0.0
+            user_bot_ui = parse_number(request.form.get('bot_ui_manday_rate', default_bot_ui))
+            user_custom_ai = parse_number(request.form.get('custom_ai_manday_rate', default_custom_ai))
             if user_bot_ui < 0.5 * default_bot_ui or user_custom_ai < 0.5 * default_custom_ai:
                 flash('Manday rates cannot be discounted by more than 50% from the default rate.', 'error')
                 return render_template('index.html', step='prices', suggested={
@@ -689,16 +691,36 @@ def index():
                 'bot_ui_manday_rate': default_bot_ui,
                 'custom_ai_manday_rate': default_custom_ai,
             }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')))
-    elif step == 'bundle':
+    elif step == 'bundle' and request.method == 'POST':
+        # User submitted messaging bundle commitment (can be 0)
         inputs = session.get('inputs', {})
+        committed_amount = request.form.get('committed_amount', '0')
+        # Remove commas if present
+        try:
+            committed_amount = float(str(committed_amount).replace(',', ''))
+        except Exception:
+            committed_amount = 0.0
+        inputs['committed_amount'] = committed_amount
+        session['inputs'] = inputs
+        # Go to prices page
         pricing_inputs = session.get('pricing_inputs', {})
-        if not inputs or not pricing_inputs:
-            if request.method == 'POST':
-                flash('Session expired or missing. Please start again.', 'error')
-            currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
-            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={})
-        currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
-        return render_template('index.html', step='bundle', inputs=inputs, currency_symbol=currency_symbol)
+        country = inputs.get('country', 'India')
+        dev_location = inputs.get('dev_location', 'India')
+        rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+        if country == 'LATAM':
+            default_bot_ui = rates['bot_ui'][dev_location]
+            default_custom_ai = rates['custom_ai'][dev_location]
+        else:
+            default_bot_ui = rates['bot_ui']
+            default_custom_ai = rates['custom_ai']
+        return render_template('index.html', step='prices', suggested={
+            'ai_price': pricing_inputs.get('ai_price', ''),
+            'advanced_price': pricing_inputs.get('advanced_price', ''),
+            'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
+            'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
+            'bot_ui_manday_rate': default_bot_ui,
+            'custom_ai_manday_rate': default_custom_ai,
+        }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')))
     # Default: show volume input form
     country = session.get('inputs', {}).get('country', 'India')
     currency_symbol = COUNTRY_CURRENCY.get(country, '$')
