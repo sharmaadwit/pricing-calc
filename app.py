@@ -396,8 +396,15 @@ def index():
         )
         # Calculate total mandays and dev cost for dev activities
         manday_rates = session.get('manday_rates', None)
-        # Patch request.form to remove commas from all relevant fields before calculation
+        # Use one-time dev activity fields from form if present, else from session
+        dev_fields = [
+            'onboarding_price', 'ux_price', 'testing_qa_price', 'aa_setup_price',
+            'num_apis_price', 'num_journeys_price', 'num_ai_workspace_commerce_price', 'num_ai_workspace_faq_price'
+        ]
         patched_form = request.form.copy()
+        for field in dev_fields:
+            if field not in patched_form and field in inputs:
+                patched_form[field] = inputs[field]
         for k in patched_form:
             if k.endswith('_price') or k.endswith('_rate') or k.endswith('_volume') or k.startswith('num_'):
                 try:
