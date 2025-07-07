@@ -442,12 +442,23 @@ def index():
         # Remove duplicate Committed Amount if present
         seen = set()
         unique_line_items = []
-        for item in results['line_items']:
-            key = (item.get('line_item'), item.get('chosen_price'), item.get('suggested_price'))
-            if key not in seen:
-                unique_line_items.append(item)
-                seen.add(key)
-        results['line_items'] = unique_line_items
+        if results and 'line_items' in results:
+            for item in results['line_items']:
+                key = (item.get('line_item'), item.get('chosen_price'), item.get('suggested_price'))
+                if key not in seen:
+                    unique_line_items.append(item)
+                    seen.add(key)
+            results['line_items'] = unique_line_items
+        else:
+            flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
+            suggested_prices = {
+                'ai_price': suggested_ai,
+                'advanced_price': suggested_advanced,
+                'basic_marketing_price': suggested_marketing,
+                'basic_utility_price': suggested_utility,
+            }
+            currency_symbol = COUNTRY_CURRENCY.get(country, '$')
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
         results['margin'] = results.get('margin', '')
         expected_invoice_amount = results.get('revenue', 0)
         chosen_platform_fee = float(platform_fee)
