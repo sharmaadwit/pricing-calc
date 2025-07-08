@@ -178,11 +178,17 @@
           {% endif %}
           <tr>
             <td><b>Bot/UI Manday Cost</b></td>
-            <td colspan="4">{{ country_currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui) }}</td>
+            <td>{{ fmt_num_currency(stat['bot_ui_manday_cost']['avg'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['bot_ui_manday_cost']['min'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['bot_ui_manday_cost']['max'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['bot_ui_manday_cost']['median'], country_currency) }}</td>
           </tr>
           <tr>
             <td><b>Custom/AI Manday Cost</b></td>
-            <td colspan="4">{{ country_currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai) }}</td>
+            <td>{{ fmt_num_currency(stat['custom_ai_manday_cost']['avg'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['custom_ai_manday_cost']['min'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['custom_ai_manday_cost']['max'], country_currency) }}</td>
+            <td>{{ fmt_num_currency(stat['custom_ai_manday_cost']['median'], country_currency) }}</td>
           </tr>
         </tbody>
       </table>
@@ -238,11 +244,17 @@
             {% endif %}
             <tr>
               <td><b>Bot/UI Manday Cost</b></td>
-              <td colspan="4">{{ currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui) }}</td>
+              <td>{{ fmt_num_currency(stat['bot_ui_manday_cost']['avg'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['bot_ui_manday_cost']['min'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['bot_ui_manday_cost']['max'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['bot_ui_manday_cost']['median'], currency) }}</td>
             </tr>
             <tr>
               <td><b>Custom/AI Manday Cost</b></td>
-              <td colspan="4">{{ currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai) }}</td>
+              <td>{{ fmt_num_currency(stat['custom_ai_manday_cost']['avg'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['custom_ai_manday_cost']['min'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['custom_ai_manday_cost']['max'], currency) }}</td>
+              <td>{{ fmt_num_currency(stat['custom_ai_manday_cost']['median'], currency) }}</td>
             </tr>
           </tbody>
         </table>
