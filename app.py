@@ -883,25 +883,20 @@ def analytics():
                 # --- One Time Dev Cost and Per Manday Cost Aggregation ---
                 dev_costs = []
                 per_manday_costs = []
-                bot_ui_rates = []
-                custom_ai_rates = []
+                bot_ui_rates = [a.bot_ui_manday_rate for a in country_analytics if a.bot_ui_manday_rate is not None]
+                custom_ai_rates = [a.custom_ai_manday_rate for a in country_analytics if a.custom_ai_manday_rate is not None]
                 for a in country_analytics:
                     dev_location = 'India'
                     if hasattr(a, 'dev_location') and a.dev_location:
                         dev_location = a.dev_location
-                    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
-                    if country == 'LATAM':
-                        bot_ui_rate = rates['bot_ui'][dev_location]
-                        custom_ai_rate = rates['custom_ai'][dev_location]
-                    else:
-                        bot_ui_rate = rates['bot_ui']
-                        custom_ai_rate = rates['custom_ai']
-                    bot_ui_rates.append(bot_ui_rate)
-                    custom_ai_rates.append(custom_ai_rate)
-                    per_manday_cost = (bot_ui_rate + custom_ai_rate) / 2
-                    per_manday_costs.append(per_manday_cost)
-                    dev_cost = bot_ui_rate + custom_ai_rate
-                    dev_costs.append(dev_cost)
+                    # Use actual user-submitted rates if available, else skip
+                    bot_ui_rate = a.bot_ui_manday_rate if a.bot_ui_manday_rate is not None else None
+                    custom_ai_rate = a.custom_ai_manday_rate if a.custom_ai_manday_rate is not None else None
+                    if bot_ui_rate is not None and custom_ai_rate is not None:
+                        per_manday_cost = (bot_ui_rate + custom_ai_rate) / 2
+                        dev_cost = bot_ui_rate + custom_ai_rate
+                        per_manday_costs.append(per_manday_cost)
+                        dev_costs.append(dev_cost)
                 def stat_dict(vals):
                     if vals:
                         return {
