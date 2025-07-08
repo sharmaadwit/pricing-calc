@@ -164,13 +164,6 @@
             <td>{{ fmt_num_currency(stat['one_time_dev_cost']['max'], country_currency) }}</td>
             <td>{{ fmt_num_currency(stat['one_time_dev_cost']['median'], country_currency) }}</td>
           </tr>
-          <tr>
-            <td><b>Per Manday Cost</b></td>
-            <td>{{ fmt_num_currency(stat['per_manday_cost']['avg'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['per_manday_cost']['min'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['per_manday_cost']['max'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['per_manday_cost']['median'], country_currency) }}</td>
-          </tr>
           {# Add Bot/UI and Custom/AI Manday Cost rows #}
           {% set manday_rates = namespace(bot_ui=0, custom_ai=0) %}
           {% if country in COUNTRY_MANDAY_RATES %}
@@ -230,13 +223,6 @@
               <td>{{ fmt_num_currency(stat['one_time_dev_cost']['min'], currency) }}</td>
               <td>{{ fmt_num_currency(stat['one_time_dev_cost']['max'], currency) }}</td>
               <td>{{ fmt_num_currency(stat['one_time_dev_cost']['median'], currency) }}</td>
-            </tr>
-            <tr>
-              <td><b>Per Manday Cost</b></td>
-              <td>{{ fmt_num_currency(stat['per_manday_cost']['avg'], currency) }}</td>
-              <td>{{ fmt_num_currency(stat['per_manday_cost']['min'], currency) }}</td>
-              <td>{{ fmt_num_currency(stat['per_manday_cost']['max'], currency) }}</td>
-              <td>{{ fmt_num_currency(stat['per_manday_cost']['median'], currency) }}</td>
             </tr>
             {# Add Bot/UI and Custom/AI Manday Cost rows #}
             {% set manday_rates = namespace(bot_ui=0, custom_ai=0) %}
