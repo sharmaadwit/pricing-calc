@@ -298,7 +298,7 @@ def index():
                 'num_ai_workspace_faq_price': num_ai_workspace_faq_price
             }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-            return render_template('index.html', step='bundle', currency_symbol=currency_symbol, inputs=session['inputs'], platform_fee=platform_fee)
+            return render_template('index.html', step='bundle', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), platform_fee=platform_fee)
         # --- END NEW ---
         # Suggest prices
         def is_zero(val):
@@ -312,7 +312,7 @@ def index():
             'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if not is_zero(basic_marketing_volume) else get_lowest_tier_price(country, 'basic_marketing'),
             'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_lowest_tier_price(country, 'basic_utility'),
         }
-        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session['inputs'], currency_symbol=currency_symbol, platform_fee=platform_fee)
+        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee)
 
     elif step == 'prices' and request.method == 'POST':
         # Step 2: User submitted prices
