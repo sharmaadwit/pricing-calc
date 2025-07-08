@@ -316,7 +316,10 @@ def index():
 
     elif step == 'prices' and request.method == 'POST':
         # Step 2: User submitted prices
-        inputs = session.get('inputs', {}) or {}
+        inputs = session.get('inputs', {})
+        if not inputs:
+            flash('Session expired or missing. Please start again.', 'error')
+            return redirect(url_for('index'))
         def parse_price(val):
             try:
                 return float(val.replace(',', '')) if val and str(val).strip() else None
@@ -722,7 +725,7 @@ def index():
         )
     # Defensive: handle GET or POST for edit actions
     elif step == 'volumes':
-        inputs = session.get('inputs', {}) or {}
+        inputs = session.get('inputs', {})
         if not inputs:
             if request.method == 'POST':
                 flash('Session expired or missing. Please start again.', 'error')
@@ -731,7 +734,7 @@ def index():
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
         return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs)
     elif step == 'prices':
-        inputs = session.get('inputs', {}) or {}
+        inputs = session.get('inputs', {})
         pricing_inputs = session.get('pricing_inputs', {}) or {}
         country = inputs.get('country', 'India')
         dev_location = inputs.get('dev_location', 'India')
