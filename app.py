@@ -945,6 +945,9 @@ def analytics():
                     'bot_ui_manday_cost': stat_dict(bot_ui_rates),
                     'custom_ai_manday_cost': stat_dict(custom_ai_rates)
                 }
+                # Defensive: always include manday cost stats, even if empty
+                stats[country]['bot_ui_manday_cost'] = stat_dict(bot_ui_rates) if 'bot_ui_manday_cost' not in stats[country] else stats[country]['bot_ui_manday_cost']
+                stats[country]['custom_ai_manday_cost'] = stat_dict(custom_ai_rates) if 'custom_ai_manday_cost' not in stats[country] else stats[country]['custom_ai_manday_cost']
             # Per-user stats for table
             user_stats = {}
             user_country_currency_list = db.session.query(Analytics.user_name, Analytics.country, Analytics.currency).distinct().all()
