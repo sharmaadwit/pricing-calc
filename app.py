@@ -886,8 +886,8 @@ def analytics():
                 country_util = [a.basic_utility_price for a in country_analytics if a.basic_utility_price is not None]
                 # --- One Time Dev Cost Aggregation ---
                 dev_costs = []
-                bot_ui_rates = [a.bot_ui_manday_rate for a in country_analytics if a.bot_ui_manday_rate not in (None, 0)]
-                custom_ai_rates = [a.custom_ai_manday_rate for a in country_analytics if a.custom_ai_manday_rate not in (None, 0)]
+                bot_ui_rates = [a.bot_ui_manday_rate for a in country_analytics if a.bot_ui_manday_rate not in (None, 0, '0', '', 'None')]
+                custom_ai_rates = [a.custom_ai_manday_rate for a in country_analytics if a.custom_ai_manday_rate not in (None, 0, '0', '', 'None')]
                 bot_ui_mandays = [getattr(a, 'bot_ui_mandays', None) for a in country_analytics]
                 custom_ai_mandays = [getattr(a, 'custom_ai_mandays', None) for a in country_analytics]
                 # Calculate one time dev cost for each record
