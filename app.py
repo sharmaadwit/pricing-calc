@@ -319,6 +319,13 @@ def index():
         basic_marketing_price = parse_price(request.form.get('basic_marketing_price', ''))
         basic_utility_price = parse_price(request.form.get('basic_utility_price', ''))
         platform_fee = parse_price(request.form.get('platform_fee', '')) or 0.0
+        # Parse manday rates from form and save to session
+        bot_ui_manday_rate = parse_price(request.form.get('bot_ui_manday_rate', ''))
+        custom_ai_manday_rate = parse_price(request.form.get('custom_ai_manday_rate', ''))
+        session['manday_rates'] = {
+            'bot_ui': bot_ui_manday_rate,
+            'custom_ai': custom_ai_manday_rate
+        }
         # Get suggested prices for validation
         country = inputs.get('country', 'India')
         ai_volume = float(inputs.get('ai_volume', 0) or 0)
