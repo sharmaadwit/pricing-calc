@@ -247,6 +247,9 @@ def index():
         advanced_volume = parse_volume(request.form.get('advanced_volume', ''))
         basic_marketing_volume = parse_volume(request.form.get('basic_marketing_volume', ''))
         basic_utility_volume = parse_volume(request.form.get('basic_utility_volume', ''))
+        
+        # Debug: Log parsed volumes
+        print(f"DEBUG: Parsed volumes - ai: {ai_volume}, advanced: {advanced_volume}, marketing: {basic_marketing_volume}, utility: {basic_utility_volume}")
         bfsi_tier = request.form.get('bfsi_tier', 'NA')
         personalize_load = request.form.get('personalize_load', 'NA')
         human_agents = request.form.get('human_agents', 'NA')
@@ -439,6 +442,50 @@ def index():
         manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 2) if default_custom_ai else 0
         total_mandays = calculate_total_mandays(patched_form)
         total_dev_cost, dev_cost_currency, manday_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
+        
+        # Debug: Log inputs being used for calculation
+        print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}")
+        
+        # Calculate pricing results
+        try:
+            results = calculate_pricing(
+                country=inputs.get('country', 'India'),
+                ai_volume=float(inputs.get('ai_volume', 0) or 0),
+                advanced_volume=float(inputs.get('advanced_volume', 0) or 0),
+                basic_marketing_volume=float(inputs.get('basic_marketing_volume', 0) or 0),
+                basic_utility_volume=float(inputs.get('basic_utility_volume', 0) or 0),
+                platform_fee=float(platform_fee),
+                ai_price=ai_price,
+                advanced_price=advanced_price,
+                basic_marketing_price=basic_marketing_price,
+                basic_utility_price=basic_utility_price
+            )
+            print(f"DEBUG: Calculation successful, results: {results}")
+        except Exception as e:
+            print(f"DEBUG: Calculation failed with error: {e}")
+            flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
+            suggested_prices = {
+                'ai_price': suggested_ai,
+                'advanced_price': suggested_advanced,
+                'basic_marketing_price': suggested_marketing,
+                'basic_utility_price': suggested_utility,
+            }
+            currency_symbol = COUNTRY_CURRENCY.get(country, '$')
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+        
+        # Validate results
+        if not results or 'line_items' not in results:
+            print(f"DEBUG: Invalid results: {results}")
+            flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
+            suggested_prices = {
+                'ai_price': suggested_ai,
+                'advanced_price': suggested_advanced,
+                'basic_marketing_price': suggested_marketing,
+                'basic_utility_price': suggested_utility,
+            }
+            currency_symbol = COUNTRY_CURRENCY.get(country, '$')
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+        
         # Remove duplicate Committed Amount if present
         seen = set()
         unique_line_items = []
