@@ -3,7 +3,7 @@
 # Key features: dynamic inclusions, robust error handling, session management, and professional UI.
 
 from flask import Flask, render_template, request, session, redirect, url_for, flash
-from calculator import calculate_pricing, get_suggested_price, price_tiers, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES
+from calculator import calculate_pricing, get_suggested_price, price_tiers, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES, calculate_total_mandays_breakdown
 import os
 # from google_auth_oauthlib.flow import Flow
 # from googleapiclient.discovery import build
@@ -50,6 +50,9 @@ class Analytics(db.Model):
     # New fields for user-submitted manday rates
     bot_ui_manday_rate = db.Column(db.Float)
     custom_ai_manday_rate = db.Column(db.Float)
+    # New fields for manday counts
+    bot_ui_mandays = db.Column(db.Float)
+    custom_ai_mandays = db.Column(db.Float)
     # Add more fields as needed
 
 # os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
@@ -675,7 +678,9 @@ def index():
             basic_utility_volume=basic_utility_volume,
             # Store user-submitted manday rates
             bot_ui_manday_rate=manday_rates.get('bot_ui'),
-            custom_ai_manday_rate=manday_rates.get('custom_ai')
+            custom_ai_manday_rate=manday_rates.get('custom_ai'),
+            bot_ui_mandays=manday_breakdown.get('bot_ui', 0),
+            custom_ai_mandays=manday_breakdown.get('custom_ai', 0),
         )
         new_analytics = Analytics(**analytics_kwargs)
         db.session.add(new_analytics)
@@ -872,7 +877,6 @@ def analytics():
             # Per-country stats for table
             stats = {}
             countries = set(country_list)
-            from calculator import calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES
             for country in countries:
                 country_analytics = Analytics.query.filter_by(country=country).all()
                 country_fees = [a.platform_fee for a in country_analytics if a.platform_fee is not None]
@@ -880,23 +884,20 @@ def analytics():
                 country_adv = [a.advanced_price for a in country_analytics if a.advanced_price is not None]
                 country_mark = [a.basic_marketing_price for a in country_analytics if a.basic_marketing_price is not None]
                 country_util = [a.basic_utility_price for a in country_analytics if a.basic_utility_price is not None]
-                # --- One Time Dev Cost and Per Manday Cost Aggregation ---
+                # --- One Time Dev Cost Aggregation ---
                 dev_costs = []
-                per_manday_costs = []
                 bot_ui_rates = [a.bot_ui_manday_rate for a in country_analytics if a.bot_ui_manday_rate is not None]
                 custom_ai_rates = [a.custom_ai_manday_rate for a in country_analytics if a.custom_ai_manday_rate is not None]
+                bot_ui_mandays = [getattr(a, 'bot_ui_mandays', None) for a in country_analytics]
+                custom_ai_mandays = [getattr(a, 'custom_ai_mandays', None) for a in country_analytics]
+                # Calculate one time dev cost for each record
                 for a in country_analytics:
-                    dev_location = 'India'
-                    if hasattr(a, 'dev_location') and a.dev_location:
-                        dev_location = a.dev_location
-                    # Use actual user-submitted rates if available, else skip
-                    bot_ui_rate = a.bot_ui_manday_rate if a.bot_ui_manday_rate is not None else None
-                    custom_ai_rate = a.custom_ai_manday_rate if a.custom_ai_manday_rate is not None else None
-                    if bot_ui_rate is not None and custom_ai_rate is not None:
-                        per_manday_cost = (bot_ui_rate + custom_ai_rate) / 2
-                        dev_cost = bot_ui_rate + custom_ai_rate
-                        per_manday_costs.append(per_manday_cost)
-                        dev_costs.append(dev_cost)
+                    bot_ui_rate = a.bot_ui_manday_rate if a.bot_ui_manday_rate is not None else 0
+                    custom_ai_rate = a.custom_ai_manday_rate if a.custom_ai_manday_rate is not None else 0
+                    bot_days = getattr(a, 'bot_ui_mandays', 0) or 0
+                    ai_days = getattr(a, 'custom_ai_mandays', 0) or 0
+                    dev_cost = (bot_ui_rate * bot_days) + (custom_ai_rate * ai_days)
+                    dev_costs.append(dev_cost)
                 def stat_dict(vals):
                     if vals:
                         return {
@@ -936,7 +937,6 @@ def analytics():
                         }
                     },
                     'one_time_dev_cost': stat_dict(dev_costs),
-                    'per_manday_cost': stat_dict(per_manday_costs),
                     'bot_ui_manday_cost': stat_dict(bot_ui_rates),
                     'custom_ai_manday_cost': stat_dict(custom_ai_rates)
                 }
