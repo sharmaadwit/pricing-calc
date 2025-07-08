@@ -899,15 +899,20 @@ def analytics():
                     dev_cost = (bot_ui_rate * bot_days) + (custom_ai_rate * ai_days)
                     dev_costs.append(dev_cost)
                 def stat_dict(vals):
-                    if vals:
-                        return {
-                            'avg': sum(vals)/len(vals),
-                            'min': min(vals),
-                            'max': max(vals),
-                            'median': sorted(vals)[len(vals)//2]
-                        }
-                    else:
+                    # Exclude None, 0, '0', '', 'None' (as string)
+                    filtered = [float(v) for v in vals if v not in (None, 0, '0', '', 'None')]
+                    if not filtered:
                         return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
+                    avg = sum(filtered) / len(filtered)
+                    min_v = min(filtered)
+                    max_v = max(filtered)
+                    sorted_vals = sorted(filtered)
+                    n = len(sorted_vals)
+                    if n % 2 == 1:
+                        median = sorted_vals[n // 2]
+                    else:
+                        median = (sorted_vals[n // 2 - 1] + sorted_vals[n // 2]) / 2
+                    return {'avg': avg, 'min': min_v, 'max': max_v, 'median': median}
                 stats[country] = {
                     'platform_fee': stat_dict(country_fees),
                     'msg_types': {
