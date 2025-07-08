@@ -453,8 +453,15 @@
             {% if manday_rates %}
             <tr>
                 <td>Bot/UI Manday</td>
-                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_bot_ui|default(0)) }}, Discount: {{ manday_rates.bot_ui_discount|default(0) }}%)<br>
-                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_custom_ai|default(0)) }}, Discount: {{ manday_rates.custom_ai_discount|default(0) }}%)<br>
+                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_bot_ui|default(0)) }}, Discount: {{ manday_rates.bot_ui_discount|default(0) }}%)</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Custom/AI Manday</td>
+                <td class="right">{{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_custom_ai|default(0)) }}, Discount: {{ manday_rates.custom_ai_discount|default(0) }}%)</td>
+                <td></td>
+                <td></td>
             </tr>
             {% endif %}
               </tbody>
