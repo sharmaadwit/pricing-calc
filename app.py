@@ -226,6 +226,7 @@ def index():
     Main route for the pricing calculator. Handles all user steps (volumes, prices, bundle, results).
     Manages session data, input validation, pricing logic, and inclusions logic.
     """
+    print("DEBUG: session at start of request:", dict(session))
     # Debug: Log form data, session data, and current step
     print("\n--- DEBUG ---")
     print("Form data:", dict(request.form))
@@ -270,36 +271,35 @@ def index():
         num_ai_workspace_faq_price = request.form.get('num_ai_workspace_faq_price', '0')
         platform_fee, fee_currency = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas, increased_tps)
         currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-        # --- NEW: Check if all volumes are zero, go to bundle step ---
+        # Always update session['inputs'] with latest form data
+        session['inputs'] = {
+            'user_name': user_name,
+            'country': country,
+            'ai_volume': ai_volume,
+            'advanced_volume': advanced_volume,
+            'basic_marketing_volume': basic_marketing_volume,
+            'basic_utility_volume': basic_utility_volume,
+            'platform_fee': platform_fee,
+            'bfsi_tier': bfsi_tier,
+            'personalize_load': personalize_load,
+            'human_agents': human_agents,
+            'ai_module': ai_module,
+            'smart_cpaas': smart_cpaas,
+            'increased_tps': increased_tps,
+            # One time dev fields
+            'onboarding_price': onboarding_price,
+            'ux_price': ux_price,
+            'testing_qa_price': testing_qa_price,
+            'aa_setup_price': aa_setup_price,
+            'num_apis_price': num_apis_price,
+            'num_journeys_price': num_journeys_price,
+            'num_ai_workspace_commerce_price': num_ai_workspace_commerce_price,
+            'num_ai_workspace_faq_price': num_ai_workspace_faq_price
+        }
+        print("DEBUG: session['inputs'] just set to:", session['inputs'])
         if all(float(v) == 0.0 for v in [ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume]):
-            # Store in session for next step
-            session['inputs'] = {
-                'user_name': user_name,
-                'country': country,
-                'ai_volume': ai_volume,
-                'advanced_volume': advanced_volume,
-                'basic_marketing_volume': basic_marketing_volume,
-                'basic_utility_volume': basic_utility_volume,
-                'platform_fee': platform_fee,
-                'bfsi_tier': bfsi_tier,
-                'personalize_load': personalize_load,
-                'human_agents': human_agents,
-                'ai_module': ai_module,
-                'smart_cpaas': smart_cpaas,
-                'increased_tps': increased_tps,
-                # One time dev fields
-                'onboarding_price': onboarding_price,
-                'ux_price': ux_price,
-                'testing_qa_price': testing_qa_price,
-                'aa_setup_price': aa_setup_price,
-                'num_apis_price': num_apis_price,
-                'num_journeys_price': num_journeys_price,
-                'num_ai_workspace_commerce_price': num_ai_workspace_commerce_price,
-                'num_ai_workspace_faq_price': num_ai_workspace_faq_price
-            }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             return render_template('index.html', step='bundle', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), platform_fee=platform_fee)
-        # --- END NEW ---
         # Suggest prices
         def is_zero(val):
             try:
@@ -1187,6 +1187,16 @@ def reset_analytics():
 def readme():
     """Render the native HTML documentation page."""
     return render_template('readme.html')
+
+# --- Minimal session test routes ---
+@app.route('/set-session')
+def set_session():
+    session['test'] = 'hello'
+    return 'Session set!'
+
+@app.route('/get-session')
+def get_session():
+    return f"Session value: {session.get('test', 'not set')}"
 
 if __name__ == '__main__':
     import os
