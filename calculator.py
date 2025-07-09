@@ -447,25 +447,54 @@ def calculate_total_mandays_breakdown(inputs):
 def calculate_total_manday_cost(inputs, manday_rates=None):
     """
     Calculate the total cost for mandays, using the correct rate for each activity and country/dev location.
-    Ignores items with 0 value.
-    If manday_rates is provided, use user-supplied rates for bot_ui and custom_ai.
+    If user enters 0 for bot_ui rate but selects any of Onboarding, UX, Testing/QA, AA Setup as Yes, use default rate for those activities.
     Returns (total_cost, currency, breakdown_dict)
     """
     country = inputs.get('country', 'India')
     dev_location = inputs.get('dev_location', 'India')
     rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
     breakdown = calculate_total_mandays_breakdown(inputs)
-    # Get rates
+    # Get user rates or default
     if manday_rates:
-        bot_ui_rate = manday_rates.get('bot_ui', rates['bot_ui'][dev_location] if country == 'LATAM' else rates['bot_ui'])
-        custom_ai_rate = manday_rates.get('custom_ai', rates['custom_ai'][dev_location] if country == 'LATAM' else rates['custom_ai'])
+        user_bot_ui_rate = manday_rates.get('bot_ui', rates['bot_ui'][dev_location] if country == 'LATAM' else rates['bot_ui'])
+        user_custom_ai_rate = manday_rates.get('custom_ai', rates['custom_ai'][dev_location] if country == 'LATAM' else rates['custom_ai'])
     else:
         if country == 'LATAM':
-            bot_ui_rate = rates['bot_ui'][dev_location]
-            custom_ai_rate = rates['custom_ai'][dev_location]
+            user_bot_ui_rate = rates['bot_ui'][dev_location]
+            user_custom_ai_rate = rates['custom_ai'][dev_location]
         else:
-            bot_ui_rate = rates['bot_ui']
-            custom_ai_rate = rates['custom_ai']
-    currency = rates['currency'] if not manday_rates else rates['currency']
-    total_cost = breakdown['bot_ui'] * bot_ui_rate + breakdown['custom_ai'] * custom_ai_rate
+            user_bot_ui_rate = rates['bot_ui']
+            user_custom_ai_rate = rates['custom_ai']
+    default_bot_ui_rate = rates['bot_ui'][dev_location] if country == 'LATAM' else rates['bot_ui']
+    default_custom_ai_rate = rates['custom_ai'][dev_location] if country == 'LATAM' else rates['custom_ai']
+    currency = rates['currency']
+
+    # Activity mandays mapping (should match ACTIVITY_MANDAYS)
+    activity_mandays = {
+        'onboarding': ACTIVITY_MANDAYS['onboarding'],
+        'ux': ACTIVITY_MANDAYS['ux'],
+        'testing': ACTIVITY_MANDAYS['testing'],
+        'aa_setup': ACTIVITY_MANDAYS['aa_setup'],
+    }
+    # Calculate cost for each activity if user rate is 0
+    bot_ui_cost = 0
+    # Track how many mandays are from activities vs. other sources
+    activity_manday_total = 0
+    if float(user_bot_ui_rate) == 0:
+        for activity, field in [('onboarding', 'onboarding_price'), ('ux', 'ux_price'), ('testing', 'testing_qa_price'), ('aa_setup', 'aa_setup_price')]:
+            if inputs.get(field, 'No') == 'Yes':
+                bot_ui_cost += default_bot_ui_rate * activity_mandays[activity]
+                activity_manday_total += activity_mandays[activity]
+        # For any remaining bot_ui mandays (e.g., journeys/APIs), use default rate
+        other_bot_ui_mandays = breakdown['bot_ui'] - activity_manday_total
+        if other_bot_ui_mandays > 0:
+            bot_ui_cost += other_bot_ui_mandays * default_bot_ui_rate
+    else:
+        bot_ui_cost = breakdown['bot_ui'] * float(user_bot_ui_rate)
+
+    # Custom/AI cost: use user rate if not 0, else default
+    custom_ai_rate = float(user_custom_ai_rate) if float(user_custom_ai_rate) != 0 else default_custom_ai_rate
+    custom_ai_cost = breakdown['custom_ai'] * custom_ai_rate
+
+    total_cost = bot_ui_cost + custom_ai_cost
     return total_cost, currency, breakdown
