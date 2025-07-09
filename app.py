@@ -709,6 +709,7 @@ def index():
             top_users = Counter(user_names).most_common(5)
             # When setting results['suggested_revenue'], use rate_card_platform_fee instead of platform_fee
             results['suggested_revenue'] = (results.get('suggested_revenue', 0) - platform_fee) + rate_card_platform_fee
+            print("RENDERING RESULTS PAGE")
             return render_template(
                 'index.html',
                 step='results',
