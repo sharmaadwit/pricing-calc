@@ -826,7 +826,7 @@ def index():
     # Default: show volume input form
     country = session.get('inputs', {}).get('country', 'India')
     currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-    return render_template('index.html', step='volumes', currency_symbol=currency_symbol)
+    return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=session.get('inputs', {}))
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
