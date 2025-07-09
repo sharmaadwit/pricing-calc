@@ -73,6 +73,11 @@
       {% endif %}
     {% endwith %}
     <h1>Pricing Calculator</h1>
+    {% if calculation_id %}
+      <div style="margin-bottom: 1em; font-size: 1.1em; color: #1976d2;">
+        <b>Calculation ID:</b> {{ calculation_id }}
+      </div>
+    {% endif %}
 
     <!-- How to Use and User Flow Diagram -->
     {% if step == 'volumes' %}

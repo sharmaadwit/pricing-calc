@@ -82,12 +82,23 @@
     <li><b>Average Margin (Rate Card):</b> {{ analytics.margin_rate_card|sum / (analytics.margin_rate_card|length or 1) }}%
       <br><span style="font-size:0.97em; color:#444;">This is the average margin if all prices were set at the default rate card (no discounts), including platform fee and all message types.</span>
     </li>
-    <li><b>Top 5 Users (by Calculations):</b>
-      <ul>
-        {% for user, count in analytics.top_users %}
-          <li>{{ user }}: {{ count }}</li>
-        {% endfor %}
-      </ul>
+    <li><b>All Users (by Calculations):</b>
+      <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Number of Calculations</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user, count in analytics.top_users %}
+            <tr>
+              <td>{{ user }}</td>
+              <td style="text-align: right;">{{ count }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </li>
   </ul>
 

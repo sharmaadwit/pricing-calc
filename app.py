@@ -15,6 +15,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
 from sqlalchemy import func
+import uuid
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
@@ -29,6 +30,7 @@ migrate = Migrate(app, db)
 # Example Analytics model (expand as needed)
 class Analytics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    calculation_id = db.Column(db.String(64), unique=False, nullable=True)  # Transaction ID for each calculation
     timestamp = db.Column(db.DateTime, nullable=False)
     user_name = db.Column(db.String(128))
     country = db.Column(db.String(64))
@@ -233,12 +235,18 @@ def index():
     print("Session data:", dict(session))
     step = request.form.get('step', 'volumes')
     print("Current step:", step)
+    calculation_id = session.get('calculation_id')
+    print(f"Calculation ID: {calculation_id}")
     print("--- END DEBUG ---\n")
     results = None
     currency_symbol = None
 
     # Defensive: ensure session data exists for edit actions
     if step == 'volumes' and request.method == 'POST':
+        # Generate a new calculation_id for each new calculation
+        calculation_id = str(uuid.uuid4())
+        session['calculation_id'] = calculation_id
+        print(f"DEBUG: New calculation started. Calculation ID: {calculation_id}")
         user_name = request.form.get('user_name', '')
         # Step 1: User submitted volumes and platform fee options
         country = request.form['country']
@@ -299,7 +307,7 @@ def index():
         print("DEBUG: session['inputs'] just set to:", session['inputs'])
         if all(float(v) == 0.0 for v in [ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume]):
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-            return render_template('index.html', step='bundle', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), platform_fee=platform_fee)
+            return render_template('index.html', step='bundle', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), platform_fee=platform_fee, calculation_id=calculation_id)
         # Suggest prices
         def is_zero(val):
             try:
@@ -312,7 +320,7 @@ def index():
             'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if not is_zero(basic_marketing_volume) else get_lowest_tier_price(country, 'basic_marketing'),
             'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_lowest_tier_price(country, 'basic_utility'),
         }
-        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee)
+        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
 
     elif step == 'prices' and request.method == 'POST':
         print('HANDLER: Entered prices POST step')
@@ -384,7 +392,7 @@ def index():
             }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             # Re-render the pricing page with user input and error
-            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
         print('HANDLER: No discount errors, continuing to results calculation')
 
         session['pricing_inputs'] = {
@@ -493,7 +501,7 @@ def index():
                 'basic_utility_price': suggested_utility,
             }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
         
         # Remove duplicate Committed Amount if present
         seen = set()
@@ -516,7 +524,7 @@ def index():
                 'basic_utility_price': suggested_utility,
             }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
         print("PASSED results validation, about to render results page")
         try:
             # --- Ensure manday_rates is always set and complete ---
@@ -569,7 +577,7 @@ def index():
                     'basic_utility_price': suggested_utility,
                 }
                 currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-                return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+                return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
             
             # Remove duplicate Committed Amount if present
             seen = set()
@@ -590,7 +598,7 @@ def index():
                     'basic_utility_price': suggested_utility,
                 }
                 currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-                return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+                return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
             results['margin'] = results.get('margin', '')
             expected_invoice_amount = results.get('revenue', 0)
             chosen_platform_fee = float(platform_fee)
@@ -757,12 +765,13 @@ def index():
                 bot_ui_mandays=manday_breakdown.get('bot_ui', 0),
                 custom_ai_mandays=manday_breakdown.get('custom_ai', 0),
             )
+            analytics_kwargs['calculation_id'] = session.get('calculation_id')
             new_analytics = Analytics(**analytics_kwargs)
             db.session.add(new_analytics)
             db.session.commit()
             # Top 5 users by number of calculations
             user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
-            top_users = Counter(user_names).most_common(5)
+            top_users = Counter(user_names).most_common()  # Remove the 5 limit
             # When setting results['suggested_revenue'], use rate_card_platform_fee instead of platform_fee
             results['suggested_revenue'] = (results.get('suggested_revenue', 0) - platform_fee) + rate_card_platform_fee
             print("RENDERING RESULTS PAGE")
@@ -789,7 +798,8 @@ def index():
                 total_dev_cost=total_dev_cost,
                 dev_cost_currency=dev_cost_currency,
                 manday_breakdown=manday_breakdown,
-                manday_rates=manday_rates
+                manday_rates=manday_rates,
+                calculation_id=calculation_id
             )
         except Exception as e:
             print("EXCEPTION AFTER DEFENSIVE CHECK:", e)
@@ -801,9 +811,9 @@ def index():
             if request.method == 'POST':
                 flash('Session expired or missing. Please start again.', 'error')
             currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
-            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={})
+            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={}, calculation_id=calculation_id)
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
-        return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs)
+        return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs, calculation_id=calculation_id)
     elif step == 'prices':
         inputs = session.get('inputs', {})
         pricing_inputs = session.get('pricing_inputs', {}) or {}
@@ -835,7 +845,7 @@ def index():
                     'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
                     'bot_ui_manday_rate': default_bot_ui,
                     'custom_ai_manday_rate': default_custom_ai,
-                }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')))
+                }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id)
             # Save user rates for use in results
             session['manday_rates'] = {
                 'bot_ui': user_bot_ui,
@@ -852,7 +862,7 @@ def index():
                 'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
                 'bot_ui_manday_rate': default_bot_ui,
                 'custom_ai_manday_rate': default_custom_ai,
-            }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')))
+            }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id)
     elif step == 'bundle' and request.method == 'POST':
         # User submitted messaging bundle commitment (can be 0)
         inputs = session.get('inputs', {}) or {}
@@ -882,11 +892,11 @@ def index():
             'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
             'bot_ui_manday_rate': default_bot_ui,
             'custom_ai_manday_rate': default_custom_ai,
-        }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')))
+        }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id)
     # Default: show volume input form
     country = session.get('inputs', {}).get('country', 'India')
     currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-    return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=session.get('inputs', {}))
+    return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), calculation_id=calculation_id)
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
@@ -1102,9 +1112,9 @@ def analytics():
                     'sum': sum(a.platform_fee or 0 for a in country_analytics),
                     'count': len([a for a in country_analytics if a.platform_fee is not None])
                 }
-            # Top 5 users by number of calculations
+            # Top users by number of calculations (show all, not just top 5)
             user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
-            top_users = Counter(user_names).most_common(5)
+            top_users = Counter(user_names).most_common()  # Remove the 5 limit
             all_analytics = Analytics.query.all()
             analytics = {
                 'calculations': total_calculations,
