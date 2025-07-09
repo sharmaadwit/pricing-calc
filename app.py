@@ -315,9 +315,10 @@ def index():
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee)
 
     elif step == 'prices' and request.method == 'POST':
-        # Step 2: User submitted prices
+        print('HANDLER: Entered prices POST step')
         inputs = session.get('inputs', {})
         if not inputs:
+            print('HANDLER: No inputs in session, redirecting to index')
             flash('Session expired or missing. Please start again.', 'error')
             return redirect(url_for('index'))
         def parse_price(val):
@@ -371,6 +372,7 @@ def index():
         if platform_fee < 0.3 * rate_card_platform_fee:
             discount_errors.append("Platform Fee is less than 30% of the rate card platform fee.")
         if discount_errors:
+            print('HANDLER: Discount errors found, rendering prices page with errors')
             for msg in discount_errors:
                 flash(msg, 'error')
             flash("Probability of deal desk rejection is high.", 'error')
@@ -383,6 +385,7 @@ def index():
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             # Re-render the pricing page with user input and error
             return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+        print('HANDLER: No discount errors, continuing to results calculation')
 
         session['pricing_inputs'] = {
             'ai_price': ai_price,
