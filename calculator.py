@@ -372,8 +372,8 @@ def calculate_total_mandays(inputs):
     for remaining journeys and apis, use 1 manday each.
     """
     total_mandays = 0
-    num_journeys = int(inputs.get('num_journeys_price', 0))
-    num_apis = int(inputs.get('num_apis_price', 0))
+    num_journeys = int(inputs.get('num_journeys_price') or 0)
+    num_apis = int(inputs.get('num_apis_price') or 0)
 
     # Calculate sets of 4 journeys and 4 apis
     sets_of_4 = min(num_journeys // 4, num_apis // 4)
@@ -388,8 +388,8 @@ def calculate_total_mandays(inputs):
     total_mandays += remaining_apis * ACTIVITY_MANDAYS['api']
 
     # AI Agents (Commerce + FAQ)
-    total_mandays += int(inputs.get('num_ai_workspace_commerce_price', 0)) * ACTIVITY_MANDAYS['ai_agents']
-    total_mandays += int(inputs.get('num_ai_workspace_faq_price', 0)) * ACTIVITY_MANDAYS['ai_agents']
+    total_mandays += int(inputs.get('num_ai_workspace_commerce_price') or 0) * ACTIVITY_MANDAYS['ai_agents']
+    total_mandays += int(inputs.get('num_ai_workspace_faq_price') or 0) * ACTIVITY_MANDAYS['ai_agents']
     # AA Setup
     if inputs.get('aa_setup_price', 'No') == 'Yes':
         total_mandays += ACTIVITY_MANDAYS['aa_setup']
@@ -408,10 +408,10 @@ def calculate_total_mandays_breakdown(inputs):
     """
     Returns a dict with mandays for bot_ui and custom_ai activities, ignoring items with 0 value.
     """
-    num_journeys = int(inputs.get('num_journeys_price', 0))
-    num_apis = int(inputs.get('num_apis_price', 0))
-    num_ai_commerce = int(inputs.get('num_ai_workspace_commerce_price', 0))
-    num_ai_faq = int(inputs.get('num_ai_workspace_faq_price', 0))
+    num_journeys = int(inputs.get('num_journeys_price') or 0)
+    num_apis = int(inputs.get('num_apis_price') or 0)
+    num_ai_commerce = int(inputs.get('num_ai_workspace_commerce_price') or 0)
+    num_ai_faq = int(inputs.get('num_ai_workspace_faq_price') or 0)
     # 4-journey-4-api logic
     sets_of_4 = min(num_journeys // 4, num_apis // 4)
     remaining_journeys = num_journeys - sets_of_4 * 4
