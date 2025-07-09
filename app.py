@@ -517,27 +517,80 @@ def index():
             }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
-        
+        print("PASSED results validation, about to render results page")
+        try:
+            # --- Ensure manday_rates is always set and complete ---
+            country = inputs.get('country', 'India')
+            dev_location = inputs.get('dev_location', 'India')
+            rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+            if country == 'LATAM':
+                default_bot_ui = rates['bot_ui'][dev_location]
+                default_custom_ai = rates['custom_ai'][dev_location]
+            else:
+                default_bot_ui = rates['bot_ui']
+                default_custom_ai = rates['custom_ai']
+            manday_rates = session.get('manday_rates', {}) or {}
+            # Fill missing keys with defaults
+            manday_rates['bot_ui'] = float(manday_rates.get('bot_ui', default_bot_ui))
+            manday_rates['custom_ai'] = float(manday_rates.get('custom_ai', default_custom_ai))
+            manday_rates['default_bot_ui'] = float(default_bot_ui)
+            manday_rates['default_custom_ai'] = float(default_custom_ai)
+            # Calculate discount percentages
+            manday_rates['bot_ui_discount'] = round(100 * (default_bot_ui - manday_rates['bot_ui']) / default_bot_ui, 2) if default_bot_ui else 0
+            manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 2) if default_custom_ai else 0
+            total_mandays = calculate_total_mandays(patched_form)
+            total_dev_cost, dev_cost_currency, manday_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
+            
+            # Debug: Log inputs being used for calculation
+            print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}")
+            
+            # Calculate pricing results
+            try:
+                results = calculate_pricing(
+                    country=inputs.get('country', 'India'),
+                    ai_volume=float(inputs.get('ai_volume', 0) or 0),
+                    advanced_volume=float(inputs.get('advanced_volume', 0) or 0),
+                    basic_marketing_volume=float(inputs.get('basic_marketing_volume', 0) or 0),
+                    basic_utility_volume=float(inputs.get('basic_utility_volume', 0) or 0),
+                    platform_fee=float(platform_fee),
+                    ai_price=ai_price,
+                    advanced_price=advanced_price,
+                    basic_marketing_price=basic_marketing_price,
+                    basic_utility_price=basic_utility_price
+                )
+                print(f"DEBUG: Calculation successful, results: {results}")
+            except Exception as e:
+                print(f"DEBUG: Calculation failed with error: {e}")
+                flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
+                suggested_prices = {
+                    'ai_price': suggested_ai,
+                    'advanced_price': suggested_advanced,
+                    'basic_marketing_price': suggested_marketing,
+                    'basic_utility_price': suggested_utility,
+                }
+                currency_symbol = COUNTRY_CURRENCY.get(country, '$')
+                return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+            
             # Remove duplicate Committed Amount if present
             seen = set()
             unique_line_items = []
-        if results and 'line_items' in results:
-            for item in results['line_items']:
-                key = (item.get('line_item'), item.get('chosen_price'), item.get('suggested_price'))
-                if key not in seen:
-                    unique_line_items.append(item)
-                    seen.add(key)
-            results['line_items'] = unique_line_items
-        else:
-            flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
-            suggested_prices = {
-                'ai_price': suggested_ai,
-                'advanced_price': suggested_advanced,
-                'basic_marketing_price': suggested_marketing,
-                'basic_utility_price': suggested_utility,
-            }
-            currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
+            if results and 'line_items' in results:
+                for item in results['line_items']:
+                    key = (item.get('line_item'), item.get('chosen_price'), item.get('suggested_price'))
+                    if key not in seen:
+                        unique_line_items.append(item)
+                        seen.add(key)
+                results['line_items'] = unique_line_items
+            else:
+                flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
+                suggested_prices = {
+                    'ai_price': suggested_ai,
+                    'advanced_price': suggested_advanced,
+                    'basic_marketing_price': suggested_marketing,
+                    'basic_utility_price': suggested_utility,
+                }
+                currency_symbol = COUNTRY_CURRENCY.get(country, '$')
+                return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
             results['margin'] = results.get('margin', '')
             expected_invoice_amount = results.get('revenue', 0)
             chosen_platform_fee = float(platform_fee)
@@ -697,12 +750,12 @@ def index():
                 ai_volume=ai_volume,
                 advanced_volume=advanced_volume,
                 basic_marketing_volume=basic_marketing_volume,
-            basic_utility_volume=basic_utility_volume,
-            # Store user-submitted manday rates
-            bot_ui_manday_rate=manday_rates.get('bot_ui'),
-            custom_ai_manday_rate=manday_rates.get('custom_ai'),
-            bot_ui_mandays=manday_breakdown.get('bot_ui', 0),
-            custom_ai_mandays=manday_breakdown.get('custom_ai', 0),
+                basic_utility_volume=basic_utility_volume,
+                # Store user-submitted manday rates
+                bot_ui_manday_rate=manday_rates.get('bot_ui'),
+                custom_ai_manday_rate=manday_rates.get('custom_ai'),
+                bot_ui_mandays=manday_breakdown.get('bot_ui', 0),
+                custom_ai_mandays=manday_breakdown.get('custom_ai', 0),
             )
             new_analytics = Analytics(**analytics_kwargs)
             db.session.add(new_analytics)
@@ -731,13 +784,16 @@ def index():
                 user_selections=user_selections,
                 inputs=inputs,
                 contradiction_warning=contradiction_warning,
-            top_users=top_users,
-            total_mandays=total_mandays,
-            total_dev_cost=total_dev_cost,
-            dev_cost_currency=dev_cost_currency,
-            manday_breakdown=manday_breakdown,
-            manday_rates=manday_rates
+                top_users=top_users,
+                total_mandays=total_mandays,
+                total_dev_cost=total_dev_cost,
+                dev_cost_currency=dev_cost_currency,
+                manday_breakdown=manday_breakdown,
+                manday_rates=manday_rates
             )
+        except Exception as e:
+            print("EXCEPTION AFTER DEFENSIVE CHECK:", e)
+            raise
     # Defensive: handle GET or POST for edit actions
     elif step == 'volumes':
         inputs = session.get('inputs', {})
