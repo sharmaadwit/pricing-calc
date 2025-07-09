@@ -391,39 +391,40 @@ def index():
             'basic_utility_price': basic_utility_price,
             'platform_fee': platform_fee
         }
+
         currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-            # --- Restored logic for results calculation and rendering ---
-            bundle_choice = 'No'
-            session['bundle_choice'] = bundle_choice
-            ai_price = session['pricing_inputs'].get('ai_price', 0)
-            advanced_price = session['pricing_inputs'].get('advanced_price', 0)
-            basic_marketing_price = session['pricing_inputs'].get('basic_marketing_price', 0)
-            basic_utility_price = session['pricing_inputs'].get('basic_utility_price', 0)
-            platform_fee = session['pricing_inputs'].get('platform_fee', 0)
-            bundle_lines = []
-            bundle_cost = 0
-            for label, key, price in [
-                ("AI Message", 'ai_volume', ai_price),
-                ("Advanced Message", 'advanced_volume', advanced_price),
-                ("Basic Marketing Message", 'basic_marketing_volume', basic_marketing_price),
-                ("Basic Utility/Authentication Message", 'basic_utility_volume', basic_utility_price),
-            ]:
-                volume = float(inputs.get(key, 0))
-                overage_price = float(price) * 1.2
-                bundle_lines.append({
-                    'label': label,
-                    'volume': volume,
-                    'price': float(price),
-                    'overage_price': overage_price
-                })
-                bundle_cost += volume * float(price)
-            total_bundle_price = float(platform_fee) + bundle_cost
-            bundle_details = {
-                'lines': bundle_lines,
-                'bundle_cost': bundle_cost,
-                'total_bundle_price': total_bundle_price,
-                'inclusion_text': 'See table below for included volumes and overage prices.'
-            }
+        # --- Restored logic for results calculation and rendering ---
+        bundle_choice = 'No'
+        session['bundle_choice'] = bundle_choice
+        ai_price = session['pricing_inputs'].get('ai_price', 0)
+        advanced_price = session['pricing_inputs'].get('advanced_price', 0)
+        basic_marketing_price = session['pricing_inputs'].get('basic_marketing_price', 0)
+        basic_utility_price = session['pricing_inputs'].get('basic_utility_price', 0)
+        platform_fee = session['pricing_inputs'].get('platform_fee', 0)
+        bundle_lines = []
+        bundle_cost = 0
+        for label, key, price in [
+            ("AI Message", 'ai_volume', ai_price),
+            ("Advanced Message", 'advanced_volume', advanced_price),
+            ("Basic Marketing Message", 'basic_marketing_volume', basic_marketing_price),
+            ("Basic Utility/Authentication Message", 'basic_utility_volume', basic_utility_price),
+        ]:
+            volume = float(inputs.get(key, 0))
+            overage_price = float(price) * 1.2
+            bundle_lines.append({
+                'label': label,
+                'volume': volume,
+                'price': float(price),
+                'overage_price': overage_price
+            })
+            bundle_cost += volume * float(price)
+        total_bundle_price = float(platform_fee) + bundle_cost
+        bundle_details = {
+            'lines': bundle_lines,
+            'bundle_cost': bundle_cost,
+            'total_bundle_price': total_bundle_price,
+            'inclusion_text': 'See table below for included volumes and overage prices.'
+        }
         # Use one-time dev activity fields from form if present, else from session
         dev_fields = [
             'onboarding_price', 'ux_price', 'testing_qa_price', 'aa_setup_price',
@@ -491,6 +492,16 @@ def index():
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee)
         
+        # Remove duplicate Committed Amount if present
+        seen = set()
+        unique_line_items = []
+        if results and 'line_items' in results:
+            for item in results['line_items']:
+                key = (item.get('line_item'), item.get('chosen_price'), item.get('suggested_price'))
+                if key not in seen:
+                    unique_line_items.append(item)
+                    seen.add(key)
+            results['line_items'] = unique_line_items
         # Validate results
         if not results or 'line_items' not in results:
             print(f"DEBUG: Invalid results: {results}")
@@ -746,7 +757,7 @@ def index():
         else:
             default_bot_ui = rates['bot_ui']
             default_custom_ai = rates['custom_ai']
-            if request.method == 'POST':
+        if request.method == 'POST':
             # Validate user rates
             def parse_number(val):
                 try:
@@ -758,10 +769,10 @@ def index():
             if user_bot_ui < 0.5 * default_bot_ui or user_custom_ai < 0.5 * default_custom_ai:
                 flash('Manday rates cannot be discounted by more than 50% from the default rate.', 'error')
                 return render_template('index.html', step='prices', suggested={
-            'ai_price': pricing_inputs.get('ai_price', ''),
-            'advanced_price': pricing_inputs.get('advanced_price', ''),
-            'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
-            'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
+                    'ai_price': pricing_inputs.get('ai_price', ''),
+                    'advanced_price': pricing_inputs.get('advanced_price', ''),
+                    'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
+                    'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
                     'bot_ui_manday_rate': default_bot_ui,
                     'custom_ai_manday_rate': default_custom_ai,
                 }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')))
