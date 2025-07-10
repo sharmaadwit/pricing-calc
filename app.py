@@ -325,6 +325,7 @@ def index():
             'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if not is_zero(basic_marketing_volume) else get_lowest_tier_price(country, 'basic_marketing'),
             'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_lowest_tier_price(country, 'basic_utility'),
         }
+        suggested_prices = patch_suggested_prices(suggested_prices, session.get('inputs', {}))
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
 
     elif step == 'prices' and request.method == 'POST':
@@ -938,6 +939,7 @@ def index():
                 'bot_ui_manday_rate': default_bot_ui,
                 'custom_ai_manday_rate': default_custom_ai,
             }
+        suggested_prices = patch_suggested_prices(suggested_prices, inputs)
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id)
     # Default: show volume input form
     country = session.get('inputs', {}).get('country', 'India')
@@ -1354,6 +1356,29 @@ def set_session():
 @app.route('/get-session')
 def get_session():
     return f"Session value: {session.get('test', 'not set')}"
+
+# --- PATCH: Ensure manday rates always included in suggested_prices for 'prices' step ---
+def get_default_manday_rates(inputs):
+    country = inputs.get('country', 'India') if inputs else 'India'
+    dev_location = inputs.get('dev_location', 'India') if inputs else 'India'
+    from calculator import COUNTRY_MANDAY_RATES
+    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+    if country == 'LATAM':
+        default_bot_ui = rates['bot_ui'][dev_location]
+        default_custom_ai = rates['custom_ai'][dev_location]
+    else:
+        default_bot_ui = rates['bot_ui']
+        default_custom_ai = rates['custom_ai']
+    return default_bot_ui, default_custom_ai
+
+# --- PATCH: Wrap all suggested_prices dicts before rendering 'prices' step ---
+def patch_suggested_prices(suggested_prices, inputs):
+    default_bot_ui, default_custom_ai = get_default_manday_rates(inputs)
+    if 'bot_ui_manday_rate' not in suggested_prices or suggested_prices['bot_ui_manday_rate'] is None:
+        suggested_prices['bot_ui_manday_rate'] = default_bot_ui
+    if 'custom_ai_manday_rate' not in suggested_prices or suggested_prices['custom_ai_manday_rate'] is None:
+        suggested_prices['custom_ai_manday_rate'] = default_custom_ai
+    return suggested_prices
 
 if __name__ == '__main__':
     import os
