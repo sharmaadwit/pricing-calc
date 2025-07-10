@@ -1004,26 +1004,26 @@ def index():
         else:
             default_bot_ui = rates['bot_ui']
             default_custom_ai = rates['custom_ai']
-        # --- Set default per-message prices for India based on committed amount ---
-        if country == 'India':
-            ca_rates = get_committed_amount_rates(inputs.get('country', 'India'), committed_amount)
-            suggested_prices = {
-                'ai_price': ca_rates['ai'],
-                'advanced_price': ca_rates['advanced'],
-                'basic_marketing_price': ca_rates['marketing'],
-                'basic_utility_price': ca_rates['utility'],
-                'bot_ui_manday_rate': default_bot_ui,
-                'custom_ai_manday_rate': default_custom_ai,
-            }
-        else:
-            suggested_prices = {
-                'ai_price': pricing_inputs.get('ai_price', ''),
-                'advanced_price': pricing_inputs.get('advanced_price', ''),
-                'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
-                'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
-                'bot_ui_manday_rate': default_bot_ui,
-                'custom_ai_manday_rate': default_custom_ai,
-            }
+        # --- Set default per-message prices for all countries based on committed amount using bundle_markup_rates ---
+        from calculator import bundle_markup_rates
+        bundle_rates = bundle_markup_rates.get(country, bundle_markup_rates.get('Rest of the World', []))
+        # Find the correct tier for the committed amount
+        selected_tier = None
+        for tier in bundle_rates:
+            if tier['min'] <= committed_amount <= tier['max']:
+                selected_tier = tier
+                break
+        if not selected_tier and bundle_rates:
+            # If above all tiers, use the highest tier
+            selected_tier = bundle_rates[-1]
+        suggested_prices = {
+            'ai_price': selected_tier['ai'] if selected_tier else '',
+            'advanced_price': selected_tier['advanced'] if selected_tier else '',
+            'basic_marketing_price': selected_tier['basic_marketing'] if selected_tier else '',
+            'basic_utility_price': selected_tier['basic_utility'] if selected_tier else '',
+            'bot_ui_manday_rate': default_bot_ui,
+            'custom_ai_manday_rate': default_custom_ai,
+        }
         suggested_prices = patch_suggested_prices(suggested_prices, inputs)
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id)
     # Default: show volume input form

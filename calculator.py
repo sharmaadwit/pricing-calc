@@ -197,6 +197,70 @@ COUNTRY_MANDAY_RATES = {
     },
 }
 
+# --- Messaging Bundle Markup Rates by Country (for committed amount/bundle flow) ---
+bundle_markup_rates = {
+    'India': [
+        {'min': 0, 'max': 50000, 'basic_marketing': 0.20, 'basic_utility': 0.05, 'advanced': 0.50, 'ai': 1.00},
+        {'min': 50001, 'max': 150000, 'basic_marketing': 0.18, 'basic_utility': 0.05, 'advanced': 0.45, 'ai': 0.95},
+        {'min': 150001, 'max': 200000, 'basic_marketing': 0.15, 'basic_utility': 0.04, 'advanced': 0.40, 'ai': 0.90},
+        {'min': 200001, 'max': 250000, 'basic_marketing': 0.12, 'basic_utility': 0.04, 'advanced': 0.35, 'ai': 0.85},
+        {'min': 250001, 'max': 500000, 'basic_marketing': 0.10, 'basic_utility': 0.03, 'advanced': 0.30, 'ai': 0.80},
+        {'min': 500001, 'max': 750000, 'basic_marketing': 0.08, 'basic_utility': 0.03, 'advanced': 0.25, 'ai': 0.75},
+        {'min': 750001, 'max': 1000000, 'basic_marketing': 0.05, 'basic_utility': 0.02, 'advanced': 0.20, 'ai': 0.70},
+        {'min': 1000001, 'max': 2000000, 'basic_marketing': 0.03, 'basic_utility': 0.02, 'advanced': 0.15, 'ai': 0.65},
+    ],
+    'MENA': [
+        {'min': 0, 'max': 1000, 'basic_marketing': 0.0033, 'basic_utility': 0.0008, 'advanced': 0.0083, 'ai': 0.0167},
+        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0030, 'basic_utility': 0.0008, 'advanced': 0.0075, 'ai': 0.0158},
+        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0025, 'basic_utility': 0.0007, 'advanced': 0.0067, 'ai': 0.0150},
+        {'min': 2501, 'max': 3500, 'basic_marketing': 0.0020, 'basic_utility': 0.0006, 'advanced': 0.0058, 'ai': 0.0142},
+        {'min': 3501, 'max': 5000, 'basic_marketing': 0.0017, 'basic_utility': 0.0005, 'advanced': 0.0050, 'ai': 0.0133},
+        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0013, 'basic_utility': 0.0004, 'advanced': 0.0042, 'ai': 0.0125},
+        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0008, 'basic_utility': 0.0003, 'advanced': 0.0033, 'ai': 0.0117},
+        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0005, 'basic_utility': 0.0003, 'advanced': 0.0025, 'ai': 0.0108},
+    ],
+    'LATAM': [
+        {'min': 0, 'max': 1000, 'basic_marketing': 0.0033, 'basic_utility': 0.0008, 'advanced': 0.0083, 'ai': 0.0167},
+        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0030, 'basic_utility': 0.0008, 'advanced': 0.0075, 'ai': 0.0158},
+        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0025, 'basic_utility': 0.0007, 'advanced': 0.0067, 'ai': 0.0150},
+        {'min': 2501, 'max': 3500, 'basic_marketing': 0.0020, 'basic_utility': 0.0006, 'advanced': 0.0058, 'ai': 0.0142},
+        {'min': 3501, 'max': 5000, 'basic_marketing': 0.0017, 'basic_utility': 0.0005, 'advanced': 0.0050, 'ai': 0.0133},
+        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0013, 'basic_utility': 0.0004, 'advanced': 0.0042, 'ai': 0.0125},
+        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0008, 'basic_utility': 0.0003, 'advanced': 0.0033, 'ai': 0.0117},
+        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0005, 'basic_utility': 0.0003, 'advanced': 0.0025, 'ai': 0.0108},
+    ],
+    'Africa': [
+        {'min': 0, 'max': 1000, 'basic_marketing': 0.0017, 'basic_utility': 0.0004, 'advanced': 0.0042, 'ai': 0.0083},
+        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0015, 'basic_utility': 0.0004, 'advanced': 0.0037, 'ai': 0.0079},
+        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0012, 'basic_utility': 0.0003, 'advanced': 0.0033, 'ai': 0.0075},
+        {'min': 2501, 'max': 3500, 'basic_marketing': 0.0010, 'basic_utility': 0.0003, 'advanced': 0.0029, 'ai': 0.0071},
+        {'min': 3501, 'max': 5000, 'basic_marketing': 0.0008, 'basic_utility': 0.0002, 'advanced': 0.0025, 'ai': 0.0067},
+        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0007, 'basic_utility': 0.0002, 'advanced': 0.0021, 'ai': 0.0062},
+        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0004, 'basic_utility': 0.0002, 'advanced': 0.0017, 'ai': 0.0058},
+        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0002, 'basic_utility': 0.0001, 'advanced': 0.0012, 'ai': 0.0054},
+    ],
+    'Europe': [
+        {'min': 0, 'max': 1000, 'basic_marketing': 0.0042, 'basic_utility': 0.0010, 'advanced': 0.0105, 'ai': 0.0209},
+        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0038, 'basic_utility': 0.0009, 'advanced': 0.0094, 'ai': 0.0199},
+        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0031, 'basic_utility': 0.0008, 'advanced': 0.0084, 'ai': 0.0188},
+        {'min': 2501, 'max': 3500, 'basic_marketing': 0.0025, 'basic_utility': 0.0007, 'advanced': 0.0073, 'ai': 0.0178},
+        {'min': 3501, 'max': 5000, 'basic_marketing': 0.0021, 'basic_utility': 0.0006, 'advanced': 0.0063, 'ai': 0.0167},
+        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0017, 'basic_utility': 0.0005, 'advanced': 0.0052, 'ai': 0.0157},
+        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0010, 'basic_utility': 0.0004, 'advanced': 0.0042, 'ai': 0.0146},
+        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0006, 'basic_utility': 0.0003, 'advanced': 0.0031, 'ai': 0.0136},
+    ],
+    'Rest of the World': [
+        {'min': 0, 'max': 1000, 'basic_marketing': 0.0033, 'basic_utility': 0.0008, 'advanced': 0.0083, 'ai': 0.0167},
+        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0030, 'basic_utility': 0.0008, 'advanced': 0.0075, 'ai': 0.0158},
+        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0025, 'basic_utility': 0.0007, 'advanced': 0.0067, 'ai': 0.0150},
+        {'min': 2501, 'max': 3500, 'basic_marketing': 0.0020, 'basic_utility': 0.0006, 'advanced': 0.0058, 'ai': 0.0142},
+        {'min': 3501, 'max': 5000, 'basic_marketing': 0.0017, 'basic_utility': 0.0005, 'advanced': 0.0050, 'ai': 0.0133},
+        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0013, 'basic_utility': 0.0004, 'advanced': 0.0042, 'ai': 0.0125},
+        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0008, 'basic_utility': 0.0003, 'advanced': 0.0033, 'ai': 0.0117},
+        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0005, 'basic_utility': 0.0003, 'advanced': 0.0025, 'ai': 0.0108},
+    ],
+}
+
 def get_suggested_price(country, msg_type, volume, currency=None):
     """
     Return the suggested price for a message type, country, and volume.
