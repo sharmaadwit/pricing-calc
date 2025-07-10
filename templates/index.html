@@ -302,9 +302,9 @@
         <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
             <h3 style="margin-top:0;">Manday Rates</h3>
             <label>Bot/UI Manday Rate:</label>
-            <input type="text" name="bot_ui_manday_rate" id="bot_ui_manday_rate" min="0" class="comma-number" value="{{ '{:,}'.format(suggested.bot_ui_manday_rate|float) if suggested.bot_ui_manday_rate is not none and suggested.bot_ui_manday_rate != '' else '' }}" required><br><br>
+            <input type="text" name="bot_ui_manday_rate" id="bot_ui_manday_rate" min="0" class="comma-number" value="{{ '{:,}'.format(suggested.get('bot_ui_manday_rate')|float) if suggested and suggested.get('bot_ui_manday_rate') not in (None, '') else '' }}" required><br><br>
             <label>Custom/AI Manday Rate:</label>
-            <input type="text" name="custom_ai_manday_rate" id="custom_ai_manday_rate" min="0" class="comma-number" value="{{ '{:,}'.format(suggested.custom_ai_manday_rate|float) if suggested.custom_ai_manday_rate is not none and suggested.custom_ai_manday_rate != '' else '' }}" required>
+            <input type="text" name="custom_ai_manday_rate" id="custom_ai_manday_rate" min="0" class="comma-number" value="{{ '{:,}'.format(suggested.get('custom_ai_manday_rate')|float) if suggested and suggested.get('custom_ai_manday_rate') not in (None, '') else '' }}" required>
         </div>
         <input type="submit" value="Calculate Results">
     </form>

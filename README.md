@@ -3,6 +3,14 @@
 ## Overview
 This is a robust, production-ready pricing calculator web application built with Flask. It is designed for messaging services with complex pricing logic, dynamic inclusions, advanced analytics, and a professional UI. The app is suitable for deployment on platforms like Railway.
 
+## Recent Changes (v25.7–v25.8.1)
+
+- **Inclusions Logic Overhaul:** Inclusions shown on the results page are now strictly non-overlapping. Only the most relevant (highest/selected) inclusions for each option (Personalize Load, Human Agents, Increased TPS, AI Module, Smart CPaaS, BFSI Tier) are displayed, and base inclusions are filtered to avoid duplication.
+- **Committed Amount Route (volume=0):** For cases where all message volumes are zero, the monthly fee is now calculated as `Monthly Fee = Platform Fee + Committed Bundle Amount`. The results page UI and summary card clearly show this formula and break out both values.
+- **Per-Country Committed Amount Rates:** The committed amount pricing slabs and logic now support all major regions (India, MENA, LATAM, Africa, Europe, Rest of World), with correct per-message rates for each country and committed amount tier.
+- **Defensive Fixes:** All code paths that render the results page now defensively define `contradiction_warning` to prevent runtime errors.
+- **UI/UX Upgrades:** Visual improvements to the forms and results page, including clearer sectioning, color-coded cards, and better formatting for manday rates and platform fee fields.
+
 ## Features
 - **Dynamic Inclusions:** Shows only the highest/most specific inclusions based on user selections (tiers, add-ons, etc.), avoiding duplicates or contradictions.
 - **Detailed Pricing & Margin Tables:** Cleanly formatted, always accurate, and includes both chosen and rate card prices.
