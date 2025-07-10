@@ -824,6 +824,7 @@ def index():
             # When setting results['suggested_revenue'], use rate_card_platform_fee instead of platform_fee
             results['suggested_revenue'] = (results.get('suggested_revenue', 0) - platform_fee) + rate_card_platform_fee
             print("RENDERING RESULTS PAGE")
+            contradiction_warning = None
             if all(float(inputs.get(v, 0)) == 0.0 for v in ['ai_volume', 'advanced_volume', 'basic_marketing_volume', 'basic_utility_volume']):
                 committed_amount = float(inputs.get('committed_amount', 0) or 0)
                 monthly_fee = float(platform_fee) + committed_amount
