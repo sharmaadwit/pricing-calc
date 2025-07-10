@@ -155,15 +155,15 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
     Calculates the platform fee based on country and selected options.
     Returns (fee, currency).
     """
-    # 1. Minimum platform fee
+    # 1. Minimum platform fee (UPDATED)
     if country == 'India':
-        min_fee = 120000  # Updated from 100000
+        min_fee = 120000
         currency = 'INR'
-    elif country in ['Africa', 'Rest of the World']:
-        min_fee = 500
+    elif country == 'Africa':
+        min_fee = 1000
         currency = 'USD'
     else:
-        min_fee = 1000
+        min_fee = 2000
         currency = 'USD'
     fee = min_fee
     # 2. BFSI tier
@@ -400,6 +400,17 @@ def index():
             # Re-render the pricing page with user input and error
             return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
         print('HANDLER: No discount errors, continuing to results calculation')
+
+        # Always recalculate platform fee before saving to session['pricing_inputs']
+        platform_fee, fee_currency = calculate_platform_fee(
+            country,
+            inputs.get('bfsi_tier', 'NA'),
+            inputs.get('personalize_load', 'NA'),
+            inputs.get('human_agents', 'NA'),
+            inputs.get('ai_module', 'NA'),
+            inputs.get('smart_cpaas', 'No'),
+            inputs.get('increased_tps', 'NA')
+        )
 
         session['pricing_inputs'] = {
             'ai_price': ai_price,
