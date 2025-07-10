@@ -482,6 +482,13 @@
               <b>Manday Breakdown:</b> Bot/UI: {{ '{:,.0f}'.format(manday_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.0f}'.format(manday_breakdown.custom_ai) }}<br>
               <b>Bot/UI Manday Rate:</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.bot_ui|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_bot_ui|default(0)) }}, Discount: {{ manday_rates.bot_ui_discount|default(0) }}%)<br>
               <b>Custom/AI Manday Rate:</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.custom_ai|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.2f}'.format(manday_rates.default_custom_ai|default(0)) }}, Discount: {{ manday_rates.custom_ai_discount|default(0) }}%)<br>
+              <hr>
+              <b>Build Cost (Bot/UI + Custom/AI):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.build_cost) }}<br>
+              <b>BA Effort (15%):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.ba_cost) }}<br>
+              <b>QA Effort (10%):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.qa_cost) }}<br>
+              <b>Project Manager (5%):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.pm_cost) }}<br>
+              <b>Uplift (Total):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.uplift_amount) }}<br>
+              <b><u>Total One Time Dev Cost (with BA, QA, PM):</u></b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.total_cost) }}
             </div>
             <div style="font-size:1.08em; margin-top:12px;">
               <b>Note:</b> This section is for internal use only and should not be shared with the customer.

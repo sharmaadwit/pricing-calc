@@ -78,9 +78,13 @@ def initialize_inclusions():
     """
     inclusions = {
         'Platform Fee Used for Margin Calculation': [
-            'Journey Builder Lite,',
-            'Campaign Manager,',
-            'CTWA - (Meta, Tiktok)'
+            'Journey Builder Lite',
+            'Campaign Manager',
+            'CTWA (Meta, Tiktok)',
+            'Agent Assist <20',
+            'Personalize Lite (upto 1ml and no advanced events)',
+            '80 TPS',
+            '1 manday/month maintenance'
         ],
         'Personalize Load Lite': [
             'personalize lite upto 1 million records - no advanced events'
@@ -152,7 +156,7 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
     """
     # 1. Minimum platform fee
     if country == 'India':
-        min_fee = 100000
+        min_fee = 120000  # Updated from 100000
         currency = 'INR'
     elif country in ['Africa', 'Rest of the World']:
         min_fee = 500
@@ -471,7 +475,8 @@ def index():
         manday_rates['bot_ui_discount'] = round(100 * (default_bot_ui - manday_rates['bot_ui']) / default_bot_ui, 2) if default_bot_ui else 0
         manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 2) if default_custom_ai else 0
         total_mandays = calculate_total_mandays(patched_form)
-        total_dev_cost, dev_cost_currency, manday_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
+        total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
+        manday_breakdown = dev_cost_breakdown['mandays_breakdown']
         
         # Debug: Log inputs being used for calculation
         print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}")
@@ -547,7 +552,8 @@ def index():
             manday_rates['bot_ui_discount'] = round(100 * (default_bot_ui - manday_rates['bot_ui']) / default_bot_ui, 2) if default_bot_ui else 0
             manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 2) if default_custom_ai else 0
             total_mandays = calculate_total_mandays(patched_form)
-            total_dev_cost, dev_cost_currency, manday_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
+            total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
+            manday_breakdown = dev_cost_breakdown['mandays_breakdown']
             
             # Debug: Log inputs being used for calculation
             print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}")
@@ -799,7 +805,8 @@ def index():
                 dev_cost_currency=dev_cost_currency,
                 manday_breakdown=manday_breakdown,
                 manday_rates=manday_rates,
-                calculation_id=calculation_id
+                calculation_id=calculation_id,
+                dev_cost_breakdown=dev_cost_breakdown
             )
         except Exception as e:
             print("EXCEPTION AFTER DEFENSIVE CHECK:", e)
