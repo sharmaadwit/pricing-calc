@@ -273,25 +273,35 @@
                 <li>No of AI Workspace - FAQ: <b>{{ inputs.get('num_ai_workspace_faq_price', '0') }}</b></li>
             </ul>
         </div>
-        <!-- Existing pricing fields -->
         <h2>Rate Card Pricing</h2>
         <p>Review and adjust the suggested prices if needed. These prices will be used to calculate your final pricing.</p>
-        <label>Platform Fee (editable):</label>
-        {{ currency_symbol }}<input type="text" name="platform_fee" class="comma-number" value="{{ platform_fee }}" required><br>
-        <small>This is the calculated platform fee based on your selections. You can edit it if needed.</small><br><br>
-        <label>AI Message Markup Rate Card:</label>
-        {{ currency_symbol }}<input type="text" name="ai_price" class="comma-number" value="{{ suggested.ai_price }}" required><br><br>
-        <label>Advanced Message Markup Rate Card:</label>
-        {{ currency_symbol }}<input type="text" name="advanced_price" class="comma-number" value="{{ suggested.advanced_price }}" required><br><br>
-        <label>Basic Marketing Message Markup Rate Card:</label>
-        {{ currency_symbol }}<input type="text" name="basic_marketing_price" class="comma-number" value="{{ suggested.basic_marketing_price }}" required><br><br>
-        <label>Basic Utility/Authentication Message Markup Rate Card:</label>
-        {{ currency_symbol }}<input type="text" name="basic_utility_price" class="comma-number" value="{{ suggested.basic_utility_price }}" required><br><br>
-        <!-- Manday Rate Inputs -->
-        <label>Bot/UI Manday Rate:</label>
-        <input type="text" name="bot_ui_manday_rate" id="bot_ui_manday_rate" min="0" class="comma-number" value="{{ suggested.bot_ui_manday_rate }}" required><br><br>
-        <label>Custom/AI Manday Rate:</label>
-        <input type="text" name="custom_ai_manday_rate" id="custom_ai_manday_rate" min="0" class="comma-number" value="{{ suggested.custom_ai_manday_rate }}" required><br><br>
+        <!-- Platform Fee Card -->
+        <div style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+            <h3 style="margin-top:0;">Platform Fee</h3>
+            <label>Platform Fee (editable):</label>
+            {{ currency_symbol }}<input type="text" name="platform_fee" class="comma-number" value="{{ platform_fee }}" required><br>
+            <small>This is the calculated platform fee based on your selections. You can edit it if needed.</small>
+        </div>
+        <!-- Message Rates Card -->
+        <div style="background: #fce4ec; border: 1px solid #f8bbd0; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+            <h3 style="margin-top:0;">Message Markup Rates</h3>
+            <label>AI Message Markup Rate Card:</label>
+            {{ currency_symbol }}<input type="text" name="ai_price" class="comma-number" value="{{ suggested.ai_price }}" required><br><br>
+            <label>Advanced Message Markup Rate Card:</label>
+            {{ currency_symbol }}<input type="text" name="advanced_price" class="comma-number" value="{{ suggested.advanced_price }}" required><br><br>
+            <label>Basic Marketing Message Markup Rate Card:</label>
+            {{ currency_symbol }}<input type="text" name="basic_marketing_price" class="comma-number" value="{{ suggested.basic_marketing_price }}" required><br><br>
+            <label>Basic Utility/Authentication Message Markup Rate Card:</label>
+            {{ currency_symbol }}<input type="text" name="basic_utility_price" class="comma-number" value="{{ suggested.basic_utility_price }}" required>
+        </div>
+        <!-- Manday Rates Card -->
+        <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+            <h3 style="margin-top:0;">Manday Rates</h3>
+            <label>Bot/UI Manday Rate:</label>
+            <input type="text" name="bot_ui_manday_rate" id="bot_ui_manday_rate" min="0" class="comma-number" value="{{ suggested.bot_ui_manday_rate }}" required><br><br>
+            <label>Custom/AI Manday Rate:</label>
+            <input type="text" name="custom_ai_manday_rate" id="custom_ai_manday_rate" min="0" class="comma-number" value="{{ suggested.custom_ai_manday_rate }}" required>
+        </div>
         <input type="submit" value="Calculate Results">
     </form>
     <form method="get">
@@ -334,9 +344,21 @@
     <!-- Results Section: Pricing Table, Inclusions, Invoice Amount, Margin Table -->
     {% if step == 'results' %}
         <div style="max-width: 1100px; margin: 0 auto;">
-          <h2 style="margin-top:0;">Section 1: Pricing</h2>
-          <!-- Pricing Table -->
-          <div style="margin-bottom: 24px;">
+          <!-- Summary Card -->
+          <div style="background: #fffde7; border: 2px solid #ffe082; border-radius: 10px; padding: 28px 36px; margin-bottom: 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+            <div style="flex:2; min-width: 220px;">
+              <h2 style="margin:0; font-size: 2em; color: #ff8f00;">Monthly Fee</h2>
+              <div style="font-size: 2.5em; font-weight: bold; color: #1a2a3a; margin-top: 8px;">{{ currency_symbol }}{{ '{:,.0f}'.format(expected_invoice_amount or 0) if ((expected_invoice_amount or 0) % 1) == 0 else '{:,.2f}'.format(expected_invoice_amount or 0) }}</div>
+            </div>
+            <div style="flex:1; min-width: 180px; margin-left: 32px;">
+              <div style="font-size: 1.1em; margin-bottom: 8px;"><b>Platform Fee:</b> {{ currency_symbol }}{{ '{:,.2f}'.format(platform_fee|float) }}</div>
+              <div style="font-size: 1.1em; margin-bottom: 8px;"><b>Total Mandays:</b> {{ '{:,.0f}'.format(total_mandays) }}</div>
+              <div style="font-size: 1.1em;"><b>Total Dev Cost:</b> {{ dev_cost_currency }} {{ '{:,.2f}'.format(total_dev_cost) }}</div>
+            </div>
+          </div>
+          <!-- Pricing Table Card -->
+          <div style="background: #f5f7fa; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Pricing Table</h3>
             <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
               <thead>
                 <tr style="background: #f0f4f8;">
@@ -375,18 +397,18 @@
               </tbody>
             </table>
           </div>
-          <!-- Inclusions Section -->
-          <div style="margin-bottom: 18px;">
-            <h3 style="margin-bottom: 8px;">Inclusions</h3>
+          <!-- Inclusions Card -->
+          <div style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Inclusions</h3>
             <ul style="margin:0 0 0 18px; padding:0; font-size:1.08em;">
               {% for inc in final_inclusions %}
                 <li style="margin-bottom:2px;">{{ inc }}</li>
                         {% endfor %}
                         </ul>
           </div>
-          <!-- Message Type Definitions Section -->
-          <div style="margin-bottom: 18px; background: #f8fafd; border: 1px solid #dbe2ea; border-radius: 6px; padding: 14px 20px;">
-            <h4 style="margin: 0 0 8px 0;">Message Type Definitions</h4>
+          <!-- Message Type Definitions Card -->
+          <div style="background: #fce4ec; border: 1px solid #f8bbd0; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Message Type Definitions</h3>
             <ul style="margin:0 0 0 18px; padding:0; font-size:1.05em;">
               <li><b>Basic Messages:</b> Triggered messages via API, Bulk Upload (GS Media, Campaign Manager)</li>
               <li><b>Advanced Messages:</b>
@@ -401,35 +423,18 @@
               <li><b>AI Messages:</b> Any message that uses AI for responding to the customer</li>
             </ul>
           </div>
-          <!-- Expected Invoice Amount block -->
-          <div style="background: #f5f7fa; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px; display: flex; align-items: center;">
-            <div style="flex:1;">
-              <h2 style="margin:0; font-size: 1.3em;">Expected Invoice Amount = (Meta Cost+Gupshup Fee) * committed volumes + Platform Cost</h2>
-              <div style="font-size: 2em; font-weight: bold; color: #1a2a3a; margin-top: 2px;">{{ currency_symbol }}{{ '{:,.0f}'.format(expected_invoice_amount or 0) if ((expected_invoice_amount or 0) % 1) == 0 else '{:,.2f}'.format(expected_invoice_amount or 0) }}</div>
-            </div>
-            {% if bundle_details and bundle_details.committed_amount is defined %}
-            <div style="background: #eaf6ff; border-left: 4px solid #2196f3; padding: 12px 18px; border-radius: 6px; margin-left: 32px; font-size: 1.08em;">
-              <b>Committed Deal:</b> Bundle Commitment + Platform Fee<br>
-              <span style="color:#333;">Your committed amount will be drawn down as you use the platform, based on the agreed rates for each message type. Overage prices apply if you exceed the commitment.</span>
-            </div>
-                {% endif %}
-          </div>
-          <!-- Total Mandays block -->
-          <div style="background: #f5f7fa; border: 1.5px solid #bbaadd; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px; display: flex; align-items: center;">
-            <div style="flex:1;">
-              <h3 style="margin:0; font-size: 1.1em;">Total Mandays for One Time Dev Activities</h3>
-              <div style="font-size: 1.5em; font-weight: bold; color: #5a2a8a; margin-top: 2px;">{{ '{:,.0f}'.format(total_mandays) }}</div>
-              <div style="margin-top: 10px; font-size: 1.08em;">
-                <b>Breakdown:</b> Bot/UI: {{ '{:,.0f}'.format(manday_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.0f}'.format(manday_breakdown.custom_ai) }}
-              </div>
+          <!-- Total Mandays Card -->
+          <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Total Mandays for One Time Dev Activities</h3>
+            <div style="font-size: 1.5em; font-weight: bold; color: #5a2a8a; margin-top: 2px;">{{ '{:,.0f}'.format(total_mandays) }}</div>
+            <div style="margin-top: 10px; font-size: 1.08em;">
+              <b>Breakdown:</b> Bot/UI: {{ '{:,.0f}'.format(manday_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.0f}'.format(manday_breakdown.custom_ai) }}
             </div>
           </div>
-          <!-- Total Dev Cost block -->
-          <div style="background: #eaf6ff; border: 1.5px solid #2196f3; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px; display: flex; align-items: center;">
-            <div style="flex:1;">
-              <h3 style="margin:0; font-size: 1.1em;">Total One Time Dev Cost</h3>
-              <div style="font-size: 1.5em; font-weight: bold; color: #1976d2; margin-top: 2px;">{{ dev_cost_currency }} {{ '{:,.2f}'.format(total_dev_cost) }}</div>
-            </div>
+          <!-- Total Dev Cost Card -->
+          <div style="background: #eaf6ff; border: 1px solid #2196f3; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Total One Time Dev Cost</h3>
+            <div style="font-size: 1.5em; font-weight: bold; color: #1976d2; margin-top: 2px;">{{ dev_cost_currency }} {{ '{:,.2f}'.format(total_dev_cost) }}</div>
           </div>
         </div>
         <!-- Internal Section: Margin Table for Internal Use Only -->
