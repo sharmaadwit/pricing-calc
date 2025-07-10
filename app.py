@@ -867,6 +867,21 @@ def index():
                     dev_cost_breakdown=dev_cost_breakdown,
                     committed_amount_route=True
                 )
+            # Recalculate platform fee for the current country and selections before rendering results
+            country = inputs.get('country', 'India')
+            platform_fee, fee_currency = calculate_platform_fee(
+                country,
+                inputs.get('bfsi_tier', 'NA'),
+                inputs.get('personalize_load', 'NA'),
+                inputs.get('human_agents', 'NA'),
+                inputs.get('ai_module', 'NA'),
+                inputs.get('smart_cpaas', 'No'),
+                inputs.get('increased_tps', 'NA')
+            )
+            session['chosen_platform_fee'] = platform_fee
+            if 'pricing_inputs' in session:
+                session['pricing_inputs']['platform_fee'] = platform_fee
+            # Use this platform_fee for all downstream calculations and rendering
             return render_template(
                 'index.html',
                 step='results',
