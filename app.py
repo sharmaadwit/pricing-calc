@@ -66,7 +66,7 @@ COUNTRY_CURRENCY = {
     'MENA': '$',  # USD for MENA
     'LATAM': '$',
     'Africa': '$',
-    'Europe': '€',
+    'Europe': '$',  # Use USD for Europe
     'Rest of the World': '$',
 }
 
@@ -161,6 +161,9 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
         currency = 'INR'
     elif country == 'Africa':
         min_fee = 1000
+        currency = 'USD'
+    elif country == 'Europe':
+        min_fee = 2500
         currency = 'USD'
     else:
         min_fee = 2000
@@ -411,7 +414,7 @@ def index():
             inputs.get('smart_cpaas', 'No'),
             inputs.get('increased_tps', 'NA')
         )
-
+        # Overwrite any previous platform_fee value for this calculation
         session['pricing_inputs'] = {
             'ai_price': ai_price,
             'advanced_price': advanced_price,
