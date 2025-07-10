@@ -251,6 +251,10 @@ def index():
 
     # Defensive: ensure session data exists for edit actions
     if step == 'volumes' and request.method == 'POST':
+        # Clear previous session state for a new calculation
+        for key in ['chosen_platform_fee', 'pricing_inputs', 'rate_card_platform_fee', 'results', 'selected_components', 'user_selections', 'inclusions']:
+            if key in session:
+                session.pop(key)
         # Generate a new calculation_id for each new calculation
         calculation_id = str(uuid.uuid4())
         session['calculation_id'] = calculation_id
