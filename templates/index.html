@@ -177,8 +177,8 @@
         <label>Basic Utility/Authentication Message Volume (per month):</label>
             <input type="text" name="basic_utility_volume" class="comma-number" value="{{ inputs.get('basic_utility_volume', '') }}"><br><br>
         <label>Minimum Platform Fee:</label>
-        <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly><br>
-            <small>80 TPS, Journey Builder Lite, Campaign Manager, CTWA - (Meta/Tiktok), Agent Assist < 20 Agents, Personalize upto 1 Million profiles and external events not supported</small><br><br>
+        <input type="text" id="min_platform_fee" name="min_platform_fee" value="INR 120000" readonly><br>
+        <small>Journey Builder Lite, Campaign Manager, CTWA (Meta, Tiktok), Agent Assist <20, Personalize Lite (upto 1ml and no advanced events), 80 TPS, 1 manday/month maintenance</small><br><br>
             <label>Personalize Load:</label>
             <select name="personalize_load">
                 <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>- Not Applicable</option>
