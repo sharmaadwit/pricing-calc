@@ -718,8 +718,9 @@ def index():
                 if item.get('line_item') != 'Platform Fee (Chosen)':
                     chosen_price = item.get('chosen_price', 0)
                     # Use correct rate card markup for India
-                    if inputs.get('country') == 'India' and item.get('line_item') in rate_card_markups:
-                        suggested_price = rate_card_markups[item.get('line_item')]
+                    rate_card_key = item.get('line_item') or item.get('label', '')
+                    if inputs.get('country') == 'India' and rate_card_key in rate_card_markups:
+                        suggested_price = rate_card_markups[rate_card_key]
                     else:
                         suggested_price = item.get('suggested_price', 0)
                     discount_percent = ''
@@ -731,7 +732,7 @@ def index():
                     else:
                         discount_percent = '0.00%'
                     margin_line_items.append({
-                        'line_item': item.get('line_item') or item.get('label', ''),
+                        'line_item': rate_card_key,
                         'chosen_price': chosen_price,
                         'rate_card_price': suggested_price,
                         'discount_percent': discount_percent
