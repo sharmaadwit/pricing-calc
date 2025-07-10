@@ -510,3 +510,24 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
         'mandays_breakdown': breakdown,
     }
     return total_cost, currency, breakdown_dict
+
+def get_committed_amount_rates_india(committed_amount):
+    """
+    Return default per-message rates for India based on committed amount slabs.
+    committed_amount: float (in INR)
+    Returns: dict with keys 'marketing', 'utility', 'advanced', 'ai'
+    """
+    slabs = [
+        (0, 50000,    {'marketing': 0.20, 'utility': 0.050, 'advanced': 0.5,  'ai': 1.00}),
+        (50000, 150000, {'marketing': 0.18, 'utility': 0.045, 'advanced': 0.45, 'ai': 0.95}),
+        (150000, 200000, {'marketing': 0.15, 'utility': 0.040, 'advanced': 0.40, 'ai': 0.90}),
+        (200000, 500000, {'marketing': 0.12, 'utility': 0.035, 'advanced': 0.35, 'ai': 0.85}),
+        (500000, 750000, {'marketing': 0.10, 'utility': 0.030, 'advanced': 0.30, 'ai': 0.80}),
+        (750000, 1000000, {'marketing': 0.08, 'utility': 0.025, 'advanced': 0.25, 'ai': 0.75}),
+        (1000000, 2000000, {'marketing': 0.05, 'utility': 0.020, 'advanced': 0.20, 'ai': 0.70}),
+        (2000000, float('inf'), {'marketing': 0.03, 'utility': 0.015, 'advanced': 0.15, 'ai': 0.65}),
+    ]
+    for lower, upper, rates in slabs:
+        if lower < committed_amount <= upper:
+            return rates
+    return slabs[0][2]  # fallback to first slab

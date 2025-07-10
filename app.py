@@ -16,6 +16,7 @@ from flask_migrate import Migrate
 from datetime import datetime
 from sqlalchemy import func
 import uuid
+from calculator import get_committed_amount_rates_india
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
@@ -892,14 +893,27 @@ def index():
         else:
             default_bot_ui = rates['bot_ui']
             default_custom_ai = rates['custom_ai']
-        return render_template('index.html', step='prices', suggested={
-            'ai_price': pricing_inputs.get('ai_price', ''),
-            'advanced_price': pricing_inputs.get('advanced_price', ''),
-            'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
-            'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
-            'bot_ui_manday_rate': default_bot_ui,
-            'custom_ai_manday_rate': default_custom_ai,
-        }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id)
+        # --- Set default per-message prices for India based on committed amount ---
+        if country == 'India':
+            ca_rates = get_committed_amount_rates_india(committed_amount)
+            suggested_prices = {
+                'ai_price': ca_rates['ai'],
+                'advanced_price': ca_rates['advanced'],
+                'basic_marketing_price': ca_rates['marketing'],
+                'basic_utility_price': ca_rates['utility'],
+                'bot_ui_manday_rate': default_bot_ui,
+                'custom_ai_manday_rate': default_custom_ai,
+            }
+        else:
+            suggested_prices = {
+                'ai_price': pricing_inputs.get('ai_price', ''),
+                'advanced_price': pricing_inputs.get('advanced_price', ''),
+                'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
+                'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
+                'bot_ui_manday_rate': default_bot_ui,
+                'custom_ai_manday_rate': default_custom_ai,
+            }
+        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id)
     # Default: show volume input form
     country = session.get('inputs', {}).get('country', 'India')
     currency_symbol = COUNTRY_CURRENCY.get(country, '$')
