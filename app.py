@@ -694,12 +694,36 @@ def index():
                 results['line_items'].append(platform_fee_line)
             # Create margin table for volume-based path
             margin_line_items = []
+            # --- Determine rate card markups for India ---
+            rate_card_markups = {}
+            if inputs.get('country') == 'India':
+                # Committed amount route
+                committed_amount = float(inputs.get('committed_amount', 0) or 0)
+                if committed_amount > 0:
+                    ca_rates = get_committed_amount_rates_india(committed_amount)
+                    rate_card_markups = {
+                        'AI Message': ca_rates['ai'],
+                        'Advanced Message': ca_rates['advanced'],
+                        'Basic Marketing Message': ca_rates['marketing'],
+                        'Basic Utility/Authentication Message': ca_rates['utility'],
+                    }
+                else:
+                    # Volumes route: use price_tiers
+                    from calculator import price_tiers
+                    for msg_type, label in [('ai', 'AI Message'), ('advanced', 'Advanced Message'), ('basic_marketing', 'Basic Marketing Message'), ('basic_utility', 'Basic Utility/Authentication Message')]:
+                        tiers = price_tiers['India'][msg_type]
+                        rate_card_markups[label] = tiers[0][2] if tiers else 0.0
+            # ---
             for item in results['line_items']:
                 if item.get('line_item') != 'Platform Fee (Chosen)':
                     chosen_price = item.get('chosen_price', 0)
-                    suggested_price = item.get('suggested_price', 0)
+                    # Use correct rate card markup for India
+                    if inputs.get('country') == 'India' and item.get('line_item') in rate_card_markups:
+                        suggested_price = rate_card_markups[item.get('line_item')]
+                    else:
+                        suggested_price = item.get('suggested_price', 0)
                     discount_percent = ''
-                    if chosen_price and suggested_price and suggested_price > 0:
+                    if chosen_price and suggested_price and float(suggested_price) > 0:
                         try:
                             discount_percent = f"{((float(suggested_price) - float(chosen_price)) / float(suggested_price) * 100):.2f}%"
                         except Exception:
