@@ -207,6 +207,23 @@
             </tr>
         </tbody>
       </table>
+      <!-- Average Discount Table -->
+      <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Average Discount (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>AI Message</td><td>{{ stat.avg_discount.ai|round(2) }}</td></tr>
+          <tr><td>Advanced Message</td><td>{{ stat.avg_discount.advanced|round(2) }}</td></tr>
+          <tr><td>Basic Marketing Message</td><td>{{ stat.avg_discount.basic_marketing|round(2) }}</td></tr>
+          <tr><td>Basic Utility Message</td><td>{{ stat.avg_discount.basic_utility|round(2) }}</td></tr>
+          <tr><td>Bot/UI Manday Rate</td><td>{{ stat.avg_discount.bot_ui_manday|round(2) }}</td></tr>
+          <tr><td>Custom/AI Manday Rate</td><td>{{ stat.avg_discount.custom_ai_manday|round(2) }}</td></tr>
+        </tbody>
+      </table>
       <hr>
       {% else %}
         <!-- DEBUG: country={{ country }} has non-mapping stat: stat_type={{ stat.__class__.__name__ }}, stat={{ stat }} -->

@@ -1083,6 +1083,36 @@ def analytics():
                 # Defensive: always include manday cost stats, even if empty
                 stats[country]['bot_ui_manday_cost'] = stat_dict(bot_ui_rates) if 'bot_ui_manday_cost' not in stats[country] else stats[country]['bot_ui_manday_cost']
                 stats[country]['custom_ai_manday_cost'] = stat_dict(custom_ai_rates) if 'custom_ai_manday_cost' not in stats[country] else stats[country]['custom_ai_manday_cost']
+            # --- Add average discount per country for all message types and manday rates ---
+            def avg_discount(chosen_list, rate_card_list):
+                pairs = [(c, r) for c, r in zip(chosen_list, rate_card_list) if r and r != 0]
+                if not pairs:
+                    return 0.0
+                return 100 * sum((r - c) / r for c, r in pairs) / len(pairs)
+            for country in countries:
+                country_analytics = Analytics.query.filter_by(country=country).all()
+                # Message types
+                ai_chosen = [a.ai_price for a in country_analytics if a.ai_price is not None]
+                ai_rate = [a.ai_rate_card_price for a in country_analytics if a.ai_rate_card_price is not None]
+                adv_chosen = [a.advanced_price for a in country_analytics if a.advanced_price is not None]
+                adv_rate = [a.advanced_rate_card_price for a in country_analytics if a.advanced_rate_card_price is not None]
+                mark_chosen = [a.basic_marketing_price for a in country_analytics if a.basic_marketing_price is not None]
+                mark_rate = [a.basic_marketing_rate_card_price for a in country_analytics if a.basic_marketing_rate_card_price is not None]
+                util_chosen = [a.basic_utility_price for a in country_analytics if a.basic_utility_price is not None]
+                util_rate = [a.basic_utility_rate_card_price for a in country_analytics if a.basic_utility_rate_card_price is not None]
+                # Manday rates
+                bot_ui_chosen = [a.bot_ui_manday_rate for a in country_analytics if a.bot_ui_manday_rate not in (None, 0, '0', '', 'None')]
+                bot_ui_rate = [COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])['bot_ui'] for _ in bot_ui_chosen]
+                custom_ai_chosen = [a.custom_ai_manday_rate for a in country_analytics if a.custom_ai_manday_rate not in (None, 0, '0', '', 'None')]
+                custom_ai_rate = [COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])['custom_ai'] for _ in custom_ai_chosen]
+                stats[country]['avg_discount'] = {
+                    'ai': avg_discount(ai_chosen, ai_rate),
+                    'advanced': avg_discount(adv_chosen, adv_rate),
+                    'basic_marketing': avg_discount(mark_chosen, mark_rate),
+                    'basic_utility': avg_discount(util_chosen, util_rate),
+                    'bot_ui_manday': avg_discount(bot_ui_chosen, bot_ui_rate),
+                    'custom_ai_manday': avg_discount(custom_ai_chosen, custom_ai_rate),
+                }
             # Defensive: Ensure every stat in analytics['stats'] is a dict
             for country in list(stats.keys()):
                 if not isinstance(stats[country], dict):
