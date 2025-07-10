@@ -99,12 +99,10 @@
 
     <!-- Volumes Form Section -->
     {% if step == 'volumes' %}
-    <div style="display: flex; flex-direction: row; align-items: flex-start;">
-      <div style="flex: 1; min-width: 0;">
     <form method="post" id="volumes-form">
         <input type="hidden" name="step" value="volumes">
-            <label for="user_name">Enter your name:</label>
-            <input type="text" name="user_name" id="user_name" value="{{ inputs.get('user_name', '') }}" required><br><br>
+        <label for="user_name">Enter your name:</label>
+        <input type="text" name="user_name" id="user_name" value="{{ inputs.get('user_name', '') }}" required><br><br>
         <label>Country:</label>
         <select name="country" id="country-select" onchange="updateMinPlatformFee(); toggleDevLocation();">
                 <option value="India" {% if inputs and inputs.country == 'India' %}selected{% endif %}>India</option>
@@ -136,9 +134,9 @@
             toggleDevLocation();
         };
         </script>
-        <!-- One Time Dev Prices Section -->
-        <div style="background: #eae6fa; border: 1px solid #bbaadd; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
-            <h3>One Time Dev Prices</h3>
+        <!-- Section 1: One Time Dev Charges -->
+        <div style="background: #ede7f6; border: 2px solid #bbaadd; border-radius: 10px; padding: 24px 32px; margin-bottom: 28px;">
+            <h2 style="margin-top:0; color: #5e35b1;">One Time Dev Charges</h2>
             <label for="onboarding_price">Onboarding:</label>
             <select name="onboarding_price" id="onboarding_price">
                 <option value="Yes" {% if inputs and inputs.onboarding_price == 'Yes' %}selected{% endif %}>Yes</option>
@@ -168,17 +166,24 @@
             <label for="num_ai_workspace_faq_price">No of AI Workspace - FAQ:</label>
             <input type="number" name="num_ai_workspace_faq_price" id="num_ai_workspace_faq_price" min="0" value="{{ inputs.get('num_ai_workspace_faq_price', '') }}"><br>
         </div>
-        <label>AI Message Volume (per month):</label>
+        <!-- Section 2: Volume Estimation -->
+        <div style="background: #fffde7; border: 2px solid #ffe082; border-radius: 10px; padding: 24px 32px; margin-bottom: 28px;">
+            <h2 style="margin-top:0; color: #ff8f00;">Volume Estimation</h2>
+            <label>AI Message Volume (per month):</label>
             <input type="text" name="ai_volume" class="comma-number" value="{{ inputs.get('ai_volume', '') }}"><br><br>
-        <label>Advanced Message Volume (per month):</label>
+            <label>Advanced Message Volume (per month):</label>
             <input type="text" name="advanced_volume" class="comma-number" value="{{ inputs.get('advanced_volume', '') }}"><br><br>
-        <label>Basic Marketing Message Volume (per month):</label>
+            <label>Basic Marketing Message Volume (per month):</label>
             <input type="text" name="basic_marketing_volume" class="comma-number" value="{{ inputs.get('basic_marketing_volume', '') }}"><br><br>
-        <label>Basic Utility/Authentication Message Volume (per month):</label>
-            <input type="text" name="basic_utility_volume" class="comma-number" value="{{ inputs.get('basic_utility_volume', '') }}"><br><br>
-        <label>Minimum Platform Fee:</label>
-        <input type="text" id="min_platform_fee" name="min_platform_fee" value="INR 120000" readonly><br>
-        <small>Journey Builder Lite, Campaign Manager, CTWA (Meta, Tiktok), Agent Assist <20, Personalize Lite (upto 1ml and no advanced events), 80 TPS, 1 manday/month maintenance</small><br><br>
+            <label>Basic Utility/Authentication Message Volume (per month):</label>
+            <input type="text" name="basic_utility_volume" class="comma-number" value="{{ inputs.get('basic_utility_volume', '') }}">
+        </div>
+        <!-- Section 3: Monthly Fixed Platform Fee Calculation -->
+        <div style="background: #e3f2fd; border: 2px solid #90caf9; border-radius: 10px; padding: 24px 32px; margin-bottom: 28px;">
+            <h2 style="margin-top:0; color: #1976d2;">Monthly Fixed Platform Fee Calculation</h2>
+            <label>Minimum Platform Fee:</label>
+            <input type="text" id="min_platform_fee" name="min_platform_fee" value="INR 120000" readonly><br>
+            <small>Journey Builder Lite, Campaign Manager, CTWA (Meta, Tiktok), Agent Assist <20, Personalize Lite (upto 1ml and no advanced events), 80 TPS, 1 manday/month maintenance</small><br><br>
             <label>Personalize Load:</label>
             <select name="personalize_load">
                 <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>- Not Applicable</option>
@@ -186,23 +191,23 @@
                 <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced - 10 million records, external events supported</option>
             </select><br>
             <small>If the client requires large number of profiles and support for external events, select the appropriate tier.</small><br><br>
-        <label>BFSI Tier:</label>
-        <select name="bfsi_tier">
+            <label>BFSI Tier:</label>
+            <select name="bfsi_tier">
                 <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>- Not Applicable</option>
                 <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1</option>
                 <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2</option>
                 <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3</option>
             </select><br>
             <small>Each tier comes with specific controls of privacy and security requirements. The exact inclusions of each tier will be displayed on the final pricing page.</small><br><br>
-        <label>AI Module (Yes/No):</label>
-        <select name="ai_module">
+            <label>AI Module (Yes/No):</label>
+            <select name="ai_module">
                 <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>- Not Applicable</option>
                 <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
                 <option value="No" {% if inputs and inputs.ai_module == 'No' %}selected{% endif %}>No</option>
             </select><br>
             <small>Access to Workspace Configuration and data retraining screens</small><br><br>
-        <label>Smart CPaaS:</label>
-        <select name="smart_cpaas">
+            <label>Smart CPaaS:</label>
+            <select name="smart_cpaas">
                 <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
                 <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes</option>
             </select><br>
@@ -220,11 +225,10 @@
                 <option value="20+" {% if inputs and inputs.human_agents == '20+' %}selected{% endif %}>20+</option>
                 <option value="50+" {% if inputs and inputs.human_agents == '50+' %}selected{% endif %}>50+</option>
                 <option value="100+" {% if inputs and inputs.human_agents == '100+' %}selected{% endif %}>100+</option>
-        </select><br><br>
-        <input type="submit" value="Next: Rate Card">
+            </select><br><br>
+            <input type="submit" value="Next: Rate Card">
+        </div>
     </form>
-      </div>
-    </div>
     <script>
     function updateMinPlatformFee() {
         var country = document.getElementById('country-select').value;
@@ -298,9 +302,9 @@
         <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
             <h3 style="margin-top:0;">Manday Rates</h3>
             <label>Bot/UI Manday Rate:</label>
-            <input type="text" name="bot_ui_manday_rate" id="bot_ui_manday_rate" min="0" class="comma-number" value="{{ suggested.bot_ui_manday_rate }}" required><br><br>
+            <input type="text" name="bot_ui_manday_rate" id="bot_ui_manday_rate" min="0" class="comma-number" value="{{ '{:,}'.format(suggested.bot_ui_manday_rate|float) if suggested.bot_ui_manday_rate is not none and suggested.bot_ui_manday_rate != '' else '' }}" required><br><br>
             <label>Custom/AI Manday Rate:</label>
-            <input type="text" name="custom_ai_manday_rate" id="custom_ai_manday_rate" min="0" class="comma-number" value="{{ suggested.custom_ai_manday_rate }}" required>
+            <input type="text" name="custom_ai_manday_rate" id="custom_ai_manday_rate" min="0" class="comma-number" value="{{ '{:,}'.format(suggested.custom_ai_manday_rate|float) if suggested.custom_ai_manday_rate is not none and suggested.custom_ai_manday_rate != '' else '' }}" required>
         </div>
         <input type="submit" value="Calculate Results">
     </form>
