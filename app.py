@@ -967,9 +967,20 @@ def index():
             committed_amount = 0.0
         inputs['committed_amount'] = committed_amount
         session['inputs'] = inputs
+        # Recalculate platform fee for the current country and selections
+        country = inputs.get('country', 'India')
+        platform_fee, fee_currency = calculate_platform_fee(
+            country,
+            inputs.get('bfsi_tier', 'NA'),
+            inputs.get('personalize_load', 'NA'),
+            inputs.get('human_agents', 'NA'),
+            inputs.get('ai_module', 'NA'),
+            inputs.get('smart_cpaas', 'No'),
+            inputs.get('increased_tps', 'NA')
+        )
+        session['chosen_platform_fee'] = platform_fee
         # Go to prices page
         pricing_inputs = session.get('pricing_inputs', {}) or {}
-        country = inputs.get('country', 'India')
         dev_location = inputs.get('dev_location', 'India')
         rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
         if country == 'LATAM':
