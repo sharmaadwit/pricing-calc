@@ -16,7 +16,7 @@ from flask_migrate import Migrate
 from datetime import datetime
 from sqlalchemy import func
 import uuid
-from calculator import get_committed_amount_rates_india
+from calculator import get_committed_amount_rates
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
@@ -634,37 +634,45 @@ def index():
                 user_selections.append(('Increased TPS', inputs['increased_tps']))
             inclusions = initialize_inclusions()
             final_inclusions = []
-            contradiction_warning = None
-            # Platform base features (always included)
-            final_inclusions += inclusions['Platform Fee Used for Margin Calculation']
-            # Personalize Load (highest only)
+            # Always include base inclusions except those that overlap with selected options
+            base_inclusions = inclusions['Platform Fee Used for Margin Calculation']
+            # Remove overlapping items from base inclusions
+            base_inclusions_filtered = []
+            # Map of option to their possible overlapping base inclusions
+            overlap_map = {
+                'Personalize Load': ['Personalize Lite (upto 1ml and no advanced events)'],
+                'Human Agents': ['Agent Assist <20'],
+                'Increased TPS': ['80 TPS'],
+            }
+            # Get selected options
             personalize_load = inputs.get('personalize_load', 'NA')
+            human_agents = inputs.get('human_agents', 'NA')
+            increased_tps = inputs.get('increased_tps', 'NA')
+            # Only add base inclusions that do not overlap with selected options
+            for item in base_inclusions:
+                if (personalize_load != 'Lite' and item in overlap_map['Personalize Load']) or \
+                   (human_agents not in ['NA', 'No', '<20'] and item in overlap_map['Human Agents']) or \
+                   (increased_tps not in ['NA', 'No', '80'] and item in overlap_map['Increased TPS']):
+                    continue
+                base_inclusions_filtered.append(item)
+            final_inclusions += base_inclusions_filtered
+            # Add only the selected option inclusions
             if personalize_load == 'Advanced':
                 final_inclusions += inclusions['Personalize Load Advanced']
             elif personalize_load == 'Standard':
                 final_inclusions += inclusions['Personalize Load Standard']
-            elif personalize_load == 'Lite' or personalize_load in ['NA', 'No', None]:
+            elif personalize_load == 'Lite':
                 final_inclusions += inclusions['Personalize Load Lite']
-            # BFSI Tier (highest only)
-            bfsi_tier = inputs.get('bfsi_tier', 'NA')
-            if bfsi_tier == 'Tier 3':
-                final_inclusions += inclusions['BFSI Tier 3']
-            elif bfsi_tier == 'Tier 2':
-                final_inclusions += inclusions['BFSI Tier 2']
-            elif bfsi_tier == 'Tier 1':
-                final_inclusions += inclusions['BFSI Tier 1']
-            # Human Agents (highest only)
-            human_agents = inputs.get('human_agents', 'NA')
+            # Human Agents
             if human_agents == '100+':
                 final_inclusions += inclusions['Human Agents 100+']
             elif human_agents == '50+':
                 final_inclusions += inclusions['Human Agents 50+']
             elif human_agents == '20+':
                 final_inclusions += inclusions['Human Agents 20+']
-            elif human_agents == '<20' or human_agents in ['NA', 'No', None]:
+            elif human_agents == '<20':
                 final_inclusions += inclusions['Human Agents <20']
-            # Increased TPS (highest only)
-            increased_tps = inputs.get('increased_tps', 'NA')
+            # Increased TPS
             if increased_tps == '1000':
                 final_inclusions += inclusions['Increased TPS 1000']
             elif increased_tps == '250':
@@ -675,6 +683,14 @@ def index():
             # Smart CPaaS
             if inputs.get('smart_cpaas', 'No') == 'Yes':
                 final_inclusions += inclusions['Smart CPaaS Yes']
+            # BFSI Tier (highest only)
+            bfsi_tier = inputs.get('bfsi_tier', 'NA')
+            if bfsi_tier == 'Tier 3':
+                final_inclusions += inclusions['BFSI Tier 3']
+            elif bfsi_tier == 'Tier 2':
+                final_inclusions += inclusions['BFSI Tier 2']
+            elif bfsi_tier == 'Tier 1':
+                final_inclusions += inclusions['BFSI Tier 1']
             # Pass contradiction_warning to the template for display if needed
             session['selected_components'] = user_selections
             session['results'] = results
@@ -701,7 +717,7 @@ def index():
                 # Committed amount route
                 committed_amount = float(inputs.get('committed_amount', 0) or 0)
                 if committed_amount > 0:
-                    ca_rates = get_committed_amount_rates_india(committed_amount)
+                    ca_rates = get_committed_amount_rates(inputs.get('country', 'India'), committed_amount)
                     rate_card_markups = {
                         'AI Message': ca_rates['ai'],
                         'Advanced Message': ca_rates['advanced'],
@@ -808,6 +824,37 @@ def index():
             # When setting results['suggested_revenue'], use rate_card_platform_fee instead of platform_fee
             results['suggested_revenue'] = (results.get('suggested_revenue', 0) - platform_fee) + rate_card_platform_fee
             print("RENDERING RESULTS PAGE")
+            if all(float(inputs.get(v, 0)) == 0.0 for v in ['ai_volume', 'advanced_volume', 'basic_marketing_volume', 'basic_utility_volume']):
+                committed_amount = float(inputs.get('committed_amount', 0) or 0)
+                monthly_fee = float(platform_fee) + committed_amount
+                return render_template(
+                    'index.html',
+                    step='results',
+                    currency_symbol=currency_symbol,
+                    inclusions=final_inclusions,
+                    final_inclusions=final_inclusions,
+                    results=results,
+                    bundle_details=bundle_details,
+                    expected_invoice_amount=monthly_fee,
+                    chosen_platform_fee=platform_fee,
+                    rate_card_platform_fee=rate_card_platform_fee,
+                    platform_fee=platform_fee,
+                    platform_fee_rate_card=rate_card_platform_fee,
+                    pricing_table=results['line_items'],
+                    margin_table=margin_line_items,
+                    user_selections=user_selections,
+                    inputs=inputs,
+                    contradiction_warning=contradiction_warning,
+                    top_users=top_users,
+                    total_mandays=total_mandays,
+                    total_dev_cost=total_dev_cost,
+                    dev_cost_currency=dev_cost_currency,
+                    manday_breakdown=manday_breakdown,
+                    manday_rates=manday_rates,
+                    calculation_id=calculation_id,
+                    dev_cost_breakdown=dev_cost_breakdown,
+                    committed_amount_route=True
+                )
             return render_template(
                 'index.html',
                 step='results',
@@ -921,7 +968,7 @@ def index():
             default_custom_ai = rates['custom_ai']
         # --- Set default per-message prices for India based on committed amount ---
         if country == 'India':
-            ca_rates = get_committed_amount_rates_india(committed_amount)
+            ca_rates = get_committed_amount_rates(inputs.get('country', 'India'), committed_amount)
             suggested_prices = {
                 'ai_price': ca_rates['ai'],
                 'advanced_price': ca_rates['advanced'],

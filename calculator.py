@@ -511,23 +511,85 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
     }
     return total_cost, currency, breakdown_dict
 
-def get_committed_amount_rates_india(committed_amount):
+def get_committed_amount_rates(country, committed_amount):
     """
-    Return default per-message rates for India based on committed amount slabs.
-    committed_amount: float (in INR)
+    Return default per-message rates for a country based on committed amount slabs.
+    country: str
+    committed_amount: float (in INR or USD as per country)
     Returns: dict with keys 'marketing', 'utility', 'advanced', 'ai'
     """
-    slabs = [
-        (0, 50000,    {'marketing': 0.20, 'utility': 0.050, 'advanced': 0.5,  'ai': 1.00}),
-        (50000, 150000, {'marketing': 0.18, 'utility': 0.045, 'advanced': 0.45, 'ai': 0.95}),
-        (150000, 200000, {'marketing': 0.15, 'utility': 0.040, 'advanced': 0.40, 'ai': 0.90}),
-        (200000, 500000, {'marketing': 0.12, 'utility': 0.035, 'advanced': 0.35, 'ai': 0.85}),
-        (500000, 750000, {'marketing': 0.10, 'utility': 0.030, 'advanced': 0.30, 'ai': 0.80}),
-        (750000, 1000000, {'marketing': 0.08, 'utility': 0.025, 'advanced': 0.25, 'ai': 0.75}),
-        (1000000, 2000000, {'marketing': 0.05, 'utility': 0.020, 'advanced': 0.20, 'ai': 0.70}),
-        (2000000, float('inf'), {'marketing': 0.03, 'utility': 0.015, 'advanced': 0.15, 'ai': 0.65}),
-    ]
+    slabs_by_country = {
+        'India': [
+            (0, 50000,    {'marketing': 0.20, 'utility': 0.05, 'advanced': 0.50, 'ai': 1.00}),
+            (50000, 150000, {'marketing': 0.18, 'utility': 0.05, 'advanced': 0.45, 'ai': 0.95}),
+            (150000, 200000, {'marketing': 0.15, 'utility': 0.04, 'advanced': 0.40, 'ai': 0.90}),
+            (200000, 250000, {'marketing': 0.12, 'utility': 0.04, 'advanced': 0.35, 'ai': 0.85}),
+            (250000, 500000, {'marketing': 0.10, 'utility': 0.03, 'advanced': 0.30, 'ai': 0.80}),
+            (500000, 750000, {'marketing': 0.08, 'utility': 0.03, 'advanced': 0.25, 'ai': 0.75}),
+            (750000, 1000000, {'marketing': 0.05, 'utility': 0.02, 'advanced': 0.20, 'ai': 0.70}),
+            (1000000, float('inf'), {'marketing': 0.03, 'utility': 0.02, 'advanced': 0.15, 'ai': 0.65}),
+        ],
+        'MENA': [
+            (0, 2500,    {'marketing': 0.0168, 'utility': 0.0042, 'advanced': 0.0420, 'ai': 0.0840}),
+            (2500, 5000, {'marketing': 0.0151, 'utility': 0.0038, 'advanced': 0.0378, 'ai': 0.0798}),
+            (5000, 7500, {'marketing': 0.0126, 'utility': 0.0034, 'advanced': 0.0336, 'ai': 0.0756}),
+            (7500, 10000, {'marketing': 0.0101, 'utility': 0.0029, 'advanced': 0.0294, 'ai': 0.0714}),
+            (10000, 15000, {'marketing': 0.0084, 'utility': 0.0025, 'advanced': 0.0252, 'ai': 0.0672}),
+            (15000, 20000, {'marketing': 0.0067, 'utility': 0.0021, 'advanced': 0.0210, 'ai': 0.0630}),
+            (20000, 50000, {'marketing': 0.0042, 'utility': 0.0017, 'advanced': 0.0168, 'ai': 0.0588}),
+            (50000, 100000, {'marketing': 0.0025, 'utility': 0.0013, 'advanced': 0.0126, 'ai': 0.0546}),
+            (100000, float('inf'), {'marketing': 0.0025, 'utility': 0.0013, 'advanced': 0.0126, 'ai': 0.0546}),
+        ],
+        'LATAM': [
+            (0, 2500,    {'marketing': 0.0240, 'utility': 0.0060, 'advanced': 0.0600, 'ai': 0.1200}),
+            (2500, 5000, {'marketing': 0.0216, 'utility': 0.0054, 'advanced': 0.0540, 'ai': 0.1140}),
+            (5000, 7500, {'marketing': 0.0180, 'utility': 0.0048, 'advanced': 0.0480, 'ai': 0.1080}),
+            (7500, 10000, {'marketing': 0.0144, 'utility': 0.0042, 'advanced': 0.0420, 'ai': 0.1020}),
+            (10000, 15000, {'marketing': 0.0120, 'utility': 0.0036, 'advanced': 0.0360, 'ai': 0.0960}),
+            (15000, 20000, {'marketing': 0.0096, 'utility': 0.0030, 'advanced': 0.0300, 'ai': 0.0900}),
+            (20000, 50000, {'marketing': 0.0060, 'utility': 0.0024, 'advanced': 0.0240, 'ai': 0.0840}),
+            (50000, 100000, {'marketing': 0.0036, 'utility': 0.0018, 'advanced': 0.0180, 'ai': 0.0780}),
+            (100000, float('inf'), {'marketing': 0.0036, 'utility': 0.0018, 'advanced': 0.0180, 'ai': 0.0780}),
+        ],
+        'Africa': [
+            (0, 2500,    {'marketing': 0.0096, 'utility': 0.0024, 'advanced': 0.0240, 'ai': 0.0480}),
+            (2500, 5000, {'marketing': 0.0086, 'utility': 0.0022, 'advanced': 0.0216, 'ai': 0.0456}),
+            (5000, 7500, {'marketing': 0.0072, 'utility': 0.0019, 'advanced': 0.0192, 'ai': 0.0432}),
+            (7500, 10000, {'marketing': 0.0058, 'utility': 0.0017, 'advanced': 0.0168, 'ai': 0.0408}),
+            (10000, 15000, {'marketing': 0.0048, 'utility': 0.0014, 'advanced': 0.0144, 'ai': 0.0384}),
+            (15000, 20000, {'marketing': 0.0038, 'utility': 0.0012, 'advanced': 0.0120, 'ai': 0.0360}),
+            (20000, 50000, {'marketing': 0.0024, 'utility': 0.0010, 'advanced': 0.0096, 'ai': 0.0336}),
+            (50000, 100000, {'marketing': 0.0014, 'utility': 0.0007, 'advanced': 0.0072, 'ai': 0.0312}),
+            (100000, float('inf'), {'marketing': 0.0014, 'utility': 0.0007, 'advanced': 0.0072, 'ai': 0.0312}),
+        ],
+        'Europe': [
+            (0, 2500,    {'marketing': 0.0480, 'utility': 0.0120, 'advanced': 0.1200, 'ai': 0.2400}),
+            (2500, 5000, {'marketing': 0.0432, 'utility': 0.0108, 'advanced': 0.1080, 'ai': 0.2280}),
+            (5000, 7500, {'marketing': 0.0360, 'utility': 0.0096, 'advanced': 0.0960, 'ai': 0.2160}),
+            (7500, 10000, {'marketing': 0.0288, 'utility': 0.0084, 'advanced': 0.0840, 'ai': 0.2040}),
+            (10000, 15000, {'marketing': 0.0240, 'utility': 0.0072, 'advanced': 0.0720, 'ai': 0.1920}),
+            (15000, 20000, {'marketing': 0.0192, 'utility': 0.0060, 'advanced': 0.0600, 'ai': 0.1800}),
+            (20000, 50000, {'marketing': 0.0120, 'utility': 0.0048, 'advanced': 0.0480, 'ai': 0.1680}),
+            (50000, 100000, {'marketing': 0.0072, 'utility': 0.0036, 'advanced': 0.0360, 'ai': 0.1560}),
+            (100000, float('inf'), {'marketing': 0.0072, 'utility': 0.0036, 'advanced': 0.0360, 'ai': 0.1560}),
+        ],
+        'Rest of the World': [
+            (0, 2500,    {'marketing': 0.0240, 'utility': 0.0060, 'advanced': 0.0600, 'ai': 0.1200}),
+            (2500, 5000, {'marketing': 0.0216, 'utility': 0.0054, 'advanced': 0.0540, 'ai': 0.1140}),
+            (5000, 7500, {'marketing': 0.0180, 'utility': 0.0048, 'advanced': 0.0480, 'ai': 0.1080}),
+            (7500, 10000, {'marketing': 0.0144, 'utility': 0.0042, 'advanced': 0.0420, 'ai': 0.1020}),
+            (10000, 15000, {'marketing': 0.0120, 'utility': 0.0036, 'advanced': 0.0360, 'ai': 0.0960}),
+            (15000, 20000, {'marketing': 0.0096, 'utility': 0.0030, 'advanced': 0.0300, 'ai': 0.0900}),
+            (20000, 50000, {'marketing': 0.0060, 'utility': 0.0024, 'advanced': 0.0240, 'ai': 0.0840}),
+            (50000, 100000, {'marketing': 0.0036, 'utility': 0.0018, 'advanced': 0.0180, 'ai': 0.0780}),
+            (100000, float('inf'), {'marketing': 0.0036, 'utility': 0.0018, 'advanced': 0.0180, 'ai': 0.0780}),
+        ],
+    }
+    slabs = slabs_by_country.get(country, slabs_by_country['Rest of the World'])
     for lower, upper, rates in slabs:
-        if lower < committed_amount <= upper:
+        if lower <= committed_amount < upper:
             return rates
     return slabs[0][2]  # fallback to first slab
+
+def get_committed_amount_rates_india(committed_amount):
+    return get_committed_amount_rates('India', committed_amount)
