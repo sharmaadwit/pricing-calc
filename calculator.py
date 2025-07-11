@@ -5,145 +5,9 @@
 
 # --- Price Tiers by Country and Message Type ---
 # Each country has a set of volume-based price tiers for each message type.
-price_tiers = {
-    'India': {
-        'ai': [
-            (0, 10000, 1.00),
-            (10000, 100000, 0.90),
-            (100000, 500000, 0.80),
-            (500000, 1000000, 0.70),
-            (1000000, float('inf'), 0.60),
-        ],
-        'advanced': [
-            (0, 50000, 0.50),
-            (50000, 150000, 0.45),
-            (150000, 500000, 0.40),
-            (500000, float('inf'), 0.35),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.05),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.03),
-        ],
-    },
-    'MENA': {
-        'ai': [
-            (0, 10000, 0.084),
-            (10000, 100000, 0.076),
-            (100000, 500000, 0.067),
-            (500000, 1000000, 0.059),
-            (1000000, float('inf'), 0.050),
-        ],
-        'advanced': [
-            (0, 50000, 0.042),
-            (50000, 150000, 0.038),
-            (150000, 500000, 0.034),
-            (500000, float('inf'), 0.029),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.0042),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.003),
-        ],
-    },
-    'LATAM': {
-        'ai': [
-            (0, 10000, 0.120),
-            (10000, 100000, 0.108),
-            (100000, 500000, 0.096),
-            (500000, 1000000, 0.084),
-            (1000000, float('inf'), 0.072),
-        ],
-        'advanced': [
-            (0, 50000, 0.060),
-            (50000, 150000, 0.054),
-            (150000, 500000, 0.048),
-            (500000, float('inf'), 0.042),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.006),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.004),
-        ],
-    },
-    'Africa': {
-        'ai': [
-            (0, 10000, 0.048),
-            (10000, 100000, 0.043),
-            (100000, 500000, 0.038),
-            (500000, 1000000, 0.034),
-            (1000000, float('inf'), 0.029),
-        ],
-        'advanced': [
-            (0, 50000, 0.024),
-            (50000, 150000, 0.022),
-            (150000, 500000, 0.019),
-            (500000, float('inf'), 0.017),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.002),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.001),
-        ],
-    },
-    'Europe': {
-        'ai': [
-            (0, 10000, 0.240),
-            (10000, 100000, 0.216),
-            (100000, 500000, 0.192),
-            (500000, 1000000, 0.168),
-            (1000000, float('inf'), 0.144),
-        ],
-        'advanced': [
-            (0, 50000, 0.120),
-            (50000, 150000, 0.108),
-            (150000, 500000, 0.096),
-            (500000, float('inf'), 0.084),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.012),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.007),
-        ],
-    },
-    'Rest of the World': {
-        'ai': [
-            (0, 10000, 0.120),
-            (10000, 100000, 0.108),
-            (100000, 500000, 0.096),
-            (500000, 1000000, 0.084),
-            (1000000, float('inf'), 0.072),
-        ],
-        'advanced': [
-            (0, 50000, 0.060),
-            (50000, 150000, 0.054),
-            (150000, 500000, 0.048),
-            (500000, float('inf'), 0.042),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.006),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.007),
-        ],
-    },
-}
 
 # --- Cost Table by Country ---
 # Meta costs for each country and message type.
-meta_costs_table = {
-    'India': {'marketing': 0.78, 'utility': 0.12, 'ai': 0.30},
-    'MENA': {'marketing': 0.0455 * 3.67, 'utility': 0.0115 * 3.67, 'ai': 0.0036 * 3.67},
-    'LATAM': {'marketing': 0.0625, 'utility': 0.0080, 'ai': 0.0036},
-    'Africa': {'marketing': 0.0379, 'utility': 0.0076, 'ai': 0.0036},
-    'Europe': {'marketing': 0.0529, 'utility': 0.0220, 'ai': 0.0036},
-    'Rest of the World': {'marketing': 0.0604, 'utility': 0.0077, 'ai': 0.0036},
-}
 
 # --- Activity to Manday Mapping (applies to all countries) ---
 ACTIVITY_MANDAYS = {
@@ -157,111 +21,10 @@ ACTIVITY_MANDAYS = {
     "ux": 1,
 }
 
-# --- Country-specific Manday Rates (Bot/UI and Custom/AI) ---
-COUNTRY_MANDAY_RATES = {
-    'India': {
-        'currency': 'INR',
-        'bot_ui': 20000,  # Updated
-        'custom_ai': 30000,  # Updated
-    },
-    'LATAM': {
-        'currency': 'USD',
-        'bot_ui': {
-            'LATAM': 825,
-            'India': 440,
-        },
-        'custom_ai': {
-            'LATAM': 1100,
-            'India': 605,
-        },
-    },
-    'MENA': {
-        'currency': 'AED',
-        'bot_ui': 1650,
-        'custom_ai': 2750,
-    },
-    'Africa': {
-        'currency': 'USD',
-        'bot_ui': 440,
-        'custom_ai': 605,
-    },
-    'Rest of the World': {
-        'currency': 'USD',
-        'bot_ui': 440,
-        'custom_ai': 605,
-    },
-    'Europe': {
-        'currency': 'USD',  # Not in table, fallback to Rest of the World?
-        'bot_ui': 440,
-        'custom_ai': 605,
-    },
-}
+from pricing_config import COUNTRY_MANDAY_RATES, price_tiers, meta_costs_table, bundle_markup_rates
+from typing import Any, Dict, Optional, Tuple
 
-# --- Messaging Bundle Markup Rates by Country (for committed amount/bundle flow) ---
-bundle_markup_rates = {
-    'India': [
-        {'min': 0, 'max': 50000, 'basic_marketing': 0.20, 'basic_utility': 0.05, 'advanced': 0.50, 'ai': 1.00},
-        {'min': 50001, 'max': 150000, 'basic_marketing': 0.18, 'basic_utility': 0.05, 'advanced': 0.45, 'ai': 0.95},
-        {'min': 150001, 'max': 200000, 'basic_marketing': 0.15, 'basic_utility': 0.04, 'advanced': 0.40, 'ai': 0.90},
-        {'min': 200001, 'max': 250000, 'basic_marketing': 0.12, 'basic_utility': 0.04, 'advanced': 0.35, 'ai': 0.85},
-        {'min': 250001, 'max': 500000, 'basic_marketing': 0.10, 'basic_utility': 0.03, 'advanced': 0.30, 'ai': 0.80},
-        {'min': 500001, 'max': 750000, 'basic_marketing': 0.08, 'basic_utility': 0.03, 'advanced': 0.25, 'ai': 0.75},
-        {'min': 750001, 'max': 1000000, 'basic_marketing': 0.05, 'basic_utility': 0.02, 'advanced': 0.20, 'ai': 0.70},
-        {'min': 1000001, 'max': 2000000, 'basic_marketing': 0.03, 'basic_utility': 0.02, 'advanced': 0.15, 'ai': 0.65},
-    ],
-    'MENA': [
-        {'min': 0, 'max': 1000, 'basic_marketing': 0.0033, 'basic_utility': 0.0008, 'advanced': 0.0083, 'ai': 0.0167},
-        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0030, 'basic_utility': 0.0008, 'advanced': 0.0075, 'ai': 0.0158},
-        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0025, 'basic_utility': 0.0007, 'advanced': 0.0067, 'ai': 0.0150},
-        {'min': 2501, 'max': 3500, 'basic_marketing': 0.0020, 'basic_utility': 0.0006, 'advanced': 0.0058, 'ai': 0.0142},
-        {'min': 3501, 'max': 5000, 'basic_marketing': 0.0017, 'basic_utility': 0.0005, 'advanced': 0.0050, 'ai': 0.0133},
-        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0013, 'basic_utility': 0.0004, 'advanced': 0.0042, 'ai': 0.0125},
-        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0008, 'basic_utility': 0.0003, 'advanced': 0.0033, 'ai': 0.0117},
-        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0005, 'basic_utility': 0.0003, 'advanced': 0.0025, 'ai': 0.0108},
-    ],
-    'LATAM': [
-        {'min': 0, 'max': 1000, 'basic_marketing': 0.0033, 'basic_utility': 0.0008, 'advanced': 0.0083, 'ai': 0.0167},
-        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0030, 'basic_utility': 0.0008, 'advanced': 0.0075, 'ai': 0.0158},
-        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0025, 'basic_utility': 0.0007, 'advanced': 0.0067, 'ai': 0.0150},
-        {'min': 2501, 'max': 3500, 'basic_marketing': 0.0020, 'basic_utility': 0.0006, 'advanced': 0.0058, 'ai': 0.0142},
-        {'min': 3501, 'max': 5000, 'basic_marketing': 0.0017, 'basic_utility': 0.0005, 'advanced': 0.0050, 'ai': 0.0133},
-        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0013, 'basic_utility': 0.0004, 'advanced': 0.0042, 'ai': 0.0125},
-        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0008, 'basic_utility': 0.0003, 'advanced': 0.0033, 'ai': 0.0117},
-        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0005, 'basic_utility': 0.0003, 'advanced': 0.0025, 'ai': 0.0108},
-    ],
-    'Africa': [
-        {'min': 0, 'max': 1000, 'basic_marketing': 0.0017, 'basic_utility': 0.0004, 'advanced': 0.0042, 'ai': 0.0083},
-        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0015, 'basic_utility': 0.0004, 'advanced': 0.0037, 'ai': 0.0079},
-        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0012, 'basic_utility': 0.0003, 'advanced': 0.0033, 'ai': 0.0075},
-        {'min': 2501, 'max': 3500, 'basic_marketing': 0.0010, 'basic_utility': 0.0003, 'advanced': 0.0029, 'ai': 0.0071},
-        {'min': 3501, 'max': 5000, 'basic_marketing': 0.0008, 'basic_utility': 0.0002, 'advanced': 0.0025, 'ai': 0.0067},
-        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0007, 'basic_utility': 0.0002, 'advanced': 0.0021, 'ai': 0.0062},
-        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0004, 'basic_utility': 0.0002, 'advanced': 0.0017, 'ai': 0.0058},
-        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0002, 'basic_utility': 0.0001, 'advanced': 0.0012, 'ai': 0.0054},
-    ],
-    'Europe': [
-        {'min': 0, 'max': 1000, 'basic_marketing': 0.0042, 'basic_utility': 0.0010, 'advanced': 0.0105, 'ai': 0.0209},
-        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0038, 'basic_utility': 0.0009, 'advanced': 0.0094, 'ai': 0.0199},
-        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0031, 'basic_utility': 0.0008, 'advanced': 0.0084, 'ai': 0.0188},
-        {'min': 2501, 'max': 3500, 'basic_marketing': 0.0025, 'basic_utility': 0.0007, 'advanced': 0.0073, 'ai': 0.0178},
-        {'min': 3501, 'max': 5000, 'basic_marketing': 0.0021, 'basic_utility': 0.0006, 'advanced': 0.0063, 'ai': 0.0167},
-        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0017, 'basic_utility': 0.0005, 'advanced': 0.0052, 'ai': 0.0157},
-        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0010, 'basic_utility': 0.0004, 'advanced': 0.0042, 'ai': 0.0146},
-        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0006, 'basic_utility': 0.0003, 'advanced': 0.0031, 'ai': 0.0136},
-    ],
-    'Rest of the World': [
-        {'min': 0, 'max': 1000, 'basic_marketing': 0.0033, 'basic_utility': 0.0008, 'advanced': 0.0083, 'ai': 0.0167},
-        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0030, 'basic_utility': 0.0008, 'advanced': 0.0075, 'ai': 0.0158},
-        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0025, 'basic_utility': 0.0007, 'advanced': 0.0067, 'ai': 0.0150},
-        {'min': 2501, 'max': 3500, 'basic_marketing': 0.0020, 'basic_utility': 0.0006, 'advanced': 0.0058, 'ai': 0.0142},
-        {'min': 3501, 'max': 5000, 'basic_marketing': 0.0017, 'basic_utility': 0.0005, 'advanced': 0.0050, 'ai': 0.0133},
-        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0013, 'basic_utility': 0.0004, 'advanced': 0.0042, 'ai': 0.0125},
-        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0008, 'basic_utility': 0.0003, 'advanced': 0.0033, 'ai': 0.0117},
-        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0005, 'basic_utility': 0.0003, 'advanced': 0.0025, 'ai': 0.0108},
-    ],
-}
-
-def get_suggested_price(country, msg_type, volume, currency=None):
+def get_suggested_price(country: str, msg_type: str, volume: int, currency: Optional[str] = None) -> float:
     """
     Return the suggested price for a message type, country, and volume.
     Looks up the correct tier based on volume.
@@ -272,7 +35,7 @@ def get_suggested_price(country, msg_type, volume, currency=None):
             return price
     return 0.0
 
-def get_next_tier_price(country, msg_type, volume):
+def get_next_tier_price(country: str, msg_type: str, volume: int) -> float:
     """
     Return the next tier price for a message type, country, and volume (overage price).
     """
@@ -290,9 +53,17 @@ def get_next_tier_price(country, msg_type, volume):
     return 0.0
 
 def calculate_pricing(
-    country, ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume, platform_fee,
-    ai_price=None, advanced_price=None, basic_marketing_price=None, basic_utility_price=None
-):
+    country: str,
+    ai_volume: int,
+    advanced_volume: int,
+    basic_marketing_volume: int,
+    basic_utility_volume: int,
+    platform_fee: float,
+    ai_price: Optional[float] = None,
+    advanced_price: Optional[float] = None,
+    basic_marketing_price: Optional[float] = None,
+    basic_utility_price: Optional[float] = None
+) -> Dict[str, Any]:
     """
     Calculate all pricing, revenue, costs, and margin for the given inputs.
     Returns a dictionary with detailed line items and summary values.
@@ -429,7 +200,7 @@ def calculate_pricing(
         'suggested_margin': f"{suggested_margin_percentage:.2f}%"
     }
 
-def calculate_total_mandays(inputs):
+def calculate_total_mandays(inputs: Dict[str, Any]) -> float:
     """
     Calculate the total mandays based on user inputs and the activity-to-manday mapping.
     Applies the '4_journey_4_api' logic for all countries: for every set of 4 journeys and 4 apis, use 5 mandays;
@@ -468,7 +239,7 @@ def calculate_total_mandays(inputs):
         total_mandays += ACTIVITY_MANDAYS['ux']
     return total_mandays
 
-def calculate_total_mandays_breakdown(inputs):
+def calculate_total_mandays_breakdown(inputs: Dict[str, Any]) -> Dict[str, float]:
     """
     Returns a dict with mandays for bot_ui and custom_ai activities, ignoring items with 0 value.
     """
@@ -508,7 +279,7 @@ def calculate_total_mandays_breakdown(inputs):
         'total': bot_ui_mandays + custom_ai_mandays
     }
 
-def calculate_total_manday_cost(inputs, manday_rates=None):
+def calculate_total_manday_cost(inputs: Dict[str, Any], manday_rates: Optional[Dict[str, Any]] = None) -> Tuple[float, str, Dict[str, Any]]:
     """
     Calculate the total cost for mandays, using the correct rate for each activity and country/dev location.
     If user enters 0 for bot_ui rate but selects any of Onboarding, UX, Testing/QA, AA Setup as Yes, use default rate for those activities.
@@ -575,7 +346,7 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
     }
     return total_cost, currency, breakdown_dict
 
-def get_committed_amount_rates(country, committed_amount):
+def get_committed_amount_rates(country: str, committed_amount: float) -> Dict[str, float]:
     """
     Return default per-message rates for a country based on committed amount slabs.
     country: str
@@ -655,5 +426,5 @@ def get_committed_amount_rates(country, committed_amount):
             return rates
     return slabs[0][2]  # fallback to first slab
 
-def get_committed_amount_rates_india(committed_amount):
+def get_committed_amount_rates_india(committed_amount: float) -> Dict[str, float]:
     return get_committed_amount_rates('India', committed_amount)

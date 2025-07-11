@@ -17,6 +17,8 @@ from datetime import datetime
 from sqlalchemy import func
 import uuid
 from calculator import get_committed_amount_rates
+from pricing_config import COUNTRY_CURRENCY
+from utils import parse_volume, parse_price, is_zero
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
@@ -59,16 +61,6 @@ class Analytics(db.Model):
     # Add more fields as needed
 
 # os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
-
-# Country to currency symbol mapping
-COUNTRY_CURRENCY = {
-    'India': '₹',
-    'MENA': '$',  # USD for MENA
-    'LATAM': '$',
-    'Africa': '$',
-    'Europe': '$',  # Use USD for Europe
-    'Rest of the World': '$',
-}
 
 SECRET_ANALYTICS_KEYWORD = "letmein123"
 
@@ -262,11 +254,6 @@ def index():
         user_name = request.form.get('user_name', '')
         # Step 1: User submitted volumes and platform fee options
         country = request.form['country']
-        def parse_volume(val):
-            try:
-                return float(val.replace(',', '')) if val and str(val).strip() else 0.0
-            except Exception:
-                return 0.0
         ai_volume = parse_volume(request.form.get('ai_volume', ''))
         advanced_volume = parse_volume(request.form.get('advanced_volume', ''))
         basic_marketing_volume = parse_volume(request.form.get('basic_marketing_volume', ''))
@@ -321,11 +308,6 @@ def index():
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             return render_template('index.html', step='bundle', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), platform_fee=platform_fee, calculation_id=calculation_id)
         # Suggest prices
-        def is_zero(val):
-            try:
-                return float(val) == 0.0
-            except Exception:
-                return True
         suggested_prices = {
             'ai_price': get_suggested_price(country, 'ai', ai_volume) if not is_zero(ai_volume) else get_lowest_tier_price(country, 'ai'),
             'advanced_price': get_suggested_price(country, 'advanced', advanced_volume) if not is_zero(advanced_volume) else get_lowest_tier_price(country, 'advanced'),
@@ -342,11 +324,6 @@ def index():
             print('HANDLER: No inputs in session, redirecting to index')
             flash('Session expired or missing. Please start again.', 'error')
             return redirect(url_for('index'))
-        def parse_price(val):
-            try:
-                return float(val.replace(',', '')) if val and str(val).strip() else None
-            except Exception:
-                return None
         ai_price = parse_price(request.form.get('ai_price', ''))
         advanced_price = parse_price(request.form.get('advanced_price', ''))
         basic_marketing_price = parse_price(request.form.get('basic_marketing_price', ''))
@@ -944,13 +921,8 @@ def index():
             default_custom_ai = rates['custom_ai']
         if request.method == 'POST':
             # Validate user rates
-            def parse_number(val):
-                try:
-                    return float(str(val).replace(',', '')) if val and str(val).strip() else 0.0
-                except Exception:
-                    return 0.0
-            user_bot_ui = parse_number(request.form.get('bot_ui_manday_rate', default_bot_ui))
-            user_custom_ai = parse_number(request.form.get('custom_ai_manday_rate', default_custom_ai))
+            user_bot_ui = parse_price(request.form.get('bot_ui_manday_rate', default_bot_ui))
+            user_custom_ai = parse_price(request.form.get('custom_ai_manday_rate', default_custom_ai))
             if user_bot_ui < 0.5 * default_bot_ui or user_custom_ai < 0.5 * default_custom_ai:
                 flash('Manday rates cannot be discounted by more than 50% from the default rate.', 'error')
                 return render_template('index.html', step='prices', suggested={
@@ -1023,14 +995,14 @@ def index():
         if not selected_tier and bundle_rates:
             # If above all tiers, use the highest tier
             selected_tier = bundle_rates[-1]
-        suggested_prices = {
+            suggested_prices = {
             'ai_price': selected_tier['ai'] if selected_tier else '',
             'advanced_price': selected_tier['advanced'] if selected_tier else '',
             'basic_marketing_price': selected_tier['basic_marketing'] if selected_tier else '',
             'basic_utility_price': selected_tier['basic_utility'] if selected_tier else '',
-            'bot_ui_manday_rate': default_bot_ui,
-            'custom_ai_manday_rate': default_custom_ai,
-        }
+                'bot_ui_manday_rate': default_bot_ui,
+                'custom_ai_manday_rate': default_custom_ai,
+            }
         suggested_prices = patch_suggested_prices(suggested_prices, inputs)
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id)
     # Default: show volume input form
