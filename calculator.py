@@ -22,7 +22,7 @@ ACTIVITY_MANDAYS = {
 }
 
 from pricing_config import COUNTRY_MANDAY_RATES, price_tiers, meta_costs_table, bundle_markup_rates
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, List
 
 def get_suggested_price(country: str, msg_type: str, volume: int, currency: Optional[str] = None) -> float:
     """
@@ -52,6 +52,106 @@ def get_next_tier_price(country: str, msg_type: str, volume: int) -> float:
         return tiers[0][2]
     return 0.0
 
+def _get_prices(country: str, ai_volume: int, advanced_volume: int, basic_marketing_volume: int, basic_utility_volume: int, ai_price: Optional[float], advanced_price: Optional[float], basic_marketing_price: Optional[float], basic_utility_price: Optional[float]) -> Dict[str, Dict[str, float]]:
+    suggested = {
+        'ai': get_suggested_price(country, 'ai', ai_volume),
+        'advanced': get_suggested_price(country, 'advanced', advanced_volume),
+        'basic_marketing': get_suggested_price(country, 'basic_marketing', basic_marketing_volume),
+        'basic_utility': get_suggested_price(country, 'basic_utility', basic_utility_volume),
+    }
+    overage = {
+        'ai': get_next_tier_price(country, 'ai', ai_volume),
+        'advanced': get_next_tier_price(country, 'advanced', advanced_volume),
+        'basic_marketing': get_next_tier_price(country, 'basic_marketing', basic_marketing_volume),
+        'basic_utility': get_next_tier_price(country, 'basic_utility', basic_utility_volume),
+    }
+    user = {
+        'ai': ai_price if ai_price is not None else suggested['ai'],
+        'advanced': advanced_price if advanced_price is not None else suggested['advanced'],
+        'basic_marketing': basic_marketing_price if basic_marketing_price is not None else suggested['basic_marketing'],
+        'basic_utility': basic_utility_price if basic_utility_price is not None else suggested['basic_utility'],
+    }
+    return {'suggested': suggested, 'overage': overage, 'user': user}
+
+def _calculate_revenue(costs: Dict[str, float], user_prices: Dict[str, float], volumes: Dict[str, int]) -> float:
+    return (
+        (costs['ai'] + user_prices['ai']) * volumes['ai'] +
+        (costs['ai'] + user_prices['advanced']) * volumes['advanced'] +
+        (costs['marketing'] + user_prices['basic_marketing']) * volumes['basic_marketing'] +
+        (costs['utility'] + user_prices['basic_utility']) * volumes['basic_utility']
+    )
+
+def _calculate_costs(costs: Dict[str, float], volumes: Dict[str, int]) -> Tuple[float, float, float]:
+    adv_marketing_vol = 0.0
+    adv_utility_vol = 0.0
+    channel_cost = (
+        (costs['marketing'] * adv_marketing_vol)
+        + (costs['utility'] * adv_utility_vol)
+        + (volumes['basic_marketing'] * costs['marketing'])
+        + (volumes['basic_utility'] * costs['utility'])
+    )
+    ai_costs = costs['ai'] * volumes['ai']
+    total_costs = channel_cost + ai_costs
+    return channel_cost, ai_costs, total_costs
+
+def _calculate_margin(revenue: float, platform_fee: float, total_costs: float) -> Tuple[float, float]:
+    margin_denom = revenue + platform_fee
+    if margin_denom > 0:
+        margin = (revenue + platform_fee - total_costs) / margin_denom
+        margin_percentage = margin * 100
+    else:
+        margin = 0
+        margin_percentage = 0
+    return margin, margin_percentage
+
+def _build_line_items(costs: Dict[str, float], user_prices: Dict[str, float], suggested_prices: Dict[str, float], overage_prices: Dict[str, float], volumes: Dict[str, int], revenues: Dict[str, float], suggested_revenues: Dict[str, float]) -> List[Dict[str, Any]]:
+    return [
+        {
+            'label': 'AI Message',
+            'volume': volumes['ai'],
+            'chosen_price': user_prices['ai'],
+            'suggested_price': suggested_prices['ai'],
+            'overage_price': overage_prices['ai'],
+            'meta_cost': costs['ai'],
+            'final_price': costs['ai'] + user_prices['ai'],
+            'revenue': revenues['ai'],
+            'suggested_revenue': suggested_revenues['ai']
+        },
+        {
+            'label': 'Advanced Message',
+            'volume': volumes['advanced'],
+            'chosen_price': user_prices['advanced'],
+            'suggested_price': suggested_prices['advanced'],
+            'overage_price': overage_prices['advanced'],
+            'meta_cost': costs['ai'],
+            'final_price': costs['ai'] + user_prices['advanced'],
+            'revenue': revenues['advanced'],
+            'suggested_revenue': suggested_revenues['advanced']
+        },
+        {
+            'label': 'Basic Marketing Message',
+            'volume': volumes['basic_marketing'],
+            'chosen_price': user_prices['basic_marketing'],
+            'suggested_price': suggested_prices['basic_marketing'],
+            'overage_price': overage_prices['basic_marketing'],
+            'meta_cost': costs['marketing'],
+            'final_price': costs['marketing'] + user_prices['basic_marketing'],
+            'revenue': revenues['basic_marketing'],
+            'suggested_revenue': suggested_revenues['basic_marketing']
+        },
+        {
+            'label': 'Basic Utility/Authentication Message',
+            'volume': volumes['basic_utility'],
+            'chosen_price': user_prices['basic_utility'],
+            'suggested_price': suggested_prices['basic_utility'],
+            'overage_price': overage_prices['basic_utility'],
+            'meta_cost': costs['utility'],
+            'final_price': costs['utility'] + user_prices['basic_utility'],
+            'revenue': revenues['basic_utility'],
+            'suggested_revenue': suggested_revenues['basic_utility']
+        },
+    ]
+
 def calculate_pricing(
     country: str,
     ai_volume: int,
@@ -64,130 +164,35 @@ def calculate_pricing(
     basic_marketing_price: Optional[float] = None,
     basic_utility_price: Optional[float] = None
 ) -> Dict[str, Any]:
-    """
-    Calculate all pricing, revenue, costs, and margin for the given inputs.
-    Returns a dictionary with detailed line items and summary values.
-    """
     costs = meta_costs_table.get(country, meta_costs_table['India'])
-
-    # Get suggested and overage prices for each type
-    suggested_ai_price = get_suggested_price(country, 'ai', ai_volume)
-    suggested_advanced_price = get_suggested_price(country, 'advanced', advanced_volume)
-    suggested_basic_marketing_price = get_suggested_price(country, 'basic_marketing', basic_marketing_volume)
-    suggested_basic_utility_price = get_suggested_price(country, 'basic_utility', basic_utility_volume)
-
-    overage_ai_price = get_next_tier_price(country, 'ai', ai_volume)
-    overage_advanced_price = get_next_tier_price(country, 'advanced', advanced_volume)
-    overage_basic_marketing_price = get_next_tier_price(country, 'basic_marketing', basic_marketing_volume)
-    overage_basic_utility_price = get_next_tier_price(country, 'basic_utility', basic_utility_volume)
-
-    # Use user-chosen prices if provided, otherwise use suggested
-    user_ai_price = ai_price if ai_price is not None else suggested_ai_price
-    user_advanced_price = advanced_price if advanced_price is not None else suggested_advanced_price
-    user_basic_marketing_price = basic_marketing_price if basic_marketing_price is not None else suggested_basic_marketing_price
-    user_basic_utility_price = basic_utility_price if basic_utility_price is not None else suggested_basic_utility_price
-
-    # Revenue (user-chosen)
-    ai_revenue = (costs['ai'] + user_ai_price) * ai_volume
-    advanced_revenue = (costs['ai'] + user_advanced_price) * advanced_volume
-    basic_marketing_revenue = (costs['marketing'] + user_basic_marketing_price) * basic_marketing_volume
-    basic_utility_revenue = (costs['utility'] + user_basic_utility_price) * basic_utility_volume
-    revenue = ai_revenue + advanced_revenue + basic_marketing_revenue + basic_utility_revenue
-
-    # Revenue (suggested)
-    ai_final_price_s = costs['ai'] + suggested_ai_price
-    advanced_final_price_s = costs['ai'] + suggested_advanced_price
-    basic_marketing_final_price_s = costs['marketing'] + suggested_basic_marketing_price
-    basic_utility_final_price_s = costs['utility'] + suggested_basic_utility_price
-
-    ai_revenue_s = ai_final_price_s * ai_volume
-    advanced_revenue_s = advanced_final_price_s * advanced_volume
-    basic_marketing_revenue_s = basic_marketing_final_price_s * basic_marketing_volume
-    basic_utility_revenue_s = basic_utility_final_price_s * basic_utility_volume
-    suggested_revenue = ai_revenue_s + advanced_revenue_s + basic_marketing_revenue_s + basic_utility_revenue_s
-
-    # Channel cost (as per your logic)
-    adv_marketing_vol = 0.0
-    adv_utility_vol = 0.0
-    channel_cost = (
-        (costs['marketing'] * adv_marketing_vol)
-        + (costs['utility'] * adv_utility_vol)
-        + (basic_marketing_volume * costs['marketing'])
-        + (basic_utility_volume * costs['utility'])
-    )
-
-    # AI costs
-    ai_costs = costs['ai'] * ai_volume
-
-    # Total costs (platform infra cost is 0)
-    total_costs = channel_cost + ai_costs
-
-    # Margin (user-chosen, business formula)
-    margin_denom = revenue + platform_fee
-    if margin_denom > 0:
-        margin = (revenue + platform_fee - total_costs) / margin_denom
-        margin_percentage = margin * 100
-    else:
-        margin = 0
-        margin_percentage = 0
-
-    # Suggested margin (business formula)
-    suggested_margin_denom = suggested_revenue + platform_fee
-    if suggested_margin_denom > 0:
-        suggested_margin = (suggested_revenue + platform_fee - total_costs) / suggested_margin_denom
-        suggested_margin_percentage = suggested_margin * 100
-    else:
-        suggested_margin = 0
-        suggested_margin_percentage = 0
-
-    # Detailed breakdown for each line item
-    line_items = [
-        {
-            'label': 'AI Message',
-            'volume': ai_volume,
-            'chosen_price': user_ai_price,
-            'suggested_price': suggested_ai_price,
-            'overage_price': overage_ai_price,
-            'meta_cost': costs['ai'],
-            'final_price': costs['ai'] + user_ai_price,
-            'revenue': ai_revenue,
-            'suggested_revenue': ai_revenue_s
-        },
-        {
-            'label': 'Advanced Message',
-            'volume': advanced_volume,
-            'chosen_price': user_advanced_price,
-            'suggested_price': suggested_advanced_price,
-            'overage_price': overage_advanced_price,
-            'meta_cost': costs['ai'],
-            'final_price': costs['ai'] + user_advanced_price,
-            'revenue': advanced_revenue,
-            'suggested_revenue': advanced_revenue_s
-        },
-        {
-            'label': 'Basic Marketing Message',
-            'volume': basic_marketing_volume,
-            'chosen_price': user_basic_marketing_price,
-            'suggested_price': suggested_basic_marketing_price,
-            'overage_price': overage_basic_marketing_price,
-            'meta_cost': costs['marketing'],
-            'final_price': costs['marketing'] + user_basic_marketing_price,
-            'revenue': basic_marketing_revenue,
-            'suggested_revenue': basic_marketing_revenue_s
-        },
-        {
-            'label': 'Basic Utility/Authentication Message',
-            'volume': basic_utility_volume,
-            'chosen_price': user_basic_utility_price,
-            'suggested_price': suggested_basic_utility_price,
-            'overage_price': overage_basic_utility_price,
-            'meta_cost': costs['utility'],
-            'final_price': costs['utility'] + user_basic_utility_price,
-            'revenue': basic_utility_revenue,
-            'suggested_revenue': basic_utility_revenue_s
-        },
-    ]
-
+    volumes = {
+        'ai': ai_volume,
+        'advanced': advanced_volume,
+        'basic_marketing': basic_marketing_volume,
+        'basic_utility': basic_utility_volume,
+    }
+    prices = _get_prices(country, ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume, ai_price, advanced_price, basic_marketing_price, basic_utility_price)
+    user_prices = prices['user']
+    suggested_prices = prices['suggested']
+    overage_prices = prices['overage']
+    revenue = _calculate_revenue(costs, user_prices, volumes)
+    suggested_revenue = _calculate_revenue(costs, suggested_prices, volumes)
+    channel_cost, ai_costs, total_costs = _calculate_costs(costs, volumes)
+    margin, margin_percentage = _calculate_margin(revenue, platform_fee, total_costs)
+    suggested_margin, suggested_margin_percentage = _calculate_margin(suggested_revenue, platform_fee, total_costs)
+    revenues = {
+        'ai': (costs['ai'] + user_prices['ai']) * ai_volume,
+        'advanced': (costs['ai'] + user_prices['advanced']) * advanced_volume,
+        'basic_marketing': (costs['marketing'] + user_prices['basic_marketing']) * basic_marketing_volume,
+        'basic_utility': (costs['utility'] + user_prices['basic_utility']) * basic_utility_volume,
+    }
+    suggested_revenues = {
+        'ai': (costs['ai'] + suggested_prices['ai']) * ai_volume,
+        'advanced': (costs['ai'] + suggested_prices['advanced']) * advanced_volume,
+        'basic_marketing': (costs['marketing'] + suggested_prices['basic_marketing']) * basic_marketing_volume,
+        'basic_utility': (costs['utility'] + suggested_prices['basic_utility']) * basic_utility_volume,
+    }
+    line_items = _build_line_items(costs, user_prices, suggested_prices, overage_prices, volumes, revenues, suggested_revenues)
     return {
         'line_items': line_items,
         'platform_fee': platform_fee,
