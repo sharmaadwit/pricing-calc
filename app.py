@@ -387,51 +387,32 @@ def index():
         inputs['committed_amount'] = committed_amount
         session['inputs'] = inputs
 
-        from calculator import calculate_pricing, calculate_total_mandays, calculate_total_mandays_breakdown, get_committed_amount_rates, calculate_total_manday_cost
+        from calculator import get_committed_amount_rates
         country = inputs.get('country', 'India')
         platform_fee = float(inputs.get('platform_fee', 0))
         currency_symbol = COUNTRY_CURRENCY.get(country, '$')
         calculation_id = session.get('calculation_id')
-        manday_breakdown = calculate_total_mandays_breakdown(inputs)
-        total_mandays = calculate_total_mandays(inputs)
-        manday_rates = session.get('manday_rates', {})
 
         # Get bundle rates for committed amount
         bundle_rates = get_committed_amount_rates(country, committed_amount)
-        results = calculate_pricing(
-            country=country,
-            ai_volume=0,
-            advanced_volume=0,
-            basic_marketing_volume=0,
-            basic_utility_volume=0,
-            platform_fee=platform_fee,
-            ai_price=bundle_rates['ai'],
-            advanced_price=bundle_rates['advanced'],
-            basic_marketing_price=bundle_rates['marketing'],
-            basic_utility_price=bundle_rates['utility']
-        )
-
-        # Calculate dev cost breakdown
-        total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(inputs, manday_rates)
-
+        # Set suggested prices in session for the prices step
+        suggested_prices = {
+            'ai_price': bundle_rates['ai'],
+            'advanced_price': bundle_rates['advanced'],
+            'basic_marketing_price': bundle_rates['marketing'],
+            'basic_utility_price': bundle_rates['utility'],
+        }
+        # Patch with manday rates if needed
+        suggested_prices = patch_suggested_prices(suggested_prices, inputs)
+        session['suggested_prices'] = suggested_prices
         return render_template(
             'index.html',
-            step='results',
-            results=results,
+            step='prices',
+            suggested=suggested_prices,
             inputs=inputs,
             currency_symbol=currency_symbol,
             platform_fee=platform_fee,
-            calculation_id=calculation_id,
-            committed_amount_route=True,
-            expected_invoice_amount=platform_fee + committed_amount,
-            manday_breakdown=manday_breakdown,
-            total_mandays=total_mandays,
-            manday_rates=manday_rates,
-            dev_cost_currency=dev_cost_currency,
-            dev_cost_breakdown=dev_cost_breakdown,
-            final_inclusions=[],  # Add your inclusions logic if needed
-            margin_table=[],      # Add your margin table logic if needed
-            total_dev_cost=total_dev_cost
+            calculation_id=calculation_id
         )
     elif step == 'bundle':
         # Always set suggested_prices for bundle step
