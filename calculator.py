@@ -5,145 +5,9 @@
 
 # --- Price Tiers by Country and Message Type ---
 # Each country has a set of volume-based price tiers for each message type.
-price_tiers = {
-    'India': {
-        'ai': [
-            (0, 10000, 1.00),
-            (10000, 100000, 0.90),
-            (100000, 500000, 0.80),
-            (500000, 1000000, 0.70),
-            (1000000, float('inf'), 0.60),
-        ],
-        'advanced': [
-            (0, 50000, 0.50),
-            (50000, 150000, 0.45),
-            (150000, 500000, 0.40),
-            (500000, float('inf'), 0.35),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.05),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.03),
-        ],
-    },
-    'MENA': {
-        'ai': [
-            (0, 10000, 0.084),
-            (10000, 100000, 0.076),
-            (100000, 500000, 0.067),
-            (500000, 1000000, 0.059),
-            (1000000, float('inf'), 0.050),
-        ],
-        'advanced': [
-            (0, 50000, 0.042),
-            (50000, 150000, 0.038),
-            (150000, 500000, 0.034),
-            (500000, float('inf'), 0.029),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.0042),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.003),
-        ],
-    },
-    'LATAM': {
-        'ai': [
-            (0, 10000, 0.120),
-            (10000, 100000, 0.108),
-            (100000, 500000, 0.096),
-            (500000, 1000000, 0.084),
-            (1000000, float('inf'), 0.072),
-        ],
-        'advanced': [
-            (0, 50000, 0.060),
-            (50000, 150000, 0.054),
-            (150000, 500000, 0.048),
-            (500000, float('inf'), 0.042),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.006),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.004),
-        ],
-    },
-    'Africa': {
-        'ai': [
-            (0, 10000, 0.048),
-            (10000, 100000, 0.043),
-            (100000, 500000, 0.038),
-            (500000, 1000000, 0.034),
-            (1000000, float('inf'), 0.029),
-        ],
-        'advanced': [
-            (0, 50000, 0.024),
-            (50000, 150000, 0.022),
-            (150000, 500000, 0.019),
-            (500000, float('inf'), 0.017),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.002),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.001),
-        ],
-    },
-    'Europe': {
-        'ai': [
-            (0, 10000, 0.240),
-            (10000, 100000, 0.216),
-            (100000, 500000, 0.192),
-            (500000, 1000000, 0.168),
-            (1000000, float('inf'), 0.144),
-        ],
-        'advanced': [
-            (0, 50000, 0.120),
-            (50000, 150000, 0.108),
-            (150000, 500000, 0.096),
-            (500000, float('inf'), 0.084),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.012),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.007),
-        ],
-    },
-    'Rest of the World': {
-        'ai': [
-            (0, 10000, 0.120),
-            (10000, 100000, 0.108),
-            (100000, 500000, 0.096),
-            (500000, 1000000, 0.084),
-            (1000000, float('inf'), 0.072),
-        ],
-        'advanced': [
-            (0, 50000, 0.060),
-            (50000, 150000, 0.054),
-            (150000, 500000, 0.048),
-            (500000, float('inf'), 0.042),
-        ],
-        'basic_marketing': [
-            (0, float('inf'), 0.006),
-        ],
-        'basic_utility': [
-            (0, float('inf'), 0.007),
-        ],
-    },
-}
 
 # --- Cost Table by Country ---
 # Meta costs for each country and message type.
-meta_costs_table = {
-    'India': {'marketing': 0.78, 'utility': 0.12, 'ai': 0.30},
-    'MENA': {'marketing': 0.0455 * 3.67, 'utility': 0.0115 * 3.67, 'ai': 0.0036 * 3.67},
-    'LATAM': {'marketing': 0.0625, 'utility': 0.0080, 'ai': 0.0036},
-    'Africa': {'marketing': 0.0379, 'utility': 0.0076, 'ai': 0.0036},
-    'Europe': {'marketing': 0.0529, 'utility': 0.0220, 'ai': 0.0036},
-    'Rest of the World': {'marketing': 0.0604, 'utility': 0.0077, 'ai': 0.0036},
-}
 
 # --- Activity to Manday Mapping (applies to all countries) ---
 ACTIVITY_MANDAYS = {
@@ -260,6 +124,8 @@ bundle_markup_rates = {
         {'min': 10001, 'max': 15000, 'basic_marketing': 0.0005, 'basic_utility': 0.0003, 'advanced': 0.0025, 'ai': 0.0108},
     ],
 }
+
+from pricing_config import price_tiers, meta_costs_table, COUNTRY_MANDAY_RATES, bundle_markup_rates
 
 def get_suggested_price(country, msg_type, volume, currency=None):
     """
