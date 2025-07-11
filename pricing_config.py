@@ -133,9 +133,9 @@ COUNTRY_MANDAY_RATES = {
         },
     },
     'MENA': {
-        'currency': 'USD',  # Changed from AED to USD
-        'bot_ui': 450,      # Converted from 1650 AED to USD (1650/3.67)
-        'custom_ai': 749,   # Converted from 2750 AED to USD (2750/3.67)
+        'currency': 'USD',  # USD for MENA
+        'bot_ui': 300,      # Updated to 300 USD
+        'custom_ai': 500,   # Updated to 500 USD
     },
     'Africa': {
         'currency': 'USD',
