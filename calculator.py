@@ -298,24 +298,21 @@ def calculate_pricing(
 def calculate_total_mandays(inputs):
     """
     Calculate the total mandays based on user inputs and the activity-to-manday mapping.
-    Applies the '4_journey_4_api' logic for all countries: for every set of 4 journeys and 4 apis, use 5 mandays;
-    for remaining journeys and apis, use 1 manday each.
+    New logic: For each set where either APIs or journeys is at least 4 and the other is > 0, count 5 mandays and subtract up to 4 from each. Remaining APIs or journeys (when the other is zero) are counted as individual mandays.
     """
     total_mandays = 0
     num_journeys = int(inputs.get('num_journeys_price') or 0)
     num_apis = int(inputs.get('num_apis_price') or 0)
 
-    # Calculate sets of 4 journeys and 4 apis
-    sets_of_4 = min(num_journeys // 4, num_apis // 4)
-    total_mandays += sets_of_4 * ACTIVITY_MANDAYS['4_journey_4_api']
-
-    # Subtract used journeys and apis
-    remaining_journeys = num_journeys - sets_of_4 * 4
-    remaining_apis = num_apis - sets_of_4 * 4
-
-    # Add mandays for remaining journeys and apis
-    total_mandays += remaining_journeys * ACTIVITY_MANDAYS['journey']
-    total_mandays += remaining_apis * ACTIVITY_MANDAYS['api']
+    # New set logic
+    while (num_apis >= 4 or num_journeys >= 4) and (num_apis > 0 and num_journeys > 0):
+        used_apis = min(4, num_apis)
+        used_journeys = min(4, num_journeys)
+        num_apis -= used_apis
+        num_journeys -= used_journeys
+        total_mandays += 5
+    # Add any remaining (less than 4) as individual mandays
+    total_mandays += num_apis + num_journeys
 
     # AI Agents (Commerce + FAQ)
     total_mandays += int(inputs.get('num_ai_workspace_commerce_price') or 0) * ACTIVITY_MANDAYS['ai_agents']
@@ -336,25 +333,31 @@ def calculate_total_mandays(inputs):
 
 def calculate_total_mandays_breakdown(inputs):
     """
-    Returns a dict with mandays for bot_ui and custom_ai activities, ignoring items with 0 value.
+    Returns a dict with mandays for bot_ui and custom_ai activities, using the new set logic.
     """
     num_journeys = int(inputs.get('num_journeys_price') or 0)
     num_apis = int(inputs.get('num_apis_price') or 0)
     num_ai_commerce = int(inputs.get('num_ai_workspace_commerce_price') or 0)
     num_ai_faq = int(inputs.get('num_ai_workspace_faq_price') or 0)
-    # 4-journey-4-api logic
-    sets_of_4 = min(num_journeys // 4, num_apis // 4)
-    remaining_journeys = num_journeys - sets_of_4 * 4
-    remaining_apis = num_apis - sets_of_4 * 4
     bot_ui_mandays = 0
     custom_ai_mandays = 0
-    # Bot/UI: journeys, apis, 4-journey-4-api, AA Setup, Onboarding, Testing, UX
-    if sets_of_4 > 0:
-        bot_ui_mandays += sets_of_4 * ACTIVITY_MANDAYS['4_journey_4_api']
-    if remaining_journeys > 0:
-        bot_ui_mandays += remaining_journeys * ACTIVITY_MANDAYS['journey']
-    if remaining_apis > 0:
-        bot_ui_mandays += remaining_apis * ACTIVITY_MANDAYS['api']
+    # New set logic for bot_ui
+    nj = num_journeys
+    na = num_apis
+    while (na >= 4 or nj >= 4) and (na > 0 and nj > 0):
+        used_apis = min(4, na)
+        used_journeys = min(4, nj)
+        na -= used_apis
+        nj -= used_journeys
+        bot_ui_mandays += 5
+    # Add any remaining (less than 4) as individual mandays
+    bot_ui_mandays += na + nj
+    # Custom/AI: AI workspaces
+    if num_ai_commerce > 0:
+        custom_ai_mandays += num_ai_commerce * ACTIVITY_MANDAYS['ai_agents']
+    if num_ai_faq > 0:
+        custom_ai_mandays += num_ai_faq * ACTIVITY_MANDAYS['ai_agents']
+    # Add extras to bot_ui
     if inputs.get('aa_setup_price', 'No') == 'Yes':
         bot_ui_mandays += ACTIVITY_MANDAYS['aa_setup']
     if inputs.get('onboarding_price', 'No') == 'Yes':
@@ -363,11 +366,6 @@ def calculate_total_mandays_breakdown(inputs):
         bot_ui_mandays += ACTIVITY_MANDAYS['testing']
     if inputs.get('ux_price', 'No') == 'Yes':
         bot_ui_mandays += ACTIVITY_MANDAYS['ux']
-    # Custom/AI: AI workspaces
-    if num_ai_commerce > 0:
-        custom_ai_mandays += num_ai_commerce * ACTIVITY_MANDAYS['ai_agents']
-    if num_ai_faq > 0:
-        custom_ai_mandays += num_ai_faq * ACTIVITY_MANDAYS['ai_agents']
     return {
         'bot_ui': bot_ui_mandays,
         'custom_ai': custom_ai_mandays,
