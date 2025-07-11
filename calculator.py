@@ -29,38 +29,38 @@ price_tiers = {
     },
     'MENA': {
         'ai': [
-            (0, 10000, 0.12),
-            (10000, 100000, 0.11),
-            (100000, 500000, 0.10),
-            (500000, 1000000, 0.09),
-            (1000000, float('inf'), 0.08),
+            (0, 10000, 0.084),
+            (10000, 100000, 0.076),
+            (100000, 500000, 0.067),
+            (500000, 1000000, 0.059),
+            (1000000, float('inf'), 0.050),
         ],
         'advanced': [
-            (0, 50000, 0.06),
-            (50000, 150000, 0.055),
-            (150000, 500000, 0.05),
-            (500000, float('inf'), 0.045),
+            (0, 50000, 0.042),
+            (50000, 150000, 0.038),
+            (150000, 500000, 0.034),
+            (500000, float('inf'), 0.029),
         ],
         'basic_marketing': [
-            (0, float('inf'), 0.006),
+            (0, float('inf'), 0.0042),
         ],
         'basic_utility': [
-            (0, float('inf'), 0.004),
+            (0, float('inf'), 0.003),
         ],
     },
     'LATAM': {
         'ai': [
-            (0, 10000, 0.12),
-            (10000, 100000, 0.11),
-            (100000, 500000, 0.10),
-            (500000, 1000000, 0.09),
-            (1000000, float('inf'), 0.08),
+            (0, 10000, 0.120),
+            (10000, 100000, 0.108),
+            (100000, 500000, 0.096),
+            (500000, 1000000, 0.084),
+            (1000000, float('inf'), 0.072),
         ],
         'advanced': [
-            (0, 50000, 0.06),
-            (50000, 150000, 0.055),
-            (150000, 500000, 0.05),
-            (500000, float('inf'), 0.045),
+            (0, 50000, 0.060),
+            (50000, 150000, 0.054),
+            (150000, 500000, 0.048),
+            (500000, float('inf'), 0.042),
         ],
         'basic_marketing': [
             (0, float('inf'), 0.006),
@@ -71,65 +71,65 @@ price_tiers = {
     },
     'Africa': {
         'ai': [
-            (0, 10000, 0.12),
-            (10000, 100000, 0.11),
-            (100000, 500000, 0.10),
-            (500000, 1000000, 0.09),
-            (1000000, float('inf'), 0.08),
+            (0, 10000, 0.048),
+            (10000, 100000, 0.043),
+            (100000, 500000, 0.038),
+            (500000, 1000000, 0.034),
+            (1000000, float('inf'), 0.029),
         ],
         'advanced': [
-            (0, 50000, 0.06),
-            (50000, 150000, 0.055),
-            (150000, 500000, 0.05),
-            (500000, float('inf'), 0.045),
+            (0, 50000, 0.024),
+            (50000, 150000, 0.022),
+            (150000, 500000, 0.019),
+            (500000, float('inf'), 0.017),
         ],
         'basic_marketing': [
-            (0, float('inf'), 0.006),
+            (0, float('inf'), 0.002),
         ],
         'basic_utility': [
-            (0, float('inf'), 0.004),
+            (0, float('inf'), 0.001),
         ],
     },
     'Europe': {
         'ai': [
-            (0, 10000, 0.12),
-            (10000, 100000, 0.11),
-            (100000, 500000, 0.10),
-            (500000, 1000000, 0.09),
-            (1000000, float('inf'), 0.08),
+            (0, 10000, 0.240),
+            (10000, 100000, 0.216),
+            (100000, 500000, 0.192),
+            (500000, 1000000, 0.168),
+            (1000000, float('inf'), 0.144),
         ],
         'advanced': [
-            (0, 50000, 0.06),
-            (50000, 150000, 0.055),
-            (150000, 500000, 0.05),
-            (500000, float('inf'), 0.045),
+            (0, 50000, 0.120),
+            (50000, 150000, 0.108),
+            (150000, 500000, 0.096),
+            (500000, float('inf'), 0.084),
         ],
         'basic_marketing': [
-            (0, float('inf'), 0.006),
+            (0, float('inf'), 0.012),
         ],
         'basic_utility': [
-            (0, float('inf'), 0.004),
+            (0, float('inf'), 0.007),
         ],
     },
     'Rest of the World': {
         'ai': [
-            (0, 10000, 0.12),
-            (10000, 100000, 0.11),
-            (100000, 500000, 0.10),
-            (500000, 1000000, 0.09),
-            (1000000, float('inf'), 0.08),
+            (0, 10000, 0.120),
+            (10000, 100000, 0.108),
+            (100000, 500000, 0.096),
+            (500000, 1000000, 0.084),
+            (1000000, float('inf'), 0.072),
         ],
         'advanced': [
-            (0, 50000, 0.06),
-            (50000, 150000, 0.055),
-            (150000, 500000, 0.05),
-            (500000, float('inf'), 0.045),
+            (0, 50000, 0.060),
+            (50000, 150000, 0.054),
+            (150000, 500000, 0.048),
+            (500000, float('inf'), 0.042),
         ],
         'basic_marketing': [
             (0, float('inf'), 0.006),
         ],
         'basic_utility': [
-            (0, float('inf'), 0.004),
+            (0, float('inf'), 0.007),
         ],
     },
 }
@@ -138,11 +138,11 @@ price_tiers = {
 # Meta costs for each country and message type.
 meta_costs_table = {
     'India': {'marketing': 0.78, 'utility': 0.12, 'ai': 0.30},
-    'MENA': {'marketing': 0.06, 'utility': 0.01, 'ai': 0.01},
-    'LATAM': {'marketing': 0.06, 'utility': 0.01, 'ai': 0.01},
-    'Africa': {'marketing': 0.06, 'utility': 0.01, 'ai': 0.01},
-    'Europe': {'marketing': 0.06, 'utility': 0.01, 'ai': 0.01},
-    'Rest of the World': {'marketing': 0.06, 'utility': 0.01, 'ai': 0.01},
+    'MENA': {'marketing': 0.0455 * 3.67, 'utility': 0.0115 * 3.67, 'ai': 0.0036 * 3.67},
+    'LATAM': {'marketing': 0.0625, 'utility': 0.0080, 'ai': 0.0036},
+    'Africa': {'marketing': 0.0379, 'utility': 0.0076, 'ai': 0.0036},
+    'Europe': {'marketing': 0.0529, 'utility': 0.0220, 'ai': 0.0036},
+    'Rest of the World': {'marketing': 0.0604, 'utility': 0.0077, 'ai': 0.0036},
 }
 
 # --- Activity to Manday Mapping (applies to all countries) ---
@@ -161,39 +161,39 @@ ACTIVITY_MANDAYS = {
 COUNTRY_MANDAY_RATES = {
     'India': {
         'currency': 'INR',
-        'bot_ui': 20000,
-        'custom_ai': 30000,
+        'bot_ui': 20000,  # Updated
+        'custom_ai': 30000,  # Updated
     },
     'LATAM': {
         'currency': 'USD',
         'bot_ui': {
-            'LATAM': 580,
-            'India': 400,
+            'LATAM': 825,
+            'India': 440,
         },
         'custom_ai': {
-            'LATAM': 750,
-            'India': 500,
+            'LATAM': 1100,
+            'India': 605,
         },
     },
     'MENA': {
-        'currency': 'USD',
-        'bot_ui': 300,
-        'custom_ai': 500,
+        'currency': 'AED',
+        'bot_ui': 1650,
+        'custom_ai': 2750,
     },
     'Africa': {
         'currency': 'USD',
-        'bot_ui': 300,
-        'custom_ai': 420,
-    },
-    'Europe': {
-        'currency': 'USD',
-        'bot_ui': 300,
-        'custom_ai': 420,
+        'bot_ui': 440,
+        'custom_ai': 605,
     },
     'Rest of the World': {
         'currency': 'USD',
-        'bot_ui': 300,
-        'custom_ai': 420,
+        'bot_ui': 440,
+        'custom_ai': 605,
+    },
+    'Europe': {
+        'currency': 'USD',  # Not in table, fallback to Rest of the World?
+        'bot_ui': 440,
+        'custom_ai': 605,
     },
 }
 
@@ -657,4 +657,3 @@ def get_committed_amount_rates(country, committed_amount):
 
 def get_committed_amount_rates_india(committed_amount):
     return get_committed_amount_rates('India', committed_amount)
-
