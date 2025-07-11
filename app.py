@@ -387,7 +387,7 @@ def index():
         inputs['committed_amount'] = committed_amount
         session['inputs'] = inputs
 
-        from calculator import calculate_pricing, calculate_total_mandays, calculate_total_mandays_breakdown, get_committed_amount_rates
+        from calculator import calculate_pricing, calculate_total_mandays, calculate_total_mandays_breakdown, get_committed_amount_rates, calculate_total_manday_cost
         country = inputs.get('country', 'India')
         platform_fee = float(inputs.get('platform_fee', 0))
         currency_symbol = COUNTRY_CURRENCY.get(country, '$')
@@ -395,7 +395,6 @@ def index():
         manday_breakdown = calculate_total_mandays_breakdown(inputs)
         total_mandays = calculate_total_mandays(inputs)
         manday_rates = session.get('manday_rates', {})
-        dev_cost_currency = currency_symbol
 
         # Get bundle rates for committed amount
         bundle_rates = get_committed_amount_rates(country, committed_amount)
@@ -412,6 +411,9 @@ def index():
             basic_utility_price=bundle_rates['utility']
         )
 
+        # Calculate dev cost breakdown
+        total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(inputs, manday_rates)
+
         return render_template(
             'index.html',
             step='results',
@@ -426,9 +428,10 @@ def index():
             total_mandays=total_mandays,
             manday_rates=manday_rates,
             dev_cost_currency=dev_cost_currency,
+            dev_cost_breakdown=dev_cost_breakdown,
             final_inclusions=[],  # Add your inclusions logic if needed
             margin_table=[],      # Add your margin table logic if needed
-            total_dev_cost=0      # Add your dev cost logic if needed
+            total_dev_cost=total_dev_cost
         )
     elif step == 'bundle':
         # Always set suggested_prices for bundle step
