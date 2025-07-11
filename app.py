@@ -395,7 +395,7 @@ def index():
             'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if basic_utility_volume != 0 else get_lowest_tier_price(country, 'basic_utility'),
         }
     # Safe default: always return the initial form if no other return is hit
-    return render_template('index.html')
+    return render_template('index.html', step='volumes', inputs={}, suggested={}, currency_symbol='$', platform_fee=None, calculation_id=None)
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
