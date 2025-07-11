@@ -42,12 +42,12 @@ price_tiers = {
 
 # --- Cost Table by Country ---
 meta_costs_table = {
-    'India': {'marketing': 0.0455, 'utility': 0.0115, 'ai': 0.0036},
-    'MENA': {'marketing': 0.0455 * 3.67, 'utility': 0.0115 * 3.67, 'ai': 0.0036 * 3.67},
-    'LATAM': {'marketing': 0.0455 * 3.67, 'utility': 0.0115 * 3.67, 'ai': 0.0036 * 3.67},
-    'Africa': {'marketing': 0.0455 * 3.67, 'utility': 0.0115 * 3.67, 'ai': 0.0036 * 3.67},
-    'Europe': {'marketing': 0.0455 * 3.67, 'utility': 0.0115 * 3.67, 'ai': 0.0036 * 3.67},
-    'Rest of the World': {'marketing': 0.0455 * 3.67, 'utility': 0.0115 * 3.67, 'ai': 0.0036 * 3.67},
+    'India': {'marketing': 0.7846, 'utility': 0.1150, 'ai': 0.30},
+    'MENA': {'marketing': 0.0384, 'utility': 0.0157, 'ai': 0.0035},
+    'LATAM': {'marketing': 0.0625, 'utility': 0.0068, 'ai': 0.0035},
+    'Africa': {'marketing': 0.0379, 'utility': 0.0076, 'ai': 0.0035},
+    'Europe': {'marketing': 0.1597, 'utility': 0.05, 'ai': 0.0035},
+    'Rest of the World': {'marketing': 0.0592, 'utility': 0.0171, 'ai': 0.0035},
 }
 
 # --- Messaging Bundle Markup Rates by Country (for committed amount/bundle flow) ---
