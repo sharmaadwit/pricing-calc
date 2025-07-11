@@ -1170,7 +1170,11 @@ def analytics():
                 stats[country]['custom_ai_manday_cost'] = stat_dict(custom_ai_rates) if 'custom_ai_manday_cost' not in stats[country] else stats[country]['custom_ai_manday_cost']
             # --- Add average discount per country for all message types and manday rates ---
             def avg_discount(chosen_list, rate_card_list):
-                pairs = [(c, r) for c, r in zip(chosen_list, rate_card_list) if r and r != 0]
+                pairs = [
+                    (c, r)
+                    for c, r in zip(chosen_list, rate_card_list)
+                    if isinstance(c, (int, float)) and isinstance(r, (int, float)) and r
+                ]
                 if not pairs:
                     return 0.0
                 return 100 * sum((r - c) / r for c, r in pairs) / len(pairs)
