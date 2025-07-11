@@ -295,77 +295,72 @@ def calculate_pricing(
         'suggested_margin': f"{suggested_margin_percentage:.2f}%"
     }
 
-def calculate_total_mandays(inputs):
+def _calculate_set_mandays(num_apis, num_journeys):
     """
-    Calculate the total mandays based on user inputs and the activity-to-manday mapping.
-    New logic: For each set where either APIs or journeys is at least 4 and the other is > 0, count 5 mandays and subtract up to 4 from each. Remaining APIs or journeys (when the other is zero) are counted as individual mandays.
+    Helper for set logic: For each set where either APIs or journeys is at least 4 and the other is > 0, count 5 mandays and subtract up to 4 from each. Returns (mandays, remaining_apis, remaining_journeys).
     """
-    total_mandays = 0
-    num_journeys = int(inputs.get('num_journeys_price') or 0)
-    num_apis = int(inputs.get('num_apis_price') or 0)
-
-    # New set logic
+    mandays = 0
     while (num_apis >= 4 or num_journeys >= 4) and (num_apis > 0 and num_journeys > 0):
         used_apis = min(4, num_apis)
         used_journeys = min(4, num_journeys)
         num_apis -= used_apis
         num_journeys -= used_journeys
-        total_mandays += 5
-    # Add any remaining (less than 4) as individual mandays
-    total_mandays += num_apis + num_journeys
+        mandays += 5
+    return mandays, num_apis, num_journeys
 
+def _calculate_extras_mandays(inputs, activity_mandays):
+    """
+    Helper for extras logic: onboarding, UX, testing, AA setup. Returns total extra mandays.
+    """
+    extras = 0
+    if inputs.get('aa_setup_price', 'No') == 'Yes':
+        extras += activity_mandays['aa_setup']
+    if inputs.get('onboarding_price', 'No') == 'Yes':
+        extras += activity_mandays['onboarding']
+    if inputs.get('testing_qa_price', 'No') == 'Yes':
+        extras += activity_mandays['testing']
+    if inputs.get('ux_price', 'No') == 'Yes':
+        extras += activity_mandays['ux']
+    return extras
+
+# --- refactored calculate_total_mandays ---
+def calculate_total_mandays(inputs):
+    """
+    Calculate the total mandays based on user inputs and the activity-to-manday mapping.
+    Uses shared helpers for set and extras logic.
+    """
+    total_mandays = 0
+    num_journeys = int(inputs.get('num_journeys_price') or 0)
+    num_apis = int(inputs.get('num_apis_price') or 0)
+    set_mandays, rem_apis, rem_journeys = _calculate_set_mandays(num_apis, num_journeys)
+    total_mandays += set_mandays
+    total_mandays += rem_apis + rem_journeys
     # AI Agents (Commerce + FAQ)
     total_mandays += int(inputs.get('num_ai_workspace_commerce_price') or 0) * ACTIVITY_MANDAYS['ai_agents']
     total_mandays += int(inputs.get('num_ai_workspace_faq_price') or 0) * ACTIVITY_MANDAYS['ai_agents']
-    # AA Setup
-    if inputs.get('aa_setup_price', 'No') == 'Yes':
-        total_mandays += ACTIVITY_MANDAYS['aa_setup']
-    # Onboarding
-    if inputs.get('onboarding_price', 'No') == 'Yes':
-        total_mandays += ACTIVITY_MANDAYS['onboarding']
-    # Testing
-    if inputs.get('testing_qa_price', 'No') == 'Yes':
-        total_mandays += ACTIVITY_MANDAYS['testing']
-    # UX
-    if inputs.get('ux_price', 'No') == 'Yes':
-        total_mandays += ACTIVITY_MANDAYS['ux']
+    # Extras
+    total_mandays += _calculate_extras_mandays(inputs, ACTIVITY_MANDAYS)
     return total_mandays
 
+# --- refactored calculate_total_mandays_breakdown ---
 def calculate_total_mandays_breakdown(inputs):
     """
-    Returns a dict with mandays for bot_ui and custom_ai activities, using the new set logic.
+    Returns a dict with mandays for bot_ui and custom_ai activities, using shared helpers for set and extras logic.
     """
     num_journeys = int(inputs.get('num_journeys_price') or 0)
     num_apis = int(inputs.get('num_apis_price') or 0)
     num_ai_commerce = int(inputs.get('num_ai_workspace_commerce_price') or 0)
     num_ai_faq = int(inputs.get('num_ai_workspace_faq_price') or 0)
-    bot_ui_mandays = 0
-    custom_ai_mandays = 0
-    # New set logic for bot_ui
-    nj = num_journeys
-    na = num_apis
-    while (na >= 4 or nj >= 4) and (na > 0 and nj > 0):
-        used_apis = min(4, na)
-        used_journeys = min(4, nj)
-        na -= used_apis
-        nj -= used_journeys
-        bot_ui_mandays += 5
-    # Add any remaining (less than 4) as individual mandays
-    bot_ui_mandays += na + nj
+    bot_ui_mandays, rem_apis, rem_journeys = _calculate_set_mandays(num_apis, num_journeys)
+    bot_ui_mandays += rem_apis + rem_journeys
+    # Extras for bot_ui
+    bot_ui_mandays += _calculate_extras_mandays(inputs, ACTIVITY_MANDAYS)
     # Custom/AI: AI workspaces
+    custom_ai_mandays = 0
     if num_ai_commerce > 0:
         custom_ai_mandays += num_ai_commerce * ACTIVITY_MANDAYS['ai_agents']
     if num_ai_faq > 0:
         custom_ai_mandays += num_ai_faq * ACTIVITY_MANDAYS['ai_agents']
-    # Add extras to bot_ui
-    if inputs.get('aa_setup_price', 'No') == 'Yes':
-        bot_ui_mandays += ACTIVITY_MANDAYS['aa_setup']
-    if inputs.get('onboarding_price', 'No') == 'Yes':
-        bot_ui_mandays += ACTIVITY_MANDAYS['onboarding']
-    if inputs.get('testing_qa_price', 'No') == 'Yes':
-        bot_ui_mandays += ACTIVITY_MANDAYS['testing']
-    if inputs.get('ux_price', 'No') == 'Yes':
-        bot_ui_mandays += ACTIVITY_MANDAYS['ux']
     return {
         'bot_ui': bot_ui_mandays,
         'custom_ai': custom_ai_mandays,
