@@ -63,10 +63,10 @@ class Analytics(db.Model):
 # Country to currency symbol mapping
 COUNTRY_CURRENCY = {
     'India': '₹',
-    'MENA': '$',  # USD for MENA
+    'MENA': '$',
     'LATAM': '$',
     'Africa': '$',
-    'Europe': '$',  # Use USD for Europe
+    'Europe': '$',
     'Rest of the World': '$',
 }
 
