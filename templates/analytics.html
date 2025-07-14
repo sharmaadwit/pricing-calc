@@ -31,7 +31,7 @@
     <li><b>Total Calculations:</b> {{ analytics.calculations }}</li>
     <li><b>Calculations by Day:</b>
       <ul>
-        {% for day, count in analytics.calculations_by_day|dictsort(true)|slice(0,10) %}
+        {% for day, count in (analytics.calculations_by_day|dictsort(true))[:10] %}
           <li>{{ day }}: {{ count }}</li>
         {% endfor %}
       </ul>
