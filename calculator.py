@@ -31,33 +31,33 @@ COUNTRY_MANDAY_RATES = {
     'LATAM': {
         'currency': 'USD',
         'bot_ui': {
-            'LATAM': 825,
-            'India': 440,
+            'LATAM': 580,
+            'India': 400,
         },
         'custom_ai': {
-            'LATAM': 1100,
-            'India': 605,
+            'LATAM': 750,
+            'India': 500,
         },
     },
     'MENA': {
-        'currency': 'AED',
-        'bot_ui': 1650,
-        'custom_ai': 2750,
+        'currency': 'USD',
+        'bot_ui': 300,  # USD value as requested
+        'custom_ai': 500,  # USD value as requested
     },
     'Africa': {
         'currency': 'USD',
-        'bot_ui': 440,
-        'custom_ai': 605,
+        'bot_ui': 300,
+        'custom_ai': 420,
     },
     'Rest of the World': {
         'currency': 'USD',
-        'bot_ui': 440,
-        'custom_ai': 605,
+        'bot_ui': 300,
+        'custom_ai': 420,
     },
     'Europe': {
-        'currency': 'USD',  # Not in table, fallback to Rest of the World?
-        'bot_ui': 440,
-        'custom_ai': 605,
+        'currency': 'USD',
+        'bot_ui': 300,
+        'custom_ai': 420,
     },
 }
 
