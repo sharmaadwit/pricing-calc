@@ -31,7 +31,7 @@
     <li><b>Total Calculations:</b> {{ analytics.calculations }}</li>
     <li><b>Calculations by Day:</b>
       <ul>
-        {% for day, count in analytics.calculations_by_day.items() %}
+        {% for day, count in analytics.calculations_by_day|dictsort(true)|slice(0,10) %}
           <li>{{ day }}: {{ count }}</li>
         {% endfor %}
       </ul>
@@ -53,14 +53,17 @@
     <li><b>Most Common Platform Fee Options:</b>
       <ul>
         {% for fee, count in analytics.platform_fee_options %}
-          {# Find the most common currency for this fee #}
           {% set fee_currency = None %}
+          {% set fee_country = None %}
           {% for a in analytics.get('all_analytics', []) %}
             {% if a.platform_fee == fee and a.currency and not fee_currency %}
               {% set fee_currency = a.currency %}
             {% endif %}
+            {% if a.platform_fee == fee and a.country and not fee_country %}
+              {% set fee_country = a.country %}
+            {% endif %}
           {% endfor %}
-          <li>{{ fee_currency if fee_currency else currency_symbol }}{{ '{:,.2f}'.format(fee|float) }}: {{ count }}</li>
+          <li>{{ fee_currency if fee_currency else currency_symbol }}{{ '{:,.2f}'.format(fee|float) }} ({{ fee_country if fee_country else 'Unknown' }}): {{ count }}</li>
         {% endfor %}
       </ul>
     </li>
