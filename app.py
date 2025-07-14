@@ -492,13 +492,19 @@ def index():
         country = inputs.get('country', 'India')
         dev_location = inputs.get('dev_location', 'India')
         rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+        # Always reset manday_rates to backend defaults when country or dev_location changes
         if country == 'LATAM':
-            default_bot_ui = rates['bot_ui'][dev_location]
-            default_custom_ai = rates['custom_ai'][dev_location]
+            default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
+            default_custom_ai = float(rates['custom_ai'].get(dev_location, 0.0) or 0.0)
         else:
-            default_bot_ui = rates['bot_ui']
-            default_custom_ai = rates['custom_ai']
-        manday_rates = session.get('manday_rates', {}) or {}
+            default_bot_ui = float(rates.get('bot_ui', 0.0) or 0.0)
+            default_custom_ai = float(rates.get('custom_ai', 0.0) or 0.0)
+        manday_rates = {
+            'bot_ui': default_bot_ui,
+            'custom_ai': default_custom_ai,
+            'default_bot_ui': default_bot_ui,
+            'default_custom_ai': default_custom_ai
+        }
         # Fill missing keys with defaults
         manday_rates['bot_ui'] = float(manday_rates.get('bot_ui', default_bot_ui))
         manday_rates['custom_ai'] = float(manday_rates.get('custom_ai', default_custom_ai))
@@ -569,13 +575,19 @@ def index():
             country = inputs.get('country', 'India')
             dev_location = inputs.get('dev_location', 'India')
             rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+            # Always reset manday_rates to backend defaults when country or dev_location changes
             if country == 'LATAM':
-                default_bot_ui = rates['bot_ui'][dev_location]
-                default_custom_ai = rates['custom_ai'][dev_location]
+                default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
+                default_custom_ai = float(rates['custom_ai'].get(dev_location, 0.0) or 0.0)
             else:
-                default_bot_ui = rates['bot_ui']
-                default_custom_ai = rates['custom_ai']
-            manday_rates = session.get('manday_rates', {}) or {}
+                default_bot_ui = float(rates.get('bot_ui', 0.0) or 0.0)
+                default_custom_ai = float(rates.get('custom_ai', 0.0) or 0.0)
+            manday_rates = {
+                'bot_ui': default_bot_ui,
+                'custom_ai': default_custom_ai,
+                'default_bot_ui': default_bot_ui,
+                'default_custom_ai': default_custom_ai
+            }
             # Fill missing keys with defaults
             manday_rates['bot_ui'] = float(manday_rates.get('bot_ui', default_bot_ui))
             manday_rates['custom_ai'] = float(manday_rates.get('custom_ai', default_custom_ai))
@@ -928,11 +940,11 @@ def index():
         # Get default rates
         rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
         if country == 'LATAM':
-            default_bot_ui = rates['bot_ui'][dev_location]
-            default_custom_ai = rates['custom_ai'][dev_location]
+            default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
+            default_custom_ai = float(rates['custom_ai'].get(dev_location, 0.0) or 0.0)
         else:
-            default_bot_ui = rates['bot_ui']
-            default_custom_ai = rates['custom_ai']
+            default_bot_ui = float(rates.get('bot_ui', 0.0) or 0.0)
+            default_custom_ai = float(rates.get('custom_ai', 0.0) or 0.0)
         if request.method == 'POST':
             # Validate user rates
             def parse_number(val):
@@ -997,11 +1009,11 @@ def index():
         dev_location = inputs.get('dev_location', 'India')
         rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
         if country == 'LATAM':
-            default_bot_ui = rates['bot_ui'][dev_location]
-            default_custom_ai = rates['custom_ai'][dev_location]
+            default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
+            default_custom_ai = float(rates['custom_ai'].get(dev_location, 0.0) or 0.0)
         else:
-            default_bot_ui = rates['bot_ui']
-            default_custom_ai = rates['custom_ai']
+            default_bot_ui = float(rates.get('bot_ui', 0.0) or 0.0)
+            default_custom_ai = float(rates.get('custom_ai', 0.0) or 0.0)
         # --- Set default per-message prices for all countries based on committed amount using bundle_markup_rates ---
         from calculator import bundle_markup_rates
         bundle_rates = bundle_markup_rates.get(country, bundle_markup_rates.get('Rest of the World', []))
@@ -1329,7 +1341,7 @@ def analytics():
                 # Distribution buckets (0-10%, 10-20%, ...)
                 buckets = [0]*10
                 for d in discounts:
-                    idx = min(int(d // 10), 9)
+                    idx = min(max(int(d // 10), 0), 9)
                     buckets[idx] += 1
                 return {'avg': avg, 'min': minv, 'max': maxv, 'median': median, 'buckets': buckets, 'count': len(discounts)}
 
