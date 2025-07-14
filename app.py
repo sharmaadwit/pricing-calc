@@ -81,17 +81,13 @@ def initialize_inclusions():
         'Platform Fee Used for Margin Calculation': [
             'Journey Builder Lite',
             'Campaign Manager',
-            'CTWA (Meta, Tiktok)',
-            'Agent Assist <20',
-            'Personalize Lite (upto 1ml and no advanced events)',
-            '80 TPS',
-            '1 manday/month maintenance'
+            'CTWA - (Meta, Tiktok)'
         ],
         'Personalize Load Lite': [
             'personalize lite upto 1 million records - no advanced events'
         ],
         'Human Agents <20': [
-            'Agent Assist < 20 Agents,'
+            'Agent Assist < 20 Agents'
         ],
         'BFSI Tier 1': [
             'Auditing to be stored for XX days for JB PRO+Flows',
@@ -108,7 +104,7 @@ def initialize_inclusions():
             'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs) on Agent Assist',
             'Conversational Data Encryption, Logging,Auditing,Purging (Data and Logs) on AI Agents',
             'Encryption, Auditing,Logging on Campaign Manager',
-            'Data Encryption, Logging, Auditing, Purging (Logs) on  Reatargetting and Personalize'
+            'Data Encryption, Logging, Auditing, Purging (Logs) on Reatargetting and Personalize'
         ],
         'Personalize Load Standard': [
             'Standard - upto 5 million records, no external events supported'
@@ -1429,6 +1425,7 @@ def analytics():
                     'seasonality': seasonality
                 })
                 # Debug: Log manday rates and breakdown before saving to Analytics
+                #print(f"DEBUG: About to save Analytics record with bot_ui_manday_rate={manday_rates.get('bot_ui')}, custom_ai_manday_rate={manday_rates.get('custom_ai')}, bot_ui_mandays={manday_breakdown.get('bot_ui', 0)}, custom_ai_mandays={manday_breakdown.get('custom_ai', 0)}")
                 return render_template('analytics.html', authorized=True, analytics=analytics)
             else:
                 flash('Incorrect keyword.', 'error')
