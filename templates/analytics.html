@@ -29,6 +29,12 @@
   <h2>Analytics Dashboard</h2>
   <ul>
     <li><b>Total Calculations:</b> {{ analytics.calculations }}</li>
+    <li><b>By Calculation Route:</b>
+      <ul>
+        <li>Committed Volumes Route: {{ analytics.volumes_count }}</li>
+        <li>Committed Amount Bundle Route: {{ analytics.bundle_count }}</li>
+      </ul>
+    </li>
     <li><b>Calculations by Day:</b>
       <ul>
         {% for day, count in (analytics.calculations_by_day|dictsort(true))[:10] %}

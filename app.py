@@ -57,6 +57,7 @@ class Analytics(db.Model):
     bot_ui_mandays = db.Column(db.Float)
     custom_ai_mandays = db.Column(db.Float)
     # Add more fields as needed
+    calculation_route = db.Column(db.String(16))  # "volumes" or "bundle"
 
 # os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
 
@@ -835,8 +836,13 @@ def index():
             custom_ai_mandays=manday_breakdown.get('custom_ai', 0),
         )
         analytics_kwargs['calculation_id'] = session.get('calculation_id')
+        # Set calculation_route for analytics
+        if all(float(inputs.get(v, 0)) == 0.0 for v in ['ai_volume', 'advanced_volume', 'basic_marketing_volume', 'basic_utility_volume']) and float(inputs.get('committed_amount', 0) or 0) > 0:
+            analytics_kwargs['calculation_route'] = 'bundle'
+        else:
+            analytics_kwargs['calculation_route'] = 'volumes'
         # Debug: Log manday rates and breakdown before saving to Analytics
-        print(f"DEBUG: Saving Analytics: bot_ui_manday_rate={analytics_kwargs.get('bot_ui_manday_rate')}, custom_ai_manday_rate={analytics_kwargs.get('custom_ai_manday_rate')}, bot_ui_mandays={analytics_kwargs.get('bot_ui_mandays')}, custom_ai_mandays={analytics_kwargs.get('custom_ai_mandays')}")
+        print(f"DEBUG: Saving Analytics: bot_ui_manday_rate={analytics_kwargs.get('bot_ui_manday_rate')}, custom_ai_manday_rate={analytics_kwargs.get('custom_ai_manday_rate')}, bot_ui_mandays={analytics_kwargs.get('bot_ui_mandays')}, custom_ai_mandays={analytics_kwargs.get('custom_ai_mandays')}, calculation_route={analytics_kwargs.get('calculation_route')}")
         new_analytics = Analytics(**analytics_kwargs)
         db.session.add(new_analytics)
         db.session.commit()
