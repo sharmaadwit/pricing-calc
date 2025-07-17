@@ -1298,8 +1298,13 @@ def analytics():
                 user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
                 top_users = Counter(user_names).most_common()  # Remove the 5 limit
                 all_analytics = Analytics.query.all()
+                # Add calculation route counts
+                volumes_count = Analytics.query.filter_by(calculation_route='volumes').count()
+                bundle_count = Analytics.query.filter_by(calculation_route='bundle').count()
                 analytics = {
                     'calculations': total_calculations,
+                    'volumes_count': volumes_count,
+                    'bundle_count': bundle_count,
                     'calculations_by_day': calculations_by_day,
                     'calculations_by_week': calculations_by_week,
                     'country_counter': country_counter,
