@@ -71,7 +71,7 @@ COUNTRY_CURRENCY = {
     'Rest of the World': '$',
 }
 
-SECRET_ANALYTICS_KEYWORD = "letmein123"
+# SECRET_ANALYTICS_KEYWORD = "letmein123" # Removed as per edit hint
 
 def initialize_inclusions():
     """
@@ -1048,11 +1048,267 @@ def index():
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
     try:
-        if request.method == 'POST':
-            # ... existing POST logic ...
-            return render_template('analytics.html', authorized=True, analytics=analytics)
-        # Handle GET requests (or any other case)
-        return render_template('analytics.html', analytics={}, currency_symbol=COUNTRY_CURRENCY.get('India', '$'), authorized=False)
+        # Always show analytics, no secret keyword required
+        # --- Begin analytics logic (previously inside POST/keyword check) ---
+        total_calculations = Analytics.query.count()
+        volumes_count = Analytics.query.filter_by(calculation_route="volumes").count()
+        bundle_count = Analytics.query.filter_by(calculation_route="bundle").count()
+        calculations_by_day = {str(row[0]): row[1] for row in db.session.query(func.date(Analytics.timestamp), func.count()).group_by(func.date(Analytics.timestamp)).all()}
+        calculations_by_week = {str(row[0]): row[1] for row in db.session.query(
+            func.to_char(Analytics.timestamp, 'IYYY-"W"IW'),
+            func.count()
+        ).group_by(
+            func.to_char(Analytics.timestamp, 'IYYY-"W"IW')
+        ).all()}
+        from collections import Counter
+        country_list = [row[0] for row in db.session.query(Analytics.country).all() if row[0] is not None]
+        country_counter = Counter(country_list).most_common(5)
+        platform_fees = [row[0] for row in db.session.query(Analytics.platform_fee).all() if row[0] is not None]
+        if platform_fees:
+            avg_platform_fee = sum(platform_fees) / len(platform_fees)
+            min_platform_fee = min(platform_fees)
+            max_platform_fee = max(platform_fees)
+            median_platform_fee = sorted(platform_fees)[len(platform_fees)//2]
+        else:
+            avg_platform_fee = min_platform_fee = max_platform_fee = median_platform_fee = 0
+        platform_fee_options = Counter(platform_fees).most_common(5)
+        def get_stats(field):
+            vals = [getattr(a, field) for a in Analytics.query.all() if getattr(a, field) is not None]
+            if vals:
+                return {
+                    'avg': sum(vals)/len(vals),
+                    'min': min(vals),
+                    'max': max(vals),
+                    'median': sorted(vals)[len(vals)//2]
+                }
+        ai_stats = get_stats('ai_price')
+        advanced_stats = get_stats('advanced_price')
+        marketing_stats = get_stats('basic_marketing_price')
+        utility_stats = get_stats('basic_utility_price')
+        def get_volume_stats(field):
+            vals = [getattr(a, field) for a in Analytics.query.all() if getattr(a, field) is not None]
+            if vals:
+                return [sum(vals), min(vals), max(vals), sorted(vals)[len(vals)//2]]
+            else:
+                return [0, 0, 0, 0]
+        message_volumes = {
+            'ai': get_volume_stats('ai_price'),
+            'advanced': get_volume_stats('advanced_price'),
+            'basic_marketing': get_volume_stats('basic_marketing_price'),
+            'basic_utility': get_volume_stats('basic_utility_price')
+        }
+        platform_fee_discount_triggered = db.session.query(Analytics).filter(Analytics.platform_fee < 0.3 * avg_platform_fee).count() if avg_platform_fee else 0
+        margin_chosen = [95.825]  # Example value, replace with real calculation if available
+        margin_rate_card = [0.0]  # Example value, replace with real calculation if available
+        stats = {}
+        countries = set(country_list)
+        for country in countries:
+            country_analytics = Analytics.query.filter_by(country=country).all()
+            country_fees = [a.platform_fee for a in country_analytics if a.platform_fee is not None]
+            country_ai = [a.ai_price for a in country_analytics if a.ai_price is not None]
+            country_adv = [a.advanced_price for a in country_analytics if a.advanced_price is not None]
+            country_mark = [a.basic_marketing_price for a in country_analytics if a.basic_marketing_price is not None]
+            country_util = [a.basic_utility_price for a in country_analytics if a.basic_utility_price is not None]
+            dev_costs = []
+            bot_ui_rates = [a.bot_ui_manday_rate for a in country_analytics if a.bot_ui_manday_rate not in (None, 0, '0', '', 'None')]
+            custom_ai_rates = [a.custom_ai_manday_rate for a in country_analytics if a.custom_ai_manday_rate not in (None, 0, '0', '', 'None')]
+            bot_ui_mandays = [getattr(a, 'bot_ui_mandays', None) for a in country_analytics]
+            custom_ai_mandays = [getattr(a, 'custom_ai_mandays', None) for a in country_analytics]
+            for a in country_analytics:
+                bot_ui_rate = a.bot_ui_manday_rate if a.bot_ui_manday_rate is not None else 0
+                custom_ai_rate = a.custom_ai_manday_rate if a.custom_ai_manday_rate is not None else 0
+                bot_days = getattr(a, 'bot_ui_mandays', 0) or 0
+                ai_days = getattr(a, 'custom_ai_mandays', 0) or 0
+                dev_cost = (bot_ui_rate * bot_days) + (custom_ai_rate * ai_days)
+                dev_costs.append(dev_cost)
+            def stat_dict(vals):
+                filtered = [float(v) for v in vals if v not in (None, 0, '0', '', 'None')]
+                if not filtered:
+                    return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
+                avg = sum(filtered) / len(filtered)
+                min_v = min(filtered)
+                max_v = max(filtered)
+                sorted_vals = sorted(filtered)
+                n = len(sorted_vals)
+                if n % 2 == 1:
+                    median = sorted_vals[n // 2]
+                else:
+                    median = (sorted_vals[n // 2 - 1] + sorted_vals[n // 2]) / 2
+                return {'avg': avg, 'min': min_v, 'max': max_v, 'median': median}
+            stats[country] = {
+                'platform_fee': stat_dict(country_fees),
+                'msg_types': {
+                    'ai': {
+                        'avg': sum(country_ai)/len(country_ai) if country_ai else 0,
+                        'min': min(country_ai) if country_ai else 0,
+                        'max': max(country_ai) if country_ai else 0,
+                        'median': sorted(country_ai)[len(country_ai)//2] if country_ai else 0
+                    },
+                    'advanced': {
+                        'avg': sum(country_adv)/len(country_adv) if country_adv else 0,
+                        'min': min(country_adv) if country_adv else 0,
+                        'max': max(country_adv) if country_adv else 0,
+                        'median': sorted(country_adv)[len(country_adv)//2] if country_adv else 0
+                    },
+                    'basic_marketing': {
+                        'avg': sum(country_mark)/len(country_mark) if country_mark else 0,
+                        'min': min(country_mark) if country_mark else 0,
+                        'max': max(country_mark) if country_mark else 0,
+                        'median': sorted(country_mark)[len(country_mark)//2] if country_mark else 0
+                    },
+                    'basic_utility': {
+                        'avg': sum(country_util)/len(country_util) if country_util else 0,
+                        'min': min(country_util) if country_util else 0,
+                        'max': max(country_util) if country_util else 0,
+                        'median': sorted(country_util)[len(country_util)//2] if country_util else 0
+                    }
+                },
+                'one_time_dev_cost': stat_dict(dev_costs),
+                'bot_ui_manday_cost': stat_dict(bot_ui_rates),
+                'custom_ai_manday_cost': stat_dict(custom_ai_rates)
+            }
+            stats[country]['bot_ui_manday_cost'] = stat_dict(bot_ui_rates) if 'bot_ui_manday_cost' not in stats[country] else stats[country]['bot_ui_manday_cost']
+            stats[country]['custom_ai_manday_cost'] = stat_dict(custom_ai_rates) if 'custom_ai_manday_cost' not in stats[country] else stats[country]['custom_ai_manday_cost']
+        # Calculation route counts
+        # Top users by number of calculations (show all, not just top 5)
+        user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
+        top_users = Counter(user_names).most_common()  # Remove the 5 limit
+        all_analytics = Analytics.query.all()
+        analytics = {
+            'calculations': total_calculations,
+            'calculations_by_day': calculations_by_day,
+            'calculations_by_week': calculations_by_week,
+            'country_counter': country_counter,
+            'platform_fee_stats': {
+                'avg': avg_platform_fee,
+                'min': min_platform_fee,
+                'max': max_platform_fee,
+                'median': median_platform_fee
+            },
+            'platform_fee_options': platform_fee_options,
+            'ai_stats': ai_stats,
+            'advanced_stats': advanced_stats,
+            'marketing_stats': marketing_stats,
+            'utility_stats': utility_stats,
+            'message_volumes': message_volumes,
+            'platform_fee_discount_triggered': platform_fee_discount_triggered,
+            'margin_chosen': margin_chosen,
+            'margin_rate_card': margin_rate_card,
+            'stats': stats,
+            'discount_warnings': {},
+            'avg_price_data': {},
+            'avg_platform_fee_data': {},
+            'top_users': top_users,
+            'user_stats': {},
+            'all_analytics': all_analytics,
+            'bundle_count': bundle_count,
+            'volumes_count': volumes_count
+        }
+        # --- Advanced Analytics Calculations ---
+        # 1. Discount calculations (by type and platform fee)
+        def get_discount_stats(price_field, rate_card_field):
+            discounts = []
+            for a in Analytics.query.all():
+                price = getattr(a, price_field, None)
+                rate_card = getattr(a, rate_card_field, None)
+                if price is not None and rate_card is not None and rate_card > 0:
+                    discount = (rate_card - price) / rate_card * 100
+                    discounts.append(discount)
+            if discounts:
+                avg = sum(discounts) / len(discounts)
+                minv = min(discounts)
+                maxv = max(discounts)
+                median = sorted(discounts)[len(discounts)//2]
+            else:
+                avg = minv = maxv = median = 0
+            # Distribution buckets (0-10%, 10-20%, ...)
+            buckets = [0]*10
+            for d in discounts:
+                idx = min(max(int(d // 10), 0), 9)
+                buckets[idx] += 1
+            return {'avg': avg, 'min': minv, 'max': maxv, 'median': median, 'buckets': buckets, 'count': len(discounts)}
+
+        ai_discount = get_discount_stats('ai_price', 'ai_rate_card_price')
+        advanced_discount = get_discount_stats('advanced_price', 'advanced_rate_card_price')
+        marketing_discount = get_discount_stats('basic_marketing_price', 'basic_marketing_rate_card_price')
+        utility_discount = get_discount_stats('basic_utility_price', 'basic_utility_rate_card_price')
+        platform_fee_discount = get_discount_stats('platform_fee', 'platform_fee')  # always 0, but for completeness
+
+        # 2. Most common prices (mode)
+        def get_mode(field):
+            vals = [getattr(a, field) for a in Analytics.query.all() if getattr(a, field) is not None]
+            if vals:
+                return Counter(vals).most_common(1)[0][0]
+            return None
+        ai_mode = get_mode('ai_price')
+        advanced_mode = get_mode('advanced_price')
+        marketing_mode = get_mode('basic_marketing_price')
+        utility_mode = get_mode('basic_utility_price')
+        platform_fee_mode = get_mode('platform_fee')
+
+        # 3. Popular message types (by total volume)
+        def get_total_volume(field):
+            return sum(getattr(a, field) or 0 for a in Analytics.query.all())
+        total_ai_vol = get_total_volume('ai_volume')
+        total_adv_vol = get_total_volume('advanced_volume')
+        total_marketing_vol = get_total_volume('basic_marketing_volume')
+        total_utility_vol = get_total_volume('basic_utility_volume')
+        popular_types = sorted([
+            ('AI', total_ai_vol),
+            ('Advanced', total_adv_vol),
+            ('Marketing', total_marketing_vol),
+            ('Utility', total_utility_vol)
+        ], key=lambda x: x[1], reverse=True)
+
+        # 4. Platform fee vs. deal size (correlation)
+        import math
+        fees = [a.platform_fee for a in Analytics.query.all() if a.platform_fee is not None]
+        deal_sizes = [
+            (getattr(a, 'ai_volume') or 0) + (getattr(a, 'advanced_volume') or 0) +
+            (getattr(a, 'basic_marketing_volume') or 0) + (getattr(a, 'basic_utility_volume') or 0)
+            for a in Analytics.query.all()
+        ]
+        if fees and deal_sizes and len(fees) == len(deal_sizes):
+            n = len(fees)
+            mean_fee = sum(fees)/n
+            mean_deal = sum(deal_sizes)/n
+            cov = sum((fees[i]-mean_fee)*(deal_sizes[i]-mean_deal) for i in range(n)) / n
+            std_fee = math.sqrt(sum((f-mean_fee)**2 for f in fees)/n)
+            std_deal = math.sqrt(sum((d-mean_deal)**2 for d in deal_sizes)/n)
+            correlation = cov / (std_fee*std_deal) if std_fee and std_deal else 0
+        else:
+            correlation = 0
+
+        # 5. Seasonality (by month)
+        from collections import defaultdict
+        month_counts = defaultdict(int)
+        for a in Analytics.query.all():
+            if a.timestamp:
+                month = a.timestamp.strftime('%Y-%m')
+                month_counts[month] += 1
+        seasonality = dict(sorted(month_counts.items()))
+
+        # Add to analytics dict
+        analytics.update({
+            'discounts': {
+                'ai': ai_discount,
+                'advanced': advanced_discount,
+                'marketing': marketing_discount,
+                'utility': utility_discount,
+                'platform_fee': platform_fee_discount
+            },
+            'modes': {
+                'ai': ai_mode,
+                'advanced': advanced_mode,
+                'marketing': marketing_mode,
+                'utility': utility_mode,
+                'platform_fee': platform_fee_mode
+            },
+            'popular_types': popular_types,
+            'platform_fee_vs_deal_correlation': correlation,
+            'seasonality': seasonality
+        })
+        return render_template('analytics.html', authorized=True, analytics=analytics)
     except Exception as e:
         return render_template('analytics.html', analytics={}, currency_symbol=COUNTRY_CURRENCY.get('India', '$'), authorized=False, error=str(e))
 
