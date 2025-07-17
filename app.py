@@ -1048,11 +1048,14 @@ def index():
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
     try:
+        authorized = False
         if request.method == 'POST':
             keyword = request.form.get('keyword', '')
             if keyword == SECRET_ANALYTICS_KEYWORD:
                 # Query the database for analytics
                 total_calculations = Analytics.query.count()
+                volumes_count = Analytics.query.filter_by(calculation_route="volumes").count()
+                bundle_count = Analytics.query.filter_by(calculation_route="bundle").count()
                 # Calculations by day
                 calculations_by_day = {str(row[0]): row[1] for row in db.session.query(func.date(Analytics.timestamp), func.count()).group_by(func.date(Analytics.timestamp)).all()}
                 # Calculations by week
@@ -1062,11 +1065,9 @@ def analytics():
                 ).group_by(
                     func.to_char(Analytics.timestamp, 'IYYY-"W"IW')
                 ).all()}
-                # Most common countries
                 from collections import Counter
                 country_list = [row[0] for row in db.session.query(Analytics.country).all() if row[0] is not None]
                 country_counter = Counter(country_list).most_common(5)
-                # Platform fee stats
                 platform_fees = [row[0] for row in db.session.query(Analytics.platform_fee).all() if row[0] is not None]
                 if platform_fees:
                     avg_platform_fee = sum(platform_fees) / len(platform_fees)
@@ -1075,9 +1076,7 @@ def analytics():
                     median_platform_fee = sorted(platform_fees)[len(platform_fees)//2]
                 else:
                     avg_platform_fee = min_platform_fee = max_platform_fee = median_platform_fee = 0
-                # Platform fee options (most common platform_fee values)
                 platform_fee_options = Counter(platform_fees).most_common(5)
-                # Message price stats by type
                 def get_stats(field):
                     vals = [getattr(a, field) for a in Analytics.query.all() if getattr(a, field) is not None]
                     if vals:
@@ -1087,13 +1086,10 @@ def analytics():
                             'max': max(vals),
                             'median': sorted(vals)[len(vals)//2]
                         }
-                    else:
-                        return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
                 ai_stats = get_stats('ai_price')
                 advanced_stats = get_stats('advanced_price')
                 marketing_stats = get_stats('basic_marketing_price')
                 utility_stats = get_stats('basic_utility_price')
-                # Message volume distribution (sum, min, max, median for each type)
                 def get_volume_stats(field):
                     vals = [getattr(a, field) for a in Analytics.query.all() if getattr(a, field) is not None]
                     if vals:
@@ -1106,12 +1102,9 @@ def analytics():
                     'basic_marketing': get_volume_stats('basic_marketing_price'),
                     'basic_utility': get_volume_stats('basic_utility_price')
                 }
-                # Platform fee discount triggered (count)
                 platform_fee_discount_triggered = db.session.query(Analytics).filter(Analytics.platform_fee < 0.3 * avg_platform_fee).count() if avg_platform_fee else 0
-                # Margin chosen and rate card (dummy values for now, replace with real if available)
                 margin_chosen = [95.825]  # Example value, replace with real calculation if available
                 margin_rate_card = [0.0]  # Example value, replace with real calculation if available
-                # Per-country stats for table
                 stats = {}
                 countries = set(country_list)
                 for country in countries:
@@ -1121,13 +1114,11 @@ def analytics():
                     country_adv = [a.advanced_price for a in country_analytics if a.advanced_price is not None]
                     country_mark = [a.basic_marketing_price for a in country_analytics if a.basic_marketing_price is not None]
                     country_util = [a.basic_utility_price for a in country_analytics if a.basic_utility_price is not None]
-                    # --- One Time Dev Cost Aggregation ---
                     dev_costs = []
                     bot_ui_rates = [a.bot_ui_manday_rate for a in country_analytics if a.bot_ui_manday_rate not in (None, 0, '0', '', 'None')]
                     custom_ai_rates = [a.custom_ai_manday_rate for a in country_analytics if a.custom_ai_manday_rate not in (None, 0, '0', '', 'None')]
                     bot_ui_mandays = [getattr(a, 'bot_ui_mandays', None) for a in country_analytics]
                     custom_ai_mandays = [getattr(a, 'custom_ai_mandays', None) for a in country_analytics]
-                    # Calculate one time dev cost for each record
                     for a in country_analytics:
                         bot_ui_rate = a.bot_ui_manday_rate if a.bot_ui_manday_rate is not None else 0
                         custom_ai_rate = a.custom_ai_manday_rate if a.custom_ai_manday_rate is not None else 0
@@ -1136,7 +1127,6 @@ def analytics():
                         dev_cost = (bot_ui_rate * bot_days) + (custom_ai_rate * ai_days)
                         dev_costs.append(dev_cost)
                     def stat_dict(vals):
-                        # Exclude None, 0, '0', '', 'None' (as string)
                         filtered = [float(v) for v in vals if v not in (None, 0, '0', '', 'None')]
                         if not filtered:
                             return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
@@ -1182,118 +1172,11 @@ def analytics():
                         'bot_ui_manday_cost': stat_dict(bot_ui_rates),
                         'custom_ai_manday_cost': stat_dict(custom_ai_rates)
                     }
-                    # Defensive: always include manday cost stats, even if empty
                     stats[country]['bot_ui_manday_cost'] = stat_dict(bot_ui_rates) if 'bot_ui_manday_cost' not in stats[country] else stats[country]['bot_ui_manday_cost']
                     stats[country]['custom_ai_manday_cost'] = stat_dict(custom_ai_rates) if 'custom_ai_manday_cost' not in stats[country] else stats[country]['custom_ai_manday_cost']
-                # --- Add average discount per country for all message types and manday rates ---
-                def avg_discount(chosen_list, rate_card_list):
-                    pairs = [
-                        (c, r)
-                        for c, r in zip(chosen_list, rate_card_list)
-                        if isinstance(c, (int, float)) and isinstance(r, (int, float)) and r
-                    ]
-                    if not pairs:
-                        return 0.0
-                    return 100 * sum((r - c) / r for c, r in pairs) / len(pairs)
-                for country in countries:
-                    country_analytics = Analytics.query.filter_by(country=country).all()
-                    # Message types
-                    ai_chosen = [a.ai_price for a in country_analytics if a.ai_price is not None]
-                    ai_rate = [a.ai_rate_card_price for a in country_analytics if a.ai_rate_card_price is not None]
-                    adv_chosen = [a.advanced_price for a in country_analytics if a.advanced_price is not None]
-                    adv_rate = [a.advanced_rate_card_price for a in country_analytics if a.advanced_rate_card_price is not None]
-                    mark_chosen = [a.basic_marketing_price for a in country_analytics if a.basic_marketing_price is not None]
-                    mark_rate = [a.basic_marketing_rate_card_price for a in country_analytics if a.basic_marketing_rate_card_price is not None]
-                    util_chosen = [a.basic_utility_price for a in country_analytics if a.basic_utility_price is not None]
-                    util_rate = [a.basic_utility_rate_card_price for a in country_analytics if a.basic_utility_rate_card_price is not None]
-                    # Manday rates
-                    bot_ui_chosen = [a.bot_ui_manday_rate for a in country_analytics if a.bot_ui_manday_rate not in (None, 0, '0', '', 'None')]
-                    bot_ui_rate = [COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])['bot_ui'] for _ in bot_ui_chosen]
-                    custom_ai_chosen = [a.custom_ai_manday_rate for a in country_analytics if a.custom_ai_manday_rate not in (None, 0, '0', '', 'None')]
-                    custom_ai_rate = [COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])['custom_ai'] for _ in custom_ai_chosen]
-                    stats[country]['avg_discount'] = {
-                        'ai': avg_discount(ai_chosen, ai_rate),
-                        'advanced': avg_discount(adv_chosen, adv_rate),
-                        'basic_marketing': avg_discount(mark_chosen, mark_rate),
-                        'basic_utility': avg_discount(util_chosen, util_rate),
-                        'bot_ui_manday': avg_discount(bot_ui_chosen, bot_ui_rate),
-                        'custom_ai_manday': avg_discount(custom_ai_chosen, custom_ai_rate),
-                    }
-                # Defensive: Ensure every stat in analytics['stats'] is a dict
-                for country in list(stats.keys()):
-                    if not isinstance(stats[country], dict):
-                        stats[country] = {}
-                # Debug: Print stats structure before rendering
-                print('DEBUG: analytics["stats"] structure:')
-                for country, stat in stats.items():
-                    print(f'Country: {country}')
-                    print(f'  Keys: {list(stat.keys())}')
-                    print(f'  bot_ui_manday_cost: {stat.get("bot_ui_manday_cost")}, custom_ai_manday_cost: {stat.get("custom_ai_manday_cost")}')
-                print('--- END DEBUG ---')
-                # Per-user stats for table
-                user_stats = {}
-                user_country_currency_list = db.session.query(Analytics.user_name, Analytics.country, Analytics.currency).distinct().all()
-                for user, country, currency in user_country_currency_list:
-                    user_entries = Analytics.query.filter_by(user_name=user, country=country, currency=currency).all()
-                    def get_user_stats(field):
-                        vals = [getattr(a, field) for a in user_entries if getattr(a, field) is not None]
-                        if vals:
-                            return {
-                                'avg': sum(vals)/len(vals),
-                                'min': min(vals),
-                                'max': max(vals),
-                                'median': sorted(vals)[len(vals)//2]
-                            }
-                        else:
-                            return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
-                    # Add one_time_dev_cost and per_manday_cost for user/country/currency
-                    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
-                    if country == 'LATAM':
-                        bot_ui_rate = rates['bot_ui'].get(country, rates['bot_ui']['India'])
-                        custom_ai_rate = rates['custom_ai'].get(country, rates['custom_ai']['India'])
-                    else:
-                        bot_ui_rate = rates['bot_ui']
-                        custom_ai_rate = rates['custom_ai']
-                    per_manday_cost = (bot_ui_rate + custom_ai_rate) / 2
-                    dev_cost = bot_ui_rate + custom_ai_rate
-                    one_time_dev_cost_stats = {'avg': dev_cost, 'min': dev_cost, 'max': dev_cost, 'median': dev_cost}
-                    per_manday_cost_stats = {'avg': per_manday_cost, 'min': per_manday_cost, 'max': per_manday_cost, 'median': per_manday_cost}
-                    user_stats.setdefault(user, {})[(country, currency)] = {
-                        'platform_fee': get_user_stats('platform_fee'),
-                        'ai': get_user_stats('ai_price'),
-                        'advanced': get_user_stats('advanced_price'),
-                        'basic_marketing': get_user_stats('basic_marketing_price'),
-                        'basic_utility': get_user_stats('basic_utility_price'),
-                        'one_time_dev_cost': one_time_dev_cost_stats,
-                        'per_manday_cost': per_manday_cost_stats
-                    }
-                # Compute avg_price_data and avg_platform_fee_data for Chart.js graphs
-                avg_price_data = {}
-                avg_platform_fee_data = {}
-                for country in countries:
-                    country_analytics = Analytics.query.filter_by(country=country).all()
-                    avg_price_data[country] = {
-                        'ai': {
-                            'sum': sum(a.ai_price or 0 for a in country_analytics),
-                            'count': len([a for a in country_analytics if a.ai_price is not None])
-                        },
-                        'advanced': {
-                            'sum': sum(a.advanced_price or 0 for a in country_analytics),
-                            'count': len([a for a in country_analytics if a.advanced_price is not None])
-                        },
-                        'basic_marketing': {
-                            'sum': sum(a.basic_marketing_price or 0 for a in country_analytics),
-                            'count': len([a for a in country_analytics if a.basic_marketing_price is not None])
-                        },
-                        'basic_utility': {
-                            'sum': sum(a.basic_utility_price or 0 for a in country_analytics),
-                            'count': len([a for a in country_analytics if a.basic_utility_price is not None])
-                        }
-                    }
-                    avg_platform_fee_data[country] = {
-                        'sum': sum(a.platform_fee or 0 for a in country_analytics),
-                        'count': len([a for a in country_analytics if a.platform_fee is not None])
-                    }
+                # Calculation route counts
+                bundle_count = Analytics.query.filter_by(calculation_route="bundle").count()
+                volumes_count = Analytics.query.filter_by(calculation_route="volumes").count()
                 # Top users by number of calculations (show all, not just top 5)
                 user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
                 top_users = Counter(user_names).most_common()  # Remove the 5 limit
@@ -1320,11 +1203,13 @@ def analytics():
                     'margin_rate_card': margin_rate_card,
                     'stats': stats,
                     'discount_warnings': {},
-                    'avg_price_data': avg_price_data,
-                    'avg_platform_fee_data': avg_platform_fee_data,
+                    'avg_price_data': {},
+                    'avg_platform_fee_data': {},
                     'top_users': top_users,
-                    'user_stats': user_stats,
-                    'all_analytics': all_analytics
+                    'user_stats': {},
+                    'all_analytics': all_analytics,
+                    'bundle_count': bundle_count,
+                    'volumes_count': volumes_count
                 }
                 # --- Advanced Analytics Calculations ---
                 # 1. Discount calculations (by type and platform fee)
@@ -1433,16 +1318,8 @@ def analytics():
                 # Debug: Log manday rates and breakdown before saving to Analytics
                 #print(f"DEBUG: About to save Analytics record with bot_ui_manday_rate={manday_rates.get('bot_ui')}, custom_ai_manday_rate={manday_rates.get('custom_ai')}, bot_ui_mandays={manday_breakdown.get('bot_ui', 0)}, custom_ai_mandays={manday_breakdown.get('custom_ai', 0)}")
                 return render_template('analytics.html', authorized=True, analytics=analytics)
-            else:
-                flash('Incorrect keyword.', 'error')
-                return render_template('analytics.html', authorized=False, analytics={})
-        # GET request or any other case
-        return render_template('analytics.html', authorized=False, analytics={})
     except Exception as e:
-        import traceback
-        print("ANALYTICS ERROR:", e)
-        traceback.print_exc()
-        return "Internal Server Error (analytics)", 500
+        return render_template('analytics.html', analytics={}, currency_symbol=COUNTRY_CURRENCY.get('India', '$'), authorized=False, error=str(e))
 
 @app.route('/reset-analytics', methods=['POST'])
 def reset_analytics():
