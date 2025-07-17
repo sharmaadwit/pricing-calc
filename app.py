@@ -1298,6 +1298,8 @@ def analytics():
                 user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
                 top_users = Counter(user_names).most_common()  # Remove the 5 limit
                 all_analytics = Analytics.query.all()
+                bundle_count = Analytics.query.filter_by(calculation_route="bundle").count()
+                volumes_count = Analytics.query.filter_by(calculation_route="volumes").count()
                 analytics = {
                     'calculations': total_calculations,
                     'calculations_by_day': calculations_by_day,
@@ -1324,7 +1326,9 @@ def analytics():
                     'avg_platform_fee_data': avg_platform_fee_data,
                     'top_users': top_users,
                     'user_stats': user_stats,
-                    'all_analytics': all_analytics
+                    'all_analytics': all_analytics,
+                    'bundle_count': bundle_count,
+                    'volumes_count': volumes_count
                 }
                 # --- Advanced Analytics Calculations ---
                 # 1. Discount calculations (by type and platform fee)
