@@ -56,6 +56,7 @@ class Analytics(db.Model):
     # New fields for manday counts
     bot_ui_mandays = db.Column(db.Float)
     custom_ai_mandays = db.Column(db.Float)
+    committed_amount = db.Column(db.Float, nullable=True)  # New column for message bundle amount
     # Add more fields as needed
     calculation_route = db.Column(db.String(16))  # "volumes" or "bundle"
 
@@ -834,6 +835,7 @@ def index():
             custom_ai_manday_rate=manday_rates.get('custom_ai'),
             bot_ui_mandays=manday_breakdown.get('bot_ui', 0),
             custom_ai_mandays=manday_breakdown.get('custom_ai', 0),
+            committed_amount=inputs.get('committed_amount', None),
         )
         analytics_kwargs['calculation_id'] = session.get('calculation_id')
         # Set calculation_route for analytics
@@ -1121,6 +1123,7 @@ def analytics():
                     country_adv = [a.advanced_price for a in country_analytics if a.advanced_price is not None]
                     country_mark = [a.basic_marketing_price for a in country_analytics if a.basic_marketing_price is not None]
                     country_util = [a.basic_utility_price for a in country_analytics if a.basic_utility_price is not None]
+                    country_committed = [a.committed_amount for a in country_analytics if a.committed_amount not in (None, 0, '0', '', 'None')]
                     # --- One Time Dev Cost Aggregation ---
                     dev_costs = []
                     bot_ui_rates = [a.bot_ui_manday_rate for a in country_analytics if a.bot_ui_manday_rate not in (None, 0, '0', '', 'None')]
@@ -1178,6 +1181,7 @@ def analytics():
                                 'median': sorted(country_util)[len(country_util)//2] if country_util else 0
                             }
                         },
+                        'committed_amount': stat_dict(country_committed),
                         'one_time_dev_cost': stat_dict(dev_costs),
                         'bot_ui_manday_cost': stat_dict(bot_ui_rates),
                         'custom_ai_manday_cost': stat_dict(custom_ai_rates)
