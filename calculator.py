@@ -9,7 +9,7 @@
 # --- Cost Table by Country ---
 # Meta costs for each country and message type.
 
-from pricing_config import price_tiers, meta_costs_table, COUNTRY_MANDAY_RATES, bundle_markup_rates, ACTIVITY_MANDAYS, committed_amount_slabs
+from pricing_config import price_tiers, meta_costs_table, COUNTRY_MANDAY_RATES, ACTIVITY_MANDAYS, committed_amount_slabs
 
 def get_suggested_price(country, msg_type, volume, currency=None):
     """
@@ -47,7 +47,7 @@ def calculate_pricing(
     Calculate all pricing, revenue, costs, and margin for the given inputs.
     Returns a dictionary with detailed line items and summary values.
     """
-    costs = meta_costs_table.get(country, meta_costs_table['India'])
+    costs = meta_costs_table.get(country, meta_costs_table['Rest of the World'])
 
     # Get suggested and overage prices for each type
     suggested_ai_price = get_suggested_price(country, 'ai', ai_volume)
@@ -55,16 +55,17 @@ def calculate_pricing(
     suggested_basic_marketing_price = get_suggested_price(country, 'basic_marketing', basic_marketing_volume)
     suggested_basic_utility_price = get_suggested_price(country, 'basic_utility', basic_utility_volume)
 
-    overage_ai_price = get_next_tier_price(country, 'ai', ai_volume)
-    overage_advanced_price = get_next_tier_price(country, 'advanced', advanced_volume)
-    overage_basic_marketing_price = get_next_tier_price(country, 'basic_marketing', basic_marketing_volume)
-    overage_basic_utility_price = get_next_tier_price(country, 'basic_utility', basic_utility_volume)
-
     # Use user-chosen prices if provided, otherwise use suggested
     user_ai_price = ai_price if ai_price is not None else suggested_ai_price
     user_advanced_price = advanced_price if advanced_price is not None else suggested_advanced_price
     user_basic_marketing_price = basic_marketing_price if basic_marketing_price is not None else suggested_basic_marketing_price
     user_basic_utility_price = basic_utility_price if basic_utility_price is not None else suggested_basic_utility_price
+
+    # Calculate overage prices using 1.2x multiplier for consistency with bundle flow
+    overage_ai_price = float(user_ai_price) * 1.2
+    overage_advanced_price = float(user_advanced_price) * 1.2
+    overage_basic_marketing_price = float(user_basic_marketing_price) * 1.2
+    overage_basic_utility_price = float(user_basic_utility_price) * 1.2
 
     # Revenue (user-chosen)
     ai_revenue = (costs['ai'] + user_ai_price) * ai_volume

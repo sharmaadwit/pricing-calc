@@ -1,6 +1,25 @@
 # pricing_config.py
 
-# --- Price Tiers by Country and Message Type ---
+# =============================================================================
+# PRICING CONFIGURATION FOR MESSAGING CALCULATOR
+# =============================================================================
+# This file contains all pricing configurations used by the messaging calculator.
+# There are two main calculation routes:
+# 1. VOLUMES ROUTE: User enters specific message volumes, uses price_tiers
+# 2. COMMITTED AMOUNT/BUNDLE ROUTE: User enters committed amount, uses committed_amount_slabs
+# =============================================================================
+
+# =============================================================================
+# VOLUMES ROUTE CONFIGURATIONS
+# =============================================================================
+# Used when user enters specific message volumes (ai_volume, advanced_volume, etc.)
+# These tiers determine suggested prices and overage prices for the volumes route.
+# Format: (min_volume, max_volume, price_per_message)
+# =============================================================================
+
+# --- Volume-based Price Tiers by Country and Message Type (VOLUMES ROUTE) ---
+# USAGE: Used in volumes route for suggested prices and tier-based overage prices
+# FUNCTIONS: get_suggested_price(), get_next_tier_price() in calculator.py
 price_tiers = {
     'India': {
         'ai': [(0, 1000, 0.50), (1001, 5000, 0.45), (5001, 10000, 0.40), (10001, 50000, 0.35), (50001, 100000, 0.30), (100001, 500000, 0.25), (500001, 1000000, 0.20), (1000001, float('inf'), 0.15)],
@@ -40,7 +59,14 @@ price_tiers = {
     },
 }
 
-# --- Cost Table by Country ---
+# =============================================================================
+# SHARED CONFIGURATIONS (Used by both routes)
+# =============================================================================
+
+# --- Meta Costs by Country and Message Type (SHARED) ---
+# USAGE: Used in both volumes route and committed amount route for final price calculation
+# PURPOSE: Meta's charges for each message type, added to Gupshup markup to get final price
+# FUNCTIONS: calculate_pricing() in calculator.py
 meta_costs_table = {
     'India': {'marketing': 0.7846, 'utility': 0.1150, 'ai': 0.30, 'advanced': 0},
     'MENA': {'marketing': 0.0384, 'utility': 0.0157, 'ai': 0.0035, 'advanced': 0},
@@ -50,71 +76,19 @@ meta_costs_table = {
     'Rest of the World': {'marketing': 0.0592, 'utility': 0.0171, 'ai': 0.0035, 'advanced': 0},
 }
 
-# --- Messaging Bundle Markup Rates by Country (for committed amount/bundle flow) ---
-bundle_markup_rates = {
-    'India': [
-        {'min': 0, 'max': 50000, 'basic_marketing': 0.15, 'basic_utility': 0.03, 'advanced': 0.50, 'ai': 1.00},
-        {'min': 50001, 'max': 150000, 'basic_marketing': 0.12, 'basic_utility': 0.024, 'advanced': 0.45, 'ai': 0.95},
-        {'min': 150001, 'max': 200000, 'basic_marketing': 0.10, 'basic_utility': 0.019, 'advanced': 0.40, 'ai': 0.90},
-        {'min': 200001, 'max': 250000, 'basic_marketing': 0.08, 'basic_utility': 0.015, 'advanced': 0.35, 'ai': 0.85},
-        {'min': 250001, 'max': 500000, 'basic_marketing': 0.06, 'basic_utility': 0.012, 'advanced': 0.30, 'ai': 0.80},
-        {'min': 500001, 'max': 750000, 'basic_marketing': 0.05, 'basic_utility': 0.010, 'advanced': 0.25, 'ai': 0.75},
-        {'min': 750001, 'max': 1000000, 'basic_marketing': 0.04, 'basic_utility': 0.008, 'advanced': 0.20, 'ai': 0.70},
-        {'min': 1000001, 'max': 2000000, 'basic_marketing': 0.03, 'basic_utility': 0.006, 'advanced': 0.15, 'ai': 0.65},
-    ],
-    'MENA': [
-        {'min': 0, 'max': 500, 'basic_marketing': 0.0075, 'basic_utility': 0.0015, 'advanced': 0.0250, 'ai': 0.0500},
-        {'min': 501, 'max': 1000, 'basic_marketing': 0.0060, 'basic_utility': 0.0012, 'advanced': 0.0225, 'ai': 0.0475},
-        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0048, 'basic_utility': 0.0010, 'advanced': 0.0200, 'ai': 0.0450},
-        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0038, 'basic_utility': 0.0008, 'advanced': 0.0175, 'ai': 0.0425},
-        {'min': 2501, 'max': 5000, 'basic_marketing': 0.0031, 'basic_utility': 0.0006, 'advanced': 0.0150, 'ai': 0.0400},
-        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0025, 'basic_utility': 0.0005, 'advanced': 0.0125, 'ai': 0.0375},
-        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0020, 'basic_utility': 0.0004, 'advanced': 0.0100, 'ai': 0.0350},
-        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0016, 'basic_utility': 0.0003, 'advanced': 0.0075, 'ai': 0.0325},
-    ],
-    'LATAM': [
-        {'min': 0, 'max': 500, 'basic_marketing': 0.0075, 'basic_utility': 0.0015, 'advanced': 0.0250, 'ai': 0.0500},
-        {'min': 501, 'max': 1000, 'basic_marketing': 0.0060, 'basic_utility': 0.0012, 'advanced': 0.0225, 'ai': 0.0475},
-        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0048, 'basic_utility': 0.0010, 'advanced': 0.0200, 'ai': 0.0450},
-        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0038, 'basic_utility': 0.0008, 'advanced': 0.0175, 'ai': 0.0425},
-        {'min': 2501, 'max': 5000, 'basic_marketing': 0.0031, 'basic_utility': 0.0006, 'advanced': 0.0150, 'ai': 0.0400},
-        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0025, 'basic_utility': 0.0005, 'advanced': 0.0125, 'ai': 0.0375},
-        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0020, 'basic_utility': 0.0004, 'advanced': 0.0100, 'ai': 0.0350},
-        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0016, 'basic_utility': 0.0003, 'advanced': 0.0075, 'ai': 0.0325},
-    ],
-    'Africa': [
-        {'min': 0, 'max': 500, 'basic_marketing': 0.0037, 'basic_utility': 0.0007, 'advanced': 0.0125, 'ai': 0.0250},
-        {'min': 501, 'max': 1000, 'basic_marketing': 0.0030, 'basic_utility': 0.0006, 'advanced': 0.0112, 'ai': 0.0237},
-        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0024, 'basic_utility': 0.0005, 'advanced': 0.0100, 'ai': 0.0225},
-        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0019, 'basic_utility': 0.0004, 'advanced': 0.0087, 'ai': 0.0212},
-        {'min': 2501, 'max': 5000, 'basic_marketing': 0.0015, 'basic_utility': 0.0003, 'advanced': 0.0075, 'ai': 0.0200},
-        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0012, 'basic_utility': 0.0002, 'advanced': 0.0050, 'ai': 0.0175},
-        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0010, 'basic_utility': 0.0002, 'advanced': 0.0037, 'ai': 0.0162},
-        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0008, 'basic_utility': 0.0002, 'advanced': 0.0037, 'ai': 0.0162},
-    ],
-    'Europe': [
-        {'min': 0, 'max': 500, 'basic_marketing': 0.0094, 'basic_utility': 0.0019, 'advanced': 0.0314, 'ai': 0.0627},
-        {'min': 501, 'max': 1000, 'basic_marketing': 0.0075, 'basic_utility': 0.0015, 'advanced': 0.0282, 'ai': 0.0596},
-        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0060, 'basic_utility': 0.0012, 'advanced': 0.0251, 'ai': 0.0564},
-        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0048, 'basic_utility': 0.0010, 'advanced': 0.0219, 'ai': 0.0533},
-        {'min': 2501, 'max': 5000, 'basic_marketing': 0.0039, 'basic_utility': 0.0008, 'advanced': 0.0188, 'ai': 0.0502},
-        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0031, 'basic_utility': 0.0006, 'advanced': 0.0157, 'ai': 0.0470},
-        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0025, 'basic_utility': 0.0005, 'advanced': 0.0125, 'ai': 0.0439},
-        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0020, 'basic_utility': 0.0004, 'advanced': 0.0094, 'ai': 0.0408},
-    ],
-    'Rest of the World': [
-        {'min': 0, 'max': 500, 'basic_marketing': 0.0050, 'basic_utility': 0.0010, 'advanced': 0.0167, 'ai': 0.0333},
-        {'min': 501, 'max': 1000, 'basic_marketing': 0.0040, 'basic_utility': 0.0008, 'advanced': 0.0150, 'ai': 0.0317},
-        {'min': 1001, 'max': 1500, 'basic_marketing': 0.0032, 'basic_utility': 0.0006, 'advanced': 0.0133, 'ai': 0.0300},
-        {'min': 1501, 'max': 2500, 'basic_marketing': 0.0026, 'basic_utility': 0.0005, 'advanced': 0.0117, 'ai': 0.0283},
-        {'min': 2501, 'max': 5000, 'basic_marketing': 0.0020, 'basic_utility': 0.0004, 'advanced': 0.0100, 'ai': 0.0267},
-        {'min': 5001, 'max': 7500, 'basic_marketing': 0.0016, 'basic_utility': 0.0003, 'advanced': 0.0083, 'ai': 0.0250},
-        {'min': 7501, 'max': 10000, 'basic_marketing': 0.0013, 'basic_utility': 0.0003, 'advanced': 0.0067, 'ai': 0.0233},
-        {'min': 10001, 'max': 15000, 'basic_marketing': 0.0010, 'basic_utility': 0.0002, 'advanced': 0.0050, 'ai': 0.0217},
-    ],
-}
+# =============================================================================
+# COMMITTED AMOUNT/BUNDLE ROUTE CONFIGURATIONS
+# =============================================================================
+# Used when user enters a committed amount instead of specific volumes
+# These determine the per-message rates based on the committed amount slab
+# =============================================================================
 
-# --- Committed Amount Slabs by Country (for get_committed_amount_rates) ---
+# --- Committed Amount Slabs by Country (COMMITTED AMOUNT/BUNDLE ROUTE) ---
+# USAGE: Used in committed amount/bundle route to determine per-message rates
+# PURPOSE: Defines Gupshup markup rates for each message type based on committed amount
+# FORMAT: (min_amount, max_amount, {'marketing': rate, 'utility': rate, 'advanced': rate, 'ai': rate})
+# FUNCTIONS: get_committed_amount_rates() in calculator.py
+# OVERAGE CALCULATION: Base rate × 1.2 (20% markup) - see app.py line 458
 committed_amount_slabs = {
     'India': [
         (0, 50000,    {'marketing': 0.15, 'utility': 0.03, 'advanced': 0.50, 'ai': 1.00}),
@@ -178,7 +152,26 @@ committed_amount_slabs = {
     ],
 }
 
+# --- Messaging Bundle Markup Rates by Country (COMMITTED AMOUNT/BUNDLE ROUTE) ---
+# USAGE: Alternative format for committed amount route (currently not used, kept for reference)
+# PURPOSE: Same data as committed_amount_slabs but in different format
+# NOTE: This configuration is currently commented out as committed_amount_slabs is used instead
+# bundle_markup_rates = {
+#     'India': [
+#         {'min': 0, 'max': 50000, 'basic_marketing': 0.15, 'basic_utility': 0.03, 'advanced': 0.50, 'ai': 1.00},
+#         # ... rest of the data
+#     ],
+#     # ... rest of countries
+# }
+
+# =============================================================================
+# DEVELOPMENT COST CONFIGURATIONS (Used by both routes)
+# =============================================================================
+
 # --- Country-specific Manday Rates (Bot/UI and Custom/AI) ---
+# USAGE: Used in both routes for development cost calculations
+# PURPOSE: Defines hourly/daily rates for development work by country and activity type
+# FUNCTIONS: calculate_total_manday_cost() in calculator.py
 COUNTRY_MANDAY_RATES = {
     'India': {
         'currency': 'INR',
@@ -219,6 +212,9 @@ COUNTRY_MANDAY_RATES = {
 }
 
 # --- Activity to Manday Mapping (applies to all countries) ---
+# USAGE: Used in both routes for development cost calculations
+# PURPOSE: Maps development activities to manday requirements
+# FUNCTIONS: calculate_total_mandays() in calculator.py
 ACTIVITY_MANDAYS = {
     "journey": 1,
     "api": 1,
@@ -230,7 +226,13 @@ ACTIVITY_MANDAYS = {
     "ux": 1,
 }
 
+# =============================================================================
+# UI/UX CONFIGURATIONS (Used by both routes)
+# =============================================================================
+
 # --- Country to currency symbol mapping ---
+# USAGE: Used in both routes for display purposes
+# PURPOSE: Maps countries to their currency symbols for UI display
 COUNTRY_CURRENCY = {
     'India': '₹',
     'MENA': '$',  # USD for MENA
