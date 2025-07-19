@@ -357,12 +357,12 @@
               {% else %}
                 <h2 style="margin:0; font-size: 2em; color: #ff8f00;">Monthly Fee = (Meta Price+Gupshup Markup) × volumes + monthly fixed platform cost</h2>
               {% endif %}
-              <div style="font-size: 2.5em; font-weight: bold; color: #1a2a3a; margin-top: 8px;">{{ currency_symbol }}{{ '{:,.0f}'.format(expected_invoice_amount or 0) if ((expected_invoice_amount or 0) % 1) == 0 else '{:,.2f}'.format(expected_invoice_amount or 0) }}</div>
+              <div style="font-size: 2.5em; font-weight: bold; color: #1a2a3a; margin-top: 8px;">{{ currency_symbol }}{{ (expected_invoice_amount or 0)|smart_format }}</div>
             </div>
             <div style="flex:1; min-width: 180px; margin-left: 32px;">
-              <div style="font-size: 1.1em; margin-bottom: 8px;"><b>Platform Fee:</b> {{ currency_symbol }}{{ '{:,.4f}'.format(platform_fee|float) }}</div>
+              <div style="font-size: 1.1em; margin-bottom: 8px;"><b>Platform Fee:</b> {{ currency_symbol }}{{ (platform_fee|float)|smart_format }}</div>
               {% if committed_amount_route %}
-                <div style="font-size: 1.1em; margin-bottom: 8px;"><b>Committed Bundle Amount:</b> {{ currency_symbol }}{{ '{:,.4f}'.format(inputs.get('committed_amount', 0)|float) }}</div>
+                <div style="font-size: 1.1em; margin-bottom: 8px;"><b>Committed Bundle Amount:</b> {{ currency_symbol }}{{ (inputs.get('committed_amount', 0)|float)|smart_format }}</div>
               {% endif %}
             </div>
           </div>
@@ -444,7 +444,7 @@
           <!-- Total Dev Cost Card -->
           <div style="background: #eaf6ff; border: 1px solid #2196f3; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <h3 style="margin-top:0;">Total One Time Dev Cost</h3>
-            <div style="font-size: 1.5em; font-weight: bold; color: #1976d2; margin-top: 2px;">{{ dev_cost_currency }} {{ '{:,.4f}'.format(total_dev_cost) }}</div>
+            <div style="font-size: 1.5em; font-weight: bold; color: #1976d2; margin-top: 2px;">{{ dev_cost_currency }} {{ (total_dev_cost)|smart_format }}</div>
           </div>
         </div>
         <!-- Internal Section: Margin Table for Internal Use Only -->
@@ -464,8 +464,8 @@
                 {% for row in margin_table %}
                 <tr>
                     <td>{{ row.line_item }}</td>
-                    <td class="right">{{ currency_symbol }}{{ '{:,.4f}'.format(row.chosen_price|float) if row.chosen_price is not none and row.chosen_price != '' else '' }}</td>
-                    <td class="right">{{ currency_symbol }}{{ '{:,.4f}'.format(row.rate_card_price|float) if row.rate_card_price is not none and row.rate_card_price != '' else '' }}</td>
+                    <td class="right">{{ currency_symbol }}{{ (row.chosen_price|float)|smart_format if row.chosen_price is not none and row.chosen_price != '' else '' }}</td>
+                    <td class="right">{{ currency_symbol }}{{ (row.rate_card_price|float)|smart_format if row.rate_card_price is not none and row.rate_card_price != '' else '' }}</td>
                     <td class="right">{{ row.discount_percent }}</td>
                 </tr>
             {% endfor %}
@@ -473,30 +473,30 @@
             {% if manday_rates %}
             <tr>
                 <td>Bot/UI Manday</td>
-                <td class="right">{{ dev_cost_currency }}{{ '{:,.4f}'.format(manday_rates.bot_ui|default(0)) }}</td>
-                <td class="right">{{ dev_cost_currency }}{{ '{:,.4f}'.format(manday_rates.default_bot_ui|default(0)) }}</td>
+                <td class="right">{{ dev_cost_currency }}{{ (manday_rates.bot_ui|default(0))|smart_format }}</td>
+                <td class="right">{{ dev_cost_currency }}{{ (manday_rates.default_bot_ui|default(0))|smart_format }}</td>
                 <td class="right">{{ manday_rates.bot_ui_discount|default(0) }}%</td>
             </tr>
             <tr>
                 <td>Custom/AI Manday</td>
-                <td class="right">{{ dev_cost_currency }}{{ '{:,.4f}'.format(manday_rates.custom_ai|default(0)) }}</td>
-                <td class="right">{{ dev_cost_currency }}{{ '{:,.4f}'.format(manday_rates.default_custom_ai|default(0)) }}</td>
+                <td class="right">{{ dev_cost_currency }}{{ (manday_rates.custom_ai|default(0))|smart_format }}</td>
+                <td class="right">{{ dev_cost_currency }}{{ (manday_rates.default_custom_ai|default(0))|smart_format }}</td>
                 <td class="right">{{ manday_rates.custom_ai_discount|default(0) }}%</td>
             </tr>
             {% endif %}
               </tbody>
         </table>
             <div style="font-size:1.08em; margin-top:12px;">
-              <b>Total Chosen Revenue:</b> {{ currency_symbol }}{{ '{:,.4f}'.format(results.revenue|float) }}<br>
-              <b>Total Rate Card Revenue:</b> {{ currency_symbol }}{{ '{:,.4f}'.format(results.suggested_revenue|float) }}
+              <b>Total Chosen Revenue:</b> {{ currency_symbol }}{{ (results.revenue|float)|smart_format }}<br>
+              <b>Total Rate Card Revenue:</b> {{ currency_symbol }}{{ (results.suggested_revenue|float)|smart_format }}
             </div>
             <!-- One Time Dev Costs Section -->
             <div style="font-size:1.08em; margin-top:18px;">
-              <b>Total One Time Dev Cost:</b> {{ dev_cost_currency }}{{ '{:,.4f}'.format(total_dev_cost) }}<br>
+              <b>Total One Time Dev Cost:</b> {{ dev_cost_currency }}{{ (total_dev_cost)|smart_format }}<br>
               <b>Total Mandays:</b> {{ '{:,.0f}'.format(total_mandays) }}<br>
               <b>Manday Breakdown:</b> Bot/UI: {{ '{:,.0f}'.format(manday_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.0f}'.format(manday_breakdown.custom_ai) }}<br>
-              <b>Bot/UI Manday Rate:</b> {{ dev_cost_currency }}{{ '{:,.4f}'.format(manday_rates.bot_ui|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.4f}'.format(manday_rates.default_bot_ui|default(0)) }}, Discount: {{ manday_rates.bot_ui_discount|default(0) }}%)<br>
-              <b>Custom/AI Manday Rate:</b> {{ dev_cost_currency }}{{ '{:,.4f}'.format(manday_rates.custom_ai|default(0)) }} (Default: {{ dev_cost_currency }}{{ '{:,.4f}'.format(manday_rates.default_custom_ai|default(0)) }}, Discount: {{ manday_rates.custom_ai_discount|default(0) }}%)<br>
+              <b>Bot/UI Manday Rate:</b> {{ dev_cost_currency }}{{ (manday_rates.bot_ui|default(0))|smart_format }} (Default: {{ dev_cost_currency }}{{ (manday_rates.default_bot_ui|default(0))|smart_format }}, Discount: {{ manday_rates.bot_ui_discount|default(0) }}%)<br>
+              <b>Custom/AI Manday Rate:</b> {{ dev_cost_currency }}{{ (manday_rates.custom_ai|default(0))|smart_format }} (Default: {{ dev_cost_currency }}{{ (manday_rates.default_custom_ai|default(0))|smart_format }}, Discount: {{ manday_rates.custom_ai_discount|default(0) }}%)<br>
               <hr>
               <b>Build Cost (Bot/UI + Custom/AI):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.build_cost) }}<br>
               <b>BA Effort (15%):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.ba_cost) }}<br>

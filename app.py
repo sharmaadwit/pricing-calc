@@ -17,9 +17,28 @@ from datetime import datetime
 from sqlalchemy import func
 import uuid
 from calculator import get_committed_amount_rates
+from pricing_config import committed_amount_slabs
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
+
+# Custom Jinja2 filter for number formatting
+@app.template_filter('smart_format')
+def smart_format_filter(value):
+    """Format numbers: no decimals if zero, up to 4 decimals if non-zero"""
+    try:
+        if value is None:
+            return ''
+        val = float(value)
+        # Check if the number is a whole number
+        if val == int(val):
+            return f"{int(val):,}"
+        else:
+            # Show up to 4 decimal places, but remove trailing zeros
+            s = f"{val:.4f}"
+            return f"{s.rstrip('0').rstrip('.'):,}"
+    except (ValueError, TypeError):
+        return str(value) if value is not None else ''
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:prdeuXwtBzpLZaOGpxgRspfjfLNEQrys@gondola.proxy.rlwy.net:25504/railway')
@@ -791,13 +810,18 @@ def index():
         })
         # Helper to format numbers for display
         def fmt(val):
-            # Format numbers: no decimals if .00, else show up to 2 decimals
+            # Format numbers: no decimals if .00, else show up to 4 decimals
             try:
                 if isinstance(val, str) and val.replace('.', '', 1).isdigit():
                     val = float(val)
                 if isinstance(val, (int, float)):
-                    s = f"{val:.2f}"
-                    return s.rstrip('0').rstrip('.') if '.' in s else s
+                    # Check if the number is a whole number
+                    if val == int(val):
+                        return str(int(val))
+                    else:
+                        # Show up to 4 decimal places, but remove trailing zeros
+                        s = f"{val:.4f}"
+                        return s.rstrip('0').rstrip('.')
             except Exception:
                 pass
             return val
@@ -1020,23 +1044,22 @@ def index():
         else:
             default_bot_ui = float(rates.get('bot_ui', 0.0) or 0.0)
             default_custom_ai = float(rates.get('custom_ai', 0.0) or 0.0)
-        # --- Set default per-message prices for all countries based on committed amount using bundle_markup_rates ---
-        from calculator import bundle_markup_rates
-        bundle_rates = bundle_markup_rates.get(country, bundle_markup_rates.get('Rest of the World', []))
-        # Find the correct tier for the committed amount
-        selected_tier = None
-        for tier in bundle_rates:
-            if tier['min'] <= committed_amount <= tier['max']:
-                selected_tier = tier
+        # --- Set default per-message prices for all countries based on committed amount using committed_amount_slabs ---
+        slabs = committed_amount_slabs.get(country, committed_amount_slabs.get('Rest of the World', []))
+        # Find the correct slab for the committed amount
+        selected_slab = None
+        for lower, upper, rates in slabs:
+            if lower <= committed_amount < upper:
+                selected_slab = rates
                 break
-        if not selected_tier and bundle_rates:
-            # If above all tiers, use the highest tier
-            selected_tier = bundle_rates[-1]
+        if not selected_slab and slabs:
+            # If above all slabs, use the highest slab
+            selected_slab = slabs[-1][2]
         suggested_prices = {
-            'ai_price': selected_tier['ai'] if selected_tier else '',
-            'advanced_price': selected_tier['advanced'] if selected_tier else '',
-            'basic_marketing_price': selected_tier['basic_marketing'] if selected_tier else '',
-            'basic_utility_price': selected_tier['basic_utility'] if selected_tier else '',
+            'ai_price': selected_slab['ai'] if selected_slab else '',
+            'advanced_price': selected_slab['advanced'] if selected_slab else '',
+            'basic_marketing_price': selected_slab['marketing'] if selected_slab else '',
+            'basic_utility_price': selected_slab['utility'] if selected_slab else '',
             'bot_ui_manday_rate': default_bot_ui,
             'custom_ai_manday_rate': default_custom_ai,
         }
