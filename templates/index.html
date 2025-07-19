@@ -349,22 +349,22 @@
     <!-- Results Section: Pricing Table, Inclusions, Invoice Amount, Margin Table -->
     {% if step == 'results' %}
         <div style="max-width: 1100px; margin: 0 auto;">
-          <!-- Summary Card -->
-          <div style="background: #fffde7; border: 2px solid #ffe082; border-radius: 10px; padding: 28px 36px; margin-bottom: 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-            <div style="flex:2; min-width: 220px;">
-              {% if committed_amount_route %}
-                <h2 style="margin:0; font-size: 2em; color: #ff8f00;">Monthly Fee = Platform Fee + Committed Bundle Amount</h2>
-              {% else %}
-                <h2 style="margin:0; font-size: 2em; color: #ff8f00;">Monthly Fee = (Meta Price+Gupshup Markup) × volumes + monthly fixed platform cost</h2>
-              {% endif %}
-              <div style="font-size: 2.5em; font-weight: bold; color: #1a2a3a; margin-top: 8px;">{{ currency_symbol }}{{ (expected_invoice_amount or 0)|smart_format }}</div>
-            </div>
-            <div style="flex:1; min-width: 180px; margin-left: 32px;">
-              <div style="font-size: 1.1em; margin-bottom: 8px;"><b>Platform Fee:</b> {{ currency_symbol }}{{ (platform_fee|float)|smart_format }}</div>
-              {% if committed_amount_route %}
-                <div style="font-size: 1.1em; margin-bottom: 8px;"><b>Committed Bundle Amount:</b> {{ currency_symbol }}{{ (inputs.get('committed_amount', 0)|float)|smart_format }}</div>
-              {% endif %}
-            </div>
+          <!-- Message Type Definitions Card (moved to top) -->
+          <div style="background: #fce4ec; border: 1px solid #f8bbd0; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Message Type Definitions</h3>
+            <ul style="margin:0 0 0 18px; padding:0; font-size:1.05em;">
+              <li><b>Basic Messages:</b> Triggered messages via API, Bulk Upload (GS Media, Campaign Manager)</li>
+              <li><b>Advanced Messages:</b>
+                <ul style="margin: 4px 0 0 18px;">
+                  <li>Bot platform usage: 2-way messages (JB/Solutions), Triggered messages, Interactive journeys</li>
+                  <li>Marketing: Triggered campaigns, Segmented Campaign on Personalize</li>
+                  <li>Agent: Agent Interactions, Triggered messages</li>
+                  <li>CTX: Retargeting messages</li>
+                  <li>Service messages (incoming won't be counted)</li>
+                </ul>
+              </li>
+              <li><b>AI Messages:</b> Any message that uses AI for responding to the customer</li>
+            </ul>
           </div>
           <!-- Pricing Table Card -->
           <div style="background: #f5f7fa; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
@@ -416,23 +416,6 @@
                         {% endfor %}
                         </ul>
           </div>
-          <!-- Message Type Definitions Card -->
-          <div style="background: #fce4ec; border: 1px solid #f8bbd0; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
-            <h3 style="margin-top:0;">Message Type Definitions</h3>
-            <ul style="margin:0 0 0 18px; padding:0; font-size:1.05em;">
-              <li><b>Basic Messages:</b> Triggered messages via API, Bulk Upload (GS Media, Campaign Manager)</li>
-              <li><b>Advanced Messages:</b>
-                <ul style="margin: 4px 0 0 18px;">
-                  <li>Bot platform usage: 2-way messages (JB/Solutions), Triggered messages, Interactive journeys</li>
-                  <li>Marketing: Triggered campaigns, Segmented Campaign on Personalize</li>
-                  <li>Agent: Agent Interactions, Triggered messages</li>
-                  <li>CTX: Retargeting messages</li>
-                  <li>Service messages (incoming won't be counted)</li>
-                </ul>
-              </li>
-              <li><b>AI Messages:</b> Any message that uses AI for responding to the customer</li>
-            </ul>
-          </div>
           <!-- Total Mandays Card -->
           <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <h3 style="margin-top:0;">Total Mandays for One Time Dev Activities</h3>
@@ -440,12 +423,20 @@
             <div style="margin-top: 10px; font-size: 1.08em;">
               <b>Breakdown:</b> Bot/UI: {{ '{:,.0f}'.format(manday_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.0f}'.format(manday_breakdown.custom_ai) }}
             </div>
+            <!-- Cost Breakdown Section -->
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #c8e6c9;">
+              <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Cost Breakdown</h4>
+              <div style="font-size: 1.05em; line-height: 1.6;">
+                <div><b>Build Cost (Bot/UI + Custom/AI):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.build_cost)|smart_format }}</div>
+                <div><b>BA Effort (15%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.ba_cost)|smart_format }}</div>
+                <div><b>QA Effort (10%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.qa_cost)|smart_format }}</div>
+                <div><b>Project Manager (5%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.pm_cost)|smart_format }}</div>
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0;"><b>Uplift (Total):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.uplift_amount)|smart_format }}</div>
+                <div style="margin-top: 8px; font-weight: bold; color: #1a2a3a;"><b>Total One Time Dev Cost (with BA, QA, PM):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.total_cost)|smart_format }}</div>
+              </div>
+            </div>
           </div>
-          <!-- Total Dev Cost Card -->
-          <div style="background: #eaf6ff; border: 1px solid #2196f3; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
-            <h3 style="margin-top:0;">Total One Time Dev Cost</h3>
-            <div style="font-size: 1.5em; font-weight: bold; color: #1976d2; margin-top: 2px;">{{ dev_cost_currency }} {{ (total_dev_cost)|smart_format }}</div>
-          </div>
+
         </div>
         <!-- Internal Section: Margin Table for Internal Use Only -->
         <div style="max-width: 1100px; margin: 0 auto;">
