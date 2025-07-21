@@ -24,19 +24,8 @@ def get_suggested_price(country, msg_type, volume, currency=None):
 
 def get_next_tier_price(country, msg_type, volume):
     """
-    Return the next tier price for a message type, country, and volume (overage price).
+    Deprecated: Overage prices are no longer used or displayed.
     """
-    tiers = price_tiers.get(country, {}).get(msg_type, [])
-    found = False
-    for i, (lower, upper, price) in enumerate(tiers):
-        if lower < volume <= upper:
-            found = True
-            if i + 1 < len(tiers):
-                return tiers[i + 1][2]
-            else:
-                return price  # No higher tier, return current
-    if not found and tiers:
-        return tiers[0][2]
     return 0.0
 
 def calculate_pricing(
@@ -127,7 +116,6 @@ def calculate_pricing(
             'volume': ai_volume,
             'chosen_price': user_ai_price,
             'suggested_price': suggested_ai_price,
-            'overage_price': overage_ai_price,
             'meta_cost': costs['ai'],
             'final_price': costs['ai'] + user_ai_price,
             'revenue': ai_revenue,
@@ -138,7 +126,6 @@ def calculate_pricing(
             'volume': advanced_volume,
             'chosen_price': user_advanced_price,
             'suggested_price': suggested_advanced_price,
-            'overage_price': overage_advanced_price,
             'meta_cost': costs['ai'],
             'final_price': costs['ai'] + user_advanced_price,
             'revenue': advanced_revenue,
@@ -149,7 +136,6 @@ def calculate_pricing(
             'volume': basic_marketing_volume,
             'chosen_price': user_basic_marketing_price,
             'suggested_price': suggested_basic_marketing_price,
-            'overage_price': overage_basic_marketing_price,
             'meta_cost': costs['marketing'],
             'final_price': costs['marketing'] + user_basic_marketing_price,
             'revenue': basic_marketing_revenue,
@@ -160,7 +146,6 @@ def calculate_pricing(
             'volume': basic_utility_volume,
             'chosen_price': user_basic_utility_price,
             'suggested_price': suggested_basic_utility_price,
-            'overage_price': overage_basic_utility_price,
             'meta_cost': costs['utility'],
             'final_price': costs['utility'] + user_basic_utility_price,
             'revenue': basic_utility_revenue,

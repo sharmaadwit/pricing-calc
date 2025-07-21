@@ -375,7 +375,6 @@
                   <th style="text-align:left;">Line Item</th>
                   <th style="text-align:right;">Volume</th>
                   <th style="text-align:right;">Gupshup Markup/message</th>
-                  <th style="text-align:right;">Overage Markup/message</th>
                   <th style="text-align:right;">Fixed Price</th>
                 </tr>
               </thead>
@@ -385,7 +384,6 @@
                       <td>{{ row.line_item or row.label }}</td>
                       <td class="right">{{ row.volume }}</td>
                       <td class="right">{{ row.chosen_price }}</td>
-                      <td class="right">{{ row.overage_price }}</td>
                       <td class="right">
                           {% if row.line_item == 'Platform Fee (Chosen)' %}
                               {{ currency_symbol }}{{ row.revenue }}

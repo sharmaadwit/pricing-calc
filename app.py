@@ -475,12 +475,10 @@ def index():
             ("Basic Utility/Authentication Message", 'basic_utility_volume', basic_utility_price),
         ]:
             volume = float(inputs.get(key, 0))
-            overage_price = float(price) * 1.2
             bundle_lines.append({
                 'label': label,
                 'volume': volume,
-                'price': float(price),
-                'overage_price': overage_price
+                'price': float(price)
             })
             bundle_cost += volume * float(price)
         total_bundle_price = float(platform_fee) + bundle_cost
