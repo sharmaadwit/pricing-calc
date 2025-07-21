@@ -1522,6 +1522,13 @@ def patch_suggested_prices(suggested_prices, inputs):
         suggested_prices['custom_ai_manday_rate'] = default_custom_ai
     return suggested_prices
 
+@app.route('/analyticsv2', methods=['GET'])
+def analytics_v2():
+    """
+    New advanced analytics and reporting page using analytics.csv.
+    """
+    return render_template('analyticsv2.html')
+
 if __name__ == '__main__':
     import os
     port = int(os.environ.get("PORT", 8081))

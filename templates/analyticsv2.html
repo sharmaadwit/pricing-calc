@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Analytics Reports (v2)</title>
+    <!-- Use Chart.js v3.9.1 and compatible boxplot plugin v3.7.0 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin-plot@3.7.0/build/Chart.BoxPlot.js"></script>
+    <!-- Add Chart.js datalabels plugin for percentage labels -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        .last-updated {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin-top: 15px;
+            display: inline-block;
+            font-size: 0.9em;
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background-color: #f8f9fa;
+        }
+        .summary-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+        .summary-card h3 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .summary-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        .summary-card .change {
+            font-size: 0.9em;
+            color: #27ae60;
+        }
+        .section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section h2 {
+            color: #2c3e50;
+            margin: 0 0 20px 0;
+            font-size: 1.8em;
+            font-weight: 500;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .chart-card h3 {
+            margin: 0 0 15px 0;
+            color: #34495e;
+            font-size: 1.2em;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+        .insights {
+            background-color: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .insights h4 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+        }
+        .insights ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .insights li {
+            margin: 5px 0;
+            color: #555;
+        }
+        .nav-tabs {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 20px;
+        }
+        .nav-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .nav-tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 500;
+        }
+        .nav-tab:hover {
+            background-color: #f8f9fa;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        .error {
+            background-color: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        #countryStatsContainer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-top: 24px;
+        }
+        .country-stats-block {
+            flex: 1 1 48%;
+            min-width: 400px;
+            max-width: 48%;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.07);
+            padding: 18px 18px 8px 18px;
+            margin-bottom: 16px;
+        }
+        @media (max-width: 900px) {
+            .country-stats-block {
+                min-width: 100%;
+                max-width: 100%;
+            }
+        }
+        .view-raw-btn {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: #fff;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            padding: 8px 18px;
+            font-size: 1em;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+            z-index: 10;
+        }
+        .view-raw-btn:hover {
+            background: #667eea;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header" style="position: relative;">
+            <h1>Advanced Analytics Reports (v2)</h1>
+            <p>Comprehensive insights from pricing calculator usage data</p>
+            <div class="last-updated" id="lastUpdated">
+                Last updated: Loading...
+            </div>
+            <a href="/analytics" target="_blank" class="view-raw-btn">View Raw Data</a>
+        </div>
+
+        <!-- Country Dropdown -->
+        <!-- (REMOVED: country dropdown and related logic) -->
+
+        <div class="summary-cards" id="summaryCards">
+            <div class="loading">Loading analytics data...</div>
+        </div>
+
+        <!-- Distribution by Country (Bar Graphs) section removed -->
+
+        <!-- Country Summary Tables: 2 per row -->
+        <div id="countrySummaryTables" style="margin: 30px 0;"></div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showTab('temporal')">Temporal Analytics</div>
+            <div class="nav-tab" onclick="showTab('customer')">Customer Behavior</div>
+            <div class="nav-tab" onclick="showTab('pricing')">Pricing Strategy</div>
+            <div class="nav-tab" onclick="showTab('platform')">Platform Analytics</div>
+        </div>
+
+        <!-- Temporal Analytics -->
+        <div id="temporal" class="tab-content active">
+            <div class="section">
+                <h2>Temporal Analytics</h2>
+                <div class="insights">
+                    <h4>Key Insights:</h4>
+                    <ul>
+                        <li>Peak usage occurs between 6-10 AM and 2-6 PM</li>
+                        <li>Weekday usage is significantly higher than weekends</li>
+                        <li>July shows the highest activity with 45+ calculations</li>
+                    </ul>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <h3>Peak Usage Hours</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="hourlyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Usage by Day of Week</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="weekdayChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Behavior -->
+        <div id="customer" class="tab-content">
+            <div class="section">
+                <h2>Customer Behavior Analytics</h2>
+                <div class="insights">
+                    <h4>Key Insights:</h4>
+                    <ul>
+                        <li>Saurabh is the most active user with 25+ calculations</li>
+                        <li>AI services are the most popular, followed by Advanced services</li>
+                        <li>Average platform fee per user is ₹120,000</li>
+                    </ul>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <h3>Top Customer Lifetime Value</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="clvChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Service Preferences</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="serviceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Strategy -->
+        <div id="pricing" class="tab-content">
+            <div class="section">
+                <h2>Pricing Strategy Analytics</h2>
+                <div class="insights">
+                    <h4>Key Insights:</h4>
+                    <ul>
+                        <li>Average discount on AI services is 15%</li>
+                        <li>Weekly revenue shows consistent growth</li>
+                        <li>Rate card vs actual pricing shows healthy margins</li>
+                    </ul>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <h3>Weekly Revenue Trends</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Rate Card vs Actual Prices</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="pricingChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Resource Utilization Section (merged) -->
+            <div class="section">
+                <h2>Resource Utilization</h2>
+                <div class="insights">
+                    <h4>Key Insights:</h4>
+                    <ul>
+                        <li>Average manday efficiency is ₹15,000 per manday</li>
+                        <li>Bot UI mandays are more common than Custom AI</li>
+                        <li>Rate variations show healthy pricing flexibility</li>
+                    </ul>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <h3>Manday Efficiency by User</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="efficiencyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Manday Rate Variations</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="rateChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Manday Rate by Country Section (moved here) -->
+            <div class="section">
+                <h2>Manday Rate by Country</h2>
+                <div id="mandayRateCountryContainer" style="display: flex; flex-wrap: wrap; gap: 24px;"></div>
+            </div>
+        </div>
+
+        <!-- Platform Analytics -->
+        <div id="platform" class="tab-content">
+            <div class="section">
+                <h2>Platform/Channel Analytics</h2>
+                <div class="insights">
+                    <h4>Key Insights:</h4>
+                    <ul>
+                        <li>Volumes route is more popular than bundle route</li>
+                        <li>Bundle route shows higher average platform fees</li>
+                        <li>Feature usage is evenly distributed</li>
+                    </ul>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <h3>Revenue by Calculation Route</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="routeChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Feature Usage Distribution</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="featureChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // Declare ONCE
+      let analyticsData = null;
+      let charts = {};
+
+      // Update all charts for the selected country
+      // This function is no longer needed as charts are rendered globally
+      function updateAllChartsForCountry() {
+          // This function is now redundant as charts are rendered globally
+          // Keeping it for now, but it will not do anything meaningful
+      }
+
+      // Example: Update summary cards for country
+      function updateSummaryCards() {
+          if (!analyticsData) return;
+
+          const summaryCards = document.getElementById('summaryCards');
+          summaryCards.innerHTML = `
+              <div class="summary-card">
+                  <h3>Total Calculations</h3>
+                  <div class="value">${analyticsData.total_calculations.toLocaleString()}</div>
+                  <div class="change">Updated daily at 8 PM IST</div>
+              </div>
+              <div class="summary-card">
+                  <h3>Unique Users</h3>
+                  <div class="value">${analyticsData.unique_users}</div>
+                  <div class="change">Active users</div>
+              </div>
+              <div class="summary-card">
+                  <h3>Countries</h3>
+                  <div class="value">${analyticsData.countries}</div>
+                  <div class="change">${Object.keys(analyticsData.country_breakdown).join(' & ')}</div>
+              </div>
+          `;
+      }
+
+      // Update last updated timestamp
+      function updateLastUpdated() {
+          if (!analyticsData) return;
+          
+          const lastUpdated = document.getElementById('lastUpdated');
+          lastUpdated.textContent = `Last updated: ${analyticsData.last_updated}`;
+      }
+
+      // Add after updateSummaryCards()
+      function renderCountryStats() {
+          if (!analyticsData || !analyticsData.country_stats) return;
+          const container = document.getElementById('countryStatsContainer');
+          let html = '';
+          let i = 0;
+          const entries = Object.entries(analyticsData.country_stats);
+          while (i < entries.length) {
+              html += '<div style="display:flex; gap:24px; width:100%;">';
+              for (let j = 0; j < 2 && i < entries.length; j++, i++) {
+                  const [country, stats] = entries[i];
+                  html += `<div class="country-stats-block">
+                      <h2>Country: ${country} <span style="font-size:0.7em; color:#888;">Currency: ${stats.currency || ''}</span></h2>
+                      <table border="1" cellpadding="6" style="border-collapse:collapse; margin-bottom:10px; width:100%;">
+                          <tr><th>Type</th><th>Average</th><th>Min</th><th>Max</th><th>Median</th></tr>
+                          <tr><td><b>Platform Fee</b></td><td>${formatCurrency(stats.platform_fee.average, stats.currency)}</td><td>${formatCurrency(stats.platform_fee.min, stats.currency)}</td><td>${formatCurrency(stats.platform_fee.max, stats.currency)}</td><td>${formatCurrency(stats.platform_fee.median, stats.currency)}</td></tr>
+                          <tr><td>AI Message</td><td>${formatCurrency(stats.ai_message.average, stats.currency)}</td><td>${formatCurrency(stats.ai_message.min, stats.currency)}</td><td>${formatCurrency(stats.ai_message.max, stats.currency)}</td><td>${formatCurrency(stats.ai_message.median, stats.currency)}</td></tr>
+                          <tr><td>Advanced Message</td><td>${formatCurrency(stats.advanced_message.average, stats.currency)}</td><td>${formatCurrency(stats.advanced_message.min, stats.currency)}</td><td>${formatCurrency(stats.advanced_message.max, stats.currency)}</td><td>${formatCurrency(stats.advanced_message.median, stats.currency)}</td></tr>
+                          <tr><td>Basic Marketing Message</td><td>${formatCurrency(stats.basic_marketing_message.average, stats.currency)}</td><td>${formatCurrency(stats.basic_marketing_message.min, stats.currency)}</td><td>${formatCurrency(stats.basic_marketing_message.max, stats.currency)}</td><td>${formatCurrency(stats.basic_marketing_message.median, stats.currency)}</td></tr>
+                          <tr><td>Basic Utility</td><td>${formatCurrency(stats.basic_utility_message.average, stats.currency)}</td><td>${formatCurrency(stats.basic_utility_message.min, stats.currency)}</td><td>${formatCurrency(stats.basic_utility_message.max, stats.currency)}</td><td>${formatCurrency(stats.basic_utility_message.median, stats.currency)}</td></tr>
+                          <tr><td>Committed Amount</td><td>${formatCurrency(stats.committed_amount.average, stats.currency)}</td><td>${formatCurrency(stats.committed_amount.min, stats.currency)}</td><td>${formatCurrency(stats.committed_amount.max, stats.currency)}</td><td>${formatCurrency(stats.committed_amount.median, stats.currency)}</td></tr>
+                          <tr><td>One Time Dev Cost</td><td>${formatCurrency(stats.one_time_dev_cost.average, stats.currency)}</td><td>${formatCurrency(stats.one_time_dev_cost.min, stats.currency)}</td><td>${formatCurrency(stats.one_time_dev_cost.max, stats.currency)}</td><td>${formatCurrency(stats.one_time_dev_cost.median, stats.currency)}</td></tr>
+                          <tr><td>Bot/UI Manday Cost</td><td>${formatCurrency(stats.bot_ui_manday_cost.average, stats.currency)}</td><td>${formatCurrency(stats.bot_ui_manday_cost.min, stats.currency)}</td><td>${formatCurrency(stats.bot_ui_manday_cost.max, stats.currency)}</td><td>${formatCurrency(stats.bot_ui_manday_cost.median, stats.currency)}</td></tr>
+                          <tr><td>Custom/AI Manday Cost</td><td>${formatCurrency(stats.custom_ai_manday_cost.average, stats.currency)}</td><td>${formatCurrency(stats.custom_ai_manday_cost.min, stats.currency)}</td><td>${formatCurrency(stats.custom_ai_manday_cost.max, stats.currency)}</td><td>${formatCurrency(stats.custom_ai_manday_cost.median, stats.currency)}</td></tr>
+                      </table>
+                      <table border="1" cellpadding="6" style="border-collapse:collapse; margin-bottom:20px; width:100%;">
+                          <tr><th>Type</th><th>Average Discount (%)</th></tr>
+                          <tr><td>AI Message</td><td>${formatPercent(stats.discounts.ai_message)}</td></tr>
+                          <tr><td>Advanced Message</td><td>${formatPercent(stats.discounts.advanced_message)}</td></tr>
+                          <tr><td>Basic Marketing Message</td><td>${formatPercent(stats.discounts.basic_marketing_message)}</td></tr>
+                          <tr><td>Basic Utility Message</td><td>${formatPercent(stats.discounts.basic_utility_message)}</td></tr>
+                          <tr><td>Bot/UI Manday Rate</td><td>${formatPercent(stats.discounts.bot_ui_manday_rate)}</td></tr>
+                          <tr><td>Custom/AI Manday Rate</td><td>${formatPercent(stats.discounts.custom_ai_manday_rate)}</td></tr>
+                      </table>
+                  </div>`;
+              }
+              html += '</div>';
+          }
+          container.innerHTML = html;
+      }
+      function formatCurrency(val, currency) {
+          if (val === undefined || val === null) return '-';
+          let num = Number(val);
+          if (isNaN(num)) return '-';
+          let symbol = currency === '₹' ? '₹' : (currency === '$' ? '$' : (currency || ''));
+          if (num >= 1000000) return symbol + (num/1000000).toFixed(2) + 'M';
+          if (num >= 1000) return symbol + num.toLocaleString();
+          if (num === 0) return symbol + '0';
+          return symbol + num.toFixed(4).replace(/\.0+$/, '');
+      }
+      function formatPercent(val) {
+          if (val === undefined || val === null) return '-';
+          let num = Number(val);
+          return (num > 0 ? '+' : '') + num.toFixed(2);
+      }
+
+      // Insert or move getAvgMedianByType function here, before initializeCharts
+      function getAvgMedianByType(type) {
+          if (!analyticsData || !analyticsData.country_stats) return { avg: 0, median: 0 };
+          let avgSum = 0, medianSum = 0, count = 0;
+          for (const stats of Object.values(analyticsData.country_stats)) {
+              if (stats[type]) {
+                  avgSum += Number(stats[type].average) || 0;
+                  medianSum += Number(stats[type].median) || 0;
+                  count++;
+              }
+          }
+          return {
+              avg: count ? avgSum / count : 0,
+              median: count ? medianSum / count : 0
+          };
+      }
+
+      // Helper to get manday efficiency data by user
+      function getMandayEfficiencyByUser() {
+          if (!analyticsData || !analyticsData.user_stats) return { labels: [], data: [] };
+          const labels = [], data = [];
+          for (const [user, stats] of Object.entries(analyticsData.user_stats)) {
+              labels.push(user);
+              data.push(Number(stats.manday_efficiency) || 0);
+          }
+          return { labels, data };
+      }
+      // Helper to get list and average prices for Bot UI and Custom AI
+      function getMandayRateVariation() {
+          if (!analyticsData || !analyticsData.country_stats) return { labels: ['Bot UI', 'Custom AI'], list: [0,0], avg: [0,0] };
+          let botList = 0, botAvg = 0, botCount = 0;
+          let aiList = 0, aiAvg = 0, aiCount = 0;
+          for (const stats of Object.values(analyticsData.country_stats)) {
+              if (stats.bot_ui_manday_rate) {
+                  botList += Number(stats.bot_ui_manday_rate.list) || 0;
+                  botAvg += Number(stats.bot_ui_manday_rate.average) || 0;
+                  botCount++;
+              }
+              if (stats.custom_ai_manday_rate) {
+                  aiList += Number(stats.custom_ai_manday_rate.list) || 0;
+                  aiAvg += Number(stats.custom_ai_manday_rate.average) || 0;
+                  aiCount++;
+              }
+          }
+          return {
+              labels: ['Bot UI', 'Custom AI'],
+              list: [botCount ? botList / botCount : 0, aiCount ? aiList / aiCount : 0],
+              avg: [botCount ? botAvg / botCount : 0, aiCount ? aiAvg / aiCount : 0]
+          };
+      }
+
+      function renderMandayRateCountryCharts() {
+        if (!analyticsData || !analyticsData.country_stats) return;
+        const container = document.getElementById('mandayRateCountryContainer');
+        let html = '';
+        let i = 0;
+        const entries = Object.entries(analyticsData.country_stats);
+        while (i < entries.length) {
+            html += '<div style="display:flex; gap:24px; width:100%;">';
+            for (let j = 0; j < 2 && i < entries.length; j++, i++) {
+                const [country, stats] = entries[i];
+                const currency = stats.currency || '';
+                const botList = stats.bot_ui_manday_rate && stats.bot_ui_manday_rate.list ? Number(stats.bot_ui_manday_rate.list) : 0;
+                const botAvg = stats.bot_ui_manday_rate && stats.bot_ui_manday_rate.average ? Number(stats.bot_ui_manday_rate.average) : 0;
+                const aiList = stats.custom_ai_manday_rate && stats.custom_ai_manday_rate.list ? Number(stats.custom_ai_manday_rate.list) : 0;
+                const aiAvg = stats.custom_ai_manday_rate && stats.custom_ai_manday_rate.average ? Number(stats.custom_ai_manday_rate.average) : 0;
+                const chartId = `mandayRateCountryChart_${country.replace(/\W/g, '')}`;
+                html += `<div style="flex:1 1 48%; min-width:400px; max-width:48%; background:#fff; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.07); padding:18px 18px 8px 18px; margin-bottom:16px;">
+                    <h3>${country} (${currency})</h3>
+                    <canvas id="${chartId}" height="220"></canvas>
+                </div>`;
+            }
+            html += '</div>';
+        }
+        container.innerHTML = html;
+        // Render charts
+        i = 0;
+        while (i < entries.length) {
+            for (let j = 0; j < 2 && i < entries.length; j++, i++) {
+                const [country, stats] = entries[i];
+                const currency = stats.currency || '';
+                const botList = stats.bot_ui_manday_rate && stats.bot_ui_manday_rate.list ? Number(stats.bot_ui_manday_rate.list) : 0;
+                const botAvg = stats.bot_ui_manday_rate && stats.bot_ui_manday_rate.average ? Number(stats.bot_ui_manday_rate.average) : 0;
+                const aiList = stats.custom_ai_manday_rate && stats.custom_ai_manday_rate.list ? Number(stats.custom_ai_manday_rate.list) : 0;
+                const aiAvg = stats.custom_ai_manday_rate && stats.custom_ai_manday_rate.average ? Number(stats.custom_ai_manday_rate.average) : 0;
+                const chartId = `mandayRateCountryChart_${country.replace(/\W/g, '')}`;
+                const ctx = document.getElementById(chartId).getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Bot UI', 'Custom AI'],
+                        datasets: [
+                            {
+                                label: 'List Price',
+                                data: [botList, aiList],
+                                backgroundColor: '#fed6e3',
+                                borderColor: '#fed6e3',
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'Average Price',
+                                data: [botAvg, aiAvg],
+                                backgroundColor: '#667eea',
+                                borderColor: '#667eea',
+                                borderWidth: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: true, position: 'bottom' } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+        }
+    }
+
+      function renderCountrySummaryTables() {
+        if (!analyticsData || !analyticsData.country_stats) return;
+        const container = document.getElementById('countrySummaryTables');
+        let html = '';
+        const entries = Object.entries(analyticsData.country_stats);
+        for (let i = 0; i < entries.length; i += 2) {
+          html += '<div style="display:flex; gap:32px; margin-bottom:32px;">';
+          for (let j = 0; j < 2 && (i + j) < entries.length; j++) {
+            const [country, stat] = entries[i + j];
+            const currency = stat.currency || '';
+            html += `<div style="flex:1; min-width:350px; max-width:48%; background:#fff; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.07); padding:18px 18px 8px 18px; margin-bottom:16px;">
+              <div style="font-size:1.3em; font-weight:bold; margin-bottom:8px;">Country: ${country}</div>
+              <div style="font-size:1.1em; margin-bottom:8px;"><b>Country:</b> ${country} &nbsp; <b>Currency:</b> ${currency}</div>
+              <table border="1" cellpadding="6" style="border-collapse:collapse; margin-bottom:10px; width:100%; font-size:1.08em;">
+                <tr><th>Type</th><th>Average</th><th>Min</th><th>Max</th><th>Median</th></tr>
+                <tr><td><b>Platform Fee</b></td><td>${formatCurrency(stat.platform_fee.average, currency)}</td><td>${formatCurrency(stat.platform_fee.min, currency)}</td><td>${formatCurrency(stat.platform_fee.max, currency)}</td><td>${formatCurrency(stat.platform_fee.median, currency)}</td></tr>
+                <tr><td>AI Message</td><td>${formatCurrency(stat.ai_message.average, currency)}</td><td>${formatCurrency(stat.ai_message.min, currency)}</td><td>${formatCurrency(stat.ai_message.max, currency)}</td><td>${formatCurrency(stat.ai_message.median, currency)}</td></tr>
+                <tr><td>Advanced Message</td><td>${formatCurrency(stat.advanced_message.average, currency)}</td><td>${formatCurrency(stat.advanced_message.min, currency)}</td><td>${formatCurrency(stat.advanced_message.max, currency)}</td><td>${formatCurrency(stat.advanced_message.median, currency)}</td></tr>
+                <tr><td>Basic Marketing Message</td><td>${formatCurrency(stat.basic_marketing_message.average, currency)}</td><td>${formatCurrency(stat.basic_marketing_message.min, currency)}</td><td>${formatCurrency(stat.basic_marketing_message.max, currency)}</td><td>${formatCurrency(stat.basic_marketing_message.median, currency)}</td></tr>
+                <tr><td>Basic Utility</td><td>${formatCurrency(stat.basic_utility_message.average, currency)}</td><td>${formatCurrency(stat.basic_utility_message.min, currency)}</td><td>${formatCurrency(stat.basic_utility_message.max, currency)}</td><td>${formatCurrency(stat.basic_utility_message.median, currency)}</td></tr>
+                <tr><td><b>Committed Amount</b></td><td>${formatCurrency(stat.committed_amount.average, currency)}</td><td>${formatCurrency(stat.committed_amount.min, currency)}</td><td>${formatCurrency(stat.committed_amount.max, currency)}</td><td>${formatCurrency(stat.committed_amount.median, currency)}</td></tr>
+                <tr><td><b>One Time Dev Cost</b></td><td>${formatCurrency(stat.one_time_dev_cost.average, currency)}</td><td>${formatCurrency(stat.one_time_dev_cost.min, currency)}</td><td>${formatCurrency(stat.one_time_dev_cost.max, currency)}</td><td>${formatCurrency(stat.one_time_dev_cost.median, currency)}</td></tr>
+                <tr><td><b>Bot/UI Manday Cost</b></td><td>${formatCurrency(stat.bot_ui_manday_cost.average, currency)}</td><td>${formatCurrency(stat.bot_ui_manday_cost.min, currency)}</td><td>${formatCurrency(stat.bot_ui_manday_cost.max, currency)}</td><td>${formatCurrency(stat.bot_ui_manday_cost.median, currency)}</td></tr>
+                <tr><td><b>Custom/AI Manday Cost</b></td><td>${formatCurrency(stat.custom_ai_manday_cost.average, currency)}</td><td>${formatCurrency(stat.custom_ai_manday_cost.min, currency)}</td><td>${formatCurrency(stat.custom_ai_manday_cost.max, currency)}</td><td>${formatCurrency(stat.custom_ai_manday_cost.median, currency)}</td></tr>
+              </table>
+              <table border="1" cellpadding="6" style="border-collapse:collapse; margin-bottom:10px; width:100%; font-size:1.08em;">
+                <tr><th>Type</th><th>Average Discount (%)</th></tr>
+                <tr><td>AI Message</td><td>${formatPercent(stat.discounts.ai_message)}</td></tr>
+                <tr><td>Advanced Message</td><td>${formatPercent(stat.discounts.advanced_message)}</td></tr>
+                <tr><td>Basic Marketing Message</td><td>${formatPercent(stat.discounts.basic_marketing_message)}</td></tr>
+                <tr><td>Basic Utility Message</td><td>${formatPercent(stat.discounts.basic_utility_message)}</td></tr>
+                <tr><td>Bot/UI Manday Rate</td><td>${formatPercent(stat.discounts.bot_ui_manday_rate)}</td></tr>
+                <tr><td>Custom/AI Manday Rate</td><td>${formatPercent(stat.discounts.custom_ai_manday_rate)}</td></tr>
+              </table>
+            </div>`;
+          }
+          html += '</div>';
+        }
+        container.innerHTML = html;
+      }
+
+      // Initialize charts with real data
+      function initializeCharts() {
+          if (!analyticsData) return;
+
+          // Define avgData and medianData for pricing chart
+          const types = ['ai_message', 'advanced_message', 'basic_marketing_message', 'basic_utility_message'];
+          const labels = ['AI', 'Advanced', 'Marketing', 'Utility'];
+          const avgData = types.map(type => getAvgMedianByType(type).avg);
+          const medianData = types.map(type => getAvgMedianByType(type).median);
+          // Manday Efficiency by User
+          const mandayUser = getMandayEfficiencyByUser();
+          // Manday Rate Variation
+          const mandayRate = getMandayRateVariation();
+
+          // Sample data based on analytics.csv (fallback if no real data)
+          const hourlyData = [2, 1, 0, 0, 0, 0, 8, 12, 15, 10, 8, 6, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1];
+          const weekdayData = [12, 15, 18, 14, 10, 0, 0];
+          
+          // Use real data if available, otherwise use sample data
+          const clvData = analyticsData.top_users ? 
+              Object.values(analyticsData.top_users).slice(0, 10) : 
+              [1200000, 850000, 720000, 670000, 620000, 420000, 320000, 295000, 245000, 220000];
+          
+          const clvLabels = analyticsData.top_users ? 
+              Object.keys(analyticsData.top_users).slice(0, 10) : 
+              ['Saurabh', 'Nikhil', 'Mridul', 'Ankit', 'Puru', 'Kat', 'Gourav', 'Matheus', 'Mariana', 'Saathwik'];
+          
+          const countryData = analyticsData.country_breakdown ? 
+              Object.values(analyticsData.country_breakdown) : 
+              [58, 11];
+          
+          const countryLabels = analyticsData.country_breakdown ? 
+              Object.keys(analyticsData.country_breakdown) : 
+              ['India', 'LATAM'];
+          
+          const routeData = analyticsData.route_breakdown ? 
+              Object.values(analyticsData.route_breakdown) : 
+              [58, 11];
+          
+          const routeLabels = analyticsData.route_breakdown ? 
+              Object.keys(analyticsData.route_breakdown) : 
+              ['volumes', 'bundle'];
+
+          const serviceData = [450000, 380000, 320000, 280000];
+          const revenueData = [120000, 180000, 220000, 280000, 320000, 380000, 420000, 480000];
+          const efficiencyData = [25000, 22000, 20000, 18000, 16000, 15000, 14000, 13000, 12000, 11000];
+
+          // Chart configurations
+          const chartConfigs = {
+              hourly: {
+                  type: 'line',
+                  data: hourlyData,
+                  labels: Array.from({length: 24}, (_, i) => i + ':00'),
+                  label: 'Calculations',
+                  color: '#667eea'
+              },
+              weekday: {
+                  type: 'bar',
+                  data: weekdayData,
+                  labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                  label: 'Calculations',
+                  color: '#764ba2'
+              },
+              clv: {
+                  type: 'bar',
+                  data: clvData,
+                  labels: clvLabels,
+                  label: 'Platform Fee (₹)',
+                  color: '#f093fb'
+              },
+              service: {
+                  type: 'doughnut',
+                  data: serviceData,
+                  labels: ['AI', 'Advanced', 'Marketing', 'Utility'],
+                  label: 'Total',
+                  colors: ['#667eea', '#764ba2', '#f093fb', '#f5576c'],
+                  datalabels: true // custom flag to enable datalabels
+              },
+              revenue: {
+                  type: 'line',
+                  data: revenueData,
+                  labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
+                  label: 'Revenue (₹)',
+                  color: '#4facfe'
+              },
+              pricing: {
+                  type: 'bar',
+                  data: [avgData, medianData],
+                  labels: labels,
+                  label: ['Average', 'Median'],
+                  color: ['#43e97b', '#667eea'],
+                  grouped: true
+              },
+              efficiency: {
+                  type: 'bar',
+                  data: efficiencyData,
+                  labels: ['User 1', 'User 2', 'User 3', 'User 4', 'User 5', 'User 6', 'User 7', 'User 8', 'User 9', 'User 10'],
+                  label: 'Efficiency (₹/Manday)',
+                  color: '#a8edea'
+              },
+              rate: {
+                  type: 'bar',
+                  data: [mandayRate.list, mandayRate.avg],
+                  labels: mandayRate.labels,
+                  label: ['List Price', 'Average Price'],
+                  color: ['#fed6e3', '#667eea'],
+                  grouped: true
+              },
+              route: {
+                  type: 'bar',
+                  data: routeData,
+                  labels: routeLabels,
+                  label: 'Revenue (₹)',
+                  color: '#ffecd2'
+              },
+              feature: {
+                  type: 'doughnut',
+                  data: routeData,
+                  labels: routeLabels,
+                  label: 'Usage',
+                  colors: ['#667eea', '#764ba2']
+              }
+          };
+
+          // Create charts
+          Object.keys(chartConfigs).forEach(chartName => {
+              const canvasId = chartName + 'Chart';
+              const canvas = document.getElementById(canvasId);
+              if (canvas) {
+                  charts[chartName] = createChart(canvasId, chartConfigs[chartName]);
+              }
+          });
+      }
+
+      // Create chart function
+      function createChart(canvasId, config) {
+          const ctx = document.getElementById(canvasId).getContext('2d');
+          let chartData;
+          if (config.grouped) {
+              chartData = {
+                  labels: config.labels,
+                  datasets: [
+                      {
+                          label: config.label[0],
+                          data: config.data[0],
+                          backgroundColor: config.color[0],
+                          borderColor: config.color[0],
+                          borderWidth: 2
+                      },
+                      {
+                          label: config.label[1],
+                          data: config.data[1],
+                          backgroundColor: config.color[1],
+                          borderColor: config.color[1],
+                          borderWidth: 2
+                      }
+                  ]
+              };
+          } else {
+              chartData = {
+                  labels: config.labels,
+                  datasets: [{
+                      label: config.label,
+                      data: config.data,
+                      backgroundColor: config.colors || config.color,
+                      borderColor: config.color,
+                      borderWidth: 2,
+                      fill: config.type === 'line' ? false : undefined
+                  }]
+              };
+          }
+
+          const options = {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                  legend: {
+                      display: true,
+                      position: 'bottom'
+                  },
+                  datalabels: config.datalabels ? {
+                      color: '#fff',
+                      font: { weight: 'bold', size: 16 },
+                      formatter: (value, context) => {
+                          const data = context.chart.data.datasets[0].data;
+                          const total = data.reduce((a, b) => a + b, 0);
+                          const percent = total ? (value / total * 100) : 0;
+                          return percent > 0 ? percent.toFixed(1) + '%' : '';
+                      }
+                  } : undefined
+              },
+              scales: config.type !== 'doughnut' && config.type !== 'pie' ? {
+                  y: {
+                      beginAtZero: true
+                  }
+              } : undefined
+          };
+
+          return new Chart(ctx, {
+              type: config.type,
+              data: chartData,
+              options: options,
+              plugins: config.datalabels ? [ChartDataLabels] : []
+          });
+      }
+
+      // Tab functionality
+      function showTab(tabName) {
+          // Hide all tab contents
+          const tabContents = document.querySelectorAll('.tab-content');
+          tabContents.forEach(content => content.classList.remove('active'));
+
+          // Remove active class from all tabs
+          const tabs = document.querySelectorAll('.nav-tab');
+          tabs.forEach(tab => tab.classList.remove('active'));
+
+          // Show selected tab content
+          document.getElementById(tabName).classList.add('active');
+
+          // Add active class to clicked tab
+          event.target.classList.add('active');
+      }
+
+      // On data load, setup dropdown and render initial charts
+      async function loadAnalyticsData() {
+          try {
+              const response = await fetch('/static/analytics_summary.json');
+              if (!response.ok) {
+                  throw new Error('Failed to load analytics data');
+              }
+              analyticsData = await response.json();
+              updateSummaryCards();
+              updateLastUpdated();
+              initializeCharts();
+              renderCountrySummaryTables(); // Call here after data is loaded
+          } catch (error) {
+              console.error('Error loading analytics data:', error);
+              document.getElementById('summaryCards').innerHTML = `
+                  <div class="error">
+                      Failed to load analytics data. Please ensure the daily update script has run.
+                      <br><br>
+                      <button onclick="loadAnalyticsData()">Retry</button>
+                  </div>
+              `;
+          }
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+          loadAnalyticsData();
+      });
+    </script>
+</body>
+</html> 

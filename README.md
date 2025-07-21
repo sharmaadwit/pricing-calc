@@ -1,145 +1,185 @@
-# Flask Pricing Calculator App
+# Pricing Calculator
 
-## Overview
-This is a robust, production-ready pricing calculator web application built with Flask. It is designed for messaging services with complex pricing logic, dynamic inclusions, advanced analytics, and a professional UI. The app is suitable for deployment on platforms like Railway.
-
-## Recent Changes (v25.7–v25.8.1)
-
-- **Inclusions Logic Overhaul:** Inclusions shown on the results page are now strictly non-overlapping. Only the most relevant (highest/selected) inclusions for each option (Personalize Load, Human Agents, Increased TPS, AI Module, Smart CPaaS, BFSI Tier) are displayed, and base inclusions are filtered to avoid duplication.
-- **Committed Amount Route (volume=0):** For cases where all message volumes are zero, the monthly fee is now calculated as `Monthly Fee = Platform Fee + Committed Bundle Amount`. The results page UI and summary card clearly show this formula and break out both values.
-- **Per-Country Committed Amount Rates:** The committed amount pricing slabs and logic now support all major regions (India, MENA, LATAM, Africa, Europe, Rest of World), with correct per-message rates for each country and committed amount tier.
-- **Defensive Fixes:** All code paths that render the results page now defensively define `contradiction_warning` to prevent runtime errors.
-- **UI/UX Upgrades:** Visual improvements to the forms and results page, including clearer sectioning, color-coded cards, and better formatting for manday rates and platform fee fields.
+A Flask-based pricing calculator for messaging services with dynamic inclusions, platform fees, and analytics.
 
 ## Features
-- **Dynamic Inclusions:** Shows only the highest/most specific inclusions based on user selections (tiers, add-ons, etc.), avoiding duplicates or contradictions.
-- **Detailed Pricing & Margin Tables:** Cleanly formatted, always accurate, and includes both chosen and rate card prices.
-- **Discount Validation:** Prevents users from entering prices below allowed thresholds (see table below).
-- **Session & Error Handling:** Robust handling of session data and user errors.
-- **Professional UI:** Modern, clear, and user-friendly interface.
-- **Analytics Dashboard:** Tracks calculations, message volumes, platform fee stats, margins, and more, with both tables and Chart.js graphs.
-- **Code Documentation:** Well-commented code and templates for easy maintenance.
 
-## Setup Instructions
-1. **Clone the repository:**
+- Dynamic pricing calculations
+- Platform fee management
+- Analytics and reporting
+- Automated daily data updates
+
+## Analytics Automation
+
+The system includes automated analytics updates that run daily at 8 PM IST:
+
+### Setup
+
+1. **Install Dependencies**:
    ```bash
-   git clone <repo-url>
-   cd pricing-calc
+   python3 -m pip install pandas matplotlib seaborn psycopg2-binary
    ```
-2. **Install dependencies:**
+
+2. **Set up Cron Job**:
    ```bash
-   pip install -r requirements.txt
+   ./scripts/setup_cron.sh
    ```
-3. **Run the app:**
+
+3. **Manual Test**:
    ```bash
-   python app.py
+   python3 scripts/update_analytics_daily.py
    ```
-   Or use your preferred WSGI server (e.g., gunicorn) for production.
+
+### What Gets Updated Daily
+
+- **CSV Export**: Fresh data from PostgreSQL database
+- **Analytics Charts**: New visualizations saved as PNG files
+- **Summary Data**: JSON file with key metrics
+- **Dashboard**: Real-time data in `/analyticsv2`
+
+### Files Generated
+
+- `analytics.csv` - Latest data export
+- `static/analytics_summary.json` - Summary statistics
+- `static/*_analytics.png` - Chart images
+- `logs/analytics_update.log` - Execution logs
+
+### Cron Schedule
+
+- **Time**: 8 PM IST (14:30 UTC) daily
+- **Command**: `python3 scripts/update_analytics_daily.py`
+- **Logs**: `logs/analytics_update.log`
+
+### Manual Execution
+
+To run the analytics update manually:
+
+```bash
+cd /path/to/pricing-calc
+python3 scripts/update_analytics_daily.py
+```
+
+### Monitoring
+
+Check the logs to monitor the automation:
+
+```bash
+tail -f logs/analytics_update.log
+```
+
+View current cron jobs:
+
+```bash
+crontab -l
+```
 
 ## Usage
-- Go to the home page and enter your message volumes and platform options.
-- Enter your chosen prices (within allowed discount limits).
-- View the detailed pricing, inclusions, and margin tables.
-- Access the analytics dashboard (with the secret keyword) to view usage stats and trends.
-- To reset analytics, send a POST request to `/reset-analytics`.
 
-## Analytics Dashboard
-- View total calculations, breakdowns by day/week/country, platform fee stats, message volume distributions, and more.
-- For each country, see a table of Average, Min, Max, and Median for platform fee and each message type, plus interactive graphs.
+1. Start the Flask application:
+   ```bash
+   python3 app.py
+   ```
 
-## Code Structure
-- `app.py` — Main Flask app, routes, logic, analytics, and inclusions.
-- `calculator.py` — Pricing and margin calculation logic.
-- `templates/` — HTML templates for the UI and analytics dashboard.
-- `static/` — Static files (e.g., diagrams).
-- `requirements.txt` — Python dependencies.
+2. Access the pricing calculator:
+   - Main calculator: `http://localhost:5000/`
+   - Analytics v1: `http://localhost:5000/analytics`
+   - Analytics v2: `http://localhost:5000/analyticsv2`
 
-## Security
-- Analytics dashboard is protected by a secret keyword.
-- All user input is validated and sanitized.
+3. Export data manually:
+   ```bash
+   python3 scripts/export_to_csv.py
+   ```
 
-## Contributing
-Pull requests and suggestions are welcome! Please ensure code is well-documented and tested.
+## Analytics Reports
+
+### Analytics v2 (`/analyticsv2`)
+
+Comprehensive dashboard with:
+- **Temporal Analytics**: Usage patterns by hour, day, month
+- **Customer Behavior**: CLV, churn, service preferences
+- **Pricing Strategy**: Discounts, revenue trends
+- **Geographic Intelligence**: Country-wise performance
+- **Resource Utilization**: Manday efficiency, rate variations
+- **Platform Analytics**: Feature usage, calculation routes
+
+### Data Sources
+
+- PostgreSQL database (primary)
+- `analytics.csv` (exported data)
+- Real-time summary statistics
+
+## Configuration
+
+### Database
+
+The application connects to PostgreSQL using the connection string in `app.py`:
+
+```python
+DATABASE_URL = "postgresql://postgres:password@host:port/database"
+```
+
+### Analytics
+
+Analytics configuration is in `scripts/update_analytics_daily.py`:
+
+```python
+DB_URL = "your_postgresql_connection_string"
+CSV_PATH = "analytics.csv"
+```
+
+## Troubleshooting
+
+### Cron Job Issues
+
+1. Check if cron is running:
+   ```bash
+   sudo service cron status
+   ```
+
+2. View cron logs:
+   ```bash
+   grep CRON /var/log/syslog
+   ```
+
+3. Test script manually:
+   ```bash
+   python3 scripts/update_analytics_daily.py
+   ```
+
+### Analytics Dashboard Issues
+
+1. Check if summary file exists:
+   ```bash
+   ls -la static/analytics_summary.json
+   ```
+
+2. Verify data export:
+   ```bash
+   wc -l analytics.csv
+   ```
+
+3. Check browser console for JavaScript errors
+
+## Development
+
+### Adding New Analytics
+
+1. Add chart generation function in `scripts/update_analytics_daily.py`
+2. Update the charts list in `generate_analytics_charts()`
+3. Add corresponding chart in `templates/analyticsv2.html`
+
+### Modifying Schedule
+
+Edit the cron schedule in `scripts/setup_cron.sh`:
+
+```bash
+# Current: 8 PM IST daily
+CRON_JOB="30 14 * * * ..."
+
+# Example: Every 6 hours
+CRON_JOB="0 */6 * * * ..."
+```
 
 ## License
-MIT License (or specify your license here)
 
-## Platform Fee and Message Type Pricing Structure
-
-### Platform Fee (Base by Country)
-| Country/Region         | Minimum Platform Fee |
-|------------------------|---------------------|
-| India                  | ₹100,000            |
-| Africa, Rest of World  | $500                |
-| MENA, LATAM, Europe    | $1,000              |
-
-**Additions for each option (examples):**
-- **BFSI Tier 1:** +₹250,000 (India), +$500 (Africa), +$1,500 (others)
-- **Personalize Load Standard:** +₹50,000 (India), +$250 (Africa), +$500 (others)
-- **Human Agents 20+:** +₹50,000 (India), +$250 (Africa), +$1,000 (LATAM/Europe), +$500 (others)
-- ...and so on for other options.
-
-### Message Type Definitions
-
-- **Basic Messages:** Triggered messages via API, Bulk Upload (GS Media, Campaign Manager)
-
-- **Advanced Messages:**
-  - Bot platform usage: 2-way messages (JB/Solutions), Triggered messages, Interactive journeys
-  - Marketing: Triggered campaigns, Segmented Campaign on Personalize
-  - Agent: Agent Interactions, Triggered messages
-  - CTX: Retargeting messages
-  - Service messages (incoming won't be counted)
-
-- **AI Messages:** Any message that uses AI for responding to the customer
-
-### Message Type Prices (Rate Card Tiers)
-
-#### India
-| Message Type         | Volume Tiers (per month)         | Gupshup Fee (INR) |
-|----------------------|----------------------------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 1.00 / 0.90 / 0.80 / 0.70 / 0.60 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.50 / 0.45 / 0.40 / 0.35 |
-| Basic Marketing      | All volumes                      | 0.05        |
-| Basic Utility        | All volumes                      | 0.03        |
-
-#### MENA
-| Message Type         | Volume Tiers (per month)         | Gupshup Fee (USD) |
-|----------------------|----------------------------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.084 / 0.076 / 0.067 / 0.059 / 0.050 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.042 / 0.038 / 0.034 / 0.029 |
-| Basic Marketing      | All volumes                      | 0.0042      |
-| Basic Utility        | All volumes                      | 0.003       |
-
-#### LATAM
-| Message Type         | Volume Tiers (per month)         | Gupshup Fee (USD) |
-|----------------------|----------------------------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.120 / 0.108 / 0.096 / 0.084 / 0.072 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.060 / 0.054 / 0.048 / 0.042 |
-| Basic Marketing      | All volumes                      | 0.006       |
-| Basic Utility        | All volumes                      | 0.004       |
-
-#### Africa
-| Message Type         | Volume Tiers (per month)         | Gupshup Fee (USD) |
-|----------------------|----------------------------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.048 / 0.043 / 0.038 / 0.034 / 0.029 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.024 / 0.022 / 0.019 / 0.017 |
-| Basic Marketing      | All volumes                      | 0.002       |
-| Basic Utility        | All volumes                      | 0.001       |
-
-#### Europe
-| Message Type         | Volume Tiers (per month)         | Gupshup Fee (USD) |
-|----------------------|----------------------------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.240 / 0.216 / 0.192 / 0.168 / 0.144 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.120 / 0.108 / 0.096 / 0.084 |
-| Basic Marketing      | All volumes                      | 0.012       |
-| Basic Utility        | All volumes                      | 0.007       |
-
-#### Rest of the World
-| Message Type         | Volume Tiers (per month)         | Gupshup Fee (USD) |
-|----------------------|----------------------------------|-------------------|
-| AI                   | 0-10k / 10k-100k / 100k-500k / 500k-1M / 1M+ | 0.120 / 0.108 / 0.096 / 0.084 / 0.072 |
-| Advanced             | 0-50k / 50k-150k / 150k-500k / 500k+ | 0.060 / 0.054 / 0.048 / 0.042 |
-| Basic Marketing      | All volumes                      | 0.006       |
-| Basic Utility        | All volumes                      | 0.007       |
-
---- 
+[Your License Here] 

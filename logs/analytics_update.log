@@ -1,0 +1,20 @@
+[2025-07-21 16:11:30] Starting daily analytics update process...
+[2025-07-21 16:11:30] Starting CSV export from PostgreSQL...
+[2025-07-21 16:11:31] Successfully exported data to analytics.csv
+[2025-07-21 16:11:31] Generating analytics charts...
+[2025-07-21 16:11:31] Loaded 69 records from analytics.csv
+[2025-07-21 16:11:31] Generated temporal charts
+[2025-07-21 16:11:31] Generated customer charts
+[2025-07-21 16:11:32] Generated pricing charts
+[2025-07-21 16:11:32] Generated geographic charts
+[2025-07-21 16:11:32] Generated resource charts
+[2025-07-21 16:11:32] Generated platform charts
+[2025-07-21 16:11:32] Updating analytics summary...
+Building stats for country: India
+Error in avg_discount() for columns 'bot_ui_manday_rate', 'bot_ui_manday_rate' in country 'India': arg must be a list, tuple, 1-d array, or Series
+Error in avg_discount() for columns 'custom_ai_manday_rate', 'custom_ai_manday_rate' in country 'India': arg must be a list, tuple, 1-d array, or Series
+Building stats for country: LATAM
+Error in avg_discount() for columns 'bot_ui_manday_rate', 'bot_ui_manday_rate' in country 'LATAM': arg must be a list, tuple, 1-d array, or Series
+Error in avg_discount() for columns 'custom_ai_manday_rate', 'custom_ai_manday_rate' in country 'LATAM': arg must be a list, tuple, 1-d array, or Series
+[2025-07-21 16:11:32] Analytics summary updated successfully
+[2025-07-21 16:11:32] Daily analytics update completed successfully!
