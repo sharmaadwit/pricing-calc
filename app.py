@@ -175,7 +175,7 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
     """
     # Minimum platform fee
     min_fees = {
-        'India': 120000,
+        'India': 100000,
         'MENA': 2000,
         'LATAM': 2000,
         'Africa': 1000,
