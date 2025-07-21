@@ -93,6 +93,9 @@ COUNTRY_CURRENCY = {
 
 SECRET_ANALYTICS_KEYWORD = "letmein123"
 
+# Add this near the top
+CALC_PASSWORD = os.environ.get('CALC_PASSWORD', 'gup$hup.i0')  # Set your password here or via env var
+
 def initialize_inclusions():
     """
     Returns a dictionary of all possible inclusions for each feature/tier.
@@ -261,8 +264,21 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
 
     return fee, currency
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        if password == CALC_PASSWORD:
+            session['authenticated'] = True
+            return redirect(url_for('index'))
+        else:
+            flash('Incorrect password. Please try again.', 'error')
+    return render_template('login.html')
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    if not session.get('authenticated'):
+        return redirect(url_for('login'))
     """
     Main route for the pricing calculator. Handles all user steps (volumes, prices, bundle, results).
     Manages session data, input validation, pricing logic, and inclusions logic.
