@@ -878,7 +878,7 @@
       // On data load, setup dropdown and render initial charts
       async function loadAnalyticsData() {
           try {
-              const response = await fetch('/static/analytics_summary.json');
+              const response = await fetch(`/static/analytics_summary.json?t=${Date.now()}`);
               if (!response.ok) {
                   throw new Error('Failed to load analytics data');
               }
