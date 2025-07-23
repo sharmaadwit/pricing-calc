@@ -9,4 +9,7 @@ MarkupSafe==3.0.2
 Flask-SQLAlchemy
 psycopg2-binary
 Flask-Migrate
+pandas
+matplotlib
+seaborn
 
