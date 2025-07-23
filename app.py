@@ -40,85 +40,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.info("Flask app logger initialized")
 
-# Custom Jinja2 filter for number formatting
-@app.template_filter('smart_format')
-def smart_format_filter(value):
-    """Format numbers: no decimals if zero, up to 4 decimals if non-zero"""
-    try:
-        if value is None:
-            return ''
-        val = float(value)
-        # Check if the number is a whole number
-        if val == int(val):
-            return f"{int(val):,}"
-        else:
-            # Show up to 4 decimal places, but remove trailing zeros
-            s = f"{val:.4f}"
-            return f"{s.rstrip('0').rstrip('.'):,}"
-    except (ValueError, TypeError):
-        return str(value) if value is not None else ''
-
-# Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:prdeuXwtBzpLZaOGpxgRspfjfLNEQrys@gondola.proxy.rlwy.net:25504/railway')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-
-# Example Analytics model (expand as needed)
-class Analytics(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    calculation_id = db.Column(db.String(64), unique=False, nullable=True)  # Transaction ID for each calculation
-    timestamp = db.Column(db.DateTime, nullable=False)
-    user_name = db.Column(db.String(128))
-    country = db.Column(db.String(64))
-    platform_fee = db.Column(db.Float)
-    ai_price = db.Column(db.Float)
-    advanced_price = db.Column(db.Float)
-    basic_marketing_price = db.Column(db.Float)
-    basic_utility_price = db.Column(db.Float)
-    currency = db.Column(db.String(8))
-    # New fields for advanced analytics
-    ai_rate_card_price = db.Column(db.Float)
-    advanced_rate_card_price = db.Column(db.Float)
-    basic_marketing_rate_card_price = db.Column(db.Float)
-    basic_utility_rate_card_price = db.Column(db.Float)
-    ai_volume = db.Column(db.Float)
-    advanced_volume = db.Column(db.Float)
-    basic_marketing_volume = db.Column(db.Float)
-    basic_utility_volume = db.Column(db.Float)
-    # New fields for user-submitted manday rates
-    bot_ui_manday_rate = db.Column(db.Float)
-    custom_ai_manday_rate = db.Column(db.Float)
-    # New fields for manday counts
-    bot_ui_mandays = db.Column(db.Float)
-    custom_ai_mandays = db.Column(db.Float)
-    committed_amount = db.Column(db.Float, nullable=True)  # New column for message bundle amount
-    # Add more fields as needed
-    calculation_route = db.Column(db.String(16))  # "volumes" or "bundle"
-
-# os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
-
-# Country to currency symbol mapping
-COUNTRY_CURRENCY = {
-    'India': '₹',
-    'MENA': '$',  # USD for MENA
-    'LATAM': '$',
-    'Africa': '$',
-    'Europe': '$',  # Use USD for Europe
-    'Rest of the World': '$',
-}
-
-SECRET_ANALYTICS_KEYWORD = "letmein123"
-
-# Add this near the top
-CALC_PASSWORD = os.environ.get('CALC_PASSWORD', 'gup$hup.i0')  # Set your password here or via env var
-
+# Health check endpoint - moved to top for immediate availability
 @app.route('/health')
 def health_check():
     logger.info("Health check endpoint accessed")
     print("HEALTH CHECK ACCESSED", file=sys.stderr, flush=True)
     return "OK", 200
+
+# Root route for basic connectivity test
+@app.route('/ping')
+def ping():
+    return "pong", 200
 
 def initialize_inclusions():
     """
@@ -287,6 +219,80 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
         fee += smart_cpaas_fees.get(country, smart_cpaas_fees['Rest of the World'])
 
     return fee, currency
+
+# Custom Jinja2 filter for number formatting
+@app.template_filter('smart_format')
+def smart_format_filter(value):
+    """Format numbers: no decimals if zero, up to 4 decimals if non-zero"""
+    try:
+        if value is None:
+            return ''
+        val = float(value)
+        # Check if the number is a whole number
+        if val == int(val):
+            return f"{int(val):,}"
+        else:
+            # Show up to 4 decimal places, but remove trailing zeros
+            s = f"{val:.4f}"
+            return f"{s.rstrip('0').rstrip('.'):,}"
+    except (ValueError, TypeError):
+        return str(value) if value is not None else ''
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:prdeuXwtBzpLZaOGpxgRspfjfLNEQrys@gondola.proxy.rlwy.net:25504/railway')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+# Example Analytics model (expand as needed)
+class Analytics(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    calculation_id = db.Column(db.String(64), unique=False, nullable=True)  # Transaction ID for each calculation
+    timestamp = db.Column(db.DateTime, nullable=False)
+    user_name = db.Column(db.String(128))
+    country = db.Column(db.String(64))
+    platform_fee = db.Column(db.Float)
+    ai_price = db.Column(db.Float)
+    advanced_price = db.Column(db.Float)
+    basic_marketing_price = db.Column(db.Float)
+    basic_utility_price = db.Column(db.Float)
+    currency = db.Column(db.String(8))
+    # New fields for advanced analytics
+    ai_rate_card_price = db.Column(db.Float)
+    advanced_rate_card_price = db.Column(db.Float)
+    basic_marketing_rate_card_price = db.Column(db.Float)
+    basic_utility_rate_card_price = db.Column(db.Float)
+    ai_volume = db.Column(db.Float)
+    advanced_volume = db.Column(db.Float)
+    basic_marketing_volume = db.Column(db.Float)
+    basic_utility_volume = db.Column(db.Float)
+    # New fields for user-submitted manday rates
+    bot_ui_manday_rate = db.Column(db.Float)
+    custom_ai_manday_rate = db.Column(db.Float)
+    # New fields for manday counts
+    bot_ui_mandays = db.Column(db.Float)
+    custom_ai_mandays = db.Column(db.Float)
+    committed_amount = db.Column(db.Float, nullable=True)  # New column for message bundle amount
+    # Add more fields as needed
+    calculation_route = db.Column(db.String(16))  # "volumes" or "bundle"
+
+# os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
+
+# Country to currency symbol mapping
+COUNTRY_CURRENCY = {
+    'India': '₹',
+    'MENA': '$',  # USD for MENA
+    'LATAM': '$',
+    'Africa': '$',
+    'Europe': '$',  # Use USD for Europe
+    'Rest of the World': '$',
+}
+
+SECRET_ANALYTICS_KEYWORD = "letmein123"
+
+# Add this near the top
+CALC_PASSWORD = os.environ.get('CALC_PASSWORD', 'gup$hup.i0')  # Set your password here or via env var
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
