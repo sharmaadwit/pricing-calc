@@ -11,16 +11,27 @@
 
 from pricing_config import price_tiers, meta_costs_table, COUNTRY_MANDAY_RATES, ACTIVITY_MANDAYS, committed_amount_slabs
 
+# New function to map volume to committed amount slab rate
+
+def get_committed_amount_rate_for_volume(country, msg_type, volume):
+    slabs = committed_amount_slabs.get(country, committed_amount_slabs['Rest of the World'])
+    # Try each slab: estimate the committed amount for this volume at the slab's rate
+    for lower, upper, rates in slabs:
+        rate = rates[msg_type]
+        est_amount = volume * rate
+        if lower <= est_amount < upper:
+            return rate
+    # Fallback to lowest slab
+    return slabs[0][2][msg_type]
+
+# Update get_suggested_price to use committed amount slab rates for volume route
+
 def get_suggested_price(country, msg_type, volume, currency=None):
     """
     Return the suggested price for a message type, country, and volume.
-    Looks up the correct tier based on volume.
+    Now uses the committed amount slab rate for the estimated monthly revenue.
     """
-    tiers = price_tiers.get(country, {}).get(msg_type, [])
-    for lower, upper, price in tiers:
-        if lower < volume <= upper:
-            return price
-    return 0.0
+    return get_committed_amount_rate_for_volume(country, msg_type, volume)
 
 def get_next_tier_price(country, msg_type, volume):
     """
