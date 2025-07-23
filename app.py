@@ -5,6 +5,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for, flash
 from calculator import calculate_pricing, get_suggested_price, price_tiers, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES, calculate_total_mandays_breakdown
 import os
+import sys
 # from google_auth_oauthlib.flow import Flow
 # from googleapiclient.discovery import build
 # from google.oauth2.credentials import Credentials
@@ -283,16 +284,14 @@ def index():
     Main route for the pricing calculator. Handles all user steps (volumes, prices, bundle, results).
     Manages session data, input validation, pricing logic, and inclusions logic.
     """
-    print("DEBUG: session at start of request:", dict(session))
-    # Debug: Log form data, session data, and current step
-    print("\n--- DEBUG ---")
-    print("Form data:", dict(request.form))
-    print("Session data:", dict(session))
+    print("DEBUG: session at start of request:", dict(session), file=sys.stderr, flush=True)
     step = request.form.get('step', 'volumes')
-    print("Current step:", step)
-    calculation_id = session.get('calculation_id')
-    print(f"Calculation ID: {calculation_id}")
-    print("--- END DEBUG ---\n")
+    print("\n--- DEBUG ---", file=sys.stderr, flush=True)
+    print("Form data:", dict(request.form), file=sys.stderr, flush=True)
+    print("Session data:", dict(session), file=sys.stderr, flush=True)
+    calculation_id = session.get('calculation_id', str(uuid.uuid4()))
+    print("Current step:", step, file=sys.stderr, flush=True)
+    print("--- END DEBUG ---\n", file=sys.stderr, flush=True)
     results = None
     currency_symbol = None
 
@@ -305,7 +304,7 @@ def index():
         # Generate a new calculation_id for each new calculation
         calculation_id = str(uuid.uuid4())
         session['calculation_id'] = calculation_id
-        print(f"DEBUG: New calculation started. Calculation ID: {calculation_id}")
+        print(f"DEBUG: New calculation started. Calculation ID: {calculation_id}", file=sys.stderr, flush=True)
         user_name = request.form.get('user_name', '')
         # Step 1: User submitted volumes and platform fee options
         country = request.form['country']
@@ -319,7 +318,7 @@ def index():
         basic_marketing_volume = parse_volume(request.form.get('basic_marketing_volume', ''))
         basic_utility_volume = parse_volume(request.form.get('basic_utility_volume', ''))
         # Debug: Log parsed volumes
-        print(f"DEBUG: Parsed volumes - ai: {ai_volume}, advanced: {advanced_volume}, marketing: {basic_marketing_volume}, utility: {basic_utility_volume}")
+        print(f"DEBUG: Parsed volumes - ai: {ai_volume}, advanced: {advanced_volume}, marketing: {basic_marketing_volume}, utility: {basic_utility_volume}", file=sys.stderr, flush=True)
         bfsi_tier = request.form.get('bfsi_tier', 'NA')
         personalize_load = request.form.get('personalize_load', 'NA')
         human_agents = request.form.get('human_agents', 'NA')
@@ -362,7 +361,7 @@ def index():
             'num_ai_workspace_commerce_price': num_ai_workspace_commerce_price,
             'num_ai_workspace_faq_price': num_ai_workspace_faq_price
         }
-        print("DEBUG: session['inputs'] just set to:", session['inputs'])
+        print("DEBUG: session['inputs'] just set to:", session['inputs'], file=sys.stderr, flush=True)
         if all(float(v) == 0.0 for v in [ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume]):
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             return render_template('index.html', step='bundle', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), platform_fee=platform_fee, calculation_id=calculation_id)
@@ -382,10 +381,10 @@ def index():
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
 
     elif step == 'prices' and request.method == 'POST':
-        print('HANDLER: Entered prices POST step')
+        print('HANDLER: Entered prices POST step', file=sys.stderr, flush=True)
         inputs = session.get('inputs', {})
         if not inputs:
-            print('HANDLER: No inputs in session, redirecting to index')
+            print('HANDLER: No inputs in session, redirecting to index', file=sys.stderr, flush=True)
             flash('Session expired or missing. Please start again.', 'error')
             return redirect(url_for('index'))
         def parse_price(val):
@@ -439,7 +438,7 @@ def index():
         if platform_fee < 0.3 * rate_card_platform_fee:
             discount_errors.append("Platform Fee is less than 30% of the rate card platform fee.")
         if discount_errors:
-            print('HANDLER: Discount errors found, rendering prices page with errors')
+            print('HANDLER: Discount errors found, rendering prices page with errors', file=sys.stderr, flush=True)
             for msg in discount_errors:
                 flash(msg, 'error')
             flash("Probability of deal desk rejection is high.", 'error')
@@ -452,7 +451,7 @@ def index():
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             # Re-render the pricing page with user input and error
             return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
-        print('HANDLER: No discount errors, continuing to results calculation')
+        print('HANDLER: No discount errors, continuing to results calculation', file=sys.stderr, flush=True)
 
         # Always recalculate platform fee before saving to session['pricing_inputs']
         platform_fee, fee_currency = calculate_platform_fee(
@@ -549,7 +548,7 @@ def index():
         manday_breakdown = dev_cost_breakdown['mandays_breakdown']
         
         # Debug: Log inputs being used for calculation
-        print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}")
+        print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}", file=sys.stderr, flush=True)
         
         # Calculate pricing results
         try:
@@ -565,9 +564,9 @@ def index():
                 basic_marketing_price=basic_marketing_price,
                 basic_utility_price=basic_utility_price
             )
-            print(f"DEBUG: Calculation successful, results: {results}")
+            print(f"DEBUG: Calculation successful, results: {results}", file=sys.stderr, flush=True)
         except Exception as e:
-            print(f"DEBUG: Calculation failed with error: {e}")
+            print(f"DEBUG: Calculation failed with error: {e}", file=sys.stderr, flush=True)
             flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
             suggested_prices = {
                 'ai_price': suggested_ai,
@@ -590,7 +589,7 @@ def index():
             results['line_items'] = unique_line_items
         # Validate results
         if not results or 'line_items' not in results:
-            print(f"DEBUG: Invalid results: {results}")
+            print(f"DEBUG: Invalid results: {results}", file=sys.stderr, flush=True)
             flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
             suggested_prices = {
                 'ai_price': suggested_ai,
@@ -600,7 +599,7 @@ def index():
             }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
-        print("PASSED results validation, about to render results page")
+        print("PASSED results validation, about to render results page", file=sys.stderr, flush=True)
         try:
             # --- Ensure manday_rates is always set and complete ---
             country = inputs.get('country', 'India')
@@ -631,7 +630,7 @@ def index():
             total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
             manday_breakdown = dev_cost_breakdown['mandays_breakdown']
             # Debug: Log inputs being used for calculation
-            print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}")
+            print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}", file=sys.stderr, flush=True)
             # Calculate pricing results
             try:
                 results = calculate_pricing(
@@ -646,9 +645,9 @@ def index():
                     basic_marketing_price=basic_marketing_price,
                     basic_utility_price=basic_utility_price
                 )
-                print(f"DEBUG: Calculation successful, results: {results}")
+                print(f"DEBUG: Calculation successful, results: {results}", file=sys.stderr, flush=True)
             except Exception as e:
-                print(f"DEBUG: Calculation failed with error: {e}")
+                print(f"DEBUG: Calculation failed with error: {e}", file=sys.stderr, flush=True)
                 flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
                 suggested_prices = {
                     'ai_price': suggested_ai,
@@ -659,7 +658,7 @@ def index():
                 currency_symbol = COUNTRY_CURRENCY.get(country, '$')
                 return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
         except Exception as e:
-            print(f"DEBUG: Error in manday/dev cost or pricing calculation: {e}")
+            print(f"DEBUG: Error in manday/dev cost or pricing calculation: {e}", file=sys.stderr, flush=True)
             flash('Internal error during calculation. Please try again.', 'error')
             return render_template('index.html', step='prices', suggested={}, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
         results['margin'] = results.get('margin', '')
@@ -890,7 +889,7 @@ def index():
         else:
             analytics_kwargs['calculation_route'] = 'volumes'
         # Debug: Log manday rates and breakdown before saving to Analytics
-        print(f"DEBUG: Saving Analytics: bot_ui_manday_rate={analytics_kwargs.get('bot_ui_manday_rate')}, custom_ai_manday_rate={analytics_kwargs.get('custom_ai_manday_rate')}, bot_ui_mandays={analytics_kwargs.get('bot_ui_mandays')}, custom_ai_mandays={analytics_kwargs.get('custom_ai_mandays')}, calculation_route={analytics_kwargs.get('calculation_route')}")
+        print(f"DEBUG: Saving Analytics: bot_ui_manday_rate={analytics_kwargs.get('bot_ui_manday_rate')}, custom_ai_manday_rate={analytics_kwargs.get('custom_ai_manday_rate')}, bot_ui_mandays={analytics_kwargs.get('bot_ui_mandays')}, custom_ai_mandays={analytics_kwargs.get('custom_ai_mandays')}, calculation_route={analytics_kwargs.get('calculation_route')}", file=sys.stderr, flush=True)
         new_analytics = Analytics(**analytics_kwargs)
         db.session.add(new_analytics)
         db.session.commit()
@@ -899,7 +898,7 @@ def index():
         top_users = Counter(user_names).most_common()  # Remove the 5 limit
         # When setting results['suggested_revenue'], use rate_card_platform_fee instead of platform_fee
         results['suggested_revenue'] = (results.get('suggested_revenue', 0) - platform_fee) + rate_card_platform_fee
-        print("RENDERING RESULTS PAGE")
+        print("RENDERING RESULTS PAGE", file=sys.stderr, flush=True)
         contradiction_warning = None
         # Always calculate final_price_details for all routes
         committed_amount = float(inputs.get('committed_amount', 0) or 0)
@@ -1322,12 +1321,12 @@ def analytics():
                     if not isinstance(stats[country], dict):
                         stats[country] = {}
                 # Debug: Print stats structure before rendering
-                print('DEBUG: analytics["stats"] structure:')
+                print('DEBUG: analytics["stats"] structure:', file=sys.stderr, flush=True)
                 for country, stat in stats.items():
-                    print(f'Country: {country}')
-                    print(f'  Keys: {list(stat.keys())}')
-                    print(f'  bot_ui_manday_cost: {stat.get("bot_ui_manday_cost")}, custom_ai_manday_cost: {stat.get("custom_ai_manday_cost")}')
-                print('--- END DEBUG ---')
+                    # Debug: Check if stat is a dict or something else
+                    # print(f'  {country}: {type(stat)} = {stat}')
+                    pass
+                print('--- END DEBUG ---', file=sys.stderr, flush=True)
                 # Per-user stats for table
                 user_stats = {}
                 user_country_currency_list = db.session.query(Analytics.user_name, Analytics.country, Analytics.currency).distinct().all()
@@ -1544,7 +1543,7 @@ def analytics():
         return render_template('analytics.html', authorized=False, analytics={})
     except Exception as e:
         import traceback
-        print("ANALYTICS ERROR:", e)
+        print("ANALYTICS ERROR:", e, file=sys.stderr, flush=True)
         traceback.print_exc()
         return "Internal Server Error (analytics)", 500
 
