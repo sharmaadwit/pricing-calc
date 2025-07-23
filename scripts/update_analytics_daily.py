@@ -18,6 +18,9 @@ from datetime import datetime, timedelta
 import json
 import subprocess
 import math
+import time
+start_time = time.time()
+print(f"[DEBUG] Script started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
 warnings.filterwarnings('ignore')
 
@@ -452,16 +455,21 @@ def main():
     if not export_analytics_to_csv():
         log_message("Failed to export CSV. Exiting.")
         sys.exit(1)
+    print(f"[DEBUG] After DB export: {time.time() - start_time:.2f} seconds elapsed")
     
     # Step 2: Generate analytics charts
     if not generate_analytics_charts():
         log_message("Failed to generate charts. Continuing...")
+    print(f"[DEBUG] After chart generation: {time.time() - start_time:.2f} seconds elapsed")
     
     # Step 3: Update analytics summary
     if not update_analytics_summary():
         log_message("Failed to update summary. Continuing...")
+    print(f"[DEBUG] After writing summary JSON: {time.time() - start_time:.2f} seconds elapsed")
     
     log_message("Daily analytics update completed successfully!")
+    print(f"[DEBUG] Script finished at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"[DEBUG] Total execution time: {time.time() - start_time:.2f} seconds")
 
 if __name__ == "__main__":
     main() 
