@@ -1006,7 +1006,8 @@ def index():
                 manday_rates=manday_rates,
                 calculation_id=calculation_id,
                 dev_cost_breakdown=dev_cost_breakdown,
-                final_price_details=final_price_details
+                final_price_details=final_price_details,
+                pricing_simulation=None
             )
         # Recalculate platform fee for the current country and selections before rendering results
         country = inputs.get('country', 'India')
@@ -1049,7 +1050,8 @@ def index():
             manday_rates=manday_rates,
             calculation_id=calculation_id,
             dev_cost_breakdown=dev_cost_breakdown,
-            final_price_details=final_price_details
+            final_price_details=final_price_details,
+            pricing_simulation=None
         )
     # Defensive: handle GET or POST for edit actions
     elif step == 'volumes':
