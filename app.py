@@ -895,7 +895,27 @@ def index():
         contradiction_warning = None
         if all(float(inputs.get(v, 0)) == 0.0 for v in ['ai_volume', 'advanced_volume', 'basic_marketing_volume', 'basic_utility_volume']):
             committed_amount = float(inputs.get('committed_amount', 0) or 0)
-            monthly_fee = float(platform_fee) + committed_amount
+            rates = get_committed_amount_rates(inputs.get('country', 'India'), committed_amount)
+            meta_costs = meta_costs_table.get(inputs.get('country', 'India'), meta_costs_table['Rest of the World'])
+            ai_volume = float(inputs.get('ai_volume', 0) or 0)
+            advanced_volume = float(inputs.get('advanced_volume', 0) or 0)
+            basic_marketing_volume = float(inputs.get('basic_marketing_volume', 0) or 0)
+            basic_utility_volume = float(inputs.get('basic_utility_volume', 0) or 0)
+            platform_fee_total = float(platform_fee)  # You can adjust this if you want to sum other fees
+            final_price_details = {
+                'platform_fee_total': platform_fee_total,
+                'fixed_platform_fee': platform_fee,
+                'ai_messages': {
+                    'volume': int(ai_volume),
+                    'price_per_msg': round(rates['ai'] + meta_costs['ai'], 4),
+                    'overage_price': round((rates['ai'] + meta_costs['ai']) * 1.2, 4)
+                },
+                'advanced_messages': {
+                    'volume': int(advanced_volume),
+                    'price_per_msg': round(rates['advanced'] + meta_costs['ai'], 4),
+                    'overage_price': round((rates['advanced'] + meta_costs['ai']) * 1.2, 4)
+                }
+            }
             return render_template(
                 'index.html',
                 step='results',
@@ -904,8 +924,8 @@ def index():
                 final_inclusions=final_inclusions,
                 results=results,
                 bundle_details=bundle_details,
-                expected_invoice_amount=monthly_fee,
-                chosen_platform_fee=platform_fee,
+                expected_invoice_amount=expected_invoice_amount,
+                chosen_platform_fee=chosen_platform_fee,
                 rate_card_platform_fee=rate_card_platform_fee,
                 platform_fee=platform_fee,
                 platform_fee_rate_card=rate_card_platform_fee,
@@ -922,7 +942,8 @@ def index():
                 manday_rates=manday_rates,
                 calculation_id=calculation_id,
                 dev_cost_breakdown=dev_cost_breakdown,
-                committed_amount_route=True
+                committed_amount_route=True,
+                final_price_details=final_price_details
             )
         # Recalculate platform fee for the current country and selections before rendering results
         country = inputs.get('country', 'India')
