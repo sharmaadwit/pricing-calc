@@ -498,71 +498,8 @@
               </table>
             </div>
             {% endif %}
-            <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
-              <thead>
-                <tr style="background: #f0f4f8;">
-                  <th style="text-align:left;">Item</th>
-                  <th style="text-align:right;">Chosen Markup</th>
-                  <th style="text-align:right;">Rate Card Markup</th>
-                  <th style="text-align:right;">Discount (%)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for row in margin_table %}
-                <tr>
-                    <td>{{ row.line_item }}</td>
-                    <td class="right">{{ currency_symbol }}{{ (row.chosen_price|float)|smart_format if row.chosen_price is not none and row.chosen_price != '' else '' }}</td>
-                    <td class="right">{{ currency_symbol }}{{ (row.rate_card_price|float)|smart_format if row.rate_card_price is not none and row.rate_card_price != '' else '' }}</td>
-                    <td class="right">{{ row.discount_percent }}</td>
-                </tr>
-            {% endfor %}
-            <!-- One Time Manday Discount Rows -->
-            {% if manday_rates %}
-            <tr>
-                <td>Bot/UI Manday</td>
-                <td class="right">{{ dev_cost_currency }}{{ (manday_rates.bot_ui|default(0))|smart_format }}</td>
-                <td class="right">{{ dev_cost_currency }}{{ (manday_rates.default_bot_ui|default(0))|smart_format }}</td>
-                <td class="right">{{ manday_rates.bot_ui_discount|default(0) }}%</td>
-            </tr>
-            <tr>
-                <td>Custom/AI Manday</td>
-                <td class="right">{{ dev_cost_currency }}{{ (manday_rates.custom_ai|default(0))|smart_format }}</td>
-                <td class="right">{{ dev_cost_currency }}{{ (manday_rates.default_custom_ai|default(0))|smart_format }}</td>
-                <td class="right">{{ manday_rates.custom_ai_discount|default(0) }}%</td>
-            </tr>
-            {% endif %}
-              </tbody>
-        </table>
-            <div style="font-size:1.08em; margin-top:12px;">
-              <b>Total Chosen Revenue:</b> {{ currency_symbol }}{{ (results.revenue|float)|smart_format }}<br>
-              <b>Total Rate Card Revenue:</b> {{ currency_symbol }}{{ (results.suggested_revenue|float)|smart_format }}
-            </div>
-            <!-- One Time Dev Costs Section -->
-            <div style="font-size:1.08em; margin-top:18px;">
-              <b>Total One Time Dev Cost:</b> {{ dev_cost_currency }}{{ (total_dev_cost)|smart_format }}<br>
-              <b>Total Mandays:</b> {{ '{:,.0f}'.format(total_mandays) }}<br>
-              <b>Manday Breakdown:</b> Bot/UI: {{ '{:,.0f}'.format(manday_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.0f}'.format(manday_breakdown.custom_ai) }}<br>
-              <b>Bot/UI Manday Rate:</b> {{ dev_cost_currency }}{{ (manday_rates.bot_ui|default(0))|smart_format }} (Default: {{ dev_cost_currency }}{{ (manday_rates.default_bot_ui|default(0))|smart_format }}, Discount: {{ manday_rates.bot_ui_discount|default(0) }}%)<br>
-              <b>Custom/AI Manday Rate:</b> {{ dev_cost_currency }}{{ (manday_rates.custom_ai|default(0))|smart_format }} (Default: {{ dev_cost_currency }}{{ (manday_rates.default_custom_ai|default(0))|smart_format }}, Discount: {{ manday_rates.custom_ai_discount|default(0) }}%)<br>
-              <hr>
-              <b>Build Cost (Bot/UI + Custom/AI):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.build_cost) }}<br>
-              <b>BA Effort (15%):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.ba_cost) }}<br>
-              <b>QA Effort (10%):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.qa_cost) }}<br>
-              <b>Project Manager (5%):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.pm_cost) }}<br>
-              <b>Uplift (Total):</b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.uplift_amount) }}<br>
-              <b><u>Total One Time Dev Cost (with BA, QA, PM):</u></b> {{ dev_cost_currency }}{{ '{:,.2f}'.format(dev_cost_breakdown.total_cost) }}
-            </div>
-            <div style="font-size:1.08em; margin-top:12px;">
-              <b>Note:</b> This section is for internal use only and should not be shared with the customer.
-            </div>
-            {% if results.margin and (inputs.get('ai_volume', 0)|float > 0 or inputs.get('advanced_volume', 0)|float > 0 or inputs.get('basic_marketing_volume', 0)|float > 0 or inputs.get('basic_utility_volume', 0)|float > 0) %}
-            <div style="font-size:1.15em; margin-top:18px; color:#1a2a3a;">
-              <b>Total Margin (as per formula above):</b> {{ results.margin if '%' in results.margin else results.margin ~ '%' }}
-            </div>
-            {% endif %}
           </div>
         </div>
-        #}
         <form method="get" action="/" style="margin-top: 32px; text-align: center;">
             <input type="submit" value="Start Over">
         </form>

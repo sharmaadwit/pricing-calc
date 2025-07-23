@@ -768,6 +768,9 @@ def index():
             final_inclusions += inclusions['Increased TPS 1000']
         elif increased_tps == '250':
             final_inclusions += inclusions['Increased TPS 250']
+        else:
+            if '80 TPS' not in final_inclusions:
+                final_inclusions.append('80 TPS')
         # AI Module
         if inputs.get('ai_module', 'No') == 'Yes':
             final_inclusions += inclusions['AI Module Yes']
@@ -1644,8 +1647,6 @@ def calculate_pricing_simulation(inputs):
     basic_utility_volume = float(inputs.get('basic_utility_volume', 0) or 0)
     platform_fee = float(inputs.get('platform_fee', 0) or 0)
     committed_amount = float(inputs.get('committed_amount', 0) or 0)
-    # --- Volume Route ---
-    # Use per-message prices from price_tiers (lowest tier for each type)
     from pricing_config import price_tiers, meta_costs_table, committed_amount_slabs
     meta_costs = meta_costs_table.get(country, meta_costs_table['Rest of the World'])
     def get_lowest_tier(country, msg_type):
@@ -1658,11 +1659,7 @@ def calculate_pricing_simulation(inputs):
     ai_cost_vol = ai_volume * ai_final_vol
     adv_cost_vol = advanced_volume * adv_final_vol
     total_vol = ai_cost_vol + adv_cost_vol + platform_fee
-    # --- Committed Amount Route ---
-    # Find slab for committed amount or for the volume (simulate committed amount route)
-    # Use the same logic as get_committed_amount_rate_for_volume
     slabs = committed_amount_slabs.get(country, committed_amount_slabs['Rest of the World'])
-    # For simulation, use the slab that matches the user's volume for each type
     def get_slab_rate(msg_type, volume):
         for lower, upper, rates in slabs:
             rate = rates[msg_type]
@@ -1674,10 +1671,11 @@ def calculate_pricing_simulation(inputs):
     adv_rate_bundle, adv_slab_low, adv_slab_high = get_slab_rate('advanced', advanced_volume)
     ai_final_bundle = ai_rate_bundle + meta_costs['ai']
     adv_final_bundle = adv_rate_bundle + meta_costs['ai']
-    # Calculate included messages for a committed amount (if user enters one)
+    # If committed_amount is 0, suggest a value that covers the entered volumes
+    if committed_amount == 0:
+        committed_amount = (ai_volume * ai_final_bundle) + (advanced_volume * adv_final_bundle)
     included_ai = committed_amount / ai_final_bundle if ai_final_bundle else 0
     included_adv = committed_amount / adv_final_bundle if adv_final_bundle else 0
-    # Calculate overage
     ai_overage = max(0, ai_volume - included_ai)
     adv_overage = max(0, advanced_volume - included_adv)
     ai_overage_rate = ai_final_bundle * 1.2
