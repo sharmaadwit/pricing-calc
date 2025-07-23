@@ -469,10 +469,33 @@
           </div>
 
         </div>
-        {# HIDE INTERNAL SECTION FOR NOW
         <div style="max-width: 1100px; margin: 0 auto;">
           <div style="background: #f8f8fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 18px 24px; margin-top: 32px;">
             <h2 style="margin-top:0; color:#444;">Section 2: Internal - Not to be shared</h2>
+            <div style="margin-bottom: 24px;">
+              <h4>Pricing Simulation: Volume Route vs. Committed Amount Route</h4>
+              <table border="1" cellpadding="6" style="border-collapse:collapse; margin-bottom:10px; width:100%; font-size:1.08em;">
+                <thead>
+                  <tr style="background: #f0f4f8;">
+                    <th>Item</th>
+                    <th>Volume Route</th>
+                    <th>Committed Amount Route</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>AI Messages</td><td>{{ pricing_simulation.volume_route.ai_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.ai_price|round(2) }} = {{ currency_symbol }}{{ pricing_simulation.volume_route.ai_cost|int }}</td><td>{{ pricing_simulation.bundle_route.ai_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_price|round(2) }}</td></tr>
+                  <tr><td>Advanced Messages</td><td>{{ pricing_simulation.volume_route.adv_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.adv_price|round(2) }} = {{ currency_symbol }}{{ pricing_simulation.volume_route.adv_cost|int }}</td><td>{{ pricing_simulation.bundle_route.adv_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_price|round(2) }}</td></tr>
+                  <tr><td>Platform Fee</td><td>{{ currency_symbol }}{{ pricing_simulation.volume_route.platform_fee|int }}</td><td>{{ currency_symbol }}{{ pricing_simulation.bundle_route.platform_fee|int }}</td></tr>
+                  <tr><td><b>Total</b></td><td><b>{{ currency_symbol }}{{ pricing_simulation.volume_route.total|int }}</b></td><td><b>{{ currency_symbol }}{{ pricing_simulation.bundle_route.total|int }}</b></td></tr>
+                  <tr><td colspan="3"><b>Committed Route Details:</b></td></tr>
+                  <tr><td>Committed Amount</td><td colspan="2">{{ currency_symbol }}{{ pricing_simulation.bundle_route.committed_amount|int }}</td></tr>
+                  <tr><td>Included AI Messages</td><td colspan="2">{{ pricing_simulation.bundle_route.included_ai|int }}</td></tr>
+                  <tr><td>Included Advanced Messages</td><td colspan="2">{{ pricing_simulation.bundle_route.included_adv|int }}</td></tr>
+                  <tr><td>AI Overage</td><td colspan="2">{{ pricing_simulation.bundle_route.ai_overage|int }} × {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_overage_rate|round(2) }} = {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_overage_cost|int }}</td></tr>
+                  <tr><td>Advanced Overage</td><td colspan="2">{{ pricing_simulation.bundle_route.adv_overage|int }} × {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_overage_rate|round(2) }} = {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_overage_cost|int }}</td></tr>
+                </tbody>
+              </table>
+            </div>
             <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
               <thead>
                 <tr style="background: #f0f4f8;">

@@ -1630,6 +1630,77 @@ def analytics_v2():
     """
     return render_template('analyticsv2.html')
 
+def calculate_pricing_simulation(inputs):
+    """
+    Returns a dict with detailed calculations for both volume and committed amount routes for the given user inputs.
+    """
+    country = inputs.get('country', 'India')
+    ai_volume = float(inputs.get('ai_volume', 0) or 0)
+    advanced_volume = float(inputs.get('advanced_volume', 0) or 0)
+    basic_marketing_volume = float(inputs.get('basic_marketing_volume', 0) or 0)
+    basic_utility_volume = float(inputs.get('basic_utility_volume', 0) or 0)
+    platform_fee = float(inputs.get('platform_fee', 0) or 0)
+    committed_amount = float(inputs.get('committed_amount', 0) or 0)
+    # --- Volume Route ---
+    # Use per-message prices from price_tiers (lowest tier for each type)
+    from pricing_config import price_tiers, meta_costs_table, committed_amount_slabs
+    meta_costs = meta_costs_table.get(country, meta_costs_table['Rest of the World'])
+    def get_lowest_tier(country, msg_type):
+        tiers = price_tiers.get(country, {}).get(msg_type, [])
+        return tiers[0][2] if tiers else 0.0
+    ai_price_vol = get_lowest_tier(country, 'ai')
+    adv_price_vol = get_lowest_tier(country, 'advanced')
+    ai_final_vol = ai_price_vol + meta_costs['ai']
+    adv_final_vol = adv_price_vol + meta_costs['ai']
+    ai_cost_vol = ai_volume * ai_final_vol
+    adv_cost_vol = advanced_volume * adv_final_vol
+    total_vol = ai_cost_vol + adv_cost_vol + platform_fee
+    # --- Committed Amount Route ---
+    # Find slab for committed amount or for the volume (simulate committed amount route)
+    # Use the same logic as get_committed_amount_rate_for_volume
+    slabs = committed_amount_slabs.get(country, committed_amount_slabs['Rest of the World'])
+    # For simulation, use the slab that matches the user's volume for each type
+    def get_slab_rate(msg_type, volume):
+        for lower, upper, rates in slabs:
+            rate = rates[msg_type]
+            est_amount = volume * rate
+            if lower <= est_amount < upper:
+                return rate, lower, upper
+        return slabs[0][2][msg_type], slabs[0][0], slabs[0][1]
+    ai_rate_bundle, ai_slab_low, ai_slab_high = get_slab_rate('ai', ai_volume)
+    adv_rate_bundle, adv_slab_low, adv_slab_high = get_slab_rate('advanced', advanced_volume)
+    ai_final_bundle = ai_rate_bundle + meta_costs['ai']
+    adv_final_bundle = adv_rate_bundle + meta_costs['ai']
+    # Calculate included messages for a committed amount (if user enters one)
+    included_ai = committed_amount / ai_final_bundle if ai_final_bundle else 0
+    included_adv = committed_amount / adv_final_bundle if adv_final_bundle else 0
+    # Calculate overage
+    ai_overage = max(0, ai_volume - included_ai)
+    adv_overage = max(0, advanced_volume - included_adv)
+    ai_overage_rate = ai_final_bundle * 1.2
+    adv_overage_rate = adv_final_bundle * 1.2
+    ai_overage_cost = ai_overage * ai_overage_rate
+    adv_overage_cost = adv_overage * adv_overage_rate
+    total_bundle = committed_amount + ai_overage_cost + adv_overage_cost + platform_fee
+    return {
+        'volume_route': {
+            'ai_price': ai_final_vol, 'adv_price': adv_final_vol,
+            'ai_cost': ai_cost_vol, 'adv_cost': adv_cost_vol,
+            'platform_fee': platform_fee, 'total': total_vol,
+            'ai_volume': ai_volume, 'adv_volume': advanced_volume
+        },
+        'bundle_route': {
+            'ai_price': ai_final_bundle, 'adv_price': adv_final_bundle,
+            'ai_slab': (ai_slab_low, ai_slab_high), 'adv_slab': (adv_slab_low, adv_slab_high),
+            'included_ai': included_ai, 'included_adv': included_adv,
+            'ai_overage': ai_overage, 'adv_overage': adv_overage,
+            'ai_overage_rate': ai_overage_rate, 'adv_overage_rate': adv_overage_rate,
+            'ai_overage_cost': ai_overage_cost, 'adv_overage_cost': adv_overage_cost,
+            'committed_amount': committed_amount, 'platform_fee': platform_fee, 'total': total_bundle,
+            'ai_volume': ai_volume, 'adv_volume': advanced_volume
+        }
+    }
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     logger.info(f"Starting Flask app on port {port}")
