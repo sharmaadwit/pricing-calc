@@ -23,6 +23,23 @@ from pricing_config import committed_amount_slabs
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
 
+# Test log to verify logging is working
+print("=== FLASK APP STARTING UP ===", file=sys.stderr, flush=True)
+print(f"Python version: {sys.version}", file=sys.stderr, flush=True)
+print("=== END STARTUP LOG ===", file=sys.stderr, flush=True)
+
+# Set up proper logging for Railway/gunicorn
+import logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stderr)
+    ]
+)
+logger = logging.getLogger(__name__)
+logger.info("Flask app logger initialized")
+
 # Custom Jinja2 filter for number formatting
 @app.template_filter('smart_format')
 def smart_format_filter(value):
@@ -96,6 +113,12 @@ SECRET_ANALYTICS_KEYWORD = "letmein123"
 
 # Add this near the top
 CALC_PASSWORD = os.environ.get('CALC_PASSWORD', 'gup$hup.i0')  # Set your password here or via env var
+
+@app.route('/health')
+def health_check():
+    logger.info("Health check endpoint accessed")
+    print("HEALTH CHECK ACCESSED", file=sys.stderr, flush=True)
+    return "OK", 200
 
 def initialize_inclusions():
     """
@@ -1602,6 +1625,7 @@ def analytics_v2():
     return render_template('analyticsv2.html')
 
 if __name__ == '__main__':
-    import os
-    port = int(os.environ.get("PORT", 8081))
-    app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get('PORT', 5000))
+    logger.info(f"Starting Flask app on port {port}")
+    print(f"STARTING FLASK APP ON PORT {port}", file=sys.stderr, flush=True)
+    app.run(host='0.0.0.0', port=port, debug=True)
