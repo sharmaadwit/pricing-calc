@@ -1,0 +1,492 @@
+```html
+<!--
+  index.html - Main template for the Pricing Calculator app
+  Sections: How to Use, Volumes Form, Prices Form, Bundle Form, Results, Inclusions, Internal Margin Table
+  Comments added for clarity for future developers.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pricing Calculator</title>
+    <style>
+        body { font-family: 'Segoe UI', 'Arial', 'sans-serif'; }
+        h2, h3, h4 { font-weight: bold; margin-top: 1.5em; }
+        h2 { font-size: 2em; }
+        h3 { font-size: 1.5em; }
+        h4 { font-size: 1.2em; }
+        .section { margin-bottom: 2em; }
+        hr { border: none; border-top: 1px solid #ccc; margin: 2em 0; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 1.5em; }
+        table tr:nth-child(even) { background-color: #f9f9f9; }
+        table tr:nth-child(odd) { background-color: #fff; }
+        table th, table td { padding: 8px 12px; }
+        th { background: #f0f0f0; }
+        td, th { text-align: right; }
+        th:first-child, td:first-child { text-align: left; }
+        label { display: block; margin-top: 0.4em; margin-bottom: 0.1em; font-weight: 500; }
+        input, select { margin-top: 0.1em; margin-bottom: 0.3em; }
+        .key-number { font-weight: bold; font-size: 1.1em; }
+        .flashes {
+          list-style: none;
+          padding: 0;
+          margin: 1em 0;
+        }
+        .flashes li {
+          background: #ffe0e0;
+          color: #b30000;
+          border: 1px solid #b30000;
+          padding: 10px 16px;
+          margin-bottom: 8px;
+          font-weight: bold;
+          border-radius: 4px;
+        }
+        .flashes li.error {
+          background: #ffe0e0;
+          color: #b30000;
+          border: 1px solid #b30000;
+        }
+        .flashes li.success {
+          background: #e0ffe0;
+          color: #006600;
+          border: 1px solid #006600;
+        }
+#region-dropdown-container {
+    margin-top: 10px;
+}
+
+#region-select {
+    width: 200px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+    </style>
+    <script>
+    // Global function for adding commas to numbers
+    function addCommas(nStr) {
+        nStr = nStr.replace(/,/g, '');
+        if (nStr === '') return '';
+        var parts = nStr.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join('.');
+    }
+    </script>
+</head>
+<body>
+    <!-- Flash messages for errors and notifications -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <h1>Pricing Calculator</h1>
+    {% if calculation_id %}
+      <div style="margin-bottom: 1em; font-size: 1.1em; color: #1976d2;">
+        <b>Calculation ID:</b> {{ calculation_id }}
+      </div>
+    {% endif %}
+
+    <!-- How to Use and User Flow Diagram -->
+    {% if step == 'volumes' %}
+    <div style="background: #f8fafd; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+      <h3 style="margin-top:0;">How to Use</h3>
+      <ul style="margin:0 0 0 18px; padding:0; font-size:1.08em;">
+        <li>Enter your expected monthly message volumes and select platform options.</li>
+        <li>You can enter 0 volumes in this step to go through message bundle flow.</li>
+        <li>Click 'Continue' to see the detailed pricing and inclusions.</li>
+        <li>Review the results. The internal section is for your reference only.</li>
+      </ul>
+      <div style="text-align: center; margin-top: 18px;">
+        <!--
+        <a href="{{ url_for('readme') }}" target="_blank" style="display: inline-block; padding: 10px 24px; background: #1976d2; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 1.08em; box-shadow: 0 2px 6px rgba(25,118,210,0.08);">Learn More</a>
+        -->
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Volumes Form Section -->
+    {% if step == 'volumes' %}
+    <form method="post" id="volumes-form">
+        <input type="hidden" name="step" value="volumes">
+        <label for="user_name">Enter your name:</label>
+        <input type="text" name="user_name" id="user_name" value="{{ inputs.get('user_name', '') }}" required><br><br>
+        <label>Country:</label>
+        <select name="country" id="country-select" onchange="updateMinPlatformFee(); toggleDevLocation(); updateRegionDropdown();">
+                <option value="India" {% if inputs and inputs.country == 'India' %}selected{% endif %}>India</option>
+                <option value="MENA" {% if inputs and inputs.country == 'MENA' %}selected{% endif %}>MENA</option>
+                <option value="LATAM" {% if inputs and inputs.country == 'LATAM' %}selected{% endif %}>LATAM</option>
+                <option value="Africa" {% if inputs and inputs.country == 'Africa' %}selected{% endif %}>Africa</option>
+                <option value="Europe" {% if inputs and inputs.country == 'Europe' %}selected{% endif %}>Europe</option>
+                <option value="Rest of the World" {% if inputs and inputs.country == 'Rest of the World' %}selected{% endif %}>Rest of the World</option>
+        </select></select><br>
+<!-- Add exactly 8 spaces of indentation at the start of each line -->
+        <div id="region-dropdown-container" style="display: none;">
+            <label for="region">Region:</label>
+            <select name="region" id="region-select">
+                <!-- Options will be populated dynamically -->
+        <option value="">-- Select Region --</option>
+            </select>
+    <input type="hidden" name="selected_region" id="selected-region" value="{{ inputs.get('region', '') }}">
+</div><br><br><br>
+        <div id="dev-location-group" style="display: none; margin-bottom: 16px;">
+            <label for="dev_location">Developer Location:</label>
+            <select name="dev_location" id="dev_location">
+                <option value="India" {% if inputs and inputs.dev_location == 'India' %}selected{% endif %}>India</option>
+                <option value="LATAM" {% if inputs and inputs.dev_location == 'LATAM' %}selected{% endif %}>LATAM</option>
+            </select>
+        </div>
+        <script>
+    // Add exactly 4 spaces of indentation for each level
+    const regionMapping = {
+    'India': ['North', 'South', 'East', 'West', 'Central'],
+    'MENA': ['UAE', 'KSA', 'Kuwait', 'Bahrain', 'Qatar', 'Oman'],
+    'LATAM': ['Brazil', 'Mexico', 'Colombia', 'Argentina', 'Chile'],
+    'Africa': ['South Africa', 'Nigeria', 'Kenya', 'Egypt', 'Morocco'],
+    'Europe': ['Western Europe', 'Eastern Europe', 'Northern Europe', 'Southern Europe'],
+    'Rest of the World': ['Asia Pacific', 'Other']
+    };
+    function updateRegionDropdown() {
+        const countrySelect = document.getElementById('country-select');
+        const regionContainer = document.getElementById('region-dropdown-container');
+        const regionSelect = document.getElementById('region-select');
+        
+        // Clear existing options
+        regionSelect.innerHTML = '';
+        
+        // Get selected country
+        const selectedCountry = countrySelect.value;
+        
+        if (regionMapping[selectedCountry]) {
+            // Show region dropdown and add options
+            regionContainer.style.display = 'block';
+            
+            // Add a default "Select Region" option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '-- Select Region --';
+            regionSelect.appendChild(defaultOption);
+            
+            // Add region options
+            regionMapping[selectedCountry].forEach(region => {
+                const option = document.createElement('option');
+                option.value = region;
+                option.textContent = region;
+                regionSelect.appendChild(option);
+            });
+        } else {
+            // Hide region dropdown if country has no regions
+            regionContainer.style.display = 'none';
+        }
+    }
+        function toggleDevLocation() {
+            var country = document.getElementById('country-select').value;
+            var devLocGroup = document.getElementById('dev-location-group');
+            if (country === 'LATAM') {
+                devLocGroup.style.display = '';
+            } else {
+                devLocGroup.style.display = 'none';
+            }
+        }
+        window.onload = function() {
+            updateMinPlatformFee();
+            updateRegionDropdown();
+        };
+        </script>
+        <!-- Section 1: One Time Dev Charges -->
+        <div style="background: #ede7f6; border: 2px solid #bbaadd; border-radius: 10px; padding: 24px 32px; margin-bottom: 28px;">
+            <h2 style="margin-top:0; color: #5e35b1;">One Time Dev Charges</h2>
+            <label for="onboarding_price">Onboarding:</label>
+            <select name="onboarding_price" id="onboarding_price">
+                <option value="Yes" {% if inputs and inputs.onboarding_price == 'Yes' %}selected{% endif %}>Yes</option>
+                <option value="No" {% if inputs and inputs.onboarding_price == 'No' %}selected{% endif %}>No</option>
+            </select><br>
+            <label for="ux_price">UX:</label>
+            <select name="ux_price" id="ux_price">
+                <option value="Yes" {% if inputs and inputs.ux_price == 'Yes' %}selected{% endif %}>Yes</option>
+                <option value="No" {% if inputs and inputs.ux_price == 'No' %}selected{% endif %}>No</option>
+            </select><br>
+            <label for="testing_qa_price">Testing/QA:</label>
+            <select name="testing_qa_price" id="testing_qa_price">
+                <option value="Yes" {% if inputs and inputs.testing_qa_price == 'Yes' %}selected{% endif %}>Yes</option>
+                <option value="No" {% if inputs and inputs.testing_qa_price == 'No' %}selected{% endif %}>No</option>
+            </select><br>
+            <label for="aa_setup_price">AA Setup:</label>
+            <select name="aa_setup_price" id="aa_setup_price">
+                <option value="Yes" {% if inputs and inputs.aa_setup_price == 'Yes' %}selected{% endif %}>Yes</option>
+                <option value="No" {% if inputs and inputs.aa_setup_price == 'No' %}selected{% endif %}>No</option>
+            </select><br>
+            <label for="num_apis_price">No of APIs:</label>
+            <input type="number" name="num_apis_price" id="num_apis_price" min="0" value="{{ inputs.get('num_apis_price', '') }}"><br>
+            <label for="num_journeys_price">No of Journeys:</label>
+            <input type="number" name="num_journeys_price" id="num_journeys_price" min="0" value="{{ inputs.get('num_journeys_price', '') }}"><br>
+            <label for="num_ai_workspace_commerce_price">No of AI Workspace - Commerce:</label>
+            <input type="number" name="num_ai_workspace_commerce_price" id="num_ai_workspace_commerce_price" min="0" value="{{ inputs.get('num_ai_workspace_commerce_price', '') }}"><br>
+            <label for="num_ai_workspace_faq_price">No of AI Workspace - FAQ:</label>
+            <input type="number" name="num_ai_workspace_faq_price" id="num_ai_workspace_faq_price" min="0" value="{{ inputs.get('num_ai_workspace_faq_price', '') }}"><br>
+        </div>
+        <!-- Section 2: Volume Estimation -->
+        <div style="background: #fffde7; border: 2px solid #ffe082; border-radius: 10px; padding: 24px 32px; margin-bottom: 28px;">
+            <h2 style="margin-top:0; color: #ff8f00;">Volume Estimation</h2>
+            <label>AI Message Volume (per month):</label>
+            <input type="text" name="ai_volume" class="comma-number" value="{{ inputs.get('ai_volume', '') }}"><br><br>
+            <label>Advanced Message Volume (per month):</label>
+            <input type="text" name="advanced_volume" class="comma-number" value="{{ inputs.get('advanced_volume', '') }}"><br><br>
+            <label>Basic Marketing Message Volume (per month):</label>
+            <input type="text" name="basic_marketing_volume" class="comma-number" value="{{ inputs.get('basic_marketing_volume', '') }}"><br><br>
+            <label>Basic Utility/Authentication Message Volume (per month):</label>
+            <input type="text" name="basic_utility_volume" class="comma-number" value="{{ inputs.get('basic_utility_volume', '') }}">
+        </div>
+        <!-- Section 3: Monthly Fixed Platform Fee Calculation -->
+        <div style="background: #e3f2fd; border: 2px solid #90caf9; border-radius: 10px; padding: 24px 32px; margin-bottom: 28px;">
+            <h2 style="margin-top:0; color: #1976d2;">Monthly Fixed Platform Fee Calculation</h2>
+            <label>Minimum Platform Fee:</label>
+            <input type="text" id="min_platform_fee" name="min_platform_fee" value="INR 120000" readonly><br>
+            <small>Journey Builder Lite, Campaign Manager, CTWA (Meta, Tiktok), Agent Assist <20, Personalize Lite (upto 1ml and no advanced events), 80 TPS, 1 manday/month maintenance</small><br><br>
+            <label>Personalize Load:</label>
+            <select name="personalize_load">
+                <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>- Not Applicable</option>
+                <option value="Standard" {% if inputs and inputs.personalize_load == 'Standard' %}selected{% endif %}>Standard - upto 5 million records, no external events</option>
+                <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced - 10 million records, external events supported</option>
+            </select><br>
+            <small>If the client requires large number of profiles and support for external events, select the appropriate tier.</small><br><br>
+            <label>BFSI Tier:</label>
+            <select name="bfsi_tier">
+                <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>- Not Applicable</option>
+                <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1</option>
+                <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2</option>
+                <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3</option>
+            </select><br>
+            <small>Each tier comes with specific controls of privacy and security requirements. The exact inclusions of each tier will be displayed on the final pricing page.</small><br><br>
+            <label>AI Module (Yes/No):</label>
+            <select name="ai_module">
+                <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>- Not Applicable</option>
+                <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
+                <option value="No" {% if inputs and inputs.ai_module == 'No' %}selected{% endif %}>No</option>
+            </select><br>
+            <small>Access to Workspace Configuration and data retraining screens</small><br><br>
+            <label>Smart CPaaS:</label>
+            <select name="smart_cpaas">
+                <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
+                <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes</option>
+            </select><br>
+            <small>Auto failover between channels</small><br><br>
+            <label>Increased TPS:</label>
+            <select name="increased_tps">
+                <option value="NA" {% if inputs and inputs.increased_tps == 'NA' %}selected{% endif %}>NA</option>
+                <option value="250" {% if inputs and inputs.increased_tps == '250' %}selected{% endif %}>250 (upto 250 Messages per Second)</option>
+                <option value="1000" {% if inputs and inputs.increased_tps == '1000' %}selected{% endif %}>1000 (upto 1000 Messages per Second)</option>
+            </select><br>
+            <small>Required to support high volume campaigns</small><br><br>
+            <label>Number of Human Agents (Agent Assist):</label>
+            <select name="human_agents">
+                <option value="NA" {% if inputs and inputs.human_agents == 'NA' %}selected{% endif %}><20 already part of standard platform fee</option>
+                <option value="20+" {% if inputs and inputs.human_agents == '20+' %}selected{% endif %}>20+</option>
+                <option value="50+" {% if inputs and inputs.human_agents == '50+' %}selected{% endif %}>50+</option>
+                <option value="100+" {% if inputs and inputs.human_agents == '100+' %}selected{% endif %}>100+</option>
+            </select><br><br>
+            <input type="submit" value="Next: Rate Card">
+        </div>
+    </form>
+    <script>
+    function updateMinPlatformFee() {
+        var country = document.getElementById('country-select').value;
+        var minFee = '';
+        if (country === 'India') minFee = 'INR 120000';
+        else if (country === 'Africa') minFee = 'USD 1000';
+        else if (country === 'Europe') minFee = 'USD 2508';
+        else if (country === 'MENA' || country === 'LATAM' || country === 'Rest of the World') minFee = 'USD 2000';
+        document.getElementById('min_platform_fee').value = minFee;
+    }
+    window.onload = updateMinPlatformFee;
+    
+    // Format input with commas as user types
+    document.querySelectorAll('.comma-number').forEach(function(input) {
+        input.addEventListener('input', function(e) {
+            var cursor = input.selectionStart;
+            var oldLength = input.value.length;
+            input.value = addCommas(input.value);
+            var newLength = input.value.length;
+            input.selectionEnd = cursor + (newLength - oldLength);
+        });
+    });
+    // Remove commas before submit
+    document.getElementById('volumes-form').addEventListener('submit', function(e) {
+        document.querySelectorAll('.comma-number').forEach(function(input) {
+            input.value = input.value.replace(/,/g, '');
+        });
+    });
+    </script>
+    {% endif %}
+
+    <!-- Prices Form Section -->
+    {% if step == 'prices' %}
+    <form method="post" id="prices-form">
+        <input type="hidden" name="step" value="prices">
+        <!-- One Time Dev Prices Review (read-only, not editable) -->
+        <div style="background: #f5f5fa; border: 1px solid #bbaadd; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+            <h3>One Time Dev Prices (Review)</h3>
+            <ul style="list-style:none; padding:0; margin:0; font-size:1.08em;">
+                <li>Onboarding: <b>{{ inputs.get('onboarding_price', 'No') }}</b></li>
+                <li>UX: <b>{{ inputs.get('ux_price', 'No') }}</b></li>
+                <li>Testing/QA: <b>{{ inputs.get('testing_qa_price', 'No') }}</b></li>
+                <li>AA Setup: <b>{{ inputs.get('aa_setup_price', 'No') }}</b></li>
+                <li>No of APIs: <b>{{ inputs.get('num_apis_price', '0') }}</b></li>
+                <li>No of Journeys: <b>{{ inputs.get('num_journeys_price', '0') }}</b></li>
+                <li>No of AI Workspace - Commerce: <b>{{ inputs.get('num_ai_workspace_commerce_price', '0') }}</b></li>
+                <li>No of AI Workspace - FAQ: <b>{{ inputs.get('num_ai_workspace_faq_price', '0') }}</b></li>
+            </ul>
+        </div>
+        <h2>Rate Card Pricing</h2>
+        <p>Review and adjust the suggested prices if needed. These prices will be used to calculate your final pricing.</p>
+        <!-- Platform Fee Card -->
+        <div style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+            <h3 style="margin-top:0;">Platform Fee</h3>
+            <label>Platform Fee (editable):</label>
+            {{ currency_symbol }}<input type="text" name="platform_fee" class="comma-number" value="{{ platform_fee }}" required><br>
+            <small>This is the calculated platform fee based on your selections. You can edit it if needed.</small>
+        </div>
+        <!-- Message Rates Card -->
+        <div style="background: #fce4ec; border: 1px solid #f8bbd0; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+            <h3 style="margin-top:0;">Message Markup Rates</h3>
+            <label>AI Message Markup Rate Card:</label>
+            {{ currency_symbol }}<input type="text" name="ai_price" class="comma-number" value="{{ suggested.ai_price }}" required><br><br>
+            <label>Advanced Message Markup Rate Card:</label>
+            {{ currency_symbol }}<input type="text" name="advanced_price" class="comma-number" value="{{ suggested.advanced_price }}" required><br><br>
+            <label>Basic Marketing Message Markup Rate Card:</label>
+            {{ currency_symbol }}<input type="text" name="basic_marketing_price" class="comma-number" value="{{ suggested.basic_marketing_price }}" required><br><br>
+            <label>Basic Utility/Authentication Message Markup Rate Card:</label>
+            {{ currency_symbol }}<input type="text" name="basic_utility_price" class="comma-number" value="{{ suggested.basic_utility_price }}" required>
+        </div>
+        <!-- Manday Rates Card -->
+        <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+            <h3 style="margin-top:0;">Manday Rates</h3>
+            <label>Bot/UI Manday Rate:</label>
+            <input type="text" name="bot_ui_manday_rate" id="bot_ui_manday_rate" min="0" class="comma-number" value="{{ '{:,}'.format(suggested.get('bot_ui_manday_rate')|float) if suggested and suggested.get('bot_ui_manday_rate') not in (None, '') else '' }}" required><br><br>
+            <label>Custom/AI Manday Rate:</label>
+            <input type="text" name="custom_ai_manday_rate" id="custom_ai_manday_rate" min="0" class="comma-number" value="{{ '{:,}'.format(suggested.get('custom_ai_manday_rate')|float) if suggested and suggested.get('custom_ai_manday_rate') not in (None, '') else '' }}" required>
+        </div>
+        <input type="submit" value="Calculate Results">
+    </form>
+    <form method="get">
+        <input type="submit" value="Back to Volumes">
+    </form>
+    <script>
+    // Format input with commas as user types
+    document.querySelectorAll('.comma-number').forEach(function(input) {
+        input.addEventListener('input', function(e) {
+            var cursor = input.selectionStart;
+            var oldLength = input.value.length;
+            input.value = addCommas(input.value);
+            var newLength = input.value.length;
+            input.selectionEnd = cursor + (newLength - oldLength);
+        });
+    });
+    // Remove commas before submit
+    document.getElementById('prices-form').addEventListener('submit', function(e) {
+        document.querySelectorAll('.comma-number').forEach(function(input) {
+            input.value = input.value.replace(/,/g, '');
+        });
+    });
+    </script>
+    {% endif %}
+
+    <!-- Bundle Form Section (for committed amount path) -->
+    {% if step == 'bundle' %}
+    {% set all_volumes_zero = (inputs.get('ai_volume', 0)|float == 0 and inputs.get('advanced_volume', 0)|float == 0 and inputs.get('basic_marketing_volume', 0)|float == 0 and inputs.get('basic_utility_volume', 0)|float == 0) %}
+    {% if all_volumes_zero %}
+    <form method="post">
+        <h2>Enter Messaging Bundle Commitment</h2>
+        <label>Messaging Bundle Commitment ({{ currency_symbol }}):</label>
+        <input type="text" name="committed_amount" class="comma-number" value="{{ inputs.get('committed_amount', '') }}"><br><br>
+        <input type="hidden" name="step" value="bundle">
+        <input type="submit" value="Continue">
+    </form>
+    {% endif %}
+    {% endif %}
+
+    <!-- Results Section: Pricing Table, Inclusions, Invoice Amount, Margin Table -->
+    {% if step == 'results' %}
+        <div style="max-width: 1100px; margin: 0 auto;">
+          <!-- Message Type Definitions Card (moved to top) -->
+          <div style="background: #fce4ec; border: 1px solid #f8bbd0; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Message Type Definitions</h3>
+            <ul style="margin:0 0 0 18px; padding:0; font-size:1.05em;">
+              <li><b>Basic Messages:</b> Triggered messages via API, Bulk Upload (GS Media, Campaign Manager)</li>
+              <li><b>Advanced Messages:</b>
+                <ul style="margin: 4px 0 0 18px;">
+                  <li>Bot platform usage: 2-way messages (JB/Solutions), Triggered messages, Interactive journeys</li>
+                  <li>Marketing: Triggered campaigns, Segmented Campaign on Personalize</li>
+                  <li>Agent: Agent Interactions, Triggered messages</li>
+                  <li>CTX: Retargeting messages</li>
+                  <li>Service messages (incoming won't be counted)</li>
+                </ul>
+              </li>
+              <li><b>AI Messages:</b> Any message that uses AI for responding to the customer</li>
+            </ul>
+          </div>
+          <!-- Pricing Table Card -->
+          <div style="background: #f5f7fa; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Pricing Table</h3>
+            <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
+              <thead>
+                <tr style="background: #f0f4f8;">
+                  <th style="text-align:left;">Line Item</th>
+                  <th style="text-align:right;">Volume</th>
+                  <th style="text-align:right;">Gupshup Markup/message</th>
+                  <th style="text-align:right;">Fixed Price</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for row in pricing_table %}
+                <tr>
+                      <td>{{ row.line_item or row.label }}</td>
+                      <td class="right">{{ row.volume }}</td>
+                      <td class="right">{{ row.chosen_price }}</td>
+                      <td class="right">
+                          {% if row.line_item == 'Platform Fee (Chosen)' %}
+                              {{ currency_symbol }}{{ row.revenue }}
+                              {% if user_selections and user_selections|length > 0 %}<br>
+                                  <span style="font-size:0.92em; color:#888;">
+                                      {% for label, value in user_selections %}
+                                          {{ label }}: {{ value }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                                  </span>
+                              {% endif %}
+                          {% elif row.line_item == 'Committed Amount' %}
+                              {{ currency_symbol }}{{ row.revenue }}
+                          {% else %}
+                              &nbsp;
+                          {% endif %}
+                    </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <!-- Inclusions Card -->
+          <div style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Inclusions</h3>
+            <ul style="margin:0 0 0 18px; padding:0; font-size:1.08em;">
+              {% for inc in final_inclusions %}
+                <li style="margin-bottom:2px;">{{ inc }}</li>
+                        {% endfor %}
+                        </ul>
+          </div>
+          <!-- Total Mandays Card -->
+          <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Total Mandays for One Time Dev Activities</h3>
+            <div style="font-size: 1.5em; font-weight: bold; color: #5a2a8a; margin-top: 2px;">{{ '{:,.0f}'.format(total_mandays) }}</div>
+            <div style="margin-top: 10px; font-size: 1.08em;">
+              <b>Breakdown:</b> Bot/UI: {{ '{:,.0f}'.format(manday_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.0f}'.format(manday_breakdown.custom_ai) }}
+            </div>
+            <!-- Cost Breakdown Section -->
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #c8e6c9;">
+              <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Cost Breakdown</h4>
+              <div style="font-size: 1.05em; line-height: 1.6;">
+                <div><b>Build Cost (Bot/UI + Custom/AI):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.build_cost)|smart_format }}</div>
+                <div><b>BA Effort (15%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.ba_cost)|smart_format }}</div>
+                <div><b>
