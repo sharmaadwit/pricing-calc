@@ -113,6 +113,15 @@ def initialize_inclusions():
         'Human Agents <20': [
             'Agent Assist < 20 Agents'
         ],
+        'Human Agents 20+': [
+            'Agent Assist 20-50 agents'
+        ],
+        'Human Agents 50+': [
+            'Agent Assist 50-100 agents'
+        ],
+        'Human Agents 100+': [
+            'Agent Assist 100+ agents, advanced routing rules'
+        ],
         'BFSI Tier 1': [
             'Auditing to be stored for XX days for JB PRO+Flows',
             'Conversational Data Encryption, Logging,Auditing, Purging (Data and Logs)'
@@ -144,15 +153,6 @@ def initialize_inclusions():
         ],
         'Increased TPS 1000': [
             '1000 - upto 1000 messages per second'
-        ],
-        'Human Agents 20+': [
-            '20-50 agents'
-        ],
-        'Human Agents 50+': [
-            '50-100 agents'
-        ],
-        'Human Agents 100+': [
-            'More than 100 agents, advanced routing rules'
         ],
         'Smart CPaaS Yes': [
             'Smart CPaaS - Intelligent failover between channels'
@@ -719,14 +719,22 @@ def index():
         elif personalize_load == 'Lite':
             final_inclusions += inclusions['Personalize Load Lite']
         # Human Agents
+        agent_inclusion_added = False
         if human_agents == '100+':
-            final_inclusions += inclusions['Human Agents 100+']
+            final_inclusions += inclusions.get('Human Agents 100+', [])
+            agent_inclusion_added = True
         elif human_agents == '50+':
-            final_inclusions += inclusions['Human Agents 50+']
+            final_inclusions += inclusions.get('Human Agents 50+', [])
+            agent_inclusion_added = True
         elif human_agents == '20+':
-            final_inclusions += inclusions['Human Agents 20+']
+            final_inclusions += inclusions.get('Human Agents 20+', [])
+            agent_inclusion_added = True
         elif human_agents == '<20':
-            final_inclusions += inclusions['Human Agents <20']
+            final_inclusions += inclusions.get('Human Agents <20', [])
+            agent_inclusion_added = True
+        # Fallback: if a Human Agents value is selected but not found, show generic inclusion
+        if not agent_inclusion_added and human_agents not in ['NA', 'No', '']:
+            final_inclusions.append('Agent Assist included')
         # Increased TPS
         if increased_tps == '1000':
             final_inclusions += inclusions['Increased TPS 1000']
@@ -970,7 +978,6 @@ def index():
                 manday_rates=manday_rates,
                 calculation_id=calculation_id,
                 dev_cost_breakdown=dev_cost_breakdown,
-                committed_amount_route=True,
                 final_price_details=final_price_details
             )
         # Recalculate platform fee for the current country and selections before rendering results
@@ -1013,7 +1020,8 @@ def index():
             manday_breakdown=manday_breakdown,
             manday_rates=manday_rates,
             calculation_id=calculation_id,
-            dev_cost_breakdown=dev_cost_breakdown
+            dev_cost_breakdown=dev_cost_breakdown,
+            final_price_details=final_price_details
         )
     # Defensive: handle GET or POST for edit actions
     elif step == 'volumes':
