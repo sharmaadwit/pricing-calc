@@ -472,6 +472,7 @@
         <div style="max-width: 1100px; margin: 0 auto;">
           <div style="background: #f8f8fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 18px 24px; margin-top: 32px;">
             <h2 style="margin-top:0; color:#444;">Section 2: Internal - Not to be shared</h2>
+            {% if pricing_simulation %}
             <div style="margin-bottom: 24px;">
               <h4>Pricing Simulation: Volume Route vs. Committed Amount Route</h4>
               <table border="1" cellpadding="6" style="border-collapse:collapse; margin-bottom:10px; width:100%; font-size:1.08em;">
@@ -496,6 +497,7 @@
                 </tbody>
               </table>
             </div>
+            {% endif %}
             <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
               <thead>
                 <tr style="background: #f0f4f8;">
