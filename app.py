@@ -1024,6 +1024,7 @@ def index():
         if 'pricing_inputs' in session:
             session['pricing_inputs']['platform_fee'] = platform_fee
         # Use this platform_fee for all downstream calculations and rendering
+        pricing_simulation = calculate_pricing_simulation(inputs)
         return render_template(
             'index.html',
             step='results',
@@ -1051,7 +1052,7 @@ def index():
             calculation_id=calculation_id,
             dev_cost_breakdown=dev_cost_breakdown,
             final_price_details=final_price_details,
-            pricing_simulation=None
+            pricing_simulation=pricing_simulation
         )
     # Defensive: handle GET or POST for edit actions
     elif step == 'volumes':
