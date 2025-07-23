@@ -893,6 +893,34 @@ def index():
         results['suggested_revenue'] = (results.get('suggested_revenue', 0) - platform_fee) + rate_card_platform_fee
         print("RENDERING RESULTS PAGE")
         contradiction_warning = None
+        # Always calculate final_price_details for all routes
+        committed_amount = float(inputs.get('committed_amount', 0) or 0)
+        country = inputs.get('country', 'India')
+        ai_volume = float(inputs.get('ai_volume', 0) or 0)
+        advanced_volume = float(inputs.get('advanced_volume', 0) or 0)
+        platform_fee_total = float(platform_fee)
+        meta_costs = meta_costs_table.get(country, meta_costs_table['Rest of the World'])
+        if all(float(inputs.get(v, 0)) == 0.0 for v in ['ai_volume', 'advanced_volume', 'basic_marketing_volume', 'basic_utility_volume']):
+            rates = get_committed_amount_rates(country, committed_amount)
+            ai_price = rates['ai']
+            advanced_price = rates['advanced']
+        else:
+            ai_price = session.get('pricing_inputs', {}).get('ai_price', 0)
+            advanced_price = session.get('pricing_inputs', {}).get('advanced_price', 0)
+        final_price_details = {
+            'platform_fee_total': platform_fee_total,
+            'fixed_platform_fee': platform_fee,
+            'ai_messages': {
+                'volume': int(ai_volume),
+                'price_per_msg': round(ai_price + meta_costs['ai'], 4),
+                'overage_price': round((ai_price + meta_costs['ai']) * 1.2, 4)
+            },
+            'advanced_messages': {
+                'volume': int(advanced_volume),
+                'price_per_msg': round(advanced_price + meta_costs['ai'], 4),
+                'overage_price': round((advanced_price + meta_costs['ai']) * 1.2, 4)
+            }
+        }
         if all(float(inputs.get(v, 0)) == 0.0 for v in ['ai_volume', 'advanced_volume', 'basic_marketing_volume', 'basic_utility_volume']):
             committed_amount = float(inputs.get('committed_amount', 0) or 0)
             rates = get_committed_amount_rates(inputs.get('country', 'India'), committed_amount)
