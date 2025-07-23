@@ -12,4 +12,5 @@ Flask-Migrate
 pandas
 matplotlib
 seaborn
+supervisor
 
