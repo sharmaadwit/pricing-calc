@@ -58,7 +58,11 @@ def initialize_inclusions():
         'Platform Fee Used for Margin Calculation': [
             'Journey Builder Lite',
             'Campaign Manager',
-            'CTWA - (Meta, Tiktok)'
+            'CTWA - (Meta, Tiktok)',
+            'Agent Assist <20',
+            'Personalize Lite (upto 1ml and no advanced events)',
+            '80 TPS',
+            '1 manday/month maintenance'
         ],
         'Personalize Load Lite': [
             'personalize lite upto 1 million records - no advanced events'
@@ -667,22 +671,11 @@ def index():
             user_selections.append(('Increased TPS', inputs['increased_tps']))
         inclusions = initialize_inclusions()
         final_inclusions = []
-        # Always include base inclusions except those that overlap with selected options
-        base_inclusions = inclusions['Platform Fee Used for Margin Calculation']
-        # Remove overlapping items from base inclusions
-        base_inclusions_filtered = []
-        # Map of option to their possible overlapping base inclusions
-        overlap_map = {
-            'Personalize Load': ['Personalize Lite (upto 1ml and no advanced events)'],
-            'Human Agents': ['Agent Assist <20'],
-            'Increased TPS': ['80 TPS'],
-        }
-        # Get selected options
-        personalize_load = inputs.get('personalize_load', 'NA')
-        human_agents = inputs.get('human_agents', 'NA')
-        increased_tps = inputs.get('increased_tps', 'NA')
         # Only add base inclusions that do not overlap with selected options
         for item in base_inclusions:
+            # Remove Personalize Lite if Standard or Advanced is selected
+            if item == 'Personalize Lite (upto 1ml and no advanced events)' and personalize_load in ['Standard', 'Advanced']:
+                continue
             if (personalize_load != 'Lite' and item in overlap_map['Personalize Load']) or \
                (human_agents not in ['NA', 'No', '<20'] and item in overlap_map['Human Agents']) or \
                (increased_tps not in ['NA', 'No', '80'] and item in overlap_map['Increased TPS']):

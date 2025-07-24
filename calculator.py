@@ -256,7 +256,8 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
     """
     country = inputs.get('country', 'India')
     dev_location = inputs.get('dev_location', 'India')
-    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+    # Use Rest of the World as fallback, not India
+    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])
     breakdown = calculate_total_mandays_breakdown(inputs)
     if manday_rates:
         user_bot_ui_rate = manday_rates.get('bot_ui', rates['bot_ui'][dev_location] if country == 'LATAM' else rates['bot_ui'])
