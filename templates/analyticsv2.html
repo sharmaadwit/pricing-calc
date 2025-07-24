@@ -226,8 +226,15 @@
             <a href="/analytics" target="_blank" class="view-raw-btn">View Raw Data</a>
         </div>
 
-        <!-- Country Dropdown -->
-        <!-- (REMOVED: country dropdown and related logic) -->
+        <!-- Country and Region Dropdowns -->
+        <div style="margin: 20px 0;">
+            <label for="countrySelect"><b>Country:</b></label>
+            <select id="countrySelect" style="margin-right: 20px;"></select>
+            <label for="regionSelect"><b>Region:</b></label>
+            <select id="regionSelect"></select>
+        </div>
+        <div id="regionSummary" class="summary-cards"></div>
+        <canvas id="regionChart" width="400" height="200" style="margin-bottom: 32px;"></canvas>
 
         <div class="summary-cards" id="summaryCards">
             <div class="loading">Loading analytics data...</div>
@@ -321,6 +328,8 @@
       // Declare ONCE
       let analyticsData = null;
       let charts = {};
+      let selectedCountry = null;
+      let selectedRegion = null;
 
       // Update all charts for the selected country
       // This function is no longer needed as charts are rendered globally
@@ -813,12 +822,134 @@
           }
       }
 
+      function populateCountryAndRegionDropdowns() {
+          if (!analyticsData) return;
+          const countrySelect = document.getElementById('countrySelect');
+          const regionSelect = document.getElementById('regionSelect');
+          countrySelect.innerHTML = '';
+          regionSelect.innerHTML = '';
+          // Populate country dropdown
+          const countries = Object.keys(analyticsData.country_stats || {});
+          countries.forEach(country => {
+              const opt = document.createElement('option');
+              opt.value = country;
+              opt.textContent = country;
+              countrySelect.appendChild(opt);
+          });
+          // Set default country
+          selectedCountry = countries[0];
+          // Populate region dropdown for default country
+          updateRegionDropdown();
+          countrySelect.addEventListener('change', function() {
+              selectedCountry = this.value;
+              updateRegionDropdown();
+              updateAllRegionAnalytics();
+          });
+          regionSelect.addEventListener('change', function() {
+              selectedRegion = this.value;
+              updateAllRegionAnalytics();
+          });
+      }
+      function updateRegionDropdown() {
+          const regionSelect = document.getElementById('regionSelect');
+          regionSelect.innerHTML = '';
+          const regions = analyticsData.region_stats && analyticsData.region_stats[selectedCountry] ? Object.keys(analyticsData.region_stats[selectedCountry]) : [];
+          if (regions.length === 0) {
+              const opt = document.createElement('option');
+              opt.value = '';
+              opt.textContent = 'All';
+              regionSelect.appendChild(opt);
+              selectedRegion = '';
+          } else {
+              regions.forEach(region => {
+                  const opt = document.createElement('option');
+                  opt.value = region;
+                  opt.textContent = region;
+                  regionSelect.appendChild(opt);
+              });
+              selectedRegion = regions[0];
+          }
+      }
+      function getCurrentStats() {
+          if (selectedCountry && selectedRegion && analyticsData.region_stats && analyticsData.region_stats[selectedCountry] && analyticsData.region_stats[selectedCountry][selectedRegion]) {
+              return analyticsData.region_stats[selectedCountry][selectedRegion];
+          } else if (selectedCountry && analyticsData.country_stats && analyticsData.country_stats[selectedCountry]) {
+              return analyticsData.country_stats[selectedCountry];
+          }
+          return null;
+      }
+      function updateAllRegionAnalytics() {
+          const stats = getCurrentStats();
+          if (!stats) return;
+          // Update region summary cards
+          const regionSummary = document.getElementById('regionSummary');
+          regionSummary.innerHTML = `
+              <div class="summary-card">
+                  <h3>Platform Fee (Avg)</h3>
+                  <div class="value">${stats.platform_fee.average.toLocaleString(undefined, {maximumFractionDigits: 2})} ${stats.currency || ''}</div>
+              </div>
+              <div class="summary-card">
+                  <h3>AI Message (Avg)</h3>
+                  <div class="value">${stats.ai_message.average.toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
+              </div>
+              <div class="summary-card">
+                  <h3>Advanced Message (Avg)</h3>
+                  <div class="value">${stats.advanced_message.average.toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
+              </div>
+              <div class="summary-card">
+                  <h3>Marketing Message (Avg)</h3>
+                  <div class="value">${stats.basic_marketing_message.average.toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
+              </div>
+              <div class="summary-card">
+                  <h3>Utility Message (Avg)</h3>
+                  <div class="value">${stats.basic_utility_message.average.toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
+              </div>
+          `;
+          // Update region bar chart
+          updateRegionChart(stats);
+      }
+      let regionChartInstance = null;
+      function updateRegionChart(stats) {
+          const ctx = document.getElementById('regionChart').getContext('2d');
+          const data = [
+              stats.ai_message.average,
+              stats.advanced_message.average,
+              stats.basic_marketing_message.average,
+              stats.basic_utility_message.average
+          ];
+          const labels = ['AI', 'Advanced', 'Marketing', 'Utility'];
+          if (regionChartInstance) {
+              regionChartInstance.destroy();
+          }
+          regionChartInstance = new Chart(ctx, {
+              type: 'bar',
+              data: {
+                  labels: labels,
+                  datasets: [{
+                      label: 'Avg Price',
+                      data: data,
+                      backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#f5576c']
+                  }]
+              },
+              options: {
+                  responsive: true,
+                  plugins: {
+                      legend: { display: false }
+                  }
+              }
+          });
+      }
+
       document.addEventListener('DOMContentLoaded', function() {
           loadAnalyticsData();
+          setTimeout(() => {
+              populateCountryAndRegionDropdowns();
+              updateAllRegionAnalytics();
+          }, 1200);
           // Render manday rate charts after data is loaded
-          setTimeout(renderMandayRateCountryCharts, 1000);
+          setTimeout(renderMandayRateCountryCharts, 1500);
           // Render message type charts after data is loaded
-          setTimeout(renderMessageTypeCountryCharts, 1200);
+          setTimeout(renderMessageTypeCountryCharts, 1700);
       });
 
       function renderMessageTypeCountryCharts() {

@@ -1,10 +1,27 @@
 from app import app, db, Analytics, COUNTRY_CURRENCY
 
+# --- Backfill region for users ---
+USER_REGION_COUNTRY = {
+    'Ankit':    ('India', 'South'),
+    'Kat':      ('India', 'South'),
+    'Saurabh':  ('India', 'North'),
+    'Puru':     ('India', 'West'),
+    'Nikhil':   ('India', 'North'),
+    'Saathwik': ('India', 'South'),
+    'Mridul':   ('India', 'West'),
+    'Mariana':  ('LATAM', 'Brazil'),
+    'Matheus':  ('LATAM', 'Mexico'),
+    'Gourav':   ('India', 'North'),
+}
+
 with app.app_context():
-    records = Analytics.query.filter((Analytics.currency == None) | (Analytics.currency == '')).all()
     updated = 0
-    for rec in records:
-        rec.currency = COUNTRY_CURRENCY.get(rec.country, '$')
-        updated += 1
+    for rec in Analytics.query.all():
+        mapping = USER_REGION_COUNTRY.get(rec.user_name)
+        if mapping:
+            country, region = mapping
+            rec.country = country
+            rec.region = region
+            updated += 1
     db.session.commit()
-    print(f'Backfilled {updated} records.') 
+    print(f'Backfilled region and country for {updated} records.') 

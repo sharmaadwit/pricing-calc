@@ -296,6 +296,7 @@ def update_analytics_summary():
 
         # Per-country stats
         country_stats = {}
+        region_stats = {}
         # Define rate card (list) prices for each country (from pricing_config.py)
         LIST_PRICES = {
             'India': {'bot_ui': 20000, 'custom_ai': 30000},
@@ -437,7 +438,64 @@ def update_analytics_summary():
                 'bot_ui_manday_rate': bot_ui_manday_rate,
                 'custom_ai_manday_rate': custom_ai_manday_rate
             }
+        # Per-country, per-region stats
+        for (country, region), group in df.groupby(['country', 'region']):
+            currency = group['currency'].dropna().iloc[0] if 'currency' in group and not group['currency'].dropna().empty else ''
+            def stat(col):
+                if col not in group.columns:
+                    return {'average': 0, 'min': 0, 'max': 0, 'median': 0}
+                try:
+                    vals = pd.to_numeric(group[col], errors='coerce').dropna()
+                    if vals.empty:
+                        return {'average': 0, 'min': 0, 'max': 0, 'median': 0}
+                    return {
+                        'average': float(vals.mean()),
+                        'min': float(vals.min()),
+                        'max': float(vals.max()),
+                        'median': float(vals.median())
+                    }
+                except Exception as e:
+                    print(f"Error in stat() for column '{col}' in country '{country}', region '{region}': {e}")
+                    return {'average': 0, 'min': 0, 'max': 0, 'median': 0}
+            def avg_discount(actual, rate_card):
+                try:
+                    if actual not in group.columns or rate_card not in group.columns:
+                        return 0
+                    vals = group[[actual, rate_card]].dropna()
+                    vals = vals[pd.to_numeric(vals[rate_card], errors='coerce') != 0]
+                    vals[actual] = pd.to_numeric(vals[actual], errors='coerce')
+                    vals[rate_card] = pd.to_numeric(vals[rate_card], errors='coerce')
+                    valid = vals.dropna()
+                    if valid.empty:
+                        return 0
+                    return float(((valid[rate_card] - valid[actual]) / valid[rate_card]).mean() * 100)
+                except Exception as e:
+                    print(f"Error in avg_discount() for columns '{actual}', '{rate_card}' in country '{country}', region '{region}': {e}")
+                    return 0
+            if country not in region_stats:
+                region_stats[country] = {}
+            region_stats[country][region] = {
+                'currency': currency,
+                'platform_fee': stat('platform_fee'),
+                'ai_message': dict(stat('ai_price'), list=get_list_price(country, 'ai')),
+                'advanced_message': dict(stat('advanced_price'), list=get_list_price(country, 'advanced')),
+                'basic_marketing_message': dict(stat('basic_marketing_price'), list=get_list_price(country, 'basic_marketing')),
+                'basic_utility_message': dict(stat('basic_utility_price'), list=get_list_price(country, 'basic_utility')),
+                'committed_amount': stat('committed_amount'),
+                'one_time_dev_cost': stat('bot_ui_manday_rate') if 'bot_ui_manday_rate' in group else {},
+                'bot_ui_manday_cost': stat('bot_ui_manday_rate'),
+                'custom_ai_manday_cost': stat('custom_ai_manday_rate'),
+                'discounts': {
+                    'ai_message': avg_discount('ai_price', 'ai_rate_card_price'),
+                    'advanced_message': avg_discount('advanced_price', 'advanced_rate_card_price'),
+                    'basic_marketing_message': avg_discount('basic_marketing_price', 'basic_marketing_rate_card_price'),
+                    'basic_utility_message': avg_discount('basic_utility_price', 'basic_utility_rate_card_price'),
+                    'bot_ui_manday_rate': 0,
+                    'custom_ai_manday_rate': 0,
+                },
+            }
         summary['country_stats'] = country_stats
+        summary['region_stats'] = region_stats
         # Add aggregate arrays for Distribution by Country
         summary['platform_fee_by_country'] = [country_stats[c]['platform_fee']['average'] for c in country_stats]
         summary['ai_message_by_country'] = [country_stats[c]['ai_message']['average'] for c in country_stats]
