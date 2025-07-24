@@ -433,7 +433,7 @@ def index():
         print('HANDLER: No discount errors, continuing to results calculation', file=sys.stderr, flush=True)
 
         # Always recalculate platform fee before saving to session['pricing_inputs']
-        platform_fee, fee_currency = calculate_platform_fee(
+        calculated_platform_fee, fee_currency = calculate_platform_fee(
             country,
             inputs.get('bfsi_tier', 'NA'),
             inputs.get('personalize_load', 'NA'),
@@ -442,6 +442,12 @@ def index():
             inputs.get('smart_cpaas', 'No'),
             inputs.get('increased_tps', 'NA')
         )
+        # Use user input if provided and valid, else use calculated
+        user_platform_fee = request.form.get('platform_fee')
+        if user_platform_fee and float(user_platform_fee) > 0:
+            platform_fee = float(user_platform_fee)
+        else:
+            platform_fee = calculated_platform_fee
         # Overwrite any previous platform_fee value for this calculation
         session['pricing_inputs'] = {
             'ai_price': ai_price,
