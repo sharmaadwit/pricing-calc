@@ -158,11 +158,11 @@
                 regionContainer.style.display = 'none';
             }
         }
-        window.onload = function() {
+        document.addEventListener('DOMContentLoaded', function() {
             updateMinPlatformFee();
             toggleDevLocation();
             updateRegionDropdown();
-        };
+        });
         </script>
         <div id="dev-location-group" style="display: none; margin-bottom: 16px;">
             <label for="dev_location">Developer Location:</label>
