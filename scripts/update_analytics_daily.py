@@ -28,6 +28,7 @@ warnings.filterwarnings('ignore')
 DB_URL = "postgresql://postgres:prdeuXwtBzpLZaOGpxgRspfjfLNEQrys@gondola.proxy.rlwy.net:25504/railway"
 CSV_PATH = "analytics.csv"
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, PROJECT_ROOT)
 
 def log_message(message):
     """Log messages with timestamp"""
