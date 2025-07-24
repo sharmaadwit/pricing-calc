@@ -924,6 +924,16 @@ def index():
                 'volume': int(advanced_volume),
                 'price_per_msg': round(advanced_price + meta_costs['ai'], 4),
                 'overage_price': round((advanced_price + meta_costs['ai']) * 1.2, 4)
+            },
+            'marketing_message': {
+                'volume': int(inputs.get('basic_marketing_volume', 0) or 0),
+                'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_marketing_price', 0) + meta_costs.get('marketing', 0), 4),
+                'overage_price': round((session.get('pricing_inputs', {}).get('basic_marketing_price', 0) + meta_costs.get('marketing', 0)) * 1.2, 4)
+            },
+            'utility_message': {
+                'volume': int(inputs.get('basic_utility_volume', 0) or 0),
+                'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_utility_price', 0) + meta_costs.get('utility', 0), 4),
+                'overage_price': round((session.get('pricing_inputs', {}).get('basic_utility_price', 0) + meta_costs.get('utility', 0)) * 1.2, 4)
             }
         }
         if all(float(inputs.get(v, 0)) == 0.0 for v in ['ai_volume', 'advanced_volume', 'basic_marketing_volume', 'basic_utility_volume']):
@@ -947,6 +957,16 @@ def index():
                     'volume': int(advanced_volume),
                     'price_per_msg': round(rates['advanced'] + meta_costs['ai'], 4),
                     'overage_price': round((rates['advanced'] + meta_costs['ai']) * 1.2, 4)
+                },
+                'marketing_message': {
+                    'volume': int(inputs.get('basic_marketing_volume', 0) or 0),
+                    'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_marketing_price', 0) + meta_costs.get('marketing', 0), 4),
+                    'overage_price': round((session.get('pricing_inputs', {}).get('basic_marketing_price', 0) + meta_costs.get('marketing', 0)) * 1.2, 4)
+                },
+                'utility_message': {
+                    'volume': int(inputs.get('basic_utility_volume', 0) or 0),
+                    'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_utility_price', 0) + meta_costs.get('utility', 0), 4),
+                    'overage_price': round((session.get('pricing_inputs', {}).get('basic_utility_price', 0) + meta_costs.get('utility', 0)) * 1.2, 4)
                 }
             }
             return render_template(
