@@ -255,15 +255,17 @@
                         <li>Rate card vs actual pricing shows healthy margins</li>
                     </ul>
                 </div>
-                <div class="chart-container">
-                    <!-- Removed Weekly Revenue Trends graph -->
-                    <div class="chart-card">
-                        <h3>Rate Card vs Actual Prices</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="pricingChart"></canvas>
-                        </div>
+                <!-- Per-country message type bar charts -->
+                <div id="messageTypeCountryContainer" style="display: flex; flex-wrap: wrap; gap: 24px;"></div>
+                <!-- Remove Rate Card vs Actual Prices graph -->
+                <!-- <div class="chart-container">
+                  <div class="chart-card">
+                    <h3>Rate Card vs Actual Prices</h3>
+                    <div class="chart-wrapper">
+                      <canvas id="pricingChart"></canvas>
                     </div>
-                </div>
+                  </div>
+                </div> -->
             </div>
             <!-- Resource Utilization Section (merged) -->
             <div class="section">
@@ -276,15 +278,15 @@
                         <li>Rate variations show healthy pricing flexibility</li>
                     </ul>
                 </div>
-                <div class="chart-container">
-                    <!-- Removed Manday Efficiency by User graph -->
-                    <div class="chart-card">
-                        <h3>Manday Rate Variations</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="rateChart"></canvas>
-                        </div>
+                <!-- Remove Manday Rate Variations graph -->
+                <!-- <div class="chart-container">
+                  <div class="chart-card">
+                    <h3>Manday Rate Variations</h3>
+                    <div class="chart-wrapper">
+                      <canvas id="rateChart"></canvas>
                     </div>
-                </div>
+                  </div>
+                </div> -->
             </div>
             <!-- Manday Rate by Country Section (moved here) -->
             <div class="section">
@@ -595,14 +597,12 @@
           if (!analyticsData) return;
 
           // Define avgData and medianData for pricing chart
-          const types = ['ai_message', 'advanced_message', 'basic_marketing_message', 'basic_utility_message'];
-          const labels = ['AI', 'Advanced', 'Marketing', 'Utility'];
-          const avgData = types.map(type => getAvgMedianByType(type).avg);
-          const medianData = types.map(type => getAvgMedianByType(type).median);
+          // (REMOVED: pricing chart data and config)
+
           // Manday Efficiency by User
           const mandayUser = getMandayEfficiencyByUser();
           // Manday Rate Variation
-          const mandayRate = getMandayRateVariation();
+          // (REMOVED: mandayRate and rate chart config)
 
           // Sample data based on analytics.csv (fallback if no real data)
           const hourlyData = [2, 1, 0, 0, 0, 0, 8, 12, 15, 10, 8, 6, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1];
@@ -637,7 +637,7 @@
           const revenueData = [120000, 180000, 220000, 280000, 320000, 380000, 420000, 480000];
           const efficiencyData = [25000, 22000, 20000, 18000, 16000, 15000, 14000, 13000, 12000, 11000];
 
-          // Chart configurations
+          // Chart configurations (REMOVED: pricing and rate charts)
           const chartConfigs = {
               hourly: {
                   type: 'line',
@@ -675,28 +675,12 @@
                   label: 'Revenue (₹)',
                   color: '#4facfe'
               },
-              pricing: {
-                  type: 'bar',
-                  data: [avgData, medianData],
-                  labels: labels,
-                  label: ['Average', 'Median'],
-                  color: ['#43e97b', '#667eea'],
-                  grouped: true
-              },
               efficiency: {
                   type: 'bar',
                   data: efficiencyData,
                   labels: ['User 1', 'User 2', 'User 3', 'User 4', 'User 5', 'User 6', 'User 7', 'User 8', 'User 9', 'User 10'],
                   label: 'Efficiency (₹/Manday)',
                   color: '#a8edea'
-              },
-              rate: {
-                  type: 'bar',
-                  data: [mandayRate.list, mandayRate.avg],
-                  labels: mandayRate.labels,
-                  label: ['List Price', 'Average Price'],
-                  color: ['#fed6e3', '#667eea'],
-                  grouped: true
               },
               route: {
                   type: 'bar',
@@ -841,7 +825,77 @@
           loadAnalyticsData();
           // Render manday rate charts after data is loaded
           setTimeout(renderMandayRateCountryCharts, 1000);
+          // Render message type charts after data is loaded
+          setTimeout(renderMessageTypeCountryCharts, 1200);
       });
+
+      function renderMessageTypeCountryCharts() {
+        if (!analyticsData || !analyticsData.country_stats) return;
+        const container = document.getElementById('messageTypeCountryContainer');
+        let html = '';
+        let i = 0;
+        const entries = Object.entries(analyticsData.country_stats);
+        while (i < entries.length) {
+            html += '<div style="display:flex; gap:24px; width:100%;">';
+            for (let j = 0; j < 2 && i < entries.length; j++, i++) {
+                const [country, stats] = entries[i];
+                const currency = stats.currency || '';
+                const chartId = `msgTypeCountryChart_${country.replace(/\W/g, '')}`;
+                html += `<div style="flex:1 1 48%; min-width:400px; max-width:48%; background:#fff; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.07); padding:18px 18px 8px 18px; margin-bottom:16px;">
+                    <h3>Message Type Prices - ${country} (${currency})</h3>
+                    <canvas id="${chartId}" height="220"></canvas>
+                </div>`;
+            }
+            html += '</div>';
+        }
+        container.innerHTML = html;
+        // Render charts
+        i = 0;
+        while (i < entries.length) {
+            for (let j = 0; j < 2 && i < entries.length; j++, i++) {
+                const [country, stats] = entries[i];
+                const currency = stats.currency || '';
+                const chartId = `msgTypeCountryChart_${country.replace(/\W/g, '')}`;
+                const ai = stats.ai_message && stats.ai_message.average ? Number(stats.ai_message.average) : 0;
+                const adv = stats.advanced_message && stats.advanced_message.average ? Number(stats.advanced_message.average) : 0;
+                const mkt = stats.basic_marketing_message && stats.basic_marketing_message.average ? Number(stats.basic_marketing_message.average) : 0;
+                const utl = stats.basic_utility_message && stats.basic_utility_message.average ? Number(stats.basic_utility_message.average) : 0;
+                const ctx = document.getElementById(chartId).getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['AI', 'Advanced', 'Marketing', 'Utility'],
+                        datasets: [
+                            {
+                                label: 'Average Price',
+                                data: [ai, adv, mkt, utl],
+                                backgroundColor: ['#43e97b', '#667eea', '#f093fb', '#f5576c'],
+                                borderColor: ['#43e97b', '#667eea', '#f093fb', '#f5576c'],
+                                borderWidth: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'end',
+                                color: '#222',
+                                font: { weight: 'bold', size: 14 },
+                                formatter: function(value, context) {
+                                    return currency + value.toLocaleString();
+                                }
+                            }
+                        },
+                        scales: { y: { beginAtZero: true } }
+                    },
+                    plugins: [ChartDataLabels]
+                });
+            }
+        }
+      }
     </script>
 </body>
 </html> 
