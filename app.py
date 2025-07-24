@@ -6,9 +6,6 @@ from flask import Flask, render_template, request, session, redirect, url_for, f
 from calculator import calculate_pricing, get_suggested_price, price_tiers, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES, calculate_total_mandays_breakdown
 import os
 import sys
-# from google_auth_oauthlib.flow import Flow
-# from googleapiclient.discovery import build
-# from google.oauth2.credentials import Credentials
 import re
 from collections import Counter, defaultdict
 import statistics

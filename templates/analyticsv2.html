@@ -239,72 +239,12 @@
         <div id="countrySummaryTables" style="margin: 30px 0;"></div>
 
         <div class="nav-tabs">
-            <div class="nav-tab active" onclick="showTab('temporal')">Temporal Analytics</div>
-            <div class="nav-tab" onclick="showTab('customer')">Customer Behavior</div>
-            <div class="nav-tab" onclick="showTab('pricing')">Pricing Strategy</div>
+            <div class="nav-tab active" onclick="showTab('pricing')">Pricing Strategy</div>
             <div class="nav-tab" onclick="showTab('platform')">Platform Analytics</div>
         </div>
 
-        <!-- Temporal Analytics -->
-        <div id="temporal" class="tab-content active">
-            <div class="section">
-                <h2>Temporal Analytics</h2>
-                <div class="insights">
-                    <h4>Key Insights:</h4>
-                    <ul>
-                        <li>Peak usage occurs between 6-10 AM and 2-6 PM</li>
-                        <li>Weekday usage is significantly higher than weekends</li>
-                        <li>July shows the highest activity with 45+ calculations</li>
-                    </ul>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-card">
-                        <h3>Peak Usage Hours</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="hourlyChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Usage by Day of Week</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="weekdayChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Customer Behavior -->
-        <div id="customer" class="tab-content">
-            <div class="section">
-                <h2>Customer Behavior Analytics</h2>
-                <div class="insights">
-                    <h4>Key Insights:</h4>
-                    <ul>
-                        <li>Saurabh is the most active user with 25+ calculations</li>
-                        <li>AI services are the most popular, followed by Advanced services</li>
-                        <li>Average platform fee per user is ₹120,000</li>
-                    </ul>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-card">
-                        <h3>Top Customer Lifetime Value</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="clvChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Service Preferences</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="serviceChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Pricing Strategy -->
-        <div id="pricing" class="tab-content">
+        <div id="pricing" class="tab-content active">
             <div class="section">
                 <h2>Pricing Strategy Analytics</h2>
                 <div class="insights">
