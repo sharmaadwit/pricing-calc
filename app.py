@@ -281,11 +281,19 @@ def index():
         print(f"DEBUG: New calculation started. Calculation ID: {calculation_id}", file=sys.stderr, flush=True)
         user_name = request.form.get('user_name', '')
         # Step 1: User submitted volumes and platform fee options
-        country = request.form['country']
+        country = request.form['country'].strip()  # Always strip country
         region = request.form.get('region', '')
         # Ignore region for Europe and Rest of the World
         if country in ['Europe', 'Rest of the World']:
             region = ''
+        # Set currency: Only use INR for India, all others use USD
+        if country == 'India':
+            currency = 'INR'
+        else:
+            currency = 'USD'
+        # Use dev_location only for India
+        dev_location = request.form.get('dev_location', 'India').strip() if country == 'India' else None
+        print(f"[app.py] After country/currency logic: country='{country}', currency='{currency}', dev_location='{dev_location}'", file=sys.stderr, flush=True)
         def parse_volume(val):
             try:
                 return float(val.replace(',', '')) if val and str(val).strip() else 0.0
@@ -506,7 +514,7 @@ def index():
         # --- Ensure manday_rates is always set and complete ---
         country = inputs.get('country', 'India')
         dev_location = inputs.get('dev_location', 'India')
-        rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+        rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])
         # Always reset manday_rates to backend defaults when country or dev_location changes
         if country == 'LATAM':
             default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
@@ -529,7 +537,17 @@ def index():
         manday_rates['bot_ui_discount'] = round(100 * (default_bot_ui - manday_rates['bot_ui']) / default_bot_ui, 2) if default_bot_ui else 0
         manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 2) if default_custom_ai else 0
         total_mandays = calculate_total_mandays(patched_form)
+        # --- PATCH: Always .strip() the country and set dev_location only for India before dev cost calculation ---
+        if 'country' in patched_form:
+            patched_form['country'] = patched_form['country'].strip()
+        else:
+            patched_form['country'] = inputs.get('country', 'India').strip()
+        if patched_form['country'] != 'India':
+            patched_form['dev_location'] = None
+        else:
+            patched_form['dev_location'] = patched_form.get('dev_location', 'India').strip()
         total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
+        print(f"DEBUG: dev_cost_currency = {dev_cost_currency}, country = {country}", file=sys.stderr, flush=True)
         manday_breakdown = dev_cost_breakdown['mandays_breakdown']
         
         # Debug: Log inputs being used for calculation
@@ -589,7 +607,7 @@ def index():
             # --- Ensure manday_rates is always set and complete ---
             country = inputs.get('country', 'India')
             dev_location = inputs.get('dev_location', 'India')
-            rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+            rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])
             # Always reset manday_rates to backend defaults when country or dev_location changes
             if country == 'LATAM':
                 default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
@@ -613,6 +631,7 @@ def index():
             manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 2) if default_custom_ai else 0
             total_mandays = calculate_total_mandays(patched_form)
             total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
+            print(f"DEBUG: dev_cost_currency = {dev_cost_currency}, country = {country}", file=sys.stderr, flush=True)
             manday_breakdown = dev_cost_breakdown['mandays_breakdown']
             # Debug: Log inputs being used for calculation
             print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}", file=sys.stderr, flush=True)
@@ -1059,7 +1078,9 @@ def index():
         country = inputs.get('country', 'India')
         dev_location = inputs.get('dev_location', 'India')
         # Get default rates
-        rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+        country = inputs.get('country', 'India').strip()
+        print(f"DEBUG: country used for manday rates = '{country}'", file=sys.stderr, flush=True)
+        rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])
         if country == 'LATAM':
             default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
             default_custom_ai = float(rates['custom_ai'].get(dev_location, 0.0) or 0.0)
@@ -1128,7 +1149,7 @@ def index():
         # Go to prices page
         pricing_inputs = session.get('pricing_inputs', {}) or {}
         dev_location = inputs.get('dev_location', 'India')
-        rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+        rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])
         if country == 'LATAM':
             default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
             default_custom_ai = float(rates['custom_ai'].get(dev_location, 0.0) or 0.0)
@@ -1333,9 +1354,9 @@ def analytics():
                     util_rate = [a.basic_utility_rate_card_price for a in country_analytics if a.basic_utility_rate_card_price is not None]
                     # Manday rates
                     bot_ui_chosen = [a.bot_ui_manday_rate for a in country_analytics if a.bot_ui_manday_rate not in (None, 0, '0', '', 'None')]
-                    bot_ui_rate = [COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])['bot_ui'] for _ in bot_ui_chosen]
+                    bot_ui_rate = [COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])['bot_ui'] for _ in bot_ui_chosen]
                     custom_ai_chosen = [a.custom_ai_manday_rate for a in country_analytics if a.custom_ai_manday_rate not in (None, 0, '0', '', 'None')]
-                    custom_ai_rate = [COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])['custom_ai'] for _ in custom_ai_chosen]
+                    custom_ai_rate = [COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])['custom_ai'] for _ in custom_ai_chosen]
                     stats[country]['avg_discount'] = {
                         'ai': avg_discount(ai_chosen, ai_rate),
                         'advanced': avg_discount(adv_chosen, adv_rate),
@@ -1372,10 +1393,10 @@ def analytics():
                         else:
                             return {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
                     # Add one_time_dev_cost and per_manday_cost for user/country/currency
-                    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+                    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])
                     if country == 'LATAM':
-                        bot_ui_rate = rates['bot_ui'].get(country, rates['bot_ui']['India'])
-                        custom_ai_rate = rates['custom_ai'].get(country, rates['custom_ai']['India'])
+                        bot_ui_rate = rates['bot_ui'].get(country, rates['bot_ui']['Rest of the World'])
+                        custom_ai_rate = rates['custom_ai'].get(country, rates['custom_ai']['Rest of the World'])
                     else:
                         bot_ui_rate = rates['bot_ui']
                         custom_ai_rate = rates['custom_ai']
@@ -1605,7 +1626,7 @@ def get_default_manday_rates(inputs):
     country = inputs.get('country', 'India') if inputs else 'India'
     dev_location = inputs.get('dev_location', 'India') if inputs else 'India'
     from calculator import COUNTRY_MANDAY_RATES
-    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
+    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])
     if country == 'LATAM':
         default_bot_ui = rates['bot_ui'][dev_location]
         default_custom_ai = rates['custom_ai'][dev_location]

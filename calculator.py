@@ -10,6 +10,7 @@
 # Meta costs for each country and message type.
 
 from pricing_config import price_tiers, meta_costs_table, COUNTRY_MANDAY_RATES, ACTIVITY_MANDAYS, committed_amount_slabs
+import sys
 
 # New function to map volume to committed amount slab rate
 
@@ -254,10 +255,19 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
     If user enters 0 for bot_ui rate but selects any of Onboarding, UX, Testing/QA, AA Setup as Yes, use default rate for those activities.
     Returns (total_cost, currency, breakdown_dict)
     """
-    country = inputs.get('country', 'India')
-    dev_location = inputs.get('dev_location', 'India')
-    # Use Rest of the World as fallback, not India
+    country = inputs.get('country', 'India').strip()
+    dev_location = (inputs.get('dev_location') or 'India').strip()
     rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])
+    # Only use dev_location for India, otherwise use the main rate
+    if country == 'India':
+        bot_ui_rate = rates['bot_ui'][dev_location] if isinstance(rates['bot_ui'], dict) else rates['bot_ui']
+        custom_ai_rate = rates['custom_ai'][dev_location] if isinstance(rates['custom_ai'], dict) else rates['custom_ai']
+        currency = rates['currency']
+    else:
+        bot_ui_rate = rates['bot_ui']
+        custom_ai_rate = rates['custom_ai']
+        currency = rates['currency']
+    print(f"DEBUG: [calculator.py] dev_cost_currency = {currency}, country = '{country}', dev_location = '{dev_location}'", file=sys.stderr, flush=True)
     breakdown = calculate_total_mandays_breakdown(inputs)
     if manday_rates:
         user_bot_ui_rate = manday_rates.get('bot_ui', rates['bot_ui'][dev_location] if country == 'LATAM' else rates['bot_ui'])
@@ -271,7 +281,7 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
             user_custom_ai_rate = rates['custom_ai']
     default_bot_ui_rate = rates['bot_ui'][dev_location] if country == 'LATAM' else rates['bot_ui']
     default_custom_ai_rate = rates['custom_ai'][dev_location] if country == 'LATAM' else rates['custom_ai']
-    currency = rates['currency']  # This will be 'USD' for Rest of the World
+    # currency = rates['currency']  # This will be 'USD' for Rest of the World
 
     activity_mandays = {
         'onboarding': ACTIVITY_MANDAYS['onboarding'],

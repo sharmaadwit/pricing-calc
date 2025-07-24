@@ -1,16 +1,22 @@
 from app import db, Analytics, app
 from calculator import calculate_total_mandays_breakdown, COUNTRY_MANDAY_RATES
+import sys
 
 # Helper to get default rates for a country
 def get_default_rates(country, dev_location='India'):
-    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['India'])
-    if country == 'LATAM':
-        bot_ui = rates['bot_ui'].get(dev_location, rates['bot_ui']['India'])
-        custom_ai = rates['custom_ai'].get(dev_location, rates['custom_ai']['India'])
+    country = country.strip()
+    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])
+    if country == 'India':
+        dev_location = dev_location.strip() if 'dev_location' in locals() else 'India'
+        bot_ui_rate = rates['bot_ui'][dev_location] if isinstance(rates['bot_ui'], dict) else rates['bot_ui']
+        custom_ai_rate = rates['custom_ai'][dev_location] if isinstance(rates['custom_ai'], dict) else rates['custom_ai']
+        currency = rates['currency']
     else:
-        bot_ui = rates['bot_ui']
-        custom_ai = rates['custom_ai']
-    return bot_ui, custom_ai
+        bot_ui_rate = rates['bot_ui']
+        custom_ai_rate = rates['custom_ai']
+        currency = rates['currency']
+    print(f"DEBUG: [backfill_manday_counts.py] dev_cost_currency = {currency}, country = '{country}'", file=sys.stderr, flush=True)
+    return bot_ui_rate, custom_ai_rate
 
 with app.app_context():
     updated = 0
