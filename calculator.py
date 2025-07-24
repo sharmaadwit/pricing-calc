@@ -271,7 +271,7 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
             user_custom_ai_rate = rates['custom_ai']
     default_bot_ui_rate = rates['bot_ui'][dev_location] if country == 'LATAM' else rates['bot_ui']
     default_custom_ai_rate = rates['custom_ai'][dev_location] if country == 'LATAM' else rates['custom_ai']
-    currency = rates['currency']
+    currency = rates['currency']  # This will be 'USD' for Rest of the World
 
     activity_mandays = {
         'onboarding': ACTIVITY_MANDAYS['onboarding'],
