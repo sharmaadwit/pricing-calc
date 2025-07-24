@@ -111,74 +111,60 @@
     </li>
   </ul>
 
-  {% if authorized and analytics.get('stats') %}
-    {% for country, stat in analytics.stats.items() %}
-      {% if stat is mapping %}
-        <!-- DEBUG: country={{ country }}, stat_type={{ stat.__class__.__name__ }}, stat={{ stat }} -->
-      {# Find the most common currency for this country, fallback to default #}
-      {% set country_currency = None %}
-      {% for a in analytics.get('all_analytics', []) %}
-        {% if a.country == country and a.currency %}
-          {% set country_currency = a.currency %}
-        {% endif %}
-      {% endfor %}
-      {% if not country_currency %}
-        {% if country == 'India' %}
-          {% set country_currency = '₹' %}
-        {% else %}
-          {% set country_currency = '$' %}
-        {% endif %}
-      {% endif %}
-      <h3>Country: {{ country }}</h3>
+  {% if authorized and analytics.get('stats_by_region') %}
+    {% for country, region_map in analytics.stats_by_region.items() %}
+      <h2>Country: {{ country }}</h2>
+      {% for region, stat in region_map.items() %}
+        <h4>Region: {{ region }}</h4>
         <div style="margin-bottom: 0.5em; font-size:1.08em; color:#444;">
-          <b>Country:</b> {{ country }} &nbsp; <b>Currency:</b> {{ country_currency }}
+          <b>Country:</b> {{ country }} &nbsp; <b>Region:</b> {{ region }}
         </div>
-      <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Average</th>
-            <th>Min</th>
-            <th>Max</th>
-            <th>Median</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><b>Platform Fee</b></td>
-            <td>{{ fmt_num_currency(stat['platform_fee']['avg'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['platform_fee']['min'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['platform_fee']['max'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['platform_fee']['median'], country_currency) }}</td>
-          </tr>
-          <tr>
-            <td>AI Message</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['ai']['avg'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['ai']['min'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['ai']['max'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['ai']['median'], country_currency) }}</td>
-          </tr>
-          <tr>
-            <td>Advanced Message</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['avg'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['min'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['max'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['advanced']['median'], country_currency) }}</td>
-          </tr>
-          <tr>
-            <td>Basic Marketing Message</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['avg'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['min'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['max'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['median'], country_currency) }}</td>
-          </tr>
-          <tr>
-            <td>Basic Utility</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['avg'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['min'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['max'], country_currency) }}</td>
-            <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['median'], country_currency) }}</td>
-          </tr>
+        <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Average</th>
+              <th>Min</th>
+              <th>Max</th>
+              <th>Median</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Platform Fee</b></td>
+              <td>{{ fmt_num_currency(stat['platform_fee']['avg'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['platform_fee']['min'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['platform_fee']['max'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['platform_fee']['median'], country_currency) }}</td>
+            </tr>
+            <tr>
+              <td>AI Message</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['ai']['avg'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['ai']['min'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['ai']['max'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['ai']['median'], country_currency) }}</td>
+            </tr>
+            <tr>
+              <td>Advanced Message</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['advanced']['avg'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['advanced']['min'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['advanced']['max'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['advanced']['median'], country_currency) }}</td>
+            </tr>
+            <tr>
+              <td>Basic Marketing Message</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['avg'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['min'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['max'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['basic_marketing']['median'], country_currency) }}</td>
+            </tr>
+            <tr>
+              <td>Basic Utility Message</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['avg'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['min'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['max'], country_currency) }}</td>
+              <td>{{ fmt_num_currency(stat['msg_types']['basic_utility']['median'], country_currency) }}</td>
+            </tr>
             <tr>
               <td><b>Committed Amount</b></td>
               <td>{{ fmt_num_currency(stat['committed_amount']['avg'], country_currency) }}</td>
@@ -193,20 +179,6 @@
               <td>{{ fmt_num_currency(stat['one_time_dev_cost']['max'], country_currency) }}</td>
               <td>{{ fmt_num_currency(stat['one_time_dev_cost']['median'], country_currency) }}</td>
             </tr>
-            {# Add Bot/UI and Custom/AI Manday Cost rows #}
-            {#
-            {% set manday_rates = namespace(bot_ui=0, custom_ai=0) %}
-            {% if country in COUNTRY_MANDAY_RATES %}
-              {% set rates = COUNTRY_MANDAY_RATES[country] %}
-              {% if country == 'LATAM' %}
-                {% set manday_rates.bot_ui = rates['bot_ui']['LATAM'] %}
-                {% set manday_rates.custom_ai = rates['custom_ai']['LATAM'] %}
-              {% else %}
-                {% set manday_rates.bot_ui = rates['bot_ui'] %}
-                {% set manday_rates.custom_ai = rates['custom_ai'] %}
-              {% endif %}
-            {% endif %}
-            #}
             <tr>
               <td><b>Bot/UI Manday Cost</b></td>
               <td>{{ fmt_num_currency(stat.get('bot_ui_manday_cost', {}).get('avg', 0), country_currency) }}</td>
@@ -221,29 +193,10 @@
               <td>{{ fmt_num_currency(stat.get('custom_ai_manday_cost', {}).get('max', 0), country_currency) }}</td>
               <td>{{ fmt_num_currency(stat.get('custom_ai_manday_cost', {}).get('median', 0), country_currency) }}</td>
             </tr>
-        </tbody>
-      </table>
-      <!-- Average Discount Table -->
-      <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Average Discount (%)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>AI Message</td><td>{{ stat.avg_discount.ai|round(4) }}</td></tr>
-          <tr><td>Advanced Message</td><td>{{ stat.avg_discount.advanced|round(4) }}</td></tr>
-          <tr><td>Basic Marketing Message</td><td>{{ stat.avg_discount.basic_marketing|round(4) }}</td></tr>
-          <tr><td>Basic Utility Message</td><td>{{ stat.avg_discount.basic_utility|round(4) }}</td></tr>
-          <tr><td>Bot/UI Manday Rate</td><td>{{ stat.avg_discount.bot_ui_manday|round(4) }}</td></tr>
-          <tr><td>Custom/AI Manday Rate</td><td>{{ stat.avg_discount.custom_ai_manday|round(4) }}</td></tr>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      {% endfor %}
       <hr>
-      {% else %}
-        <!-- DEBUG: country={{ country }} has non-mapping stat: stat_type={{ stat.__class__.__name__ }}, stat={{ stat }} -->
-      {% endif %}
     {% endfor %}
   {% else %}
     <p>No analytics data available yet.</p>

@@ -104,14 +104,68 @@
         <label for="user_name">Enter your name:</label>
         <input type="text" name="user_name" id="user_name" value="{{ inputs.get('user_name', '') }}" required><br><br>
         <label>Country:</label>
-        <select name="country" id="country-select" onchange="updateMinPlatformFee(); toggleDevLocation();">
+        <select name="country" id="country-select" onchange="updateMinPlatformFee(); toggleDevLocation(); updateRegionDropdown();">
                 <option value="India" {% if inputs and inputs.country == 'India' %}selected{% endif %}>India</option>
                 <option value="MENA" {% if inputs and inputs.country == 'MENA' %}selected{% endif %}>MENA</option>
                 <option value="LATAM" {% if inputs and inputs.country == 'LATAM' %}selected{% endif %}>LATAM</option>
                 <option value="Africa" {% if inputs and inputs.country == 'Africa' %}selected{% endif %}>Africa</option>
                 <option value="Europe" {% if inputs and inputs.country == 'Europe' %}selected{% endif %}>Europe</option>
                 <option value="Rest of the World" {% if inputs and inputs.country == 'Rest of the World' %}selected{% endif %}>Rest of the World</option>
-        </select><br><br>
+        </select><br>
+        {% if inputs.country in ['India', 'MENA', 'LATAM', 'Africa'] %}
+        <div id="region-dropdown-container" style="margin-bottom: 16px;">
+            <label for="region">Region:</label>
+            <select name="region" id="region-select">
+                <!-- Options will be populated dynamically -->
+            </select>
+        </div><br>
+        {% endif %}
+        <script>
+        const regionMapping = {
+            'India': ['North', 'South', 'West'],
+            'MENA': ['UAE', 'KSA'],
+            'LATAM': ['Brazil', 'Mexico'],
+            'Africa': ['South Africa', 'Nigeria', 'Rest of Africa']
+        };
+        // Store selected region from Jinja in a JS variable
+        var selectedRegion = "{{ inputs.region if inputs and inputs.region is defined else '' }}";
+        function updateRegionDropdown() {
+            const countrySelect = document.getElementById('country-select');
+            const regionContainer = document.getElementById('region-dropdown-container');
+            const regionSelect = document.getElementById('region-select');
+            if (!regionContainer || !regionSelect) return;
+            // Clear existing options
+            regionSelect.innerHTML = '';
+            // Get selected country
+            const selectedCountry = countrySelect.value;
+            if (regionMapping[selectedCountry]) {
+                regionContainer.style.display = 'block';
+                // Add a default "Select Region" option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '-- Select Region --';
+                regionSelect.appendChild(defaultOption);
+                // Add region options
+                regionMapping[selectedCountry].forEach(region => {
+                    const option = document.createElement('option');
+                    option.value = region;
+                    option.textContent = region;
+                    regionSelect.appendChild(option);
+                });
+                // Set selected region if present
+                if (selectedRegion) {
+                    regionSelect.value = selectedRegion;
+                }
+            } else {
+                regionContainer.style.display = 'none';
+            }
+        }
+        window.onload = function() {
+            updateMinPlatformFee();
+            toggleDevLocation();
+            updateRegionDropdown();
+        };
+        </script>
         <div id="dev-location-group" style="display: none; margin-bottom: 16px;">
             <label for="dev_location">Developer Location:</label>
             <select name="dev_location" id="dev_location">
