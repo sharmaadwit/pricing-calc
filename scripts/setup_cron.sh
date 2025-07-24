@@ -15,26 +15,27 @@ chmod +x "$SCRIPT_PATH"
 # Create log directory
 mkdir -p "$PROJECT_DIR/logs"
 
-# Create the cron job entry (4 PM IST = 10:30 UTC)
-# The cron job will run daily at 4 PM IST (10:30 UTC)
-CRON_JOB="30 10 * * * cd $PROJECT_DIR && python3 $SCRIPT_PATH >> $PROJECT_DIR/logs/analytics_update.log 2>&1"
+# Create the cron job entries for 11:00 AM, 2:00 PM, and 6:00 PM IST (05:30, 08:30, 12:30 UTC)
+CRON_JOBS="30 5 * * * cd $PROJECT_DIR && python3 $SCRIPT_PATH >> $PROJECT_DIR/logs/analytics_update.log 2>&1
+30 8 * * * cd $PROJECT_DIR && python3 $SCRIPT_PATH >> $PROJECT_DIR/logs/analytics_update.log 2>&1
+30 12 * * * cd $PROJECT_DIR && python3 $SCRIPT_PATH >> $PROJECT_DIR/logs/analytics_update.log 2>&1"
 
-# Check if cron job already exists
+# Remove any existing cron jobs for update_analytics_daily.py
 if crontab -l 2>/dev/null | grep -q "update_analytics_daily.py"; then
     echo "Cron job already exists. Removing old entry..."
     crontab -l 2>/dev/null | grep -v "update_analytics_daily.py" | crontab -
 fi
 
-# Add the new cron job
-(crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
+# Add the new cron jobs
+(crontab -l 2>/dev/null; echo "$CRON_JOBS") | crontab -
 
-echo "Cron job set up successfully!"
-echo "The analytics update will run daily at 8 PM IST (14:30 UTC)"
+echo "Cron jobs set up successfully!"
+echo "The analytics update will run daily at 11:00 AM, 2:00 PM, and 6:00 PM IST (05:30, 08:30, 12:30 UTC)"
 echo "Logs will be saved to: $PROJECT_DIR/logs/analytics_update.log"
 echo ""
 echo "To view current cron jobs: crontab -l"
 echo "To edit cron jobs: crontab -e"
-echo "To remove this cron job: crontab -e (then delete the line)"
+echo "To remove these cron jobs: crontab -e (then delete the lines)"
 echo ""
 echo "To test the script manually, run:"
 echo "python3 $SCRIPT_PATH" 
