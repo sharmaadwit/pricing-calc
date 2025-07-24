@@ -112,14 +112,12 @@
                 <option value="Europe" {% if inputs and inputs.country == 'Europe' %}selected{% endif %}>Europe</option>
                 <option value="Rest of the World" {% if inputs and inputs.country == 'Rest of the World' %}selected{% endif %}>Rest of the World</option>
         </select><br>
-        {% if inputs.country in ['India', 'MENA', 'LATAM', 'Africa'] %}
-        <div id="region-dropdown-container" style="margin-bottom: 16px;">
+        <div id="region-dropdown-container" style="display: none;">
             <label for="region">Region:</label>
             <select name="region" id="region-select">
                 <!-- Options will be populated dynamically -->
             </select>
         </div><br>
-        {% endif %}
         <script>
         const regionMapping = {
             'India': ['North', 'South', 'West'],
