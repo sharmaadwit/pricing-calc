@@ -256,12 +256,7 @@
                     </ul>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-card">
-                        <h3>Weekly Revenue Trends</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="revenueChart"></canvas>
-                        </div>
-                    </div>
+                    <!-- Removed Weekly Revenue Trends graph -->
                     <div class="chart-card">
                         <h3>Rate Card vs Actual Prices</h3>
                         <div class="chart-wrapper">
@@ -282,12 +277,7 @@
                     </ul>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-card">
-                        <h3>Manday Efficiency by User</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="efficiencyChart"></canvas>
-                        </div>
-                    </div>
+                    <!-- Removed Manday Efficiency by User graph -->
                     <div class="chart-card">
                         <h3>Manday Rate Variations</h3>
                         <div class="chart-wrapper">
@@ -495,13 +485,9 @@
             for (let j = 0; j < 2 && i < entries.length; j++, i++) {
                 const [country, stats] = entries[i];
                 const currency = stats.currency || '';
-                const botList = stats.bot_ui_manday_rate && stats.bot_ui_manday_rate.list ? Number(stats.bot_ui_manday_rate.list) : 0;
-                const botAvg = stats.bot_ui_manday_rate && stats.bot_ui_manday_rate.average ? Number(stats.bot_ui_manday_rate.average) : 0;
-                const aiList = stats.custom_ai_manday_rate && stats.custom_ai_manday_rate.list ? Number(stats.custom_ai_manday_rate.list) : 0;
-                const aiAvg = stats.custom_ai_manday_rate && stats.custom_ai_manday_rate.average ? Number(stats.custom_ai_manday_rate.average) : 0;
                 const chartId = `mandayRateCountryChart_${country.replace(/\W/g, '')}`;
                 html += `<div style="flex:1 1 48%; min-width:400px; max-width:48%; background:#fff; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.07); padding:18px 18px 8px 18px; margin-bottom:16px;">
-                    <h3>${country} (${currency})</h3>
+                    <h3>Manday Rate Variations - ${country} (${currency})</h3>
                     <canvas id="${chartId}" height="220"></canvas>
                 </div>`;
             }
@@ -543,9 +529,21 @@
                     },
                     options: {
                         responsive: true,
-                        plugins: { legend: { display: true, position: 'bottom' } },
+                        plugins: {
+                            legend: { display: true, position: 'bottom' },
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'end',
+                                color: '#222',
+                                font: { weight: 'bold', size: 14 },
+                                formatter: function(value, context) {
+                                    return currency + value.toLocaleString();
+                                }
+                            }
+                        },
                         scales: { y: { beginAtZero: true } }
-                    }
+                    },
+                    plugins: [ChartDataLabels]
                 });
             }
         }
@@ -841,6 +839,8 @@
 
       document.addEventListener('DOMContentLoaded', function() {
           loadAnalyticsData();
+          // Render manday rate charts after data is loaded
+          setTimeout(renderMandayRateCountryCharts, 1000);
       });
     </script>
 </body>

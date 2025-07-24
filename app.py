@@ -15,7 +15,7 @@ from datetime import datetime
 from sqlalchemy import func
 import uuid
 from calculator import get_committed_amount_rates
-from pricing_config import committed_amount_slabs
+from pricing_config import committed_amount_slabs, PLATFORM_PRICING_GUIDANCE
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
@@ -127,94 +127,41 @@ def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, a
     """
     Calculates the platform fee based on country and selected options.
     Returns (fee, currency).
-    Updated to match the new fee table provided.
+    Now uses PLATFORM_PRICING_GUIDANCE for all values.
     """
-    # Minimum platform fee
-    min_fees = {
-        'India': 100000,
-        'MENA': 2000,
-        'LATAM': 2000,
-        'Africa': 1000,
-        'Europe': 2508,
-        'Rest of the World': 2000,
-    }
-    fee = min_fees.get(country, 2000)
+    guidance = PLATFORM_PRICING_GUIDANCE.get(country, PLATFORM_PRICING_GUIDANCE['Rest of the World'])
+    fee = guidance['minimum']
     currency = 'INR' if country == 'India' else 'USD'
-
     # BFSI Tiers
-    bfsi_fees = {
-        'India':    {'Tier 1': 250000, 'Tier 2': 500000, 'Tier 3': 800000},
-        'MENA':     {'Tier 1': 4168,   'Tier 2': 8335,   'Tier 3': 13336},
-        'LATAM':    {'Tier 1': 4168,   'Tier 2': 8335,   'Tier 3': 13336},
-        'Africa':   {'Tier 1': 2083,   'Tier 2': 4165,   'Tier 3': 6664},
-        'Europe':   {'Tier 1': 5225,   'Tier 2': 10450,  'Tier 3': 16720},
-        'Rest of the World': {'Tier 1': 4168, 'Tier 2': 8335, 'Tier 3': 13336},
-    }
-    if bfsi_tier in ['Tier 1', 'Tier 2', 'Tier 3']:
-        fee += bfsi_fees.get(country, bfsi_fees['Rest of the World']).get(bfsi_tier, 0)
-
+    if bfsi_tier == 'Tier 1':
+        fee += guidance.get('BFSI_Tier_1', 0)
+    elif bfsi_tier == 'Tier 2':
+        fee += guidance.get('BFSI_Tier_2', 0)
+    elif bfsi_tier == 'Tier 3':
+        fee += guidance.get('BFSI_Tier_3', 0)
     # TPS
-    tps_fees = {
-        'India':    {'250': 50000,  '1000': 100000},
-        'MENA':     {'250': 834,    '1000': 1667},
-        'LATAM':    {'250': 834,    '1000': 1667},
-        'Africa':   {'250': 417,    '1000': 833},
-        'Europe':   {'250': 1045,   '1000': 2090},
-        'Rest of the World': {'250': 834, '1000': 1667},
-    }
-    if increased_tps in ['250', '1000']:
-        fee += tps_fees.get(country, tps_fees['Rest of the World']).get(increased_tps, 0)
-
+    if increased_tps == '250':
+        fee += guidance.get('TPS_250', 0)
+    elif increased_tps == '1000':
+        fee += guidance.get('TPS_1000', 0)
     # Personalize Load
-    personalize_fees = {
-        'India':    {'Standard': 50000, 'Advanced': 100000},
-        'MENA':     {'Standard': 834,   'Advanced': 1667},
-        'LATAM':    {'Standard': 834,   'Advanced': 1667},
-        'Africa':   {'Standard': 417,   'Advanced': 833},
-        'Europe':   {'Standard': 1045,  'Advanced': 2090},
-        'Rest of the World': {'Standard': 834, 'Advanced': 1667},
-    }
     if personalize_load == 'Standard':
-        fee += personalize_fees.get(country, personalize_fees['Rest of the World'])['Standard']
+        fee += guidance.get('Personalize_Standard', 0)
     elif personalize_load in ['Advanced', 'Pro']:
-        fee += personalize_fees.get(country, personalize_fees['Rest of the World'])['Advanced']
-
+        fee += guidance.get('Personalize_Pro', 0)
     # Agent Assist (Human Agents)
-    agent_fees = {
-        'India':    {'20+': 50000, '50+': 75000, '100+': 100000},
-        'MENA':     {'20+': 834,   '50+': 1250,  '100+': 1667},
-        'LATAM':    {'20+': 834,   '50+': 1250,  '100+': 1667},
-        'Africa':   {'20+': 417,   '50+': 625,   '100+': 833},
-        'Europe':   {'20+': 1045,  '50+': 1568,  '100+': 2090},
-        'Rest of the World': {'20+': 834, '50+': 1250, '100+': 1667},
-    }
-    if human_agents in ['20+', '50+', '100+']:
-        fee += agent_fees.get(country, agent_fees['Rest of the World']).get(human_agents, 0)
-
+    if human_agents == '20+':
+        fee += guidance.get('Agent_Assist_20_50', 0)
+    elif human_agents == '50+':
+        fee += guidance.get('Agent_Assist_50_100', 0)
+    elif human_agents == '100+':
+        fee += guidance.get('Agent_Assist_100_plus', 0)
     # AI Module
-    ai_module_fees = {
-        'India': 50000,
-        'MENA': 834,
-        'LATAM': 834,
-        'Africa': 417,
-        'Europe': 1045,
-        'Rest of the World': 834,
-    }
     if ai_module == 'Yes':
-        fee += ai_module_fees.get(country, ai_module_fees['Rest of the World'])
-
+        fee += guidance.get('AI_Module', 0)
     # Smart CPaaS
-    smart_cpaas_fees = {
-        'India': 25000,
-        'MENA': 417,
-        'LATAM': 417,
-        'Africa': 208,
-        'Europe': 523,
-        'Rest of the World': 417,
-    }
     if smart_cpaas == 'Yes':
-        fee += smart_cpaas_fees.get(country, smart_cpaas_fees['Rest of the World'])
-
+        fee += guidance.get('Smart_CPaaS', 0)
     return fee, currency
 
 # Custom Jinja2 filter for number formatting

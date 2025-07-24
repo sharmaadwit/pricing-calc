@@ -295,6 +295,15 @@ def update_analytics_summary():
 
         # Per-country stats
         country_stats = {}
+        # Define rate card (list) prices for each country (from pricing_config.py)
+        LIST_PRICES = {
+            'India': {'bot_ui': 20000, 'custom_ai': 30000},
+            'LATAM': {'bot_ui': 580, 'custom_ai': 750},
+            'MENA': {'bot_ui': 300, 'custom_ai': 500},
+            'Africa': {'bot_ui': 300, 'custom_ai': 420},
+            'Europe': {'bot_ui': 300, 'custom_ai': 420},
+            'Rest of the World': {'bot_ui': 300, 'custom_ai': 420},
+        }
         for country, group in df.groupby('country'):
             currency = group['currency'].dropna().iloc[0] if 'currency' in group and not group['currency'].dropna().empty else ''
             # --- Per-country arrays for charts ---
@@ -335,13 +344,21 @@ def update_analytics_summary():
             route_counts_series = group['calculation_route'].value_counts()
             route_counts = route_counts_series.values.tolist()
             # Manday rates (list and average)
+            if country == 'LATAM':
+                list_bot = LIST_PRICES.get(country, {}).get('bot_ui', float(group['bot_ui_manday_rate'].dropna().mean()) if 'bot_ui_manday_rate' in group else 0)
+                list_ai = LIST_PRICES.get(country, {}).get('custom_ai', float(group['custom_ai_manday_rate'].dropna().mean()) if 'custom_ai_manday_rate' in group else 0)
+            else:
+                list_bot = LIST_PRICES.get(country, {}).get('bot_ui', float(group['bot_ui_manday_rate'].dropna().mean()) if 'bot_ui_manday_rate' in group else 0)
+                list_ai = LIST_PRICES.get(country, {}).get('custom_ai', float(group['custom_ai_manday_rate'].dropna().mean()) if 'custom_ai_manday_rate' in group else 0)
+            avg_bot = float(group['bot_ui_manday_rate'].dropna().mean()) if 'bot_ui_manday_rate' in group else 0
+            avg_ai = float(group['custom_ai_manday_rate'].dropna().mean()) if 'custom_ai_manday_rate' in group else 0
             bot_ui_manday_rate = {
-                'list': float(group['bot_ui_manday_rate'].dropna().mean()) if 'bot_ui_manday_rate' in group else 0,
-                'average': float(group['bot_ui_manday_rate'].dropna().mean()) if 'bot_ui_manday_rate' in group else 0
+                'list': list_bot,
+                'average': avg_bot
             }
             custom_ai_manday_rate = {
-                'list': float(group['custom_ai_manday_rate'].dropna().mean()) if 'custom_ai_manday_rate' in group else 0,
-                'average': float(group['custom_ai_manday_rate'].dropna().mean()) if 'custom_ai_manday_rate' in group else 0
+                'list': list_ai,
+                'average': avg_ai
             }
             # Restore stat function for summary stats
             def stat(col):
