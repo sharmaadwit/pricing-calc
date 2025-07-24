@@ -1258,6 +1258,8 @@ def analytics():
                     region_map = {}
                     for a in country_analytics:
                         region = getattr(a, 'region', '') or 'All'
+                        if region == 'All' or not region:
+                            region = a.country
                         if region not in region_map:
                             region_map[region] = []
                         region_map[region].append(a)
@@ -1395,8 +1397,14 @@ def analytics():
                     # Add one_time_dev_cost and per_manday_cost for user/country/currency
                     rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])
                     if country == 'LATAM':
-                        bot_ui_rate = rates['bot_ui'].get(country, rates['bot_ui']['Rest of the World'])
-                        custom_ai_rate = rates['custom_ai'].get(country, rates['custom_ai']['Rest of the World'])
+                        if isinstance(rates['bot_ui'], dict):
+                            bot_ui_rate = rates['bot_ui'].get(country, list(rates['bot_ui'].values())[0])
+                        else:
+                            bot_ui_rate = rates['bot_ui']
+                        if isinstance(rates['custom_ai'], dict):
+                            custom_ai_rate = rates['custom_ai'].get(country, list(rates['custom_ai'].values())[0])
+                        else:
+                            custom_ai_rate = rates['custom_ai']
                     else:
                         bot_ui_rate = rates['bot_ui']
                         custom_ai_rate = rates['custom_ai']
