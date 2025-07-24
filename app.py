@@ -759,8 +759,8 @@ def index():
                 rate_card_markups = {
                     'AI Message': ca_rates['ai'],
                     'Advanced Message': ca_rates['advanced'],
-                    'Basic Marketing Message': ca_rates['marketing'],
-                    'Basic Utility/Authentication Message': ca_rates['utility'],
+                    'Basic Marketing Message': ca_rates['basic_marketing'],
+                    'Basic Utility/Authentication Message': ca_rates['basic_utility'],
                 }
             else:
                 # Volumes route: use price_tiers
