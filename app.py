@@ -196,6 +196,7 @@ class Analytics(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False)
     user_name = db.Column(db.String(128))
     country = db.Column(db.String(64))
+    region = db.Column(db.String(64))  # Added region column for region-specific analytics
     platform_fee = db.Column(db.Float)
     ai_price = db.Column(db.Float)
     advanced_price = db.Column(db.Float)
