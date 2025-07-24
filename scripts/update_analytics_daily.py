@@ -304,6 +304,10 @@ def update_analytics_summary():
             'Europe': {'bot_ui': 300, 'custom_ai': 420},
             'Rest of the World': {'bot_ui': 300, 'custom_ai': 420},
         }
+        from pricing_config import price_tiers
+        def get_list_price(country, msg_type):
+            tiers = price_tiers.get(country, price_tiers.get('Rest of the World', {})).get(msg_type, [])
+            return tiers[0][2] if tiers else 0.0
         for country, group in df.groupby('country'):
             currency = group['currency'].dropna().iloc[0] if 'currency' in group and not group['currency'].dropna().empty else ''
             # --- Per-country arrays for charts ---
@@ -397,10 +401,10 @@ def update_analytics_summary():
             country_stats[country] = {
                 'currency': currency,
                 'platform_fee': stat('platform_fee'),
-                'ai_message': stat('ai_price'),
-                'advanced_message': stat('advanced_price'),
-                'basic_marketing_message': stat('basic_marketing_price'),
-                'basic_utility_message': stat('basic_utility_price'),
+                'ai_message': dict(stat('ai_price'), list=get_list_price(country, 'ai')),
+                'advanced_message': dict(stat('advanced_price'), list=get_list_price(country, 'advanced')),
+                'basic_marketing_message': dict(stat('basic_marketing_price'), list=get_list_price(country, 'basic_marketing')),
+                'basic_utility_message': dict(stat('basic_utility_price'), list=get_list_price(country, 'basic_utility')),
                 'committed_amount': stat('committed_amount'),
                 'one_time_dev_cost': stat('bot_ui_manday_rate') if 'bot_ui_manday_rate' in group else {},
                 'bot_ui_manday_cost': stat('bot_ui_manday_rate'),
