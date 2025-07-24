@@ -247,14 +247,6 @@
         <div id="pricing" class="tab-content active">
             <div class="section">
                 <h2>Pricing Strategy Analytics</h2>
-                <div class="insights">
-                    <h4>Key Insights:</h4>
-                    <ul>
-                        <li>Average discount on AI services is 15%</li>
-                        <li>Weekly revenue shows consistent growth</li>
-                        <li>Rate card vs actual pricing shows healthy margins</li>
-                    </ul>
-                </div>
                 <!-- Per-country message type bar charts -->
                 <div id="messageTypeCountryContainer" style="display: flex; flex-wrap: wrap; gap: 24px;"></div>
                 <!-- Remove Rate Card vs Actual Prices graph -->
@@ -856,10 +848,15 @@
                 const [country, stats] = entries[i];
                 const currency = stats.currency || '';
                 const chartId = `msgTypeCountryChart_${country.replace(/\W/g, '')}`;
-                const ai = stats.ai_message && stats.ai_message.average ? Number(stats.ai_message.average) : 0;
-                const adv = stats.advanced_message && stats.advanced_message.average ? Number(stats.advanced_message.average) : 0;
-                const mkt = stats.basic_marketing_message && stats.basic_marketing_message.average ? Number(stats.basic_marketing_message.average) : 0;
-                const utl = stats.basic_utility_message && stats.basic_utility_message.average ? Number(stats.basic_utility_message.average) : 0;
+                // List and average for each message type
+                const ai_avg = stats.ai_message && stats.ai_message.average ? Number(stats.ai_message.average) : 0;
+                const ai_list = stats.ai_message && stats.ai_message.list ? Number(stats.ai_message.list) : 0;
+                const adv_avg = stats.advanced_message && stats.advanced_message.average ? Number(stats.advanced_message.average) : 0;
+                const adv_list = stats.advanced_message && stats.advanced_message.list ? Number(stats.advanced_message.list) : 0;
+                const mkt_avg = stats.basic_marketing_message && stats.basic_marketing_message.average ? Number(stats.basic_marketing_message.average) : 0;
+                const mkt_list = stats.basic_marketing_message && stats.basic_marketing_message.list ? Number(stats.basic_marketing_message.list) : 0;
+                const utl_avg = stats.basic_utility_message && stats.basic_utility_message.average ? Number(stats.basic_utility_message.average) : 0;
+                const utl_list = stats.basic_utility_message && stats.basic_utility_message.list ? Number(stats.basic_utility_message.list) : 0;
                 const ctx = document.getElementById(chartId).getContext('2d');
                 new Chart(ctx, {
                     type: 'bar',
@@ -867,10 +864,17 @@
                         labels: ['AI', 'Advanced', 'Marketing', 'Utility'],
                         datasets: [
                             {
+                                label: 'List Price',
+                                data: [ai_list, adv_list, mkt_list, utl_list],
+                                backgroundColor: '#fed6e3',
+                                borderColor: '#fed6e3',
+                                borderWidth: 2
+                            },
+                            {
                                 label: 'Average Price',
-                                data: [ai, adv, mkt, utl],
-                                backgroundColor: ['#43e97b', '#667eea', '#f093fb', '#f5576c'],
-                                borderColor: ['#43e97b', '#667eea', '#f093fb', '#f5576c'],
+                                data: [ai_avg, adv_avg, mkt_avg, utl_avg],
+                                backgroundColor: '#43e97b',
+                                borderColor: '#43e97b',
                                 borderWidth: 2
                             }
                         ]
@@ -878,7 +882,7 @@
                     options: {
                         responsive: true,
                         plugins: {
-                            legend: { display: false },
+                            legend: { display: true, position: 'top' },
                             datalabels: {
                                 anchor: 'end',
                                 align: 'end',
