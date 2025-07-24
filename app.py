@@ -1107,8 +1107,8 @@ def index():
         suggested_prices = {
             'ai_price': selected_slab['ai'] if selected_slab else '',
             'advanced_price': selected_slab['advanced'] if selected_slab else '',
-            'basic_marketing_price': selected_slab['marketing'] if selected_slab else '',
-            'basic_utility_price': selected_slab['utility'] if selected_slab else '',
+            'basic_marketing_price': selected_slab['basic_marketing'] if selected_slab else '',
+            'basic_utility_price': selected_slab['basic_utility'] if selected_slab else '',
             'bot_ui_manday_rate': default_bot_ui,
             'custom_ai_manday_rate': default_custom_ai,
         }
