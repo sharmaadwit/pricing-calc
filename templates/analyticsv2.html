@@ -248,6 +248,19 @@
         <div class="nav-tabs">
             <div class="nav-tab active" onclick="showTab('pricing')">Pricing Strategy</div>
             <div class="nav-tab" onclick="showTab('platform')">Platform Analytics</div>
+            <div class="nav-tab" onclick="showTab('regional')">Regional Analytics</div>
+        </div>
+
+        <!-- Regional Analytics Section -->
+        <div id="regional-analytics-section" style="display:none;">
+            <div style="margin: 20px 0;">
+                <label for="countrySelect"><b>Country:</b></label>
+                <select id="countrySelect" style="margin-right: 20px;"></select>
+                <label for="regionSelect"><b>Region:</b></label>
+                <select id="regionSelect"></select>
+            </div>
+            <div id="regionSummary" class="summary-cards"></div>
+            <canvas id="regionChart" width="400" height="200" style="margin-bottom: 32px;"></canvas>
         </div>
 
         <!-- Pricing Strategy -->
@@ -796,6 +809,16 @@
 
           // Add active class to clicked tab
           event.target.classList.add('active');
+
+          // Show/hide regional analytics section
+          const regionalSection = document.getElementById('regional-analytics-section');
+          if (tabName === 'pricing') {
+              regionalSection.style.display = 'none';
+          } else if (tabName === 'platform') {
+              regionalSection.style.display = 'none';
+          } else if (tabName === 'regional') {
+              regionalSection.style.display = 'block';
+          }
       }
 
       // On data load, setup dropdown and render initial charts
@@ -950,6 +973,8 @@
           setTimeout(renderMandayRateCountryCharts, 1500);
           // Render message type charts after data is loaded
           setTimeout(renderMessageTypeCountryCharts, 1700);
+          // Show Pricing Strategy tab by default
+          showTab('pricing');
       });
 
       function renderMessageTypeCountryCharts() {
