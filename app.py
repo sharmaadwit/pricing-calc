@@ -670,6 +670,7 @@ def index():
         if inputs.get('increased_tps', 'NA') not in ['NA', 'No']:
             user_selections.append(('Increased TPS', inputs['increased_tps']))
         inclusions = initialize_inclusions()
+        base_inclusions = inclusions['Platform Fee Used for Margin Calculation']
         final_inclusions = []
         # Only add base inclusions that do not overlap with selected options
         for item in base_inclusions:
