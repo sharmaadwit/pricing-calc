@@ -433,13 +433,25 @@
                 <td style="text-align:right;">{{ currency_symbol }}{{ final_price_details.platform_fee_total|int|default(0) }}</td>
               </tr>
               <tr>
-                <td><b>AI Messages</b></td>
+                <td><b>AI messages (Channel fee_Gupshup markup)</b></td>
                 <td style="text-align:right;">#{{ final_price_details.ai_messages.volume }} ( {{ currency_symbol }}{{ final_price_details.ai_messages.price_per_msg|round(2) }} per Msg )</td>
               </tr>
               <tr>
-                <td><b>Advanced Messages</b></td>
+                <td><b>Advanced messages (Channel fee_Gupshup markup)</b></td>
                 <td style="text-align:right;">#{{ final_price_details.advanced_messages.volume }} ( {{ currency_symbol }}{{ final_price_details.advanced_messages.price_per_msg|round(2) }} per Msg )</td>
               </tr>
+              {% if final_price_details.marketing_message.volume > 0 %}
+              <tr>
+                <td><b>Basic marketing messages (Channel fee_Gupshup markup)</b></td>
+                <td style="text-align:right;">#{{ final_price_details.marketing_message.volume }} ( {{ currency_symbol }}{{ final_price_details.marketing_message.price_per_msg|round(2) }} per Msg )</td>
+              </tr>
+              {% endif %}
+              {% if final_price_details.utility_message.volume > 0 %}
+              <tr>
+                <td><b>Basic utility/authentication messages (Channel fee_Gupshup markup)</b></td>
+                <td style="text-align:right;">#{{ final_price_details.utility_message.volume }} ( {{ currency_symbol }}{{ final_price_details.utility_message.price_per_msg|round(2) }} per Msg )</td>
+              </tr>
+              {% endif %}
               <tr>
                 <td><b>Overage AI Message</b></td>
                 <td style="text-align:right;">{{ currency_symbol }}{{ final_price_details.ai_messages.overage_price }} per unit</td>
@@ -514,8 +526,9 @@
                 <div><b>BA Effort (15%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.ba_cost)|smart_format }}</div>
                 <div><b>QA Effort (10%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.qa_cost)|smart_format }}</div>
                 <div><b>Project Manager (5%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.pm_cost)|smart_format }}</div>
-                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0;"><b>Uplift (Total):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.uplift_amount)|smart_format }}</div>
-                <div style="margin-top: 8px; font-weight: bold; color: #1a2a3a;"><b>Total One Time Dev Cost (with BA, QA, PM):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.total_cost)|smart_format }}</div>
+                <hr>
+                <div><b>Uplift (Total):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.uplift_amount)|smart_format }}</div>
+                <div style="font-weight: bold; margin-top: 10px;">Total One Time Dev Cost (with BA, QA, PM): {{ dev_cost_currency }}{{ (dev_cost_breakdown.total_cost)|smart_format }}</div>
               </div>
             </div>
           </div>
