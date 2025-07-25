@@ -200,22 +200,22 @@
         <!-- Section 1: One Time Dev Charges -->
         <div style="background: #ede7f6; border: 2px solid #bbaadd; border-radius: 10px; padding: 24px 32px; margin-bottom: 28px;">
             <h2 style="margin-top:0; color: #5e35b1;">One Time Dev Charges</h2>
-            <label for="onboarding_price">Onboarding:</label>
+            <label for="onboarding_price">Onboarding Required?:</label>
             <select name="onboarding_price" id="onboarding_price">
                 <option value="Yes" {% if inputs and inputs.onboarding_price == 'Yes' %}selected{% endif %}>Yes</option>
                 <option value="No" {% if inputs and inputs.onboarding_price == 'No' %}selected{% endif %}>No</option>
             </select><br>
-            <label for="ux_price">UX:</label>
+            <label for="ux_price">Journey Design Required?:</label>
             <select name="ux_price" id="ux_price">
                 <option value="Yes" {% if inputs and inputs.ux_price == 'Yes' %}selected{% endif %}>Yes</option>
                 <option value="No" {% if inputs and inputs.ux_price == 'No' %}selected{% endif %}>No</option>
             </select><br>
-            <label for="testing_qa_price">Testing/QA:</label>
+            <label for="testing_qa_price">Testing/QA Services Required?:</label>
             <select name="testing_qa_price" id="testing_qa_price">
                 <option value="Yes" {% if inputs and inputs.testing_qa_price == 'Yes' %}selected{% endif %}>Yes</option>
                 <option value="No" {% if inputs and inputs.testing_qa_price == 'No' %}selected{% endif %}>No</option>
             </select><br>
-            <label for="aa_setup_price">AA Setup:</label>
+            <label for="aa_setup_price">Agent Assist Setup Required?:</label>
             <select name="aa_setup_price" id="aa_setup_price">
                 <option value="Yes" {% if inputs and inputs.aa_setup_price == 'Yes' %}selected{% endif %}>Yes</option>
                 <option value="No" {% if inputs and inputs.aa_setup_price == 'No' %}selected{% endif %}>No</option>
