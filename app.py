@@ -55,10 +55,14 @@ def initialize_inclusions():
     Only the inclusions for the highest/most specific tier in each category should be shown.
     """
     inclusions = {
-        'Platform Fee Used for Margin Calculation': [
+         'Platform Fee Used for Margin Calculation': [
             'Journey Builder Lite',
             'Campaign Manager',
-            'CTWA - (Meta, Tiktok)'
+            'CTWA - (Meta, Tiktok)',
+            'Agent Assist < 20 Agents',
+            'personalize lite upto 1 million records - no advanced events',
+            '80 TPS',
+            '1 manday/month maintenance'
         ],
         'Personalize Load Lite': [
             'personalize lite upto 1 million records - no advanced events'
