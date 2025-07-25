@@ -114,7 +114,7 @@
         </select><br>
         <div id="region-dropdown-container" style="display: none;">
             <label for="region">Region:</label>
-            <select name="region" id="region-select">
+            <select name="region" id="region-select" required>
                 <!-- Options will be populated dynamically -->
             </select>
         </div><br>
@@ -138,6 +138,7 @@
             const selectedCountry = countrySelect.value;
             if (regionMapping[selectedCountry]) {
                 regionContainer.style.display = 'block';
+                regionSelect.required = true;
                 // Add a default "Select Region" option
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
@@ -156,12 +157,22 @@
                 }
             } else {
                 regionContainer.style.display = 'none';
+                regionSelect.required = false;
             }
         }
         document.addEventListener('DOMContentLoaded', function() {
             updateMinPlatformFee();
             toggleDevLocation();
             updateRegionDropdown();
+            document.getElementById('volumes-form').addEventListener('submit', function(e) {
+                const country = document.getElementById('country-select').value;
+                const regionSelect = document.getElementById('region-select');
+                if (regionMapping[country] && (!regionSelect.value || regionSelect.value === '')) {
+                    alert('Please select a region for ' + country + '.');
+                    regionSelect.focus();
+                    e.preventDefault();
+                }
+            });
         });
         </script>
         <div id="dev-location-group" style="display: none; margin-bottom: 16px;">
