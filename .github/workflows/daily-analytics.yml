@@ -24,4 +24,14 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run analytics update script
-        run: python scripts/update_analytics_daily.py 
+        run: python scripts/update_analytics_daily.py
+
+      - name: Commit and push updated analytics_summary.json
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add static/analytics_summary.json
+          git commit -m "Update analytics_summary.json [skip ci]" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
