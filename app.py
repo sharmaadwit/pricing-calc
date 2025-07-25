@@ -273,6 +273,8 @@ def index():
     results = None
     currency_symbol = None
 
+    min_fees = {country: data['minimum'] for country, data in PLATFORM_PRICING_GUIDANCE.items()}
+
     # Defensive: ensure session data exists for edit actions
     if step == 'volumes' and request.method == 'POST':
         # Clear previous session state for a new calculation
@@ -355,7 +357,7 @@ def index():
         print("DEBUG: session['inputs'] just set to:", session['inputs'], file=sys.stderr, flush=True)
         if all(float(v) == 0.0 for v in [ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume]):
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-            return render_template('index.html', step='bundle', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), platform_fee=platform_fee, calculation_id=calculation_id)
+            return render_template('index.html', step='bundle', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
         # Suggest prices
         def is_zero(val):
             try:
@@ -369,7 +371,7 @@ def index():
             'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_lowest_tier_price(country, 'basic_utility'),
         }
         suggested_prices = patch_suggested_prices(suggested_prices, session.get('inputs', {}))
-        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
+        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
 
     elif step == 'prices' and request.method == 'POST':
         print('HANDLER: Entered prices POST step', file=sys.stderr, flush=True)
@@ -441,7 +443,7 @@ def index():
             }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             # Re-render the pricing page with user input and error
-            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
         print('HANDLER: No discount errors, continuing to results calculation', file=sys.stderr, flush=True)
 
         # Always recalculate platform fee before saving to session['pricing_inputs']
@@ -582,7 +584,7 @@ def index():
                 'basic_utility_price': suggested_utility,
             }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
         
         # Remove duplicate Committed Amount if present
         seen = set()
@@ -605,7 +607,7 @@ def index():
                 'basic_utility_price': suggested_utility,
             }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
         print("PASSED results validation, about to render results page", file=sys.stderr, flush=True)
         try:
             # --- Ensure manday_rates is always set and complete ---
@@ -664,11 +666,11 @@ def index():
                     'basic_utility_price': suggested_utility,
                 }
                 currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-                return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
+                return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
         except Exception as e:
             print(f"DEBUG: Error in manday/dev cost or pricing calculation: {e}", file=sys.stderr, flush=True)
             flash('Internal error during calculation. Please try again.', 'error')
-            return render_template('index.html', step='prices', suggested={}, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id)
+            return render_template('index.html', step='prices', suggested={}, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
         results['margin'] = results.get('margin', '')
         expected_invoice_amount = results.get('revenue', 0)
         chosen_platform_fee = float(platform_fee)
@@ -1031,7 +1033,9 @@ def index():
                 calculation_id=calculation_id,
                 dev_cost_breakdown=dev_cost_breakdown,
                 final_price_details=final_price_details,
-                pricing_simulation=None
+                pricing_simulation=None,
+                platform_pricing_guidance=PLATFORM_PRICING_GUIDANCE,
+                min_fees=min_fees
             )
         # Recalculate platform fee for the current country and selections before rendering results
         country = inputs.get('country', 'India')
@@ -1076,7 +1080,9 @@ def index():
             calculation_id=calculation_id,
             dev_cost_breakdown=dev_cost_breakdown,
             final_price_details=final_price_details,
-            pricing_simulation=pricing_simulation
+            pricing_simulation=pricing_simulation,
+            platform_pricing_guidance=PLATFORM_PRICING_GUIDANCE,
+            min_fees=min_fees
         )
     # Defensive: handle GET or POST for edit actions
     elif step == 'volumes':
@@ -1085,9 +1091,9 @@ def index():
             if request.method == 'POST':
                 flash('Session expired or missing. Please start again.', 'error')
             currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
-            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={}, calculation_id=calculation_id)
+            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={}, calculation_id=calculation_id, min_fees=min_fees)
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
-        return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs, calculation_id=calculation_id)
+        return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs, calculation_id=calculation_id, min_fees=min_fees)
     elif step == 'prices':
         inputs = session.get('inputs', {})
         pricing_inputs = session.get('pricing_inputs', {}) or {}
@@ -1121,7 +1127,7 @@ def index():
                     'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
                     'bot_ui_manday_rate': default_bot_ui,
                     'custom_ai_manday_rate': default_custom_ai,
-                }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id)
+                }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id, min_fees=min_fees)
             # Save user rates for use in results
             session['manday_rates'] = {
                 'bot_ui': user_bot_ui,
@@ -1138,7 +1144,7 @@ def index():
                 'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
                 'bot_ui_manday_rate': default_bot_ui,
                 'custom_ai_manday_rate': default_custom_ai,
-            }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id)
+            }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id, min_fees=min_fees)
     elif step == 'bundle' and request.method == 'POST':
         # User submitted messaging bundle commitment (can be 0)
         inputs = session.get('inputs', {}) or {}
@@ -1192,11 +1198,11 @@ def index():
             'custom_ai_manday_rate': default_custom_ai,
         }
         suggested_prices = patch_suggested_prices(suggested_prices, inputs)
-        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id)
+        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id, min_fees=min_fees)
     # Default: show volume input form
     country = session.get('inputs', {}).get('country', 'India')
     currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-    return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), calculation_id=calculation_id)
+    return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), calculation_id=calculation_id, min_fees=min_fees)
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():

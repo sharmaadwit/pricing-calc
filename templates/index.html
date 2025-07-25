@@ -206,7 +206,7 @@
                 <option value="No" {% if inputs and inputs.onboarding_price == 'No' %}selected{% endif %}>No</option>
             </select><br>
             <label for="ux_price">Journey Design Required?:</label>
-            <select name="ux_price" id="ux_price">
+            <select name="ux_price" id="ux_price" >
                 <option value="Yes" {% if inputs and inputs.ux_price == 'Yes' %}selected{% endif %}>Yes</option>
                 <option value="No" {% if inputs and inputs.ux_price == 'No' %}selected{% endif %}>No</option>
             </select><br>
@@ -245,7 +245,7 @@
         <div style="background: #e3f2fd; border: 2px solid #90caf9; border-radius: 10px; padding: 24px 32px; margin-bottom: 28px;">
             <h2 style="margin-top:0; color: #1976d2;">Monthly Fixed Platform Fee Calculation</h2>
             <label>Minimum Platform Fee:</label>
-            <input type="text" id="min_platform_fee" name="min_platform_fee" value="INR 120000" readonly><br>
+            <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly><br>
             <small>Journey Builder Lite, Campaign Manager, CTWA (Meta, Tiktok), Agent Assist <20, Personalize Lite (upto 1ml and no advanced events), 80 TPS, 1 manday/month maintenance</small><br><br>
             <label>Personalize Load:</label>
             <select name="personalize_load">
@@ -293,14 +293,17 @@
         </div>
     </form>
     <script>
+    // Make backend config available to JS
+    const MIN_FEES = {{ min_fees | tojson }};
     function updateMinPlatformFee() {
         var country = document.getElementById('country-select').value;
-        var minFee = '';
-        if (country === 'India') minFee = 'INR 120000';
-        else if (country === 'Africa') minFee = 'USD 1000';
-        else if (country === 'Europe') minFee = 'USD 2508';
-        else if (country === 'MENA' || country === 'LATAM' || country === 'Rest of the World') minFee = 'USD 2000';
-        document.getElementById('min_platform_fee').value = minFee;
+        var minFee = MIN_FEES[country] || MIN_FEES['Rest of the World'];
+        var currency = (country === 'India') ? 'INR' : 'USD';
+        if (minFee !== undefined) {
+            document.getElementById('min_platform_fee').value = currency + ' ' + minFee;
+        } else {
+            document.getElementById('min_platform_fee').value = '';
+        }
     }
     window.onload = updateMinPlatformFee;
     
