@@ -773,6 +773,18 @@ def index():
             final_inclusions += inclusions['BFSI Tier 2']
         elif bfsi_tier == 'Tier 1':
             final_inclusions += inclusions['BFSI Tier 1']
+        # Remove lower-tier inclusions if higher tier is selected
+        if human_agents in ['20+', '50+', '100+']:
+            if 'Agent Assist < 20 Agents' in final_inclusions:
+                final_inclusions.remove('Agent Assist < 20 Agents')
+        if personalize_load in ['Standard', 'Advanced']:
+            if 'personalize lite upto 1 million records - no advanced events' in final_inclusions:
+                final_inclusions.remove('personalize lite upto 1 million records - no advanced events')
+        if increased_tps in ['250', '1000']:
+            if '80 TPS' in final_inclusions:
+                final_inclusions.remove('80 TPS')
+        # Remove duplicates
+        final_inclusions = list(dict.fromkeys(final_inclusions))
         # Pass contradiction_warning to the template for display if needed
         session['selected_components'] = user_selections
         session['results'] = results
