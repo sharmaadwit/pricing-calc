@@ -306,10 +306,18 @@ def update_analytics_summary():
             'Europe': {'bot_ui': 300, 'custom_ai': 420},
             'Rest of the World': {'bot_ui': 300, 'custom_ai': 420},
         }
-        from pricing_config import price_tiers
+        from pricing_config import price_tiers, committed_amount_slabs
         def get_list_price(country, msg_type):
-            tiers = price_tiers.get(country, price_tiers.get('Rest of the World', {})).get(msg_type, [])
-            return tiers[0][2] if tiers else 0.0
+            slabs = committed_amount_slabs.get(country, committed_amount_slabs.get('Rest of the World', []))
+            if not slabs:
+                return 0.0
+            # Find the highest price for the message type across all slabs (usually the first slab, lowest committed amount)
+            max_price = 0.0
+            for slab in slabs:
+                price = slab[2].get(msg_type, 0.0)
+                if price > max_price:
+                    max_price = price
+            return max_price
         for country, group in df.groupby('country'):
             currency = group['currency'].dropna().iloc[0] if 'currency' in group and not group['currency'].dropna().empty else ''
             # --- Per-country arrays for charts ---

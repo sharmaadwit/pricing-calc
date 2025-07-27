@@ -40,3 +40,25 @@ Building stats for country: LATAM
 [2025-07-25 10:30:20] Daily analytics update completed successfully!
 [DEBUG] Script finished at: 2025-07-25 10:30:20
 [DEBUG] Total execution time: 5.69 seconds
+[DEBUG] Script started at: 2025-07-26 10:30:24
+[2025-07-26 10:30:24] Starting daily analytics update process...
+[2025-07-26 10:30:24] Starting CSV export from PostgreSQL...
+[2025-07-26 10:30:26] Successfully exported data to analytics.csv
+[DEBUG] After DB export: 1.53 seconds elapsed
+[2025-07-26 10:30:26] Generating analytics charts...
+[2025-07-26 10:30:26] Loaded 109 records from analytics.csv
+[2025-07-26 10:30:27] Generated temporal charts
+[2025-07-26 10:30:27] Generated customer charts
+[2025-07-26 10:30:28] Generated pricing charts
+[2025-07-26 10:30:29] Generated geographic charts
+[2025-07-26 10:30:29] Generated resource charts
+[2025-07-26 10:30:30] Generated platform charts
+[DEBUG] After chart generation: 5.40 seconds elapsed
+[2025-07-26 10:30:30] Updating analytics summary...
+Building stats for country: India
+Building stats for country: LATAM
+[2025-07-26 10:30:30] Analytics summary updated successfully
+[DEBUG] After writing summary JSON: 5.47 seconds elapsed
+[2025-07-26 10:30:30] Daily analytics update completed successfully!
+[DEBUG] Script finished at: 2025-07-26 10:30:30
+[DEBUG] Total execution time: 5.47 seconds
