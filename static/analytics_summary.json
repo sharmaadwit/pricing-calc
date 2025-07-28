@@ -1,9 +1,9 @@
 {
-  "total_calculations": 114,
-  "unique_users": 13,
-  "total_revenue": 26196654.0,
-  "countries": 2,
-  "last_updated": "2025-07-28 18:33:39",
+  "total_calculations": 116,
+  "unique_users": 14,
+  "total_revenue": 26200954.0,
+  "countries": 3,
+  "last_updated": "2025-07-28 21:20:10",
   "top_users": {
     "Kat": 7125000.0,
     "Ankit": 5400000.0,
@@ -13,10 +13,11 @@
   },
   "country_breakdown": {
     "India": 109,
-    "LATAM": 5
+    "LATAM": 5,
+    "Rest of the World": 2
   },
   "route_breakdown": {
-    "volumes": 89,
+    "volumes": 91,
     "bundle": 25
   },
   "country_stats": {
@@ -381,6 +382,148 @@
         "list": 750,
         "average": 512.6
       }
+    },
+    "Rest of the World": {
+      "currency": "$",
+      "platform_fee": {
+        "average": 2150.0,
+        "min": 1800.0,
+        "max": 2500.0,
+        "median": 2150.0
+      },
+      "ai_message": {
+        "average": 0.0267,
+        "min": 0.0267,
+        "max": 0.0267,
+        "median": 0.0267,
+        "list": 0.0333
+      },
+      "advanced_message": {
+        "average": 0.0133,
+        "min": 0.0133,
+        "max": 0.0133,
+        "median": 0.0133,
+        "list": 0.0167
+      },
+      "basic_marketing_message": {
+        "average": 0.0033,
+        "min": 0.0033,
+        "max": 0.0033,
+        "median": 0.0033,
+        "list": 0.005
+      },
+      "basic_utility_message": {
+        "average": 0.0008,
+        "min": 0.0008,
+        "max": 0.0008,
+        "median": 0.0008,
+        "list": 0.001
+      },
+      "committed_amount": {
+        "average": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "one_time_dev_cost": {
+        "average": 300.0,
+        "min": 300.0,
+        "max": 300.0,
+        "median": 300.0
+      },
+      "bot_ui_manday_cost": {
+        "average": 300.0,
+        "min": 300.0,
+        "max": 300.0,
+        "median": 300.0
+      },
+      "custom_ai_manday_cost": {
+        "average": 420.0,
+        "min": 420.0,
+        "max": 420.0,
+        "median": 420.0
+      },
+      "discounts": {
+        "ai_message": 0.0,
+        "advanced_message": 0.0,
+        "basic_marketing_message": 34.0,
+        "basic_utility_message": 20.0,
+        "bot_ui_manday_rate": 0,
+        "custom_ai_manday_rate": 0
+      },
+      "weekly_revenue": [
+        4300.0
+      ],
+      "weekly_revenue_labels": [
+        "2025-08-03"
+      ],
+      "clv": [
+        4300.0
+      ],
+      "clv_labels": [
+        "Abhiraj"
+      ],
+      "service_usage": [
+        0.0534,
+        0.0266,
+        0.0066,
+        0.0016
+      ],
+      "service_labels": [
+        "ai_price",
+        "advanced_price",
+        "basic_marketing_price",
+        "basic_utility_price"
+      ],
+      "manday_efficiency": [
+        91.48936170212765
+      ],
+      "manday_efficiency_labels": [
+        "Abhiraj"
+      ],
+      "hourly_counts": [
+        1,
+        1
+      ],
+      "hourly_labels": [
+        "19:00",
+        "20:00"
+      ],
+      "weekday_counts": [
+        2.0,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "weekday_labels": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ],
+      "route_revenue": [
+        4300.0
+      ],
+      "route_labels": [
+        "volumes"
+      ],
+      "route_counts": [
+        2
+      ],
+      "bot_ui_manday_rate": {
+        "list": 300,
+        "average": 300.0
+      },
+      "custom_ai_manday_rate": {
+        "list": 420,
+        "average": 420.0
+      }
     }
   },
   "region_stats": {
@@ -736,14 +879,17 @@
   },
   "platform_fee_by_country": [
     240198.623853211,
-    3000.8
+    3000.8,
+    2150.0
   ],
   "ai_message_by_country": [
     0.6776761467889909,
-    0.043340000000000004
+    0.043340000000000004,
+    0.0267
   ],
   "country_labels": [
     "India",
-    "LATAM"
+    "LATAM",
+    "Rest of the World"
   ]
 }
