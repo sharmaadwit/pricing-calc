@@ -1,9 +1,9 @@
 {
-  "total_calculations": 116,
+  "total_calculations": 117,
   "unique_users": 14,
-  "total_revenue": 26200954.0,
+  "total_revenue": 26203454.0,
   "countries": 3,
-  "last_updated": "2025-07-28 21:20:10",
+  "last_updated": "2025-07-29 02:03:27",
   "top_users": {
     "Kat": 7125000.0,
     "Ankit": 5400000.0,
@@ -14,10 +14,10 @@
   "country_breakdown": {
     "India": 109,
     "LATAM": 5,
-    "Rest of the World": 2
+    "Rest of the World": 3
   },
   "route_breakdown": {
-    "volumes": 91,
+    "volumes": 92,
     "bundle": 25
   },
   "country_stats": {
@@ -386,27 +386,27 @@
     "Rest of the World": {
       "currency": "$",
       "platform_fee": {
-        "average": 2150.0,
+        "average": 2266.6666666666665,
         "min": 1800.0,
         "max": 2500.0,
-        "median": 2150.0
+        "median": 2500.0
       },
       "ai_message": {
-        "average": 0.0267,
+        "average": 0.0289,
         "min": 0.0267,
-        "max": 0.0267,
+        "max": 0.0333,
         "median": 0.0267,
         "list": 0.0333
       },
       "advanced_message": {
-        "average": 0.0133,
+        "average": 0.014433333333333333,
         "min": 0.0133,
-        "max": 0.0133,
+        "max": 0.0167,
         "median": 0.0133,
         "list": 0.0167
       },
       "basic_marketing_message": {
-        "average": 0.0033,
+        "average": 0.0032999999999999995,
         "min": 0.0033,
         "max": 0.0033,
         "median": 0.0033,
@@ -452,22 +452,22 @@
         "custom_ai_manday_rate": 0
       },
       "weekly_revenue": [
-        4300.0
+        6800.0
       ],
       "weekly_revenue_labels": [
         "2025-08-03"
       ],
       "clv": [
-        4300.0
+        6800.0
       ],
       "clv_labels": [
         "Abhiraj"
       ],
       "service_usage": [
-        0.0534,
-        0.0266,
-        0.0066,
-        0.0016
+        0.0867,
+        0.0433,
+        0.009899999999999999,
+        0.0024000000000000002
       ],
       "service_labels": [
         "ai_price",
@@ -476,21 +476,23 @@
         "basic_utility_price"
       ],
       "manday_efficiency": [
-        91.48936170212765
+        110.5691056910569
       ],
       "manday_efficiency_labels": [
         "Abhiraj"
       ],
       "hourly_counts": [
         1,
+        1,
         1
       ],
       "hourly_labels": [
         "19:00",
-        "20:00"
+        "20:00",
+        "21:00"
       ],
       "weekday_counts": [
-        2.0,
+        3.0,
         null,
         null,
         null,
@@ -508,13 +510,13 @@
         "Sunday"
       ],
       "route_revenue": [
-        4300.0
+        6800.0
       ],
       "route_labels": [
         "volumes"
       ],
       "route_counts": [
-        2
+        3
       ],
       "bot_ui_manday_rate": {
         "list": 300,
@@ -880,12 +882,12 @@
   "platform_fee_by_country": [
     240198.623853211,
     3000.8,
-    2150.0
+    2266.6666666666665
   ],
   "ai_message_by_country": [
     0.6776761467889909,
     0.043340000000000004,
-    0.0267
+    0.0289
   ],
   "country_labels": [
     "India",
