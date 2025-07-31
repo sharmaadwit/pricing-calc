@@ -141,14 +141,14 @@ committed_amount_slabs = {
         (10000, 15000, {'basic_marketing': 0.0041, 'basic_utility': 0.0041, 'advanced': 0.0082, 'ai': 0.0154}),
     ],
     'Rest of the World': [
-        (0, 500,    {'basic_marketing': 0.0050, 'basic_utility': 0.0010, 'advanced': 0.0167, 'ai': 0.0333}),
-        (500, 1000, {'basic_marketing': 0.0040, 'basic_utility': 0.0008, 'advanced': 0.0150, 'ai': 0.0317}),
-        (1000, 1500, {'basic_marketing': 0.0032, 'basic_utility': 0.0006, 'advanced': 0.0133, 'ai': 0.0300}),
-        (1500, 2500, {'basic_marketing': 0.0026, 'basic_utility': 0.0005, 'advanced': 0.0117, 'ai': 0.0283}),
-        (2500, 5000, {'basic_marketing': 0.0020, 'basic_utility': 0.0004, 'advanced': 0.0100, 'ai': 0.0267}),
-        (5000, 7500, {'basic_marketing': 0.0016, 'basic_utility': 0.0003, 'advanced': 0.0083, 'ai': 0.0250}),
-        (7500, 10000, {'basic_marketing': 0.0013, 'basic_utility': 0.0003, 'advanced': 0.0067, 'ai': 0.0233}),
-        (10000, 15000, {'basic_marketing': 0.0010, 'basic_utility': 0.0002, 'advanced': 0.0050, 'ai': 0.0217}),
+        (0, 500,    {'basic_marketing': 0.0080, 'basic_utility': 0.0080, 'advanced': 0.0160, 'ai': 0.0267}),
+        (500, 1000,  {'basic_marketing': 0.0080, 'basic_utility': 0.0080, 'advanced': 0.0160, 'ai': 0.0267}),
+        (1000, 1500, {'basic_marketing': 0.0080, 'basic_utility': 0.0080, 'advanced': 0.0160, 'ai': 0.0267}),
+        (1500, 2500, {'basic_marketing': 0.0054, 'basic_utility': 0.0054, 'advanced': 0.0108, 'ai': 0.0203}),
+        (2500, 5000, {'basic_marketing': 0.0054, 'basic_utility': 0.0054, 'advanced': 0.0108, 'ai': 0.0203}),
+        (5000, 7500, {'basic_marketing': 0.0054, 'basic_utility': 0.0054, 'advanced': 0.0108, 'ai': 0.0203}),
+        (7500, 10000, {'basic_marketing': 0.0041, 'basic_utility': 0.0041, 'advanced': 0.0082, 'ai': 0.0154}),
+        (10000, 15000, {'basic_marketing': 0.0041, 'basic_utility': 0.0041, 'advanced': 0.0082, 'ai': 0.0154}),
     ],
 }
 
