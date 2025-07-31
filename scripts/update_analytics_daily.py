@@ -306,7 +306,7 @@ def update_analytics_summary():
             'Europe': {'bot_ui': 300, 'custom_ai': 420},
             'Rest of the World': {'bot_ui': 300, 'custom_ai': 420},
         }
-        from pricing_config import price_tiers, committed_amount_slabs
+        from pricing_config import committed_amount_slabs
         def get_list_price(country, msg_type):
             slabs = committed_amount_slabs.get(country, committed_amount_slabs.get('Rest of the World', []))
             if not slabs:

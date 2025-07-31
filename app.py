@@ -3,7 +3,7 @@
 # Key features: dynamic inclusions, robust error handling, session management, and professional UI.
 
 from flask import Flask, render_template, request, session, redirect, url_for, flash
-from calculator import calculate_pricing, get_suggested_price, price_tiers, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES, calculate_total_mandays_breakdown
+from calculator import calculate_pricing, get_suggested_price, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES, calculate_total_mandays_breakdown, get_committed_amount_rate_for_volume
 import os
 import sys
 import re
@@ -16,6 +16,7 @@ from sqlalchemy import func
 import uuid
 from calculator import get_committed_amount_rates
 from pricing_config import committed_amount_slabs, PLATFORM_PRICING_GUIDANCE
+from calculator import get_committed_amount_rate_for_volume
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
@@ -116,16 +117,6 @@ def initialize_inclusions():
         ]
     }
     return inclusions
-
-def get_lowest_tier_price(country, msg_type):
-    """
-    Returns the lowest tier price for a given country and message type.
-    Used for rate card price display when volume is zero.
-    """
-    tiers = price_tiers.get(country, {}).get(msg_type.replace('_price', ''), [])
-    if tiers:
-        return tiers[0][2]
-    return 0.0
 
 def calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas, increased_tps='NA'):
     """
@@ -368,7 +359,7 @@ def index():
             'ai_price': get_suggested_price(country, 'ai', ai_volume) if not is_zero(ai_volume) else get_lowest_tier_price(country, 'ai'),
             'advanced_price': get_suggested_price(country, 'advanced', advanced_volume) if not is_zero(advanced_volume) else get_lowest_tier_price(country, 'advanced'),
             'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if not is_zero(basic_marketing_volume) else get_lowest_tier_price(country, 'basic_marketing'),
-            'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_lowest_tier_price(country, 'basic_utility'),
+            'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_committed_amount_rate_for_volume(country, 'basic_utility', 0),
         }
         suggested_prices = patch_suggested_prices(suggested_prices, session.get('inputs', {}))
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
@@ -820,12 +811,6 @@ def index():
                     'Basic Marketing Message': ca_rates['basic_marketing'],
                     'Basic Utility/Authentication Message': ca_rates['basic_utility'],
                 }
-            else:
-                # Volumes route: use price_tiers
-                from calculator import price_tiers
-                for msg_type, label in [('ai', 'AI Message'), ('advanced', 'Advanced Message'), ('basic_marketing', 'Basic Marketing Message'), ('basic_utility', 'Basic Utility/Authentication Message')]:
-                    tiers = price_tiers['India'][msg_type]
-                    rate_card_markups[label] = tiers[0][2] if tiers else 0.0
         # ---
         for item in results['line_items']:
             if item.get('line_item') != 'Platform Fee (Chosen)':
@@ -1692,18 +1677,23 @@ def calculate_pricing_simulation(inputs):
     basic_utility_volume = float(inputs.get('basic_utility_volume', 0) or 0)
     platform_fee = float(inputs.get('platform_fee', 0) or 0)
     committed_amount = float(inputs.get('committed_amount', 0) or 0)
-    from pricing_config import price_tiers, meta_costs_table, committed_amount_slabs
+    from pricing_config import meta_costs_table, committed_amount_slabs
+    from calculator import get_committed_amount_rate_for_volume
     meta_costs = meta_costs_table.get(country, meta_costs_table['Rest of the World'])
-    def get_lowest_tier(country, msg_type):
-        tiers = price_tiers.get(country, {}).get(msg_type, [])
-        return tiers[0][2] if tiers else 0.0
-    ai_price_vol = get_lowest_tier(country, 'ai')
-    adv_price_vol = get_lowest_tier(country, 'advanced')
+    # Use bundle slab rate for the actual volume for the volume route
+    ai_price_vol = get_committed_amount_rate_for_volume(country, 'ai', ai_volume)
+    adv_price_vol = get_committed_amount_rate_for_volume(country, 'advanced', advanced_volume)
+    mkt_price_vol = get_committed_amount_rate_for_volume(country, 'basic_marketing', basic_marketing_volume)
+    utl_price_vol = get_committed_amount_rate_for_volume(country, 'basic_utility', basic_utility_volume)
     ai_final_vol = ai_price_vol + meta_costs['ai']
-    adv_final_vol = adv_price_vol + meta_costs['ai']
+    adv_final_vol = adv_price_vol + meta_costs['advanced']
+    mkt_final_vol = mkt_price_vol + meta_costs['marketing']
+    utl_final_vol = utl_price_vol + meta_costs['utility']
     ai_cost_vol = ai_volume * ai_final_vol
     adv_cost_vol = advanced_volume * adv_final_vol
-    total_vol = ai_cost_vol + adv_cost_vol + platform_fee
+    mkt_cost_vol = basic_marketing_volume * mkt_final_vol
+    utl_cost_vol = basic_utility_volume * utl_final_vol
+    total_vol = ai_cost_vol + adv_cost_vol + mkt_cost_vol + utl_cost_vol + platform_fee
     slabs = committed_amount_slabs.get(country, committed_amount_slabs['Rest of the World'])
     def get_slab_rate(msg_type, volume):
         for lower, upper, rates in slabs:

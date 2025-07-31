@@ -9,7 +9,7 @@
 # --- Cost Table by Country ---
 # Meta costs for each country and message type.
 
-from pricing_config import price_tiers, meta_costs_table, COUNTRY_MANDAY_RATES, ACTIVITY_MANDAYS, committed_amount_slabs
+from pricing_config import meta_costs_table, COUNTRY_MANDAY_RATES, ACTIVITY_MANDAYS, committed_amount_slabs
 import sys
 
 # New function to map volume to committed amount slab rate
