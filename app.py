@@ -1705,7 +1705,7 @@ def calculate_pricing_simulation(inputs):
     ai_rate_bundle, ai_slab_low, ai_slab_high = get_slab_rate('ai', ai_volume)
     adv_rate_bundle, adv_slab_low, adv_slab_high = get_slab_rate('advanced', advanced_volume)
     ai_final_bundle = ai_rate_bundle + meta_costs['ai']
-    adv_final_bundle = adv_rate_bundle + meta_costs['ai']
+    adv_final_bundle = adv_rate_bundle + meta_costs['advanced']
     # If committed_amount is 0, suggest a value that covers the entered volumes
     if committed_amount == 0:
         committed_amount = (ai_volume * ai_final_bundle) + (advanced_volume * adv_final_bundle)
