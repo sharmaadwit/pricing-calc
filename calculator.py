@@ -77,7 +77,7 @@ def calculate_pricing(
 
     # Revenue (user-chosen)
     ai_revenue = (costs['ai'] + user_ai_price) * ai_volume
-    advanced_revenue = (costs['ai'] + user_advanced_price) * advanced_volume
+    advanced_revenue = user_advanced_price * advanced_volume  # Only markup for advanced
     basic_marketing_revenue = (costs['marketing'] + user_basic_marketing_price) * basic_marketing_volume
     basic_utility_revenue = (costs['utility'] + user_basic_utility_price) * basic_utility_volume
     revenue = ai_revenue + advanced_revenue + basic_marketing_revenue + basic_utility_revenue

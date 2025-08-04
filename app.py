@@ -958,6 +958,9 @@ def index():
                 'overage_price': round((session.get('pricing_inputs', {}).get('basic_utility_price', 0) + meta_costs.get('utility', 0)) * 1.2, 4)
             }
         }
+        print("DEBUG: advanced_price =", advanced_price)
+        print("DEBUG: meta_costs['advanced'] =", meta_costs.get('advanced', 0))
+        print("DEBUG: final_price_details.advanced_messages.price_per_msg =", final_price_details['advanced_messages']['price_per_msg'])
         if all(float(inputs.get(v, 0)) == 0.0 for v in ['ai_volume', 'advanced_volume', 'basic_marketing_volume', 'basic_utility_volume']):
             committed_amount = float(inputs.get('committed_amount', 0) or 0)
             rates = get_committed_amount_rates(inputs.get('country', 'India'), committed_amount)
