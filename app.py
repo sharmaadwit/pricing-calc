@@ -3,7 +3,7 @@
 # Key features: dynamic inclusions, robust error handling, session management, and professional UI.
 
 from flask import Flask, render_template, request, session, redirect, url_for, flash
-from calculator import calculate_pricing, get_suggested_price, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES, calculate_total_mandays_breakdown, get_committed_amount_rate_for_volume
+from calculator import calculate_pricing, get_suggested_price, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES, calculate_total_mandays_breakdown, get_committed_amount_rate_for_volume, get_lowest_tier_price
 import os
 import sys
 import re

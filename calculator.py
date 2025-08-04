@@ -34,6 +34,16 @@ def get_suggested_price(country, msg_type, volume, currency=None):
     """
     return get_committed_amount_rate_for_volume(country, msg_type, volume)
 
+def get_lowest_tier_price(country, msg_type):
+    """
+    Return the lowest (smallest volume) price for a given country and message type
+    using the first slab in committed_amount_slabs.
+    """
+    slabs = committed_amount_slabs.get(country, committed_amount_slabs.get('Rest of the World', []))
+    if not slabs:
+        return 0
+    return slabs[0][2][msg_type]
+
 def get_next_tier_price(country, msg_type, volume):
     """
     Deprecated: Overage prices are no longer used or displayed.
