@@ -1680,35 +1680,27 @@ def calculate_pricing_simulation(inputs):
     basic_utility_volume = float(inputs.get('basic_utility_volume', 0) or 0)
     platform_fee = float(inputs.get('platform_fee', 0) or 0)
     committed_amount = float(inputs.get('committed_amount', 0) or 0)
-    from pricing_config import meta_costs_table, committed_amount_slabs
-    from calculator import get_committed_amount_rate_for_volume
+    from pricing_config import meta_costs_table
     meta_costs = meta_costs_table.get(country, meta_costs_table['Rest of the World'])
-    # Use bundle slab rate for the actual volume for the volume route
-    ai_price_vol = get_committed_amount_rate_for_volume(country, 'ai', ai_volume)
-    adv_price_vol = get_committed_amount_rate_for_volume(country, 'advanced', advanced_volume)
-    mkt_price_vol = get_committed_amount_rate_for_volume(country, 'basic_marketing', basic_marketing_volume)
-    utl_price_vol = get_committed_amount_rate_for_volume(country, 'basic_utility', basic_utility_volume)
-    ai_final_vol = ai_price_vol + meta_costs['ai']
-    adv_final_vol = adv_price_vol + meta_costs['advanced']
-    mkt_final_vol = mkt_price_vol + meta_costs['marketing']
-    utl_final_vol = utl_price_vol + meta_costs['utility']
-    ai_cost_vol = ai_volume * ai_final_vol
-    adv_cost_vol = advanced_volume * adv_final_vol
-    mkt_cost_vol = basic_marketing_volume * mkt_final_vol
-    utl_cost_vol = basic_utility_volume * utl_final_vol
-    total_vol = ai_cost_vol + adv_cost_vol + mkt_cost_vol + utl_cost_vol + platform_fee
-    slabs = committed_amount_slabs.get(country, committed_amount_slabs['Rest of the World'])
-    def get_slab_rate(msg_type, volume):
-        for lower, upper, rates in slabs:
-            rate = rates[msg_type]
-            est_amount = volume * rate
-            if lower <= est_amount < upper:
-                return rate, lower, upper
-        return slabs[0][2][msg_type], slabs[0][0], slabs[0][1]
-    ai_rate_bundle, ai_slab_low, ai_slab_high = get_slab_rate('ai', ai_volume)
-    adv_rate_bundle, adv_slab_low, adv_slab_high = get_slab_rate('advanced', advanced_volume)
-    ai_final_bundle = ai_rate_bundle + meta_costs['ai']
-    adv_final_bundle = adv_rate_bundle + meta_costs['advanced']
+    # Use user-chosen prices for both routes
+    ai_price = float(inputs.get('ai_price', 0) or 0)
+    adv_price = float(inputs.get('advanced_price', 0) or 0)
+    mkt_price = float(inputs.get('basic_marketing_price', 0) or 0)
+    utl_price = float(inputs.get('basic_utility_price', 0) or 0)
+    ai_final = ai_price + meta_costs['ai']
+    adv_final = adv_price + meta_costs['advanced']
+    mkt_final = mkt_price + meta_costs['marketing']
+    utl_final = utl_price + meta_costs['utility']
+    ai_cost = ai_volume * ai_final
+    adv_cost = advanced_volume * adv_final
+    mkt_cost = basic_marketing_volume * mkt_final
+    utl_cost = basic_utility_volume * utl_final
+    total = ai_cost + adv_cost + mkt_cost + utl_cost + platform_fee
+    # For committed route, use the same user-chosen prices
+    ai_final_bundle = ai_final
+    adv_final_bundle = adv_final
+    mkt_final_bundle = mkt_final
+    utl_final_bundle = utl_final
     # If committed_amount is 0, suggest a value that covers the entered volumes
     if committed_amount == 0:
         committed_amount = (ai_volume * ai_final_bundle) + (advanced_volume * adv_final_bundle)
@@ -1723,14 +1715,13 @@ def calculate_pricing_simulation(inputs):
     total_bundle = committed_amount + ai_overage_cost + adv_overage_cost + platform_fee
     return {
         'volume_route': {
-            'ai_price': ai_final_vol, 'adv_price': adv_final_vol,
-            'ai_cost': ai_cost_vol, 'adv_cost': adv_cost_vol,
-            'platform_fee': platform_fee, 'total': total_vol,
+            'ai_price': ai_final, 'adv_price': adv_final,
+            'ai_cost': ai_cost, 'adv_cost': adv_cost,
+            'platform_fee': platform_fee, 'total': total,
             'ai_volume': ai_volume, 'adv_volume': advanced_volume
         },
         'bundle_route': {
             'ai_price': ai_final_bundle, 'adv_price': adv_final_bundle,
-            'ai_slab': (ai_slab_low, ai_slab_high), 'adv_slab': (adv_slab_low, adv_slab_high),
             'included_ai': included_ai, 'included_adv': included_adv,
             'ai_overage': ai_overage, 'adv_overage': adv_overage,
             'ai_overage_rate': ai_overage_rate, 'adv_overage_rate': adv_overage_rate,
