@@ -944,8 +944,8 @@ def index():
             },
             'advanced_messages': {
                 'volume': int(advanced_volume),
-                'price_per_msg': round(advanced_price + meta_costs['ai'], 4),
-                'overage_price': round((advanced_price + meta_costs['ai']) * 1.2, 4)
+                'price_per_msg': round(advanced_price + meta_costs.get('advanced', 0), 4),
+                'overage_price': round((advanced_price + meta_costs.get('advanced', 0)) * 1.2, 4)
             },
             'marketing_message': {
                 'volume': int(inputs.get('basic_marketing_volume', 0) or 0),

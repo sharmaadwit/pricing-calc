@@ -16,14 +16,11 @@ import sys
 
 def get_committed_amount_rate_for_volume(country, msg_type, volume):
     slabs = committed_amount_slabs.get(country, committed_amount_slabs['Rest of the World'])
-    # Try each slab: estimate the committed amount for this volume at the slab's rate
     for lower, upper, rates in slabs:
-        rate = rates[msg_type]
-        est_amount = volume * rate
-        if lower <= est_amount < upper:
-            return rate
-    # Fallback to lowest slab
-    return slabs[0][2][msg_type]
+        if lower <= volume < upper:
+            return rates[msg_type]
+    # Fallback to highest slab if above all
+    return slabs[-1][2][msg_type]
 
 # Update get_suggested_price to use committed amount slab rates for volume route
 
@@ -87,7 +84,7 @@ def calculate_pricing(
 
     # Revenue (suggested)
     ai_final_price_s = costs['ai'] + suggested_ai_price
-    advanced_final_price_s = costs['ai'] + suggested_advanced_price
+    advanced_final_price_s = suggested_advanced_price
     basic_marketing_final_price_s = costs['marketing'] + suggested_basic_marketing_price
     basic_utility_final_price_s = costs['utility'] + suggested_basic_utility_price
 
@@ -148,10 +145,10 @@ def calculate_pricing(
             'volume': advanced_volume,
             'chosen_price': user_advanced_price,
             'suggested_price': suggested_advanced_price,
-            'meta_cost': costs['ai'],
-            'final_price': costs['ai'] + user_advanced_price,
-            'revenue': advanced_revenue,
-            'suggested_revenue': advanced_revenue_s
+            'meta_cost': 0,  # Always 0 for advanced
+            'final_price': user_advanced_price,  # Only the slab/user price
+            'revenue': user_advanced_price * advanced_volume,
+            'suggested_revenue': suggested_advanced_price * advanced_volume
         },
         {
             'label': 'Basic Marketing Message',
