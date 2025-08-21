@@ -46,6 +46,7 @@ meta_costs_table = {
 # FORMAT: (min_amount, max_amount, {'marketing': rate, 'utility': rate, 'advanced': rate, 'ai': rate})
 # FUNCTIONS: get_committed_amount_rates() in calculator.py
 # OVERAGE CALCULATION: Base rate × 1.2 (20% markup) - see app.py line 458
+# NOTE: APAC pricing is now included in "Rest of the World" category
 committed_amount_slabs = {
     'India': [
         (0, 50000,    {'basic_marketing': 0.15, 'basic_utility': 0.03, 'advanced': 0.50, 'ai': 1.00}),
@@ -68,14 +69,14 @@ committed_amount_slabs = {
         (10000, 15000, {'basic_marketing': 0.0041, 'basic_utility': 0.0041, 'advanced': 0.0082, 'ai': 0.0154}),
     ],
     'LATAM': [
-        (0, 500,    {'basic_marketing': 0.0075, 'basic_utility': 0.0015, 'advanced': 0.0250, 'ai': 0.0500}),
-        (500, 1000, {'basic_marketing': 0.0060, 'basic_utility': 0.0012, 'advanced': 0.0225, 'ai': 0.0475}),
-        (1000, 1500, {'basic_marketing': 0.0048, 'basic_utility': 0.0010, 'advanced': 0.0200, 'ai': 0.0450}),
-        (1500, 2500, {'basic_marketing': 0.0038, 'basic_utility': 0.0008, 'advanced': 0.0175, 'ai': 0.0425}),
-        (2500, 5000, {'basic_marketing': 0.0031, 'basic_utility': 0.0006, 'advanced': 0.0150, 'ai': 0.0400}),
-        (5000, 7500, {'basic_marketing': 0.0025, 'basic_utility': 0.0005, 'advanced': 0.0125, 'ai': 0.0375}),
-        (7500, 10000, {'basic_marketing': 0.0020, 'basic_utility': 0.0004, 'advanced': 0.0100, 'ai': 0.0350}),
-        (10000, 15000, {'basic_marketing': 0.0016, 'basic_utility': 0.0003, 'advanced': 0.0075, 'ai': 0.0325}),
+        (0, 500,    {'basic_marketing': 0.0080, 'basic_utility': 0.0080, 'advanced': 0.0160, 'ai': 0.0267}),
+        (500, 1000, {'basic_marketing': 0.0080, 'basic_utility': 0.0080, 'advanced': 0.0160, 'ai': 0.0267}),
+        (1000, 1500, {'basic_marketing': 0.0080, 'basic_utility': 0.0080, 'advanced': 0.0160, 'ai': 0.0267}),
+        (1500, 2500, {'basic_marketing': 0.0054, 'basic_utility': 0.0054, 'advanced': 0.0108, 'ai': 0.0203}),
+        (2500, 5000, {'basic_marketing': 0.0054, 'basic_utility': 0.0054, 'advanced': 0.0108, 'ai': 0.0203}),
+        (5000, 7500, {'basic_marketing': 0.0054, 'basic_utility': 0.0054, 'advanced': 0.0108, 'ai': 0.0203}),
+        (7500, 10000, {'basic_marketing': 0.0041, 'basic_utility': 0.0041, 'advanced': 0.0082, 'ai': 0.0154}),
+        (10000, 15000, {'basic_marketing': 0.0041, 'basic_utility': 0.0041, 'advanced': 0.0082, 'ai': 0.0154}),
     ],
     'Africa': [
         (0, 500,    {'basic_marketing': 0.0030, 'basic_utility': 0.0030, 'advanced': 0.0060, 'ai': 0.0150}),
@@ -98,14 +99,14 @@ committed_amount_slabs = {
         (10000, 15000, {'basic_marketing': 0.0041, 'basic_utility': 0.0041, 'advanced': 0.0082, 'ai': 0.0154}),
     ],
     'Rest of the World': [
-        (0, 500,    {'basic_marketing': 0.0172, 'basic_utility': 0.0030, 'advanced': 0.0060, 'ai': 0.0150}),
-        (500, 1000,  {'basic_marketing': 0.0030, 'basic_utility': 0.0030, 'advanced': 0.0060, 'ai': 0.0150}),
-        (1000, 1500, {'basic_marketing': 0.0030, 'basic_utility': 0.0030, 'advanced': 0.0060, 'ai': 0.0150}),
-        (1500, 2500, {'basic_marketing': 0.0030, 'basic_utility': 0.0030, 'advanced': 0.0060, 'ai': 0.0150}),
-        (2500, 5000, {'basic_marketing': 0.0030, 'basic_utility': 0.0030, 'advanced': 0.0060, 'ai': 0.0150}),
-        (5000, 7500, {'basic_marketing': 0.0030, 'basic_utility': 0.0030, 'advanced': 0.0060, 'ai': 0.0150}),
-        (7500, 10000, {'basic_marketing': 0.0030, 'basic_utility': 0.0030, 'advanced': 0.0060, 'ai': 0.0150}),
-        (10000, 15000, {'basic_marketing': 0.0030, 'basic_utility': 0.0030, 'advanced': 0.0060, 'ai': 0.0150}),
+        (0, 500,    {'basic_marketing': 0.0021, 'basic_utility': 0.0013, 'advanced': 0.0070, 'ai': 0.0105}),
+        (500, 1000,  {'basic_marketing': 0.0021, 'basic_utility': 0.0013, 'advanced': 0.0070, 'ai': 0.0105}),
+        (1000, 1500, {'basic_marketing': 0.0021, 'basic_utility': 0.0013, 'advanced': 0.0070, 'ai': 0.0105}),
+        (1500, 2500, {'basic_marketing': 0.0021, 'basic_utility': 0.0013, 'advanced': 0.0070, 'ai': 0.0105}),
+        (2500, 5000, {'basic_marketing': 0.0021, 'basic_utility': 0.0013, 'advanced': 0.0070, 'ai': 0.0105}),
+        (5000, 7500, {'basic_marketing': 0.0021, 'basic_utility': 0.0013, 'advanced': 0.0070, 'ai': 0.0105}),
+        (7500, 10000, {'basic_marketing': 0.0021, 'basic_utility': 0.0013, 'advanced': 0.0070, 'ai': 0.0105}),
+        (10000, 15000, {'basic_marketing': 0.0021, 'basic_utility': 0.0013, 'advanced': 0.0070, 'ai': 0.0105}),
     ],
 }
 
