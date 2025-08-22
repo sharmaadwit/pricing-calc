@@ -1,9 +1,9 @@
 {
-  "total_calculations": 216,
+  "total_calculations": 218,
   "unique_users": 18,
-  "total_revenue": 40922204.0,
+  "total_revenue": 40927204.0,
   "countries": 4,
-  "last_updated": "2025-08-22 15:20:28",
+  "last_updated": "2025-08-22 18:28:14",
   "top_users": {
     "Kat": 10525000.0,
     "Ankit": 7525000.0,
@@ -14,12 +14,12 @@
   "country_breakdown": {
     "India": 202,
     "LATAM": 11,
-    "MENA": 2,
-    "Rest of the World": 1
+    "Rest of the World": 3,
+    "MENA": 2
   },
   "route_breakdown": {
-    "volumes": 182,
-    "bundle": 34
+    "volumes": 183,
+    "bundle": 35
   },
   "country_stats": {
     "India": {
@@ -559,38 +559,38 @@
         "median": 2500.0
       },
       "ai_message": {
-        "average": 0.015,
-        "min": 0.015,
+        "average": 0.012000000000000002,
+        "min": 0.0105,
         "max": 0.015,
-        "median": 0.015,
+        "median": 0.0105,
         "list": 0.0105
       },
       "advanced_message": {
-        "average": 0.006,
+        "average": 0.006666666666666667,
         "min": 0.006,
-        "max": 0.006,
-        "median": 0.006,
+        "max": 0.007,
+        "median": 0.007,
         "list": 0.007
       },
       "basic_marketing_message": {
-        "average": 0.0172,
-        "min": 0.0172,
+        "average": 0.007133333333333333,
+        "min": 0.0021,
         "max": 0.0172,
-        "median": 0.0172,
+        "median": 0.0021,
         "list": 0.0021
       },
       "basic_utility_message": {
-        "average": 0.003,
-        "min": 0.003,
+        "average": 0.0018666666666666666,
+        "min": 0.0013,
         "max": 0.003,
-        "median": 0.003,
+        "median": 0.0013,
         "list": 0.0013
       },
       "committed_amount": {
-        "average": 0,
-        "min": 0,
-        "max": 0,
-        "median": 0
+        "average": 500.0,
+        "min": 500.0,
+        "max": 500.0,
+        "median": 500.0
       },
       "one_time_dev_cost": {
         "average": 300.0,
@@ -619,47 +619,53 @@
         "custom_ai_manday_rate": 0
       },
       "weekly_revenue": [
-        2500.0
+        7500.0
       ],
       "weekly_revenue_labels": [
         "2025-08-24"
       ],
       "clv": [
+        5000.0,
         2500.0
       ],
       "clv_labels": [
+        "Adwit",
         "Saathwik"
       ],
       "service_usage": [
-        0.0172,
-        0.015,
-        0.006,
-        0.003
+        0.036000000000000004,
+        0.0214,
+        0.02,
+        0.0056
       ],
       "service_labels": [
-        "basic_marketing_price",
         "ai_price",
+        "basic_marketing_price",
         "advanced_price",
         "basic_utility_price"
       ],
       "manday_efficiency": [
+        121.95121951219512,
         102.04081632653062
       ],
       "manday_efficiency_labels": [
+        "Adwit",
         "Saathwik"
       ],
       "hourly_counts": [
-        1
+        1,
+        2
       ],
       "hourly_labels": [
-        "8:00"
+        "8:00",
+        "17:00"
       ],
       "weekday_counts": [
         1.0,
         null,
         null,
         null,
-        null,
+        2.0,
         null,
         null
       ],
@@ -673,12 +679,15 @@
         "Sunday"
       ],
       "route_revenue": [
+        5000.0,
         2500.0
       ],
       "route_labels": [
-        "volumes"
+        "volumes",
+        "bundle"
       ],
       "route_counts": [
+        2,
         1
       ],
       "bot_ui_manday_rate": {
@@ -1123,7 +1132,7 @@
     0.7726074257425742,
     0.03959090909090909,
     0.02105,
-    0.015
+    0.012000000000000002
   ],
   "country_labels": [
     "India",
