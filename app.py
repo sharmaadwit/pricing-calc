@@ -18,6 +18,126 @@ from calculator import get_committed_amount_rates
 from pricing_config import committed_amount_slabs, PLATFORM_PRICING_GUIDANCE
 from calculator import get_committed_amount_rate_for_volume
 
+# 🍕 PIZZA EASTER EGG SYSTEM 🍕
+def generate_pizza_easter_egg_id(calculation_data=None):
+    """
+    Generate a fun pizza-themed calculation ID with achievement and time-based triggers!
+    
+    Args:
+        calculation_data: Dict containing calculation details for achievement triggers
+        
+    Returns:
+        str: Fun pizza-themed calculation ID
+    """
+    import random
+    
+    # 🍕 Pizza toppings for different calculation types
+    pizza_toppings = {
+        'basic': ['CHEESE', 'MARGHERITA', 'PLAIN-JANE', 'PANEER', 'TANDOORI'],
+        'premium': ['PEPPERONI', 'SUPREME', 'DELUXE', 'CHICKEN-TIKKA', 'BUTTER-CHICKEN'],
+        'luxury': ['TRUFFLE', 'CAVIAR', 'GOLD-LEAF', 'SAFFRON', 'GOLDEN-TEMPLE'],
+        'funny': ['PINEAPPLE', 'ANCHOVY', 'BROCCOLI', 'PICKLE', 'CHUTNEY'],
+        'achievement': ['WINNER', 'CHAMPION', 'HERO', 'MAHARAJA', 'SARDAR'],
+        'time': ['BREAKFAST', 'LUNCH', 'DINNER', 'MIDNIGHT-SNACK', 'CHAI-TIME', 'SUNDOWNER'],
+        'indian': ['MASALA', 'GARAM', 'TANDOORI', 'BIRYANI', 'CURRY', 'NAAN', 'ROTI', 'DOSA', 'IDLI', 'SAMOSA', 'PAKORA', 'GULAB-JAMUN', 'JALEBI', 'RASGULLA']
+    }
+    
+    # 🎯 Achievement-based triggers
+    achievement_toppings = []
+    if calculation_data:
+        revenue = calculation_data.get('revenue', 0)
+        platform_fee = calculation_data.get('platform_fee', 0)
+        margin = calculation_data.get('margin', '0%')
+        
+        # High value achievement
+        if revenue > 10000:
+            achievement_toppings.append('MONEY-BAGS')
+        elif revenue > 5000:
+            achievement_toppings.append('RICH-BOY')
+        elif revenue > 1000:
+            achievement_toppings.append('BUDGET-BOSS')
+        
+        # Platform fee achievement
+        if platform_fee > 5000:
+            achievement_toppings.append('PREMIUM-PLATFORM')
+        elif platform_fee > 2000:
+            achievement_toppings.append('STANDARD-PLATFORM')
+        
+        # Margin achievement
+        try:
+            margin_value = float(margin.replace('%', ''))
+            if margin_value > 95:
+                achievement_toppings.append('GOLDEN-RATIO')
+            elif margin_value > 90:
+                achievement_toppings.append('SILVER-STAR')
+            elif margin_value > 80:
+                achievement_toppings.append('BRONZE-BADGE')
+        except:
+            pass
+        
+        # 🍛 Indian-themed achievements
+        if revenue > 50000:
+            achievement_toppings.append('MAHARAJA')
+        elif revenue > 25000:
+            achievement_toppings.append('SARDAR')
+        elif revenue > 15000:
+            achievement_toppings.append('ZAMINDAR')
+        
+        # Spice level achievement (based on complexity)
+        if calculation_data.get('complexity', 0) > 8:
+            achievement_toppings.append('GARAM-MASALA')
+        elif calculation_data.get('complexity', 0) > 5:
+            achievement_toppings.append('MASALA')
+    
+    # 🕐 Time-based triggers
+    current_hour = datetime.now().hour
+    time_toppings = []
+    if 6 <= current_hour < 11:
+        time_toppings.append('BREAKFAST')
+    elif 11 <= current_hour < 15:
+        time_toppings.append('LUNCH')
+    elif 15 <= current_hour < 19:
+        time_toppings.append('DINNER')
+    elif 19 <= current_hour < 23:
+        time_toppings.append('EVENING')
+    elif 23 <= current_hour or current_hour < 6:
+        time_toppings.append('MIDNIGHT-SNACK')
+    
+    # 🍵 Indian time references
+    if 7 <= current_hour < 9:
+        time_toppings.append('CHAI-TIME')
+    elif 16 <= current_hour < 18:
+        time_toppings.append('EVENING-CHAI')
+    elif 20 <= current_hour < 22:
+        time_toppings.append('SUNDOWNER')
+    
+    # 🎲 Random pizza base (with higher chance for Indian options)
+    base_toppings = random.choice(pizza_toppings['basic'])
+    
+    # 🏆 Combine all toppings
+    all_toppings = [base_toppings] + achievement_toppings + time_toppings
+    
+    # 🍛 Add some Indian flair - 30% chance to include an Indian topping
+    if random.random() < 0.3:
+        indian_topping = random.choice(pizza_toppings['indian'])
+        all_toppings.append(indian_topping)
+    
+    selected_toppings = random.sample(all_toppings, min(3, len(all_toppings)))
+    
+    # 🍕 Generate the fun ID
+    pizza_id = '-'.join(selected_toppings)
+    
+    # Add some random numbers and letters for uniqueness
+    random_part = ''.join(random.choices('0123456789ABCDEF', k=8))
+    
+    return f"{pizza_id}-{random_part}"
+
+# 🎉 Easter egg trigger function
+def should_trigger_easter_egg():
+    """Randomly decide if we should use the easter egg ID (20% chance)"""
+    import random
+    return random.random() < 0.2  # 20% chance
+
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
 
@@ -258,7 +378,12 @@ def index():
     print("\n--- DEBUG ---", file=sys.stderr, flush=True)
     print("Form data:", dict(request.form), file=sys.stderr, flush=True)
     print("Session data:", dict(session), file=sys.stderr, flush=True)
-    calculation_id = session.get('calculation_id', str(uuid.uuid4()))
+    # 🍕 Easter egg chance for calculation ID
+    if should_trigger_easter_egg():
+        calculation_id = generate_pizza_easter_egg_id()
+        print(f"🍕 PIZZA EASTER EGG TRIGGERED! ID: {calculation_id}", file=sys.stderr, flush=True)
+    else:
+        calculation_id = session.get('calculation_id', str(uuid.uuid4()))
     print("Current step:", step, file=sys.stderr, flush=True)
     print("--- END DEBUG ---\n", file=sys.stderr, flush=True)
     results = None
@@ -273,7 +398,12 @@ def index():
             if key in session:
                 session.pop(key)
         # Generate a new calculation_id for each new calculation
-        calculation_id = str(uuid.uuid4())
+        # 🍕 Easter egg chance for calculation ID
+        if should_trigger_easter_egg():
+            calculation_id = generate_pizza_easter_egg_id()
+            print(f"🍕 PIZZA EASTER EGG TRIGGERED! ID: {calculation_id}", file=sys.stderr, flush=True)
+        else:
+            calculation_id = str(uuid.uuid4())
         session['calculation_id'] = calculation_id
         print(f"DEBUG: New calculation started. Calculation ID: {calculation_id}", file=sys.stderr, flush=True)
         user_name = request.form.get('user_name', '')
