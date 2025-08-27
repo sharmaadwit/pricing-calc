@@ -134,9 +134,9 @@ def generate_pizza_easter_egg_id(calculation_data=None):
 
 # 🎉 Easter egg trigger function
 def should_trigger_easter_egg():
-    """Randomly decide if we should use the easter egg ID (20% chance)"""
+    """Randomly decide if we should use the easter egg ID (80% chance for testing, can be reduced later)"""
     import random
-    return random.random() < 0.2  # 20% chance
+    return random.random() < 0.8  # 80% chance - increased for testing Indian toppings
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
