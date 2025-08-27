@@ -1,9 +1,9 @@
 {
-  "total_calculations": 230,
+  "total_calculations": 231,
   "unique_users": 18,
-  "total_revenue": 42032204.0,
+  "total_revenue": 42034704.0,
   "countries": 4,
-  "last_updated": "2025-08-26 21:17:37",
+  "last_updated": "2025-08-27 01:28:24",
   "top_users": {
     "Kat": 11325000.0,
     "Ankit": 7525000.0,
@@ -14,11 +14,11 @@
   "country_breakdown": {
     "India": 212,
     "LATAM": 11,
-    "Rest of the World": 5,
+    "Rest of the World": 6,
     "MENA": 2
   },
   "route_breakdown": {
-    "volumes": 195,
+    "volumes": 196,
     "bundle": 35
   },
   "country_stats": {
@@ -561,28 +561,28 @@
         "median": 2500.0
       },
       "ai_message": {
-        "average": 0.0114,
+        "average": 0.011250000000000001,
         "min": 0.0105,
         "max": 0.015,
         "median": 0.0105,
         "list": 0.0105
       },
       "advanced_message": {
-        "average": 0.0068000000000000005,
+        "average": 0.006833333333333334,
         "min": 0.006,
         "max": 0.007,
         "median": 0.007,
         "list": 0.007
       },
       "basic_marketing_message": {
-        "average": 0.0051199999999999996,
+        "average": 0.0046166666666666665,
         "min": 0.0021,
         "max": 0.0172,
         "median": 0.0021,
         "list": 0.0021
       },
       "basic_utility_message": {
-        "average": 0.0016399999999999997,
+        "average": 0.0015833333333333333,
         "min": 0.0013,
         "max": 0.003,
         "median": 0.0013,
@@ -622,7 +622,7 @@
       },
       "weekly_revenue": [
         7500.0,
-        5000.0
+        7500.0
       ],
       "weekly_revenue_labels": [
         "2025-08-24",
@@ -630,17 +630,19 @@
       ],
       "clv": [
         7500.0,
-        5000.0
+        5000.0,
+        2500.0
       ],
       "clv_labels": [
         "Saathwik",
-        "Adwit"
+        "Adwit",
+        "Abhiraj"
       ],
       "service_usage": [
-        0.057,
-        0.034,
-        0.025599999999999998,
-        0.008199999999999999
+        0.0675,
+        0.041,
+        0.0277,
+        0.0095
       ],
       "service_labels": [
         "ai_price",
@@ -650,27 +652,31 @@
       ],
       "manday_efficiency": [
         294.11764705882354,
-        121.95121951219512
+        121.95121951219512,
+        90.9090909090909
       ],
       "manday_efficiency_labels": [
         "Saathwik",
-        "Adwit"
+        "Adwit",
+        "Abhiraj"
       ],
       "hourly_counts": [
         1,
         1,
         1,
-        2
+        2,
+        1
       ],
       "hourly_labels": [
         "7:00",
         "8:00",
         "11:00",
-        "17:00"
+        "17:00",
+        "23:00"
       ],
       "weekday_counts": [
         2.0,
-        1.0,
+        2.0,
         null,
         null,
         2.0,
@@ -687,7 +693,7 @@
         "Sunday"
       ],
       "route_revenue": [
-        10000.0,
+        12500.0,
         2500.0
       ],
       "route_labels": [
@@ -695,7 +701,7 @@
         "bundle"
       ],
       "route_counts": [
-        4,
+        5,
         1
       ],
       "bot_ui_manday_rate": {
@@ -1140,7 +1146,7 @@
     0.7828617924528302,
     0.03959090909090909,
     0.02105,
-    0.0114
+    0.011250000000000001
   ],
   "country_labels": [
     "India",
