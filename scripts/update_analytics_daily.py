@@ -124,7 +124,7 @@ def generate_temporal_charts(df, static_dir):
     axes[0].set_xlabel('Hour of Day')
     axes[0].set_ylabel('Number of Calculations')
     # Add data labels
-    axes[0].bar_label(bars0, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.2f}')
+    axes[0].bar_label(bars0, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.3f}')
     
     # Daily pattern
     df['weekday'] = df['timestamp'].dt.day_name()
@@ -137,7 +137,7 @@ def generate_temporal_charts(df, static_dir):
     axes[1].set_xticks(range(len(weekday_counts)))
     axes[1].set_xticklabels(weekday_counts.index, rotation=45)
     # Add data labels
-    axes[1].bar_label(bars1, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.2f}')
+    axes[1].bar_label(bars1, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.3f}')
     
     plt.tight_layout()
     plt.savefig(os.path.join(static_dir, 'temporal_analytics.png'), dpi=300, bbox_inches='tight')
@@ -155,7 +155,7 @@ def generate_customer_charts(df, static_dir):
     axes[0].set_xticks(range(len(clv)))
     axes[0].set_xticklabels(clv.index, rotation=45)
     # Add data labels
-    axes[0].bar_label(bars0, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.2f}')
+    axes[0].bar_label(bars0, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.3f}')
     
     # Service preferences
     service_cols = ['ai_price', 'advanced_price', 'basic_marketing_price', 'basic_utility_price']
@@ -166,7 +166,7 @@ def generate_customer_charts(df, static_dir):
     axes[1].set_xticks(range(len(service_usage)))
     axes[1].set_xticklabels(service_usage.index, rotation=45)
     # Add data labels
-    axes[1].bar_label(bars1, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.2f}')
+    axes[1].bar_label(bars1, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.3f}')
     
     plt.tight_layout()
     plt.savefig(os.path.join(static_dir, 'customer_analytics.png'), dpi=300, bbox_inches='tight')
@@ -186,7 +186,7 @@ def generate_pricing_charts(df, static_dir):
     axes[0].tick_params(axis='x', rotation=45)
     # Add data labels to line plot
     for x, y in zip(weekly_revenue.index, weekly_revenue.values):
-        axes[0].annotate(f'{int(y) if y == int(y) else f"{y:.2f}"}', xy=(x, y), xytext=(0, 5), textcoords='offset points', ha='center', fontsize=8)
+        axes[0].annotate(f'{int(y) if y == int(y) else f"{y:.3f}"}', xy=(x, y), xytext=(0, 5), textcoords='offset points', ha='center', fontsize=8)
     
     # Price comparison
     price_cols = ['ai_price', 'advanced_price', 'basic_marketing_price', 'basic_utility_price']
@@ -197,7 +197,7 @@ def generate_pricing_charts(df, static_dir):
     axes[1].set_xticks(range(len(avg_prices)))
     axes[1].set_xticklabels(avg_prices.index, rotation=45)
     # Add data labels
-    axes[1].bar_label(bars1, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.2f}')
+    axes[1].bar_label(bars1, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.3f}')
     
     plt.tight_layout()
     plt.savefig(os.path.join(static_dir, 'pricing_analytics.png'), dpi=300, bbox_inches='tight')
@@ -215,7 +215,7 @@ def generate_geographic_charts(df, static_dir):
     axes[0].set_xticks(range(len(country_revenue)))
     axes[0].set_xticklabels(country_revenue.index, rotation=45)
     # Add data labels
-    axes[0].bar_label(bars0, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.2f}')
+    axes[0].bar_label(bars0, fmt=lambda x: f'{int(x)}' if x == int(x) else f'{x:.3f}')
     
     # Calculations by country
     country_counts = df['country'].value_counts()
@@ -543,21 +543,21 @@ def main():
     if not export_analytics_to_csv():
         log_message("Failed to export CSV. Exiting.")
         sys.exit(1)
-    print(f"[DEBUG] After DB export: {time.time() - start_time:.2f} seconds elapsed")
+    print(f"[DEBUG] After DB export: {time.time() - start_time:.3f} seconds elapsed")
     
     # Step 2: Generate analytics charts
     if not generate_analytics_charts():
         log_message("Failed to generate charts. Continuing...")
-    print(f"[DEBUG] After chart generation: {time.time() - start_time:.2f} seconds elapsed")
+    print(f"[DEBUG] After chart generation: {time.time() - start_time:.3f} seconds elapsed")
     
     # Step 3: Update analytics summary
     if not update_analytics_summary():
         log_message("Failed to update summary. Continuing...")
-    print(f"[DEBUG] After writing summary JSON: {time.time() - start_time:.2f} seconds elapsed")
+    print(f"[DEBUG] After writing summary JSON: {time.time() - start_time:.3f} seconds elapsed")
     
     log_message("Daily analytics update completed successfully!")
     print(f"[DEBUG] Script finished at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"[DEBUG] Total execution time: {time.time() - start_time:.2f} seconds")
+    print(f"[DEBUG] Total execution time: {time.time() - start_time:.3f} seconds")
 
 if __name__ == "__main__":
     main() 

@@ -115,8 +115,8 @@ def log_calculation_start(logger, calculation_id, country, volumes):
 def log_calculation_success(logger, results):
     """Log successful calculation results"""
     logger.info(f"✅ Calculation completed successfully")
-    logger.info(f"   Revenue: ${results.get('revenue', 0):,.2f}")
-    logger.info(f"   Platform Fee: ${results.get('platform_fee', 0):,.2f}")
+    logger.info(f"   Revenue: ${results.get('revenue', 0):,.3f}")
+    logger.info(f"   Platform Fee: ${results.get('platform_fee', 0):,.3f}")
     logger.info(f"   Margin: {results.get('margin', 'N/A')}")
 
 def log_calculation_error(logger, error, context=""):
@@ -158,13 +158,13 @@ def log_volume_breakdown(logger, volumes):
 
 def log_platform_fee(logger, platform_fee, currency="$"):
     """Log platform fee information"""
-    logger.info(f"🏢 Platform Fee: {currency}{platform_fee:,.2f}")
+    logger.info(f"🏢 Platform Fee: {currency}{platform_fee:,.3f}")
 
 def log_manday_costs(logger, manday_rates, manday_breakdown):
     """Log manday cost information"""
     logger.debug(f"👨‍💻 Manday Costs:")
-    logger.debug(f"   Bot UI Rate: ${manday_rates.get('bot_ui', 0):,.2f}")
-    logger.debug(f"   Custom AI Rate: ${manday_rates.get('custom_ai', 0):,.2f}")
+    logger.debug(f"   Bot UI Rate: ${manday_rates.get('bot_ui', 0):,.3f}")
+    logger.debug(f"   Custom AI Rate: ${manday_rates.get('custom_ai', 0):,.3f}")
     logger.debug(f"   Bot UI Mandays: {manday_breakdown.get('bot_ui', 0):.1f}")
     logger.debug(f"   Custom AI Mandays: {manday_breakdown.get('custom_ai', 0):.1f}")
 
@@ -187,14 +187,14 @@ def log_calculation_inputs(logger, calculation_id, inputs, pricing_inputs=None):
         logger.info(f"     Advanced Price: ${pricing_inputs.get('advanced_price', 0):.4f}")
         logger.info(f"     Marketing Price: ${pricing_inputs.get('basic_marketing_price', 0):.4f}")
         logger.info(f"     Utility Price: ${pricing_inputs.get('basic_utility_price', 0):.4f}")
-        logger.info(f"     Platform Fee: ${pricing_inputs.get('platform_fee', 0):,.2f}")
+        logger.info(f"     Platform Fee: ${pricing_inputs.get('platform_fee', 0):,.3f}")
 
 def log_calculation_results(logger, calculation_id, results, inputs=None):
     """Log complete calculation results for user support"""
     logger.info(f"💰 CALCULATION RESULTS - ID: {calculation_id[:8]}...")
-    logger.info(f"   Revenue: ${results.get('revenue', 0):,.2f}")
-    logger.info(f"   Platform Fee: ${results.get('platform_fee', 0):,.2f}")
-    logger.info(f"   Total Costs: ${results.get('total_costs', 0):,.2f}")
+    logger.info(f"   Revenue: ${results.get('revenue', 0):,.3f}")
+    logger.info(f"   Platform Fee: ${results.get('platform_fee', 0):,.3f}")
+    logger.info(f"   Total Costs: ${results.get('total_costs', 0):,.3f}")
     logger.info(f"   Margin: {results.get('margin', 'N/A')}")
     
     if 'line_items' in results:
@@ -204,7 +204,7 @@ def log_calculation_results(logger, calculation_id, results, inputs=None):
                 volume = item.get('volume', 0)
                 revenue = item.get('revenue', 0)
                 if volume > 0 or revenue > 0:
-                    logger.info(f"     {item['label']}: {volume:,} msgs, ${revenue:,.2f}")
+                    logger.info(f"     {item['label']}: {volume:,} msgs, ${revenue:,.3f}")
 
 def log_calculation_summary(logger, calculation_id, inputs, results, pricing_inputs=None):
     """Log a complete calculation summary for easy user support lookup"""

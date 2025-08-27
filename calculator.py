@@ -180,8 +180,8 @@ def calculate_pricing(
         'channel_cost': channel_cost,
         'ai_costs': ai_costs,
         'total_costs': total_costs,
-        'margin': f"{margin_percentage:.2f}%",
-        'suggested_margin': f"{suggested_margin_percentage:.2f}%"
+        'margin': f"{margin_percentage:.3f}%",
+        'suggested_margin': f"{suggested_margin_percentage:.3f}%"
     }
 
 def _calculate_set_mandays(num_apis, num_journeys):

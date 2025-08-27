@@ -108,7 +108,7 @@ def display_calculation_details(calculation_data):
     if calculation_data['basic_utility_volume']:
         print(f"   Utility Messages: {calculation_data['basic_utility_volume']:,.0f}")
     if calculation_data['committed_amount']:
-        print(f"   Committed Amount: ${calculation_data['committed_amount']:,.2f}")
+        print(f"   Committed Amount: ${calculation_data['committed_amount']:,.3f}")
     
     print("\n💰 PRICING:")
     if calculation_data['ai_price']:
@@ -120,7 +120,7 @@ def display_calculation_details(calculation_data):
     if calculation_data['basic_utility_price']:
         print(f"   Utility Price: ${calculation_data['basic_utility_price']:.4f}")
     if calculation_data['platform_fee']:
-        print(f"   Platform Fee: ${calculation_data['platform_fee']:,.2f}")
+        print(f"   Platform Fee: ${calculation_data['platform_fee']:,.3f}")
     
     print("\n🏢 RATE CARD PRICES:")
     if calculation_data['ai_rate_card_price']:
@@ -134,9 +134,9 @@ def display_calculation_details(calculation_data):
     
     print("\n👨‍�� MANDAY INFORMATION:")
     if calculation_data['bot_ui_manday_rate']:
-        print(f"   Bot UI Rate: ${calculation_data['bot_ui_manday_rate']:,.2f}")
+        print(f"   Bot UI Rate: ${calculation_data['bot_ui_manday_rate']:,.3f}")
     if calculation_data['custom_ai_manday_rate']:
-        print(f"   Custom AI Rate: ${calculation_data['custom_ai_manday_rate']:,.2f}")
+        print(f"   Custom AI Rate: ${calculation_data['custom_ai_manday_rate']:,.3f}")
     if calculation_data['bot_ui_mandays']:
         print(f"   Bot UI Mandays: {calculation_data['bot_ui_mandays']:.1f}")
     if calculation_data['custom_ai_mandays']:
@@ -202,7 +202,7 @@ def main():
                 if results:
                     print(f"\n�� Found {len(results)} calculations for user '{user_name}':")
                     for i, calc in enumerate(results, 1):
-                        print(f"   {i}. ID: {calc['calculation_id'][:8]}... | {calc['timestamp']} | {calc['country']} | ${calc['platform_fee']:,.2f} {calc['currency']}")
+                        print(f"   {i}. ID: {calc['calculation_id'][:8]}... | {calc['timestamp']} | {calc['country']} | ${calc['platform_fee']:,.3f} {calc['currency']}")
                 else:
                     print(f"❌ No calculations found for user '{user_name}'")
             else:

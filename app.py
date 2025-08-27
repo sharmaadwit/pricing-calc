@@ -531,8 +531,8 @@ def index():
         manday_rates['default_bot_ui'] = float(default_bot_ui)
         manday_rates['default_custom_ai'] = float(default_custom_ai)
         # Calculate discount percentages
-        manday_rates['bot_ui_discount'] = round(100 * (default_bot_ui - manday_rates['bot_ui']) / default_bot_ui, 2) if default_bot_ui else 0
-        manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 2) if default_custom_ai else 0
+        manday_rates['bot_ui_discount'] = round(100 * (default_bot_ui - manday_rates['bot_ui']) / default_bot_ui, 3) if default_bot_ui else 0
+        manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 3) if default_custom_ai else 0
         total_mandays = calculate_total_mandays(patched_form)
         # --- PATCH: Always .strip() the country and set dev_location only for India before dev cost calculation ---
         if 'country' in patched_form:
@@ -624,8 +624,8 @@ def index():
             manday_rates['default_bot_ui'] = float(default_bot_ui)
             manday_rates['default_custom_ai'] = float(default_custom_ai)
             # Calculate discount percentages
-            manday_rates['bot_ui_discount'] = round(100 * (default_bot_ui - manday_rates['bot_ui']) / default_bot_ui, 2) if default_bot_ui else 0
-            manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 2) if default_custom_ai else 0
+            manday_rates['bot_ui_discount'] = round(100 * (default_bot_ui - manday_rates['bot_ui']) / default_bot_ui, 3) if default_bot_ui else 0
+            manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 3) if default_custom_ai else 0
             total_mandays = calculate_total_mandays(patched_form)
             total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
             print(f"DEBUG: dev_cost_currency = {dev_cost_currency}, country = {country}", file=sys.stderr, flush=True)
@@ -824,7 +824,7 @@ def index():
                 discount_percent = ''
                 if chosen_price and suggested_price and float(suggested_price) > 0:
                     try:
-                        discount_percent = f"{((float(suggested_price) - float(chosen_price)) / float(suggested_price) * 100):.2f}%"
+                        discount_percent = f"{((float(suggested_price) - float(chosen_price)) / float(suggested_price) * 100):.3f}%"
                     except Exception:
                         discount_percent = '0.00%'
                 else:
@@ -839,7 +839,7 @@ def index():
         pf_discount = '0.00%'
         try:
             if rate_card_platform_fee and float(rate_card_platform_fee) > 0:
-                pf_discount = f"{((float(rate_card_platform_fee) - float(platform_fee)) / float(rate_card_platform_fee) * 100):.2f}%"
+                pf_discount = f"{((float(rate_card_platform_fee) - float(platform_fee)) / float(rate_card_platform_fee) * 100):.3f}%"
         except Exception:
             pf_discount = '0.00%'
         margin_line_items.append({
