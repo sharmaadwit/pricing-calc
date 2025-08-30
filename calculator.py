@@ -70,10 +70,14 @@ def calculate_pricing(
     user_basic_utility_price = basic_utility_price if basic_utility_price is not None else suggested_basic_utility_price
 
     # Calculate overage prices using 1.2x multiplier for consistency with bundle flow
-    overage_ai_price = float(user_ai_price) * 1.2
-    overage_advanced_price = float(user_advanced_price) * 1.2
-    overage_basic_marketing_price = float(user_basic_marketing_price) * 1.2
-    overage_basic_utility_price = float(user_basic_utility_price) * 1.2
+    # Ensure overage prices are never lower than rate card prices
+    def safe_overage_price(base_price, markup=1.2):
+        return max(base_price * markup, base_price)
+    
+    overage_ai_price = safe_overage_price(float(user_ai_price))
+    overage_advanced_price = safe_overage_price(float(user_advanced_price))
+    overage_basic_marketing_price = safe_overage_price(float(user_basic_marketing_price))
+    overage_basic_utility_price = safe_overage_price(float(user_basic_utility_price))
 
     # Revenue (user-chosen)
     ai_revenue = (costs['ai'] + user_ai_price) * ai_volume

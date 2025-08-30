@@ -138,6 +138,26 @@ def should_trigger_easter_egg():
     import random
     return random.random() < 0.8  # 80% chance - increased for testing Indian toppings
 
+def calculate_safe_overage_price(rate_card_price, meta_cost, markup_multiplier=1.2):
+    """
+    Calculate overage price ensuring it's never lower than the rate card price.
+    
+    Args:
+        rate_card_price: Base rate card price
+        meta_cost: Additional meta cost
+        markup_multiplier: Multiplier for overage (default 1.2 = 20% markup)
+    
+    Returns:
+        float: Safe overage price that's always >= rate card price
+    """
+    base_cost = rate_card_price + meta_cost
+    overage_price = base_cost * markup_multiplier
+    
+    # Ensure overage price is never lower than rate card price
+    safe_overage_price = max(overage_price, rate_card_price)
+    
+    return round(safe_overage_price, 4)
+
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
 
@@ -1070,22 +1090,22 @@ def index():
             'ai_messages': {
                 'volume': int(ai_volume),
                 'price_per_msg': round(ai_price + meta_costs['ai'], 4),
-                'overage_price': round((ai_price + meta_costs['ai']) * 1.2, 4)
+                'overage_price': calculate_safe_overage_price(ai_price, meta_costs['ai'])
             },
             'advanced_messages': {
                 'volume': int(advanced_volume),
                 'price_per_msg': round(advanced_price + meta_costs.get('advanced', 0), 4),
-                'overage_price': round((advanced_price + meta_costs.get('advanced', 0)) * 1.2, 4)
+                'overage_price': calculate_safe_overage_price(advanced_price, meta_costs.get('advanced', 0))
             },
             'marketing_message': {
                 'volume': int(inputs.get('basic_marketing_volume', 0) or 0),
                 'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_marketing_price', 0) + meta_costs.get('marketing', 0), 4),
-                'overage_price': round((session.get('pricing_inputs', {}).get('basic_marketing_price', 0) + meta_costs.get('marketing', 0)) * 1.2, 4)
+                'overage_price': calculate_safe_overage_price(session.get('pricing_inputs', {}).get('basic_marketing_price', 0), meta_costs.get('marketing', 0))
             },
             'utility_message': {
                 'volume': int(inputs.get('basic_utility_volume', 0) or 0),
                 'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_utility_price', 0) + meta_costs.get('utility', 0), 4),
-                'overage_price': round((session.get('pricing_inputs', {}).get('basic_utility_price', 0) + meta_costs.get('utility', 0)) * 1.2, 4)
+                'overage_price': calculate_safe_overage_price(session.get('pricing_inputs', {}).get('basic_utility_price', 0), meta_costs.get('utility', 0))
             }
         }
         print("DEBUG: advanced_price =", advanced_price)
@@ -1106,22 +1126,22 @@ def index():
                 'ai_messages': {
                     'volume': int(ai_volume),
                     'price_per_msg': round(rates['ai'] + meta_costs['ai'], 4),
-                    'overage_price': round((rates['ai'] + meta_costs['ai']) * 1.2, 4)
+                    'overage_price': calculate_safe_overage_price(rates['ai'], meta_costs['ai'])
                 },
                 'advanced_messages': {
                     'volume': int(advanced_volume),
                     'price_per_msg': round(rates['advanced'] + meta_costs['ai'], 4),
-                    'overage_price': round((rates['advanced'] + meta_costs['ai']) * 1.2, 4)
+                    'overage_price': calculate_safe_overage_price(rates['advanced'], meta_costs['ai'])
                 },
                 'marketing_message': {
                     'volume': int(inputs.get('basic_marketing_volume', 0) or 0),
                     'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_marketing_price', 0) + meta_costs.get('marketing', 0), 4),
-                    'overage_price': round((session.get('pricing_inputs', {}).get('basic_marketing_price', 0) + meta_costs.get('marketing', 0)) * 1.2, 4)
+                    'overage_price': calculate_safe_overage_price(session.get('pricing_inputs', {}).get('basic_marketing_price', 0), meta_costs.get('marketing', 0))
                 },
                 'utility_message': {
                     'volume': int(inputs.get('basic_utility_volume', 0) or 0),
                     'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_utility_price', 0) + meta_costs.get('utility', 0), 4),
-                    'overage_price': round((session.get('pricing_inputs', {}).get('basic_utility_price', 0) + meta_costs.get('utility', 0)) * 1.2, 4)
+                    'overage_price': calculate_safe_overage_price(session.get('pricing_inputs', {}).get('basic_utility_price', 0), meta_costs.get('utility', 0))
                 }
             }
             return render_template(
