@@ -12,6 +12,10 @@ USER_REGION_COUNTRY = {
     'Mariana':  ('LATAM', 'Brazil'),
     'Matheus':  ('LATAM', 'Mexico'),
     'Gourav':   ('India', 'North'),
+    # Africa region mappings (matching the regions defined in index.html)
+    'Africa_User1': ('Africa', 'South Africa'),
+    'Africa_User2': ('Africa', 'Nigeria'),
+    'Africa_User3': ('Africa', 'Rest of Africa'),
 }
 
 with app.app_context():
