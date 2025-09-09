@@ -1191,7 +1191,7 @@ def index():
         if 'pricing_inputs' in session:
             session['pricing_inputs']['platform_fee'] = platform_fee
         # Use this platform_fee for all downstream calculations and rendering
-        pricing_simulation = calculate_pricing_simulation(inputs)
+        pricing_simulation = calculate_pricing_simulation(inputs, session.get('pricing_inputs'))
         return render_template(
             'index.html',
             step='results',
@@ -1820,7 +1820,7 @@ def analytics_v2():
     """
     return render_template('analyticsv2.html')
 
-def calculate_pricing_simulation(inputs):
+def calculate_pricing_simulation(inputs, pricing_inputs=None):
     """
     Returns a dict with detailed calculations for both volume and committed amount routes for the given user inputs.
     """
@@ -1832,12 +1832,31 @@ def calculate_pricing_simulation(inputs):
     platform_fee = float(inputs.get('platform_fee', 0) or 0)
     committed_amount = float(inputs.get('committed_amount', 0) or 0)
     from pricing_config import meta_costs_table
+    from calculator import get_committed_amount_rate_for_volume
     meta_costs = meta_costs_table.get(country, meta_costs_table['APAC'])
+    
     # Use user-chosen prices for both routes
+    # First try from inputs, then from pricing_inputs parameter
     ai_price = float(inputs.get('ai_price', 0) or 0)
     adv_price = float(inputs.get('advanced_price', 0) or 0)
     mkt_price = float(inputs.get('basic_marketing_price', 0) or 0)
     utl_price = float(inputs.get('basic_utility_price', 0) or 0)
+    
+    # If prices are 0 and pricing_inputs is provided, use those
+    if pricing_inputs:
+        if ai_price == 0:
+            ai_price = float(pricing_inputs.get('ai_price', 0) or 0)
+        if adv_price == 0:
+            adv_price = float(pricing_inputs.get('advanced_price', 0) or 0)
+        if mkt_price == 0:
+            mkt_price = float(pricing_inputs.get('basic_marketing_price', 0) or 0)
+        if utl_price == 0:
+            utl_price = float(pricing_inputs.get('basic_utility_price', 0) or 0)
+    
+    # Calculate Gupshup markup rates for advanced messages
+    total_volume = ai_volume + advanced_volume + basic_marketing_volume + basic_utility_volume
+    adv_gupshup_rate = get_committed_amount_rate_for_volume(country, 'advanced', total_volume)
+    
     ai_final = ai_price + meta_costs['ai']
     adv_final = adv_price + meta_costs['advanced']
     mkt_final = mkt_price + meta_costs['marketing']
@@ -1852,34 +1871,109 @@ def calculate_pricing_simulation(inputs):
     adv_final_bundle = adv_final
     mkt_final_bundle = mkt_final
     utl_final_bundle = utl_final
-    # If committed_amount is 0, suggest a value that covers the entered volumes
+    # Calculate the required committed amount to cover all message volumes
+    # This is the minimum committed amount needed to cover the client's actual usage
+    required_committed_amount = (ai_volume * ai_final_bundle) + (advanced_volume * adv_final_bundle) + (basic_marketing_volume * mkt_final_bundle) + (basic_utility_volume * utl_final_bundle)
+    
+    # Find the nearest programmed bundle amount
+    from pricing_config import committed_amount_slabs
+    slabs = committed_amount_slabs.get(country, committed_amount_slabs['APAC'])
+    
+    # Get all programmed bundle amounts (both lower and upper bounds of tiers)
+    programmed_bundles = []
+    for slab in slabs:
+        programmed_bundles.append(slab[0])  # Lower bound
+        programmed_bundles.append(slab[1])  # Upper bound
+    
+    # Remove duplicates and sort
+    programmed_bundles = sorted(list(set(programmed_bundles)))
+    
+    # Find the nearest upper and lower bundles
+    lower_bundles = [bundle for bundle in programmed_bundles if bundle <= required_committed_amount]
+    upper_bundles = [bundle for bundle in programmed_bundles if bundle >= required_committed_amount]
+    
+    nearest_lower = max(lower_bundles) if lower_bundles else programmed_bundles[0]
+    nearest_upper = min(upper_bundles) if upper_bundles else programmed_bundles[-1]
+    
+    # Choose the closer one as the recommended bundle
+    distance_to_lower = abs(required_committed_amount - nearest_lower)
+    distance_to_upper = abs(required_committed_amount - nearest_upper)
+    
+    if distance_to_lower <= distance_to_upper:
+        nearest_bundle = nearest_lower
+    else:
+        nearest_bundle = nearest_upper
+    
+    # Find the tier rates for both bundles
+    chosen_tier_rates = None
+    lower_tier_rates = None
+    upper_tier_rates = None
+    
+    for slab in slabs:
+        if slab[0] <= nearest_bundle < slab[1]:
+            chosen_tier_rates = slab[2]
+        if slab[0] <= nearest_lower < slab[1]:
+            lower_tier_rates = slab[2]
+        if slab[0] <= nearest_upper < slab[1]:
+            upper_tier_rates = slab[2]
+    
+    # If committed_amount is 0, use the nearest programmed bundle
     if committed_amount == 0:
-        committed_amount = (ai_volume * ai_final_bundle) + (advanced_volume * adv_final_bundle)
-    included_ai = committed_amount / ai_final_bundle if ai_final_bundle else 0
-    included_adv = committed_amount / adv_final_bundle if adv_final_bundle else 0
-    ai_overage = max(0, ai_volume - included_ai)
-    adv_overage = max(0, advanced_volume - included_adv)
-    ai_overage_rate = ai_final_bundle * 1.2
-    adv_overage_rate = adv_final_bundle * 1.2
-    ai_overage_cost = ai_overage * ai_overage_rate
-    adv_overage_cost = adv_overage * adv_overage_rate
-    total_bundle = committed_amount + ai_overage_cost + adv_overage_cost + platform_fee
+        committed_amount = nearest_bundle
+        # For committed amount route, use user's chosen rates (not tier rates)
+        # The committed amount covers all usage at the user's chosen rates
+        ai_final_bundle = ai_price
+        adv_final_bundle = adv_price
+        mkt_final_bundle = mkt_price
+        utl_final_bundle = utl_price
+    
+    # Calculate how many messages each bundle can actually cover with its amount
+    # Using user's chosen rates (not tier rates)
+    ai_included = int(nearest_bundle / ai_price) if ai_price > 0 else 0
+    adv_included = int(nearest_bundle / adv_price) if adv_price > 0 else 0
+    mkt_included = int(nearest_bundle / mkt_price) if mkt_price > 0 else 0
+    utl_included = int(nearest_bundle / utl_price) if utl_price > 0 else 0
+    
+    # Calculate messages covered by lower bundle
+    ai_lower_included = int(nearest_lower / ai_price) if ai_price > 0 else 0
+    adv_lower_included = int(nearest_lower / adv_price) if adv_price > 0 else 0
+    mkt_lower_included = int(nearest_lower / mkt_price) if mkt_price > 0 else 0
+    utl_lower_included = int(nearest_lower / utl_price) if utl_price > 0 else 0
+    
+    # Calculate messages covered by upper bundle
+    ai_upper_included = int(nearest_upper / ai_price) if ai_price > 0 else 0
+    adv_upper_included = int(nearest_upper / adv_price) if adv_price > 0 else 0
+    mkt_upper_included = int(nearest_upper / mkt_price) if mkt_price > 0 else 0
+    utl_upper_included = int(nearest_upper / utl_price) if utl_price > 0 else 0
+    
+    # Calculate messages covered by required amount
+    ai_required_included = int(required_committed_amount / ai_price) if ai_price > 0 else 0
+    adv_required_included = int(required_committed_amount / adv_price) if adv_price > 0 else 0
+    mkt_required_included = int(required_committed_amount / mkt_price) if mkt_price > 0 else 0
+    utl_required_included = int(required_committed_amount / utl_price) if utl_price > 0 else 0
+    
+    # No overage calculations for committed amount bundle route
+    # The committed amount covers all usage without additional charges
+    total_bundle = committed_amount + platform_fee
     return {
         'volume_route': {
-            'ai_price': ai_final, 'adv_price': adv_final,
-            'ai_cost': ai_cost, 'adv_cost': adv_cost,
+            'ai_price': ai_final, 'adv_price': adv_final, 'mkt_price': mkt_final, 'utl_price': utl_final,
+            'ai_cost': ai_cost, 'adv_cost': adv_cost, 'mkt_cost': mkt_cost, 'utl_cost': utl_cost,
             'platform_fee': platform_fee, 'total': total,
-            'ai_volume': ai_volume, 'adv_volume': advanced_volume
+            'ai_volume': ai_volume, 'adv_volume': advanced_volume, 'mkt_volume': basic_marketing_volume, 'utl_volume': basic_utility_volume,
+            'adv_gupshup_rate': adv_gupshup_rate
         },
         'bundle_route': {
-            'ai_price': ai_final_bundle, 'adv_price': adv_final_bundle,
-            'included_ai': included_ai, 'included_adv': included_adv,
-            'ai_overage': ai_overage, 'adv_overage': adv_overage,
-            'ai_overage_rate': ai_overage_rate, 'adv_overage_rate': adv_overage_rate,
-            'ai_overage_cost': ai_overage_cost, 'adv_overage_cost': adv_overage_cost,
-            'committed_amount': committed_amount, 'platform_fee': platform_fee, 'total': total_bundle,
-            'ai_volume': ai_volume, 'adv_volume': advanced_volume
-        }
+            'ai_price': ai_final_bundle, 'adv_price': adv_final_bundle, 'mkt_price': mkt_final_bundle, 'utl_price': utl_final_bundle,
+            'committed_amount': committed_amount, 'required_committed_amount': required_committed_amount, 'nearest_bundle': nearest_bundle, 'nearest_lower': nearest_lower, 'nearest_upper': nearest_upper, 'platform_fee': platform_fee, 'total': total_bundle,
+            'ai_volume': ai_volume, 'adv_volume': advanced_volume, 'mkt_volume': basic_marketing_volume, 'utl_volume': basic_utility_volume,
+            'ai_included': ai_included, 'adv_included': adv_included, 'mkt_included': mkt_included, 'utl_included': utl_included,
+            'ai_lower_included': ai_lower_included, 'adv_lower_included': adv_lower_included, 'mkt_lower_included': mkt_lower_included, 'utl_lower_included': utl_lower_included,
+            'ai_upper_included': ai_upper_included, 'adv_upper_included': adv_upper_included, 'mkt_upper_included': mkt_upper_included, 'utl_upper_included': utl_upper_included,
+            'ai_required_included': ai_required_included, 'adv_required_included': adv_required_included, 'mkt_required_included': mkt_required_included, 'utl_required_included': utl_required_included,
+            'adv_gupshup_rate': adv_gupshup_rate, 'lower_tier_rates': lower_tier_rates, 'upper_tier_rates': upper_tier_rates
+        },
+        'meta_costs': meta_costs
     }
 
 if __name__ == '__main__':

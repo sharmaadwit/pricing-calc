@@ -8,46 +8,350 @@
 <head>
     <title>Pricing Calculator</title>
     <style>
-        body { font-family: 'Segoe UI', 'Arial', 'sans-serif'; }
-        h2, h3, h4 { font-weight: bold; margin-top: 1.5em; }
-        h2 { font-size: 2em; }
-        h3 { font-size: 1.5em; }
-        h4 { font-size: 1.2em; }
-        .section { margin-bottom: 2em; }
-        hr { border: none; border-top: 1px solid #ccc; margin: 2em 0; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 1.5em; }
-        table tr:nth-child(even) { background-color: #f9f9f9; }
-        table tr:nth-child(odd) { background-color: #fff; }
-        table th, table td { padding: 8px 12px; }
-        th { background: #f0f0f0; }
-        td, th { text-align: right; }
-        th:first-child, td:first-child { text-align: left; }
-        label { display: block; margin-top: 0.4em; margin-bottom: 0.1em; font-weight: 500; }
-        input, select { margin-top: 0.1em; margin-bottom: 0.3em; }
-        .key-number { font-weight: bold; font-size: 1.1em; }
+        * {
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #2c3e50;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .progress-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px;
+            padding: 8px;
+            margin: 20px auto 0;
+            max-width: 400px;
+        }
+        
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .progress-step {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .progress-step.active {
+            color: white;
+        }
+        
+        .progress-step.completed {
+            color: #4ade80;
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        
+        .progress-step.active .step-number {
+            background: white;
+            color: #667eea;
+        }
+        
+        .progress-step.completed .step-number {
+            background: #4ade80;
+            color: white;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        h2, h3, h4 { 
+            font-weight: 600; 
+            margin-top: 0;
+            margin-bottom: 1em;
+        }
+        
+        h2 { 
+            font-size: 1.8em;
+            color: #2c3e50;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        h3 { 
+            font-size: 1.4em;
+            color: #34495e;
+        }
+        
+        h4 { 
+            font-size: 1.2em;
+            color: #7f8c8d;
+        }
+        
+        .section { 
+            margin-bottom: 2.5em; 
+        }
+        
+        .form-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-section:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .form-section h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.95em;
+        }
+        
+        input, select { 
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        input[type="submit"] {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        input[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+        }
+        
+        table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin-bottom: 1.5em;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        table tr:nth-child(even) { 
+            background-color: #f8fafc; 
+        }
+        
+        table tr:nth-child(odd) { 
+            background-color: #fff; 
+        }
+        
+        table th, table td { 
+            padding: 16px 20px;
+            text-align: left;
+        }
+        
+        table th { 
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        table td:last-child, table th:last-child {
+            text-align: right;
+        }
+        
+        .key-number { 
+            font-weight: bold; 
+            font-size: 1.1em;
+            color: #667eea;
+        }
+        
         .flashes {
           list-style: none;
           padding: 0;
-          margin: 1em 0;
+            margin: 0 0 20px 0;
         }
+        
         .flashes li {
-          background: #ffe0e0;
-          color: #b30000;
-          border: 1px solid #b30000;
-          padding: 10px 16px;
-          margin-bottom: 8px;
-          font-weight: bold;
-          border-radius: 4px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            font-weight: 500;
+            border-radius: 8px;
+            border-left: 4px solid;
         }
+        
         .flashes li.error {
-          background: #ffe0e0;
-          color: #b30000;
-          border: 1px solid #b30000;
+            background: #fef2f2;
+            color: #dc2626;
+            border-left-color: #dc2626;
         }
+        
         .flashes li.success {
-          background: #e0ffe0;
-          color: #006600;
-          border: 1px solid #006600;
+            background: #f0fdf4;
+            color: #16a34a;
+            border-left-color: #16a34a;
+        }
+        
+        .help-text {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: 4px;
+            font-style: italic;
+        }
+        
+        .calculation-id {
+            background: #e0f2fe;
+            color: #0277bd;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .how-to-use {
+            background: linear-gradient(135deg, #e0f2fe 0%, #f3e5f5 100%);
+            border: 1px solid #b3e5fc;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+        
+        .how-to-use h3 {
+            margin-top: 0;
+            color: #0277bd;
+        }
+        
+        .how-to-use ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .how-to-use li {
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 12px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .form-section {
+                padding: 20px;
+            }
+            
+            .progress-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .progress-step {
+                font-size: 0.8em;
+            }
         }
     </style>
     <script>
@@ -62,6 +366,35 @@
     </script>
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <h1>Pricing Calculator</h1>
+            {% if step != 'volumes' and calculation_id %}
+                <div class="calculation-id">
+                    <b>Calculation ID:</b> {{ calculation_id }}
+                </div>
+            {% endif %}
+            
+            <!-- Progress Indicator -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-step {% if step == 'volumes' %}active{% elif step in ['prices', 'results'] %}completed{% endif %}">
+                        <div class="step-number">1</div>
+                        <span>Volumes</span>
+                    </div>
+                    <div class="progress-step {% if step == 'prices' %}active{% elif step == 'results' %}completed{% endif %}">
+                        <div class="step-number">2</div>
+                        <span>Pricing</span>
+                    </div>
+                    <div class="progress-step {% if step == 'results' %}active{% endif %}">
+                        <div class="step-number">3</div>
+                        <span>Results</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
     <!-- Flash messages for errors and notifications -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -72,28 +405,17 @@
         </ul>
       {% endif %}
     {% endwith %}
-    <h1>Pricing Calculator</h1>
-    {% if step != 'volumes' and calculation_id %}
-      <div style="margin-bottom: 1em; font-size: 1.1em; color: #1976d2;">
-        <b>Calculation ID:</b> {{ calculation_id }}
-      </div>
-    {% endif %}
 
     <!-- How to Use and User Flow Diagram -->
     {% if step == 'volumes' %}
-    <div style="background: #f8fafd; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
-      <h3 style="margin-top:0;">How to Use</h3>
-      <ul style="margin:0 0 0 18px; padding:0; font-size:1.08em;">
+            <div class="how-to-use">
+                <h3>How to Use</h3>
+                <ul>
         <li>Enter your expected monthly message volumes and select platform options.</li>
         <li>You can enter 0 volumes in this step to go through message bundle flow.</li>
         <li>Click 'Continue' to see the detailed pricing and inclusions.</li>
         <li>Review the results. The internal section is for your reference only.</li>
       </ul>
-      <div style="text-align: center; margin-top: 18px;">
-        <!--
-        <a href="{{ url_for('readme') }}" target="_blank" style="display: inline-block; padding: 10px 24px; background: #1976d2; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 1.08em; box-shadow: 0 2px 6px rgba(25,118,210,0.08);">Learn More</a>
-        -->
-      </div>
     </div>
     {% endif %}
 
@@ -101,9 +423,14 @@
     {% if step == 'volumes' %}
     <form method="post" id="volumes-form">
         <input type="hidden" name="step" value="volumes">
+                
+                <div class="form-group">
         <label for="user_name">Enter your name:</label>
-        <input type="text" name="user_name" id="user_name" value="{{ inputs.get('user_name', '') }}" required><br><br>
-        <label>Country:</label>
+                    <input type="text" name="user_name" id="user_name" value="{{ inputs.get('user_name', '') }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="country-select">Country:</label>
         <select name="country" id="country-select" onchange="updateMinPlatformFee(); toggleDevLocation(); updateRegionDropdown();">
                 <option value="India" {% if inputs and inputs.country == 'India' %}selected{% endif %}>India</option>
                 <option value="MENA" {% if inputs and inputs.country == 'MENA' %}selected{% endif %}>MENA</option>
@@ -111,13 +438,14 @@
                 <option value="Africa" {% if inputs and inputs.country == 'Africa' %}selected{% endif %}>Africa</option>
                 <option value="Europe" {% if inputs and inputs.country == 'Europe' %}selected{% endif %}>Europe</option>
                 <option value="APAC" {% if inputs and inputs.country == 'APAC' %}selected{% endif %}>APAC</option>
-        </select><br>
-        <div id="region-dropdown-container" style="display: none;">
+                    </select>
+                </div>
+                <div id="region-dropdown-container" class="form-group" style="display: none;">
             <label for="region">Region:</label>
             <select name="region" id="region-select" required>
                 <!-- Options will be populated dynamically -->
             </select>
-        </div><br>
+                </div>
         <script>
         const regionMapping = {
             'India': ['North', 'South', 'West'],
@@ -198,103 +526,165 @@
         };
         </script>
         <!-- Section 1: One Time Dev Charges -->
-        <div style="background: #ede7f6; border: 2px solid #bbaadd; border-radius: 10px; padding: 24px 32px; margin-bottom: 28px;">
-            <h2 style="margin-top:0; color: #5e35b1;">One Time Dev Charges</h2>
-            <label for="onboarding_price">Onboarding Required?:</label>
-            <select name="onboarding_price" id="onboarding_price">
-                <option value="Yes" {% if inputs and inputs.onboarding_price == 'Yes' %}selected{% endif %}>Yes</option>
-                <option value="No" {% if inputs and inputs.onboarding_price == 'No' %}selected{% endif %}>No</option>
-            </select><br>
-            <label for="ux_price">Journey Design Required?:</label>
-            <select name="ux_price" id="ux_price" >
-                <option value="Yes" {% if inputs and inputs.ux_price == 'Yes' %}selected{% endif %}>Yes</option>
-                <option value="No" {% if inputs and inputs.ux_price == 'No' %}selected{% endif %}>No</option>
-            </select><br>
-            <label for="testing_qa_price">Testing/QA Services Required?:</label>
-            <select name="testing_qa_price" id="testing_qa_price">
-                <option value="Yes" {% if inputs and inputs.testing_qa_price == 'Yes' %}selected{% endif %}>Yes</option>
-                <option value="No" {% if inputs and inputs.testing_qa_price == 'No' %}selected{% endif %}>No</option>
-            </select><br>
-            <label for="aa_setup_price">Agent Assist Setup Required?:</label>
-            <select name="aa_setup_price" id="aa_setup_price">
-                <option value="Yes" {% if inputs and inputs.aa_setup_price == 'Yes' %}selected{% endif %}>Yes</option>
-                <option value="No" {% if inputs and inputs.aa_setup_price == 'No' %}selected{% endif %}>No</option>
-            </select><br>
-            <label for="num_apis_price">No of APIs:</label>
-            <input type="number" name="num_apis_price" id="num_apis_price" min="0" value="{{ inputs.get('num_apis_price', '') }}"><br>
-            <label for="num_journeys_price">No of Journeys:</label>
-            <input type="number" name="num_journeys_price" id="num_journeys_price" min="0" value="{{ inputs.get('num_journeys_price', '') }}"><br>
-            <label for="num_ai_workspace_commerce_price">No of AI Workspace - Commerce:</label>
-            <input type="number" name="num_ai_workspace_commerce_price" id="num_ai_workspace_commerce_price" min="0" value="{{ inputs.get('num_ai_workspace_commerce_price', '') }}"><br>
-            <label for="num_ai_workspace_faq_price">No of AI Workspace - FAQ:</label>
-            <input type="number" name="num_ai_workspace_faq_price" id="num_ai_workspace_faq_price" min="0" value="{{ inputs.get('num_ai_workspace_faq_price', '') }}"><br>
-        </div>
-        <!-- Section 2: Volume Estimation -->
-        <div style="background: #fffde7; border: 2px solid #ffe082; border-radius: 10px; padding: 24px 32px; margin-bottom: 28px;">
-            <h2 style="margin-top:0; color: #ff8f00;">Volume Estimation</h2>
-            <label>AI Message Volume (per month):</label>
-            <input type="text" name="ai_volume" class="comma-number" value="{{ inputs.get('ai_volume', '') }}"><br><br>
-            <label>Advanced Message Volume (per month):</label>
-            <input type="text" name="advanced_volume" class="comma-number" value="{{ inputs.get('advanced_volume', '') }}"><br><br>
-            <label>Basic Marketing Message Volume (per month):</label>
-            <input type="text" name="basic_marketing_volume" class="comma-number" value="{{ inputs.get('basic_marketing_volume', '') }}"><br><br>
-            <label>Basic Utility/Authentication Message Volume (per month):</label>
-            <input type="text" name="basic_utility_volume" class="comma-number" value="{{ inputs.get('basic_utility_volume', '') }}">
-        </div>
-        <!-- Section 3: Monthly Fixed Platform Fee Calculation -->
-        <div style="background: #e3f2fd; border: 2px solid #90caf9; border-radius: 10px; padding: 24px 32px; margin-bottom: 28px;">
-            <h2 style="margin-top:0; color: #1976d2;">Monthly Fixed Platform Fee Calculation</h2>
-            <label>Minimum Platform Fee:</label>
-            <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly><br>
-            <small>Journey Builder Lite, Campaign Manager, CTWA (Meta, Tiktok), Agent Assist <20, Personalize Lite (upto 1ml and no advanced events), 80 TPS, 1 manday/month maintenance</small><br><br>
-            <label>Personalize Load:</label>
-            <select name="personalize_load">
-                <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>- Not Applicable</option>
-                <option value="Standard" {% if inputs and inputs.personalize_load == 'Standard' %}selected{% endif %}>Standard - upto 5 million records, no external events</option>
-                <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced - 10 million records, external events supported</option>
-            </select><br>
-            <small>If the client requires large number of profiles and support for external events, select the appropriate tier.</small><br><br>
-            <label>BFSI Tier:</label>
-            <select name="bfsi_tier">
-                <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>- Not Applicable</option>
-                <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1</option>
-                <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2</option>
-                <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3</option>
-            </select><br>
-            <small>Each tier comes with specific controls of privacy and security requirements. The exact inclusions of each tier will be displayed on the final pricing page.</small><br><br>
-            <label>AI Module (Yes/No):</label>
-            <select name="ai_module">
-                <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>- Not Applicable</option>
-                <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
-                <option value="No" {% if inputs and inputs.ai_module == 'No' %}selected{% endif %}>No</option>
-            </select><br>
-            <small>Access to Workspace Configuration and data retraining screens</small><br><br>
-            <label>Smart CPaaS:</label>
-            <select name="smart_cpaas">
-                <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
-                <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes</option>
-            </select><br>
-            <small>Auto failover between channels</small><br><br>
-            <label>Increased TPS:</label>
-            <select name="increased_tps">
-                <option value="NA" {% if inputs and inputs.increased_tps == 'NA' %}selected{% endif %}>NA</option>
-                <option value="250" {% if inputs and inputs.increased_tps == '250' %}selected{% endif %}>250 (upto 250 Messages per Second)</option>
-                <option value="1000" {% if inputs and inputs.increased_tps == '1000' %}selected{% endif %}>1000 (upto 1000 Messages per Second)</option>
-            </select><br>
-            <small>Required to support high volume campaigns</small><br><br>
-            <label>Number of Human Agents (Agent Assist):</label>
-            <select name="human_agents">
-                <option value="NA" {% if inputs and inputs.human_agents == 'NA' %}selected{% endif %}><20 already part of standard platform fee</option>
-                <option value="20+" {% if inputs and inputs.human_agents == '20+' %}selected{% endif %}>20+</option>
-                <option value="50+" {% if inputs and inputs.human_agents == '50+' %}selected{% endif %}>50+</option>
-                <option value="100+" {% if inputs and inputs.human_agents == '100+' %}selected{% endif %}>100+</option>
-            </select><br><br>
-            <input type="submit" value="Next: Rate Card">
-        </div>
-    </form>
+                <div class="form-section">
+                    <h2>One Time Dev Charges</h2>
+                    <div class="form-group">
+                        <label for="onboarding_price">Onboarding Required?:</label>
+                        <select name="onboarding_price" id="onboarding_price">
+                            <option value="Yes" {% if inputs and inputs.onboarding_price == 'Yes' %}selected{% endif %}>Yes</option>
+                            <option value="No" {% if inputs and inputs.onboarding_price == 'No' %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ux_price">Journey Design Required?:</label>
+                        <select name="ux_price" id="ux_price">
+                            <option value="Yes" {% if inputs and inputs.ux_price == 'Yes' %}selected{% endif %}>Yes</option>
+                            <option value="No" {% if inputs and inputs.ux_price == 'No' %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="testing_qa_price">Testing/QA Services Required?:</label>
+                        <select name="testing_qa_price" id="testing_qa_price">
+                            <option value="Yes" {% if inputs and inputs.testing_qa_price == 'Yes' %}selected{% endif %}>Yes</option>
+                            <option value="No" {% if inputs and inputs.testing_qa_price == 'No' %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="aa_setup_price">Agent Assist Setup Required?:</label>
+                        <select name="aa_setup_price" id="aa_setup_price">
+                            <option value="Yes" {% if inputs and inputs.aa_setup_price == 'Yes' %}selected{% endif %}>Yes</option>
+                            <option value="No" {% if inputs and inputs.aa_setup_price == 'No' %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="num_apis_price">No of APIs:</label>
+                        <input type="number" name="num_apis_price" id="num_apis_price" min="0" value="{{ inputs.get('num_apis_price', '') }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="num_journeys_price">No of Journeys:</label>
+                        <input type="number" name="num_journeys_price" id="num_journeys_price" min="0" value="{{ inputs.get('num_journeys_price', '') }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="num_ai_workspace_commerce_price">No of AI Workspace - Commerce:</label>
+                        <input type="number" name="num_ai_workspace_commerce_price" id="num_ai_workspace_commerce_price" min="0" value="{{ inputs.get('num_ai_workspace_commerce_price', '') }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="num_ai_workspace_faq_price">No of AI Workspace - FAQ:</label>
+                        <input type="number" name="num_ai_workspace_faq_price" id="num_ai_workspace_faq_price" min="0" value="{{ inputs.get('num_ai_workspace_faq_price', '') }}">
+                    </div>
+                </div>
+                <!-- Section 2: Volume Estimation -->
+                <div class="form-section">
+                    <h2>Volume Estimation</h2>
+                    <div class="form-group">
+                        <label for="ai_volume">AI Message Volume (per month):</label>
+                        <input type="text" name="ai_volume" id="ai_volume" class="comma-number" value="{{ inputs.get('ai_volume', '') }}">
+                        <div class="help-text">Enter the expected number of AI-powered messages per month</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="advanced_volume">Advanced Message Volume (per month):</label>
+                        <input type="text" name="advanced_volume" id="advanced_volume" class="comma-number" value="{{ inputs.get('advanced_volume', '') }}">
+                        <div class="help-text">Enter the expected number of advanced messages per month</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="basic_marketing_volume">Basic Marketing Message Volume (per month):</label>
+                        <input type="text" name="basic_marketing_volume" id="basic_marketing_volume" class="comma-number" value="{{ inputs.get('basic_marketing_volume', '') }}">
+                        <div class="help-text">Enter the expected number of basic marketing messages per month</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="basic_utility_volume">Basic Utility/Authentication Message Volume (per month):</label>
+                        <input type="text" name="basic_utility_volume" id="basic_utility_volume" class="comma-number" value="{{ inputs.get('basic_utility_volume', '') }}">
+                        <div class="help-text">Enter the expected number of basic utility/authentication messages per month</div>
+                    </div>
+                </div>
+                <!-- Section 3: Monthly Fixed Platform Fee Calculation -->
+                <div class="form-section">
+                    <h2>Monthly Fixed Platform Fee Calculation</h2>
+                    
+                    <div class="form-group">
+                        <label for="min_platform_fee">Minimum Platform Fee:</label>
+                        <input type="text" id="min_platform_fee" name="min_platform_fee" value="" readonly>
+                        <div class="help-text">Journey Builder Lite, Campaign Manager, CTWA (Meta, Tiktok), Agent Assist <20, Personalize Lite (upto 1ml and no advanced events), 80 TPS, 1 manday/month maintenance</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="personalize_load">Personalize Load:</label>
+                        <select name="personalize_load" id="personalize_load">
+                            <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>- Not Applicable</option>
+                            <option value="Standard" {% if inputs and inputs.personalize_load == 'Standard' %}selected{% endif %}>Standard - upto 5 million records, no external events</option>
+                            <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced - 10 million records, external events supported</option>
+                        </select>
+                        <div class="help-text">If the client requires large number of profiles and support for external events, select the appropriate tier.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bfsi_tier">BFSI Tier:</label>
+                        <select name="bfsi_tier" id="bfsi_tier">
+                            <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>- Not Applicable</option>
+                            <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1</option>
+                            <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2</option>
+                            <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3</option>
+                        </select>
+                        <div class="help-text">Each tier comes with specific controls of privacy and security requirements. The exact inclusions of each tier will be displayed on the final pricing page.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ai_module">AI Module (Yes/No):</label>
+                        <select name="ai_module" id="ai_module">
+                            <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>- Not Applicable</option>
+                            <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
+                            <option value="No" {% if inputs and inputs.ai_module == 'No' %}selected{% endif %}>No</option>
+                        </select>
+                        <div class="help-text">Access to Workspace Configuration and data retraining screens</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="smart_cpaas">Smart CPaaS:</label>
+                        <select name="smart_cpaas" id="smart_cpaas">
+                            <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
+                            <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes</option>
+                        </select>
+                        <div class="help-text">Auto failover between channels</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="increased_tps">Increased TPS:</label>
+                        <select name="increased_tps" id="increased_tps">
+                            <option value="NA" {% if inputs and inputs.increased_tps == 'NA' %}selected{% endif %}>NA</option>
+                            <option value="250" {% if inputs and inputs.increased_tps == '250' %}selected{% endif %}>250 (upto 250 Messages per Second)</option>
+                            <option value="1000" {% if inputs and inputs.increased_tps == '1000' %}selected{% endif %}>1000 (upto 1000 Messages per Second)</option>
+                        </select>
+                        <div class="help-text">Required to support high volume campaigns</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="human_agents">Number of Human Agents (Agent Assist):</label>
+                        <select name="human_agents" id="human_agents">
+                            <option value="NA" {% if inputs and inputs.human_agents == 'NA' %}selected{% endif %}><20 already part of standard platform fee</option>
+                            <option value="20+" {% if inputs and inputs.human_agents == '20+' %}selected{% endif %}>20+</option>
+                            <option value="50+" {% if inputs and inputs.human_agents == '50+' %}selected{% endif %}>50+</option>
+                            <option value="100+" {% if inputs and inputs.human_agents == '100+' %}selected{% endif %}>100+</option>
+                        </select>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 30px;">
+                        <input type="submit" value="Next: Rate Card" class="btn-primary">
+                    </div>
+                </div>
+            </form>
     <script>
     // Make backend config available to JS
-    const MIN_FEES = {{ min_fees | tojson }};
+    const MIN_FEES = {{ min_fees | tojson | safe }};
     function updateMinPlatformFee() {
         var country = document.getElementById('country-select').value;
         var minFee = MIN_FEES[country] || MIN_FEES['APAC'];
@@ -484,8 +874,8 @@
               <thead>
                 <tr style="background: #f0f4f8;">
                   <th style="text-align:left;">Line Item</th>
-                  <th style="text-align:right;">Volume</th>
-                  <th style="text-align:right;">Gupshup Markup/message</th>
+                  <th style="text-align:center;">Volume</th>
+                  <th style="text-align:center;">Gupshup Markup/message</th>
                   <th style="text-align:right;">Fixed Price</th>
                 </tr>
               </thead>
@@ -493,8 +883,8 @@
               {% for row in pricing_table %}
                 <tr>
                       <td>{{ row.line_item or row.label }}</td>
-                      <td class="right">{{ row.volume }}</td>
-                      <td class="right">{{ row.chosen_price }}</td>
+                      <td style="text-align:center;">{{ row.volume }}</td>
+                      <td style="text-align:center;">{{ row.chosen_price }}</td>
                       <td class="right">
                           {% if row.line_item == 'Platform Fee (Chosen)' %}
                               {{ currency_symbol }}{{ row.revenue }}
@@ -549,32 +939,223 @@
 
         </div>
         <div style="max-width: 1100px; margin: 0 auto;">
-          <div style="background: #f8f8fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 18px 24px; margin-top: 32px;">
-            <h2 style="margin-top:0; color:#444;">Section 2: Internal - Not to be shared</h2>
+          <div class="form-section" style="background: #f8f9fa; border: 2px solid #e9ecef; margin-top: 32px;">
+            <h2 style="margin-top:0; color:#495057; border-bottom: 2px solid #6c757d; padding-bottom: 8px;">
+              🔒 Section 2: Internal Analysis - Confidential
+            </h2>
+            <p style="color: #6c757d; font-style: italic; margin-bottom: 20px;">
+              This section compares different pricing strategies for internal decision-making. Do not share with clients.
+            </p>
+            
             {% if pricing_simulation %}
             <div style="margin-bottom: 24px;">
-              <h4>Pricing Simulation: Volume Route vs. Committed Amount Route</h4>
-              <table border="1" cellpadding="6" style="border-collapse:collapse; margin-bottom:10px; width:100%; font-size:1.08em;">
-                <thead>
-                  <tr style="background: #f0f4f8;">
-                    <th>Item</th>
-                    <th>Volume Route</th>
-                    <th>Committed Amount Route</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><td>AI Messages</td><td>{{ pricing_simulation.volume_route.ai_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.ai_price|round(2) }} = {{ currency_symbol }}{{ pricing_simulation.volume_route.ai_cost|int }}</td><td>{{ pricing_simulation.bundle_route.ai_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_price|round(2) }}</td></tr>
-                  <tr><td>Advanced Messages</td><td>{{ pricing_simulation.volume_route.adv_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.adv_price|round(2) }} = {{ currency_symbol }}{{ pricing_simulation.volume_route.adv_cost|int }}</td><td>{{ pricing_simulation.bundle_route.adv_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_price|round(2) }}</td></tr>
-                  <tr><td>Platform Fee</td><td>{{ currency_symbol }}{{ pricing_simulation.volume_route.platform_fee|int }}</td><td>{{ currency_symbol }}{{ pricing_simulation.bundle_route.platform_fee|int }}</td></tr>
-                  <tr><td><b>Total</b></td><td><b>{{ currency_symbol }}{{ pricing_simulation.volume_route.total|int }}</b></td><td><b>{{ currency_symbol }}{{ pricing_simulation.bundle_route.total|int }}</b></td></tr>
-                  <tr><td colspan="3"><b>Committed Route Details:</b></td></tr>
-                  <tr><td>Committed Amount</td><td colspan="2">{{ currency_symbol }}{{ pricing_simulation.bundle_route.committed_amount|int }}</td></tr>
-                  <tr><td>Included AI Messages</td><td colspan="2">{{ pricing_simulation.bundle_route.included_ai|int }}</td></tr>
-                  <tr><td>Included Advanced Messages</td><td colspan="2">{{ pricing_simulation.bundle_route.included_adv|int }}</td></tr>
-                  <tr><td>AI Overage</td><td colspan="2">{{ pricing_simulation.bundle_route.ai_overage|int }} × {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_overage_rate|round(2) }} = {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_overage_cost|int }}</td></tr>
-                  <tr><td>Advanced Overage</td><td colspan="2">{{ pricing_simulation.bundle_route.adv_overage|int }} × {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_overage_rate|round(2) }} = {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_overage_cost|int }}</td></tr>
-                </tbody>
-              </table>
+              <h3 style="color: #495057; margin-bottom: 16px;">📊 Pricing Strategy Comparison</h3>
+              
+              <!-- Pricing Models Explanation -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div style="background: #e3f2fd; padding: 16px; border-radius: 8px; border-left: 4px solid #2196f3;">
+                  <h4 style="margin: 0 0 8px 0; color: #1976d2;">Volume Route (Pay-per-Use)</h4>
+                  <ul style="margin: 0; padding-left: 16px; font-size: 0.9em; color: #424242;">
+                    <li>Client pays for each message sent</li>
+                    <li>No upfront commitment required</li>
+                    <li>Higher per-message rates</li>
+                    <li>Overage charges apply for excess usage</li>
+                  </ul>
+                </div>
+                <div style="background: #e8f5e9; padding: 16px; border-radius: 8px; border-left: 4px solid #4caf50;">
+                  <h4 style="margin: 0 0 8px 0; color: #388e3c;">Committed Amount Route (Prepaid Bundle)</h4>
+                  <ul style="margin: 0; padding-left: 16px; font-size: 0.9em; color: #424242;">
+                    <li>Client pays upfront for message bundle</li>
+                    <li>Lower effective per-message rates</li>
+                    <li>No overage charges - unlimited usage</li>
+                    <li>Better for high-volume clients</li>
+                  </ul>
+                </div>
+              </div>
+
+
+              <!-- Comparison Table -->
+              <div style="overflow-x: auto;">
+                <table style="border-collapse: collapse; width: 100%; font-size: 1em; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                  <thead>
+                    <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                      <th style="padding: 16px; text-align: left; font-weight: 600;">Item</th>
+                      <th style="padding: 16px; text-align: center; font-weight: 600;">Volume Route<br><small style="opacity: 0.8;">(Pay-per-Use)</small></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="background: #f8f9fa;">
+                      <td style="padding: 12px 16px; font-weight: 600;">AI Messages</td>
+                      <td style="padding: 12px 16px; text-align: center;">
+                        {{ pricing_simulation.volume_route.ai_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.ai_price|round(2) }}<br>
+                        <strong style="color: #1976d2;">= {{ currency_symbol }}{{ pricing_simulation.volume_route.ai_cost|int }}</strong>
+                        <br><small style="color: #666;">(Meta: {{ currency_symbol }}{{ pricing_simulation.meta_costs.ai|round(3) }} + Gupshup: {{ currency_symbol }}{{ (pricing_simulation.volume_route.ai_price - pricing_simulation.meta_costs.ai)|round(3) }})</small>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 12px 16px; font-weight: 600;">Advanced Messages</td>
+                      <td style="padding: 12px 16px; text-align: center;">
+                        {{ pricing_simulation.volume_route.adv_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.adv_price|round(2) }}<br>
+                        <strong style="color: #1976d2;">= {{ currency_symbol }}{{ pricing_simulation.volume_route.adv_cost|int }}</strong>
+                        <br><small style="color: #666;">(Meta: {{ currency_symbol }}{{ pricing_simulation.meta_costs.advanced|round(3) }} + Gupshup: {{ currency_symbol }}{{ (pricing_simulation.volume_route.adv_price - pricing_simulation.meta_costs.advanced)|round(3) }})</small>
+                      </td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                      <td style="padding: 12px 16px; font-weight: 600;">Basic Marketing Messages</td>
+                      <td style="padding: 12px 16px; text-align: center;">
+                        {{ pricing_simulation.volume_route.mkt_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.mkt_price|round(2) }}<br>
+                        <strong style="color: #1976d2;">= {{ currency_symbol }}{{ pricing_simulation.volume_route.mkt_cost|int }}</strong>
+                        <br><small style="color: #666;">(Meta: {{ currency_symbol }}{{ pricing_simulation.meta_costs.marketing|round(3) }} + Gupshup: {{ currency_symbol }}{{ (pricing_simulation.volume_route.mkt_price - pricing_simulation.meta_costs.marketing)|round(3) }})</small>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 12px 16px; font-weight: 600;">Basic Utility Messages</td>
+                      <td style="padding: 12px 16px; text-align: center;">
+                        {{ pricing_simulation.volume_route.utl_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.utl_price|round(2) }}<br>
+                        <strong style="color: #1976d2;">= {{ currency_symbol }}{{ pricing_simulation.volume_route.utl_cost|int }}</strong>
+                        <br><small style="color: #666;">(Meta: {{ currency_symbol }}{{ pricing_simulation.meta_costs.utility|round(3) }} + Gupshup: {{ currency_symbol }}{{ (pricing_simulation.volume_route.utl_price - pricing_simulation.meta_costs.utility)|round(3) }})</small>
+                      </td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                      <td style="padding: 12px 16px; font-weight: 600;">Platform Fee</td>
+                      <td style="padding: 12px 16px; text-align: center;">
+                        <strong style="color: #1976d2;">{{ currency_symbol }}{{ pricing_simulation.volume_route.platform_fee|int }}</strong>
+                      </td>
+                    </tr>
+                    <tr style="background: #e3f2fd; border-top: 2px solid #2196f3;">
+                      <td style="padding: 16px; font-weight: 700; font-size: 1.1em;">TOTAL COST</td>
+                      <td style="padding: 16px; text-align: center;">
+                        <strong style="color: #1976d2; font-size: 1.2em;">{{ currency_symbol }}{{ pricing_simulation.volume_route.total|int }}</strong>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Committed Route Details -->
+              <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #4caf50;">
+                <h4 style="margin: 0 0 12px 0; color: #388e3c;">💰 Committed Amount Route Details</h4>
+                
+                <!-- Bundle Options Comparison -->
+                <div style="margin-bottom: 20px;">
+                  <h5 style="margin: 0 0 16px 0; color: #2e7d32;">🎯 Choose Your Bundle Option</h5>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    
+                    <!-- Lower Bundle Card -->
+                    <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); padding: 20px; border-radius: 12px; border: 2px solid #1976d2; position: relative;">
+                      <div style="position: absolute; top: -8px; left: 20px; background: #1976d2; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.9em; font-weight: bold;">
+                        LOWER BUNDLE
+                      </div>
+                      <div style="margin-top: 8px;">
+                        <div style="text-align: center; margin-bottom: 16px;">
+                          <span style="font-size: 2em; color: #1976d2; font-weight: bold;">{{ currency_symbol }}{{ pricing_simulation.bundle_route.nearest_lower|int }}</span><br>
+                          <small style="color: #666;">Required: {{ currency_symbol }}{{ pricing_simulation.bundle_route.required_committed_amount|int }}</small><br>
+                          <small style="color: #666;">+ Platform Fee: {{ currency_symbol }}{{ pricing_simulation.bundle_route.platform_fee|int }}</small>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                          <strong style="color: #1976d2;">📊 Messages Covered:</strong>
+                          <div style="background: rgba(255,255,255,0.7); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9em;">
+                              <div>AI: {{ pricing_simulation.bundle_route.ai_lower_included|int }}</div>
+                              <div>Advanced: {{ pricing_simulation.bundle_route.adv_lower_included|int }}</div>
+                              <div>Marketing: {{ pricing_simulation.bundle_route.mkt_lower_included|int }}</div>
+                              <div>Utility: {{ pricing_simulation.bundle_route.utl_lower_included|int }}</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <strong style="color: #1976d2;">💰 Your Chosen Rates:</strong>
+                          <div style="background: rgba(255,255,255,0.7); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                            <div style="font-size: 0.9em;">
+                              <div>AI: {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_price|round(2) }}</div>
+                              <div>Advanced: {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_price|round(2) }}</div>
+                              <div>Marketing: {{ currency_symbol }}{{ pricing_simulation.bundle_route.mkt_price|round(2) }}</div>
+                              <div>Utility: {{ currency_symbol }}{{ pricing_simulation.bundle_route.utl_price|round(2) }}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Upper Bundle Card -->
+                    <div style="background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); padding: 20px; border-radius: 12px; border: 2px solid #388e3c; position: relative;">
+                      <div style="position: absolute; top: -8px; left: 20px; background: #388e3c; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.9em; font-weight: bold;">
+                        UPPER BUNDLE
+                      </div>
+                      <div style="margin-top: 8px;">
+                        <div style="text-align: center; margin-bottom: 16px;">
+                          <span style="font-size: 2em; color: #388e3c; font-weight: bold;">{{ currency_symbol }}{{ pricing_simulation.bundle_route.nearest_upper|int }}</span><br>
+                          <small style="color: #666;">Required: {{ currency_symbol }}{{ pricing_simulation.bundle_route.required_committed_amount|int }}</small><br>
+                          <small style="color: #666;">+ Platform Fee: {{ currency_symbol }}{{ pricing_simulation.bundle_route.platform_fee|int }}</small>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                          <strong style="color: #388e3c;">📊 Messages Covered:</strong>
+                          <div style="background: rgba(255,255,255,0.7); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9em;">
+                              <div>AI: {{ pricing_simulation.bundle_route.ai_upper_included|int }}</div>
+                              <div>Advanced: {{ pricing_simulation.bundle_route.adv_upper_included|int }}</div>
+                              <div>Marketing: {{ pricing_simulation.bundle_route.mkt_upper_included|int }}</div>
+                              <div>Utility: {{ pricing_simulation.bundle_route.utl_upper_included|int }}</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <strong style="color: #388e3c;">💰 Your Chosen Rates:</strong>
+                          <div style="background: rgba(255,255,255,0.7); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                            <div style="font-size: 0.9em;">
+                              <div>AI: {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_price|round(2) }}</div>
+                              <div>Advanced: {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_price|round(2) }}</div>
+                              <div>Marketing: {{ currency_symbol }}{{ pricing_simulation.bundle_route.mkt_price|round(2) }}</div>
+                              <div>Utility: {{ currency_symbol }}{{ pricing_simulation.bundle_route.utl_price|round(2) }}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                  </div>
+                  
+                  <div style="text-align: center; margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.8); border-radius: 8px;">
+                    <strong style="color: #2e7d32;">📊 Required Amount Analysis: {{ currency_symbol }}{{ pricing_simulation.bundle_route.required_committed_amount|int }}</strong><br>
+                    <small style="color: #666;">This is what you actually need based on your message volumes and chosen rates</small><br>
+                    <div style="margin-top: 8px; padding: 8px; background: rgba(76, 175, 80, 0.1); border-radius: 4px; display: inline-block;">
+                      <strong style="color: #2e7d32;">💰 Fixed Platform Fee: {{ currency_symbol }}{{ pricing_simulation.bundle_route.platform_fee|int }}</strong><br>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Required Amount Coverage -->
+                <div style="margin-top: 16px;">
+                  <h5 style="margin: 0 0 8px 0; color: #2e7d32;">📊 What Your Required Amount ({{ currency_symbol }}{{ pricing_simulation.bundle_route.required_committed_amount|int }}) Can Cover:</h5>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 8px;">
+                    <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
+                      <strong>AI Messages:</strong><br>
+                      <span style="color: #2e7d32;">{{ pricing_simulation.bundle_route.ai_required_included|int }} messages</span><br>
+                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_price|round(2) }}/msg</small>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
+                      <strong>Advanced Messages:</strong><br>
+                      <span style="color: #2e7d32;">{{ pricing_simulation.bundle_route.adv_required_included|int }} messages</span><br>
+                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_price|round(2) }}/msg</small>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
+                      <strong>Marketing Messages:</strong><br>
+                      <span style="color: #2e7d32;">{{ pricing_simulation.bundle_route.mkt_required_included|int }} messages</span><br>
+                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.mkt_price|round(2) }}/msg</small>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
+                      <strong>Utility Messages:</strong><br>
+                      <span style="color: #2e7d32;">{{ pricing_simulation.bundle_route.utl_required_included|int }} messages</span><br>
+                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.utl_price|round(2) }}/msg</small>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
             </div>
             {% endif %}
           </div>
@@ -584,18 +1165,7 @@
         </form>
     {% endif %}
 
-    <!-- Disabled Edit Buttons for Future Features -->
-    {% if step != 'volumes' %}
-    <form method="post" style="display:inline;" onsubmit="event.preventDefault(); alert('Coming soon'); return false;">
-        <input type="hidden" name="step" value="volumes">
-        <input type="submit" value="Edit Volumes" disabled style="opacity:0.5; cursor:not-allowed;">
-    </form>
-    {% endif %}
-    {% if step != 'prices' %}
-    <form method="post" style="display:inline;" onsubmit="event.preventDefault(); alert('Coming soon'); return false;">
-        <input type="hidden" name="step" value="prices">
-        <input type="submit" value="Edit Prices" disabled style="opacity:0.5; cursor:not-allowed;">
-        </form>
-    {% endif %}
+        </div>
+    </div>
 </body>
 </html>
