@@ -1,7 +1,7 @@
 from app import calculate_pricing_simulation, calculate_platform_fee
 from pricing_config import COUNTRY_CURRENCY
 
-countries = ['India', 'MENA', 'LATAM', 'Africa', 'Europe', 'Rest of the World']
+countries = ['India', 'MENA', 'LATAM', 'Africa', 'Europe', 'APAC']
 inputs_template = {
     'ai_volume': 10000,
     'advanced_volume': 5000,

@@ -30,7 +30,7 @@ meta_costs_table = {
     'LATAM': {'marketing': 0.0625, 'utility': 0.0068, 'ai': 0.0035, 'advanced': 0},
     'Africa': {'marketing': 0.0379, 'utility': 0.0076, 'ai': 0.0035, 'advanced': 0},
     'Europe': {'marketing': 0.1597, 'utility': 0.05, 'ai': 0.0035, 'advanced': 0},
-    'Rest of the World': {'marketing': 0.0592, 'utility': 0.0171, 'ai': 0.0035, 'advanced': 0},
+    'APAC': {'marketing': 0.0592, 'utility': 0.0171, 'ai': 0.0035, 'advanced': 0},
 }
 
 # =============================================================================
@@ -46,7 +46,7 @@ meta_costs_table = {
 # FORMAT: (min_amount, max_amount, {'marketing': rate, 'utility': rate, 'advanced': rate, 'ai': rate})
 # FUNCTIONS: get_committed_amount_rates() in calculator.py
 # OVERAGE CALCULATION: Base rate × 1.2 (20% markup) - see app.py line 458
-# NOTE: APAC pricing is now included in "Rest of the World" category
+# NOTE: APAC pricing replaces "Rest of the World" category
 committed_amount_slabs = {
     'India': [
         (0, 50000,    {'basic_marketing': 0.15, 'basic_utility': 0.03, 'advanced': 0.50, 'ai': 1.00}),
@@ -98,7 +98,7 @@ committed_amount_slabs = {
         (7500, 10000, {'basic_marketing': 0.0041, 'basic_utility': 0.0041, 'advanced': 0.0082, 'ai': 0.0154}),
         (10000, 15000, {'basic_marketing': 0.0041, 'basic_utility': 0.0041, 'advanced': 0.0082, 'ai': 0.0154}),
     ],
-    'Rest of the World': [
+    'APAC': [
         (0, 500,    {'basic_marketing': 0.0021, 'basic_utility': 0.0013, 'advanced': 0.0070, 'ai': 0.0105}),
         (500, 1000,  {'basic_marketing': 0.0021, 'basic_utility': 0.0013, 'advanced': 0.0070, 'ai': 0.0105}),
         (1000, 1500, {'basic_marketing': 0.0021, 'basic_utility': 0.0013, 'advanced': 0.0070, 'ai': 0.0105}),
@@ -157,13 +157,18 @@ COUNTRY_MANDAY_RATES = {
         'bot_ui': 300,
         'custom_ai': 420,
     },
-    'Rest of the World': {
+    'APAC': {
         'currency': 'USD',
         'bot_ui': 300,
         'custom_ai': 420,
     },
     'Europe': {
-        'currency': 'USD',  # Not in table, fallback to Rest of the World?
+        'currency': 'USD',  # Not in table, fallback to APAC
+        'bot_ui': 300,
+        'custom_ai': 420,
+    },
+    'Rest of the World': {
+        'currency': 'USD',  # For historical data compatibility
         'bot_ui': 300,
         'custom_ai': 420,
     },
@@ -197,7 +202,7 @@ COUNTRY_CURRENCY = {
     'LATAM': '$',
     'Africa': '$',
     'Europe': '$',  # Use USD for Europe
-    'Rest of the World': '$',
+    'APAC': '$',
 }
 
 PLATFORM_PRICING_GUIDANCE = {
@@ -217,6 +222,21 @@ PLATFORM_PRICING_GUIDANCE = {
         'Smart_CPaaS': 25000,
     },
     'MENA': {
+        'minimum': 1650,
+        'BFSI_Tier_1': 4150,
+        'BFSI_Tier_2': 8350,
+        'BFSI_Tier_3': 13350,
+        'TPS_250': 850,
+        'TPS_1000': 1650,
+        'Personalize_Standard': 850,
+        'Personalize_Pro': 1650,
+        'Agent_Assist_20_50': 850,
+        'Agent_Assist_50_100': 1250,
+        'Agent_Assist_100_plus': 1650,
+        'AI_Module': 850,
+        'Smart_CPaaS': 400,
+    },
+    'Europe': {
         'minimum': 1650,
         'BFSI_Tier_1': 4150,
         'BFSI_Tier_2': 8350,
@@ -261,34 +281,19 @@ PLATFORM_PRICING_GUIDANCE = {
         'AI_Module': 400,
         'Smart_CPaaS': 200,
     },
-    'Europe': {
-        'minimum': 2100,
-        'BFSI_Tier_1': 5250,
-        'BFSI_Tier_2': 10450,
-        'BFSI_Tier_3': 16700,
-        'TPS_250': 1050,
-        'TPS_1000': 2100,
-        'Personalize_Standard': 1050,
-        'Personalize_Pro': 2100,
-        'Agent_Assist_20_50': 1050,
-        'Agent_Assist_50_100': 1550,
-        'Agent_Assist_100_plus': 2100,
-        'AI_Module': 1050,
-        'Smart_CPaaS': 500,
-    },
-    'Rest of the World': {
-        'minimum': 1650,
-        'BFSI_Tier_1': 4150,
-        'BFSI_Tier_2': 8350,
-        'BFSI_Tier_3': 13350,
-        'TPS_250': 850,
-        'TPS_1000': 1650,
-        'Personalize_Standard': 850,
-        'Personalize_Pro': 1650,
-        'Agent_Assist_20_50': 850,
-        'Agent_Assist_50_100': 1250,
-        'Agent_Assist_100_plus': 1650,
-        'AI_Module': 850,
-        'Smart_CPaaS': 400,
+    'APAC': {
+        'minimum': 850,
+        'BFSI_Tier_1': 2100,
+        'BFSI_Tier_2': 4150,
+        'BFSI_Tier_3': 6650,
+        'TPS_250': 400,
+        'TPS_1000': 850,
+        'Personalize_Standard': 400,
+        'Personalize_Pro': 850,
+        'Agent_Assist_20_50': 400,
+        'Agent_Assist_50_100': 600,
+        'Agent_Assist_100_plus': 850,
+        'AI_Module': 400,
+        'Smart_CPaaS': 200,
     },
 } 

@@ -110,7 +110,7 @@
                 <option value="LATAM" {% if inputs and inputs.country == 'LATAM' %}selected{% endif %}>LATAM</option>
                 <option value="Africa" {% if inputs and inputs.country == 'Africa' %}selected{% endif %}>Africa</option>
                 <option value="Europe" {% if inputs and inputs.country == 'Europe' %}selected{% endif %}>Europe</option>
-                <option value="Rest of the World" {% if inputs and inputs.country == 'Rest of the World' %}selected{% endif %}>Rest of the World</option>
+                <option value="APAC" {% if inputs and inputs.country == 'APAC' %}selected{% endif %}>APAC</option>
         </select><br>
         <div id="region-dropdown-container" style="display: none;">
             <label for="region">Region:</label>
@@ -297,7 +297,7 @@
     const MIN_FEES = {{ min_fees | tojson }};
     function updateMinPlatformFee() {
         var country = document.getElementById('country-select').value;
-        var minFee = MIN_FEES[country] || MIN_FEES['Rest of the World'];
+        var minFee = MIN_FEES[country] || MIN_FEES['APAC'];
         var currency = (country === 'India') ? 'INR' : 'USD';
         if (minFee !== undefined) {
             document.getElementById('min_platform_fee').value = currency + ' ' + minFee;

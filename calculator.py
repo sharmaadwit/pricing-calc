@@ -15,7 +15,7 @@ import sys
 # New function to map volume to committed amount slab rate
 
 def get_committed_amount_rate_for_volume(country, msg_type, volume):
-    slabs = committed_amount_slabs.get(country, committed_amount_slabs['Rest of the World'])
+    slabs = committed_amount_slabs.get(country, committed_amount_slabs['APAC'])
     for lower, upper, rates in slabs:
         if lower <= volume < upper:
             return rates[msg_type]
@@ -55,7 +55,7 @@ def calculate_pricing(
     Calculate all pricing, revenue, costs, and margin for the given inputs.
     Returns a dictionary with detailed line items and summary values.
     """
-    costs = meta_costs_table.get(country, meta_costs_table['Rest of the World'])
+    costs = meta_costs_table.get(country, meta_costs_table['APAC'])
 
     # Get suggested and overage prices for each type
     suggested_ai_price = get_suggested_price(country, 'ai', ai_volume)
@@ -268,7 +268,7 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
     """
     country = inputs.get('country', 'India').strip()
     dev_location = (inputs.get('dev_location') or 'India').strip()
-    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['Rest of the World'])
+    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
     # Only use dev_location for India, otherwise use the main rate
     if country == 'India':
         bot_ui_rate = rates['bot_ui'][dev_location] if isinstance(rates['bot_ui'], dict) else rates['bot_ui']
@@ -344,7 +344,7 @@ def get_committed_amount_rates(country, committed_amount):
     committed_amount: float (in INR or USD as per country)
     Returns: dict with keys 'marketing', 'utility', 'advanced', 'ai'
     """
-    slabs = committed_amount_slabs.get(country, committed_amount_slabs['Rest of the World'])
+    slabs = committed_amount_slabs.get(country, committed_amount_slabs['APAC'])
     for lower, upper, rates in slabs:
         if lower <= committed_amount < upper:
             return rates
