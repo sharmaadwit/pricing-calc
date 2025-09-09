@@ -838,22 +838,22 @@
               </tr>
               <tr>
                 <td><b>AI messages (Channel fee + Gupshup markup)</b></td>
-                <td style="text-align:right;">#{{ final_price_details.ai_messages.volume }} ( {{ currency_symbol }}{{ final_price_details.ai_messages.price_per_msg|round(2) }} per Msg )</td>
+                <td style="text-align:right;">#{{ final_price_details.ai_messages.volume }} ( {{ currency_symbol }}{{ final_price_details.ai_messages.price_per_msg|round(3) }} per Msg )</td>
               </tr>
               <tr>
                 <td><b>Advanced messages (Channel fee + Gupshup markup)</b></td>
-                <td style="text-align:right;">#{{ final_price_details.advanced_messages.volume }} ( {{ currency_symbol }}{{ final_price_details.advanced_messages.price_per_msg|round(2) }} per Msg )</td>
+                <td style="text-align:right;">#{{ final_price_details.advanced_messages.volume }} ( {{ currency_symbol }}{{ final_price_details.advanced_messages.price_per_msg|round(3) }} per Msg )</td>
               </tr>
               {% if final_price_details.marketing_message.volume > 0 %}
               <tr>
                 <td><b>Basic marketing messages (Channel fee + Gupshup markup)</b></td>
-                <td style="text-align:right;">#{{ final_price_details.marketing_message.volume }} ( {{ currency_symbol }}{{ final_price_details.marketing_message.price_per_msg|round(2) }} per Msg )</td>
+                <td style="text-align:right;">#{{ final_price_details.marketing_message.volume }} ( {{ currency_symbol }}{{ final_price_details.marketing_message.price_per_msg|round(3) }} per Msg )</td>
               </tr>
               {% endif %}
               {% if final_price_details.utility_message.volume > 0 %}
               <tr>
                 <td><b>Basic utility/authentication messages (Channel fee + Gupshup markup)</b></td>
-                <td style="text-align:right;">#{{ final_price_details.utility_message.volume }} ( {{ currency_symbol }}{{ final_price_details.utility_message.price_per_msg|round(2) }} per Msg )</td>
+                <td style="text-align:right;">#{{ final_price_details.utility_message.volume }} ( {{ currency_symbol }}{{ final_price_details.utility_message.price_per_msg|round(3) }} per Msg )</td>
               </tr>
               {% endif %}
               <tr>
@@ -976,7 +976,7 @@
                     <tr style="background: #f8f9fa;">
                       <td style="padding: 12px 16px; font-weight: 600;">AI Messages</td>
                       <td style="padding: 12px 16px; text-align: center;">
-                        {{ pricing_simulation.volume_route.ai_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.ai_price|round(2) }}<br>
+                        {{ pricing_simulation.volume_route.ai_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.ai_price|round(3) }}<br>
                         <strong style="color: #1976d2;">= {{ currency_symbol }}{{ pricing_simulation.volume_route.ai_cost|int }}</strong>
                         <br><small style="color: #666;">(Meta: {{ currency_symbol }}{{ pricing_simulation.meta_costs.ai|round(3) }} + Gupshup: {{ currency_symbol }}{{ (pricing_simulation.volume_route.ai_price - pricing_simulation.meta_costs.ai)|round(3) }})</small>
                       </td>
@@ -984,7 +984,7 @@
                     <tr>
                       <td style="padding: 12px 16px; font-weight: 600;">Advanced Messages</td>
                       <td style="padding: 12px 16px; text-align: center;">
-                        {{ pricing_simulation.volume_route.adv_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.adv_price|round(2) }}<br>
+                        {{ pricing_simulation.volume_route.adv_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.adv_price|round(3) }}<br>
                         <strong style="color: #1976d2;">= {{ currency_symbol }}{{ pricing_simulation.volume_route.adv_cost|int }}</strong>
                         <br><small style="color: #666;">(Meta: {{ currency_symbol }}{{ pricing_simulation.meta_costs.advanced|round(3) }} + Gupshup: {{ currency_symbol }}{{ (pricing_simulation.volume_route.adv_price - pricing_simulation.meta_costs.advanced)|round(3) }})</small>
                       </td>
@@ -992,7 +992,7 @@
                     <tr style="background: #f8f9fa;">
                       <td style="padding: 12px 16px; font-weight: 600;">Basic Marketing Messages</td>
                       <td style="padding: 12px 16px; text-align: center;">
-                        {{ pricing_simulation.volume_route.mkt_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.mkt_price|round(2) }}<br>
+                        {{ pricing_simulation.volume_route.mkt_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.mkt_price|round(3) }}<br>
                         <strong style="color: #1976d2;">= {{ currency_symbol }}{{ pricing_simulation.volume_route.mkt_cost|int }}</strong>
                         <br><small style="color: #666;">(Meta: {{ currency_symbol }}{{ pricing_simulation.meta_costs.marketing|round(3) }} + Gupshup: {{ currency_symbol }}{{ (pricing_simulation.volume_route.mkt_price - pricing_simulation.meta_costs.marketing)|round(3) }})</small>
                       </td>
@@ -1000,7 +1000,7 @@
                     <tr>
                       <td style="padding: 12px 16px; font-weight: 600;">Basic Utility Messages</td>
                       <td style="padding: 12px 16px; text-align: center;">
-                        {{ pricing_simulation.volume_route.utl_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.utl_price|round(2) }}<br>
+                        {{ pricing_simulation.volume_route.utl_volume|int }} × {{ currency_symbol }}{{ pricing_simulation.volume_route.utl_price|round(3) }}<br>
                         <strong style="color: #1976d2;">= {{ currency_symbol }}{{ pricing_simulation.volume_route.utl_cost|int }}</strong>
                         <br><small style="color: #666;">(Meta: {{ currency_symbol }}{{ pricing_simulation.meta_costs.utility|round(3) }} + Gupshup: {{ currency_symbol }}{{ (pricing_simulation.volume_route.utl_price - pricing_simulation.meta_costs.utility)|round(3) }})</small>
                       </td>
@@ -1069,10 +1069,10 @@
                           <strong style="color: #1976d2;">💰 Your Chosen Rates:</strong>
                           <div style="background: rgba(255,255,255,0.7); padding: 12px; border-radius: 8px; margin-top: 8px;">
                             <div style="font-size: 0.9em;">
-                              <div>AI: {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_price|round(2) }}</div>
-                              <div>Advanced: {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_price|round(2) }}</div>
-                              <div>Marketing: {{ currency_symbol }}{{ pricing_simulation.bundle_route.mkt_price|round(2) }}</div>
-                              <div>Utility: {{ currency_symbol }}{{ pricing_simulation.bundle_route.utl_price|round(2) }}</div>
+                              <div>AI: {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_price|round(3) }}</div>
+                              <div>Advanced: {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_price|round(3) }}</div>
+                              <div>Marketing: {{ currency_symbol }}{{ pricing_simulation.bundle_route.mkt_price|round(3) }}</div>
+                              <div>Utility: {{ currency_symbol }}{{ pricing_simulation.bundle_route.utl_price|round(3) }}</div>
                             </div>
                           </div>
                         </div>
@@ -1107,10 +1107,10 @@
                           <strong style="color: #388e3c;">💰 Your Chosen Rates:</strong>
                           <div style="background: rgba(255,255,255,0.7); padding: 12px; border-radius: 8px; margin-top: 8px;">
                             <div style="font-size: 0.9em;">
-                              <div>AI: {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_price|round(2) }}</div>
-                              <div>Advanced: {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_price|round(2) }}</div>
-                              <div>Marketing: {{ currency_symbol }}{{ pricing_simulation.bundle_route.mkt_price|round(2) }}</div>
-                              <div>Utility: {{ currency_symbol }}{{ pricing_simulation.bundle_route.utl_price|round(2) }}</div>
+                              <div>AI: {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_price|round(3) }}</div>
+                              <div>Advanced: {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_price|round(3) }}</div>
+                              <div>Marketing: {{ currency_symbol }}{{ pricing_simulation.bundle_route.mkt_price|round(3) }}</div>
+                              <div>Utility: {{ currency_symbol }}{{ pricing_simulation.bundle_route.utl_price|round(3) }}</div>
                             </div>
                           </div>
                         </div>
@@ -1135,22 +1135,22 @@
                     <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
                       <strong>AI Messages:</strong><br>
                       <span style="color: #2e7d32;">{{ pricing_simulation.bundle_route.ai_required_included|int }} messages</span><br>
-                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_price|round(2) }}/msg</small>
+                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.ai_price|round(3) }}/msg</small>
                     </div>
                     <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
                       <strong>Advanced Messages:</strong><br>
                       <span style="color: #2e7d32;">{{ pricing_simulation.bundle_route.adv_required_included|int }} messages</span><br>
-                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_price|round(2) }}/msg</small>
+                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.adv_price|round(3) }}/msg</small>
                     </div>
                     <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
                       <strong>Marketing Messages:</strong><br>
                       <span style="color: #2e7d32;">{{ pricing_simulation.bundle_route.mkt_required_included|int }} messages</span><br>
-                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.mkt_price|round(2) }}/msg</small>
+                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.mkt_price|round(3) }}/msg</small>
                     </div>
                     <div style="background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
                       <strong>Utility Messages:</strong><br>
                       <span style="color: #2e7d32;">{{ pricing_simulation.bundle_route.utl_required_included|int }} messages</span><br>
-                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.utl_price|round(2) }}/msg</small>
+                      <small style="color: #666;">at {{ currency_symbol }}{{ pricing_simulation.bundle_route.utl_price|round(3) }}/msg</small>
                     </div>
                   </div>
                 </div>
