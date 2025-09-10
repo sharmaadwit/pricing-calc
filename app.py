@@ -396,15 +396,32 @@ def index():
     """
     print("DEBUG: session at start of request:", dict(session), file=sys.stderr, flush=True)
     step = request.form.get('step', 'volumes')
+    
+    # If no form data (page refresh) and we have results in session, assume results step
+    if not request.form and session.get('results') and session.get('inputs'):
+        step = 'results'
+    
     print("\n--- DEBUG ---", file=sys.stderr, flush=True)
     print("Form data:", dict(request.form), file=sys.stderr, flush=True)
     print("Session data:", dict(session), file=sys.stderr, flush=True)
-    # 🍕 Easter egg chance for calculation ID
-    if should_trigger_easter_egg():
-        calculation_id = generate_pizza_easter_egg_id()
-        print(f"🍕 PIZZA EASTER EGG TRIGGERED! ID: {calculation_id}", file=sys.stderr, flush=True)
+    print("Detected step:", step, file=sys.stderr, flush=True)
+    
+    # Generate calculation_id only when user moves to page 2 (prices or bundle step)
+    # For all other steps, preserve existing calculation_id from session
+    if step in ['prices', 'bundle'] and not session.get('calculation_id'):
+        # 🍕 Easter egg chance for calculation ID (only for new calculations)
+        if should_trigger_easter_egg():
+            calculation_id = generate_pizza_easter_egg_id()
+            print(f"🍕 PIZZA EASTER EGG TRIGGERED! ID: {calculation_id}", file=sys.stderr, flush=True)
+        else:
+            calculation_id = str(uuid.uuid4())
+        session['calculation_id'] = calculation_id
+        print(f"DEBUG: New calculation started on {step} step. Calculation ID: {calculation_id}", file=sys.stderr, flush=True)
     else:
+        # For all other cases, preserve the calculation_id from session
         calculation_id = session.get('calculation_id', str(uuid.uuid4()))
+        print(f"DEBUG: Using existing calculation ID: {calculation_id}", file=sys.stderr, flush=True)
+    
     print("Current step:", step, file=sys.stderr, flush=True)
     print("--- END DEBUG ---\n", file=sys.stderr, flush=True)
     results = None
@@ -415,18 +432,10 @@ def index():
     # Defensive: ensure session data exists for edit actions
     if step == 'volumes' and request.method == 'POST':
         # Clear previous session state for a new calculation
-        for key in ['chosen_platform_fee', 'pricing_inputs', 'rate_card_platform_fee', 'results', 'selected_components', 'user_selections', 'inclusions']:
+        for key in ['chosen_platform_fee', 'pricing_inputs', 'rate_card_platform_fee', 'results', 'selected_components', 'user_selections', 'inclusions', 'calculation_id']:
             if key in session:
                 session.pop(key)
-        # Generate a new calculation_id for each new calculation
-        # 🍕 Easter egg chance for calculation ID
-        if should_trigger_easter_egg():
-            calculation_id = generate_pizza_easter_egg_id()
-            print(f"🍕 PIZZA EASTER EGG TRIGGERED! ID: {calculation_id}", file=sys.stderr, flush=True)
-        else:
-            calculation_id = str(uuid.uuid4())
-        session['calculation_id'] = calculation_id
-        print(f"DEBUG: New calculation started. Calculation ID: {calculation_id}", file=sys.stderr, flush=True)
+        # Calculation ID will be generated when user moves to page 2 (prices or bundle)
         user_name = request.form.get('user_name', '')
         # Step 1: User submitted volumes and platform fee options
         country = request.form['country'].strip()  # Always strip country
@@ -1340,10 +1349,59 @@ def index():
         }
         suggested_prices = patch_suggested_prices(suggested_prices, inputs)
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id, min_fees=min_fees)
-    # Default: show volume input form
+    elif step == 'results':
+        # Handle GET request for results page (page refresh)
+        inputs = session.get('inputs', {})
+        if not inputs or not session.get('results'):
+            flash('Session expired or missing. Please start again.', 'error')
+            currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
+            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={}, calculation_id=calculation_id, min_fees=min_fees)
+        
+        # Re-render results page with existing session data
+        country = inputs.get('country', 'India')
+        currency_symbol = COUNTRY_CURRENCY.get(country, '$')
+        
+        # Get all the data from session
+        results = session.get('results', {})
+        pricing_inputs = session.get('pricing_inputs', {})
+        final_inclusions = session.get('inclusions', {})
+        dev_cost_breakdown = session.get('dev_cost_breakdown', {})
+        final_price_details = session.get('final_price_details', {})
+        manday_breakdown = session.get('manday_breakdown', {})
+        manday_rates = session.get('manday_rates', {})
+        dev_cost_currency = session.get('dev_cost_currency', 'INR')
+        
+        # Recalculate pricing simulation
+        pricing_simulation = calculate_pricing_simulation(inputs, pricing_inputs)
+        
+        return render_template(
+            'index.html',
+            step='results',
+            currency_symbol=currency_symbol,
+            inclusions=final_inclusions,
+            final_inclusions=final_inclusions,
+            results=results,
+            inputs=inputs,
+            pricing_inputs=pricing_inputs,
+            dev_cost_breakdown=dev_cost_breakdown,
+            final_price_details=final_price_details,
+            manday_breakdown=manday_breakdown,
+            manday_rates=manday_rates,
+            dev_cost_currency=dev_cost_currency,
+            calculation_id=calculation_id,
+            pricing_simulation=pricing_simulation,
+            platform_pricing_guidance=PLATFORM_PRICING_GUIDANCE,
+            min_fees=min_fees
+        )
+    # Default: show volume input form (this handles "Start Over" and initial page load)
+    # Clear calculation_id when starting fresh
+    if 'calculation_id' in session:
+        session.pop('calculation_id')
+        print("DEBUG: Cleared calculation_id for fresh start", file=sys.stderr, flush=True)
+    
     country = session.get('inputs', {}).get('country', 'India')
     currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-    return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), calculation_id=calculation_id, min_fees=min_fees)
+    return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), calculation_id=None, min_fees=min_fees)
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
