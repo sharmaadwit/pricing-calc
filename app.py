@@ -1145,6 +1145,8 @@ def index():
                     'overage_price': calculate_safe_overage_price(session.get('pricing_inputs', {}).get('basic_utility_price', 0), meta_costs.get('utility', 0))
                 }
             }
+            # Calculate pricing simulation for internal analysis
+            pricing_simulation = calculate_pricing_simulation(inputs, session.get('pricing_inputs'))
             return render_template(
                 'index.html',
                 step='results',
@@ -1172,7 +1174,7 @@ def index():
                 calculation_id=calculation_id,
                 dev_cost_breakdown=dev_cost_breakdown,
                 final_price_details=final_price_details,
-                pricing_simulation=None,
+                pricing_simulation=pricing_simulation,
                 platform_pricing_guidance=PLATFORM_PRICING_GUIDANCE,
                 min_fees=min_fees
             )
@@ -1824,16 +1826,40 @@ def calculate_pricing_simulation(inputs, pricing_inputs=None):
     """
     Returns a dict with detailed calculations for both volume and committed amount routes for the given user inputs.
     """
-    country = inputs.get('country', 'India')
-    ai_volume = float(inputs.get('ai_volume', 0) or 0)
-    advanced_volume = float(inputs.get('advanced_volume', 0) or 0)
-    basic_marketing_volume = float(inputs.get('basic_marketing_volume', 0) or 0)
-    basic_utility_volume = float(inputs.get('basic_utility_volume', 0) or 0)
-    platform_fee = float(inputs.get('platform_fee', 0) or 0)
-    committed_amount = float(inputs.get('committed_amount', 0) or 0)
-    from pricing_config import meta_costs_table
-    from calculator import get_committed_amount_rate_for_volume
-    meta_costs = meta_costs_table.get(country, meta_costs_table['APAC'])
+    try:
+        country = inputs.get('country', 'India')
+        ai_volume = float(inputs.get('ai_volume', 0) or 0)
+        advanced_volume = float(inputs.get('advanced_volume', 0) or 0)
+        basic_marketing_volume = float(inputs.get('basic_marketing_volume', 0) or 0)
+        basic_utility_volume = float(inputs.get('basic_utility_volume', 0) or 0)
+        platform_fee = float(inputs.get('platform_fee', 0) or 0)
+        committed_amount = float(inputs.get('committed_amount', 0) or 0)
+        from pricing_config import meta_costs_table
+        from calculator import get_committed_amount_rate_for_volume
+        meta_costs = meta_costs_table.get(country, meta_costs_table['APAC'])
+    except Exception as e:
+        print(f"ERROR in calculate_pricing_simulation: {e}", file=sys.stderr, flush=True)
+        # Return a minimal valid structure to ensure internal section shows
+        return {
+            'volume_route': {
+                'ai_price': 0, 'adv_price': 0, 'mkt_price': 0, 'utl_price': 0,
+                'ai_cost': 0, 'adv_cost': 0, 'mkt_cost': 0, 'utl_cost': 0,
+                'platform_fee': 0, 'total': 0,
+                'ai_volume': 0, 'adv_volume': 0, 'mkt_volume': 0, 'utl_volume': 0,
+                'adv_gupshup_rate': 0
+            },
+            'bundle_route': {
+                'ai_price': 0, 'adv_price': 0, 'mkt_price': 0, 'utl_price': 0,
+                'committed_amount': 0, 'required_committed_amount': 0, 'nearest_bundle': 0, 'nearest_lower': 0, 'nearest_upper': 0, 'platform_fee': 0, 'total': 0,
+                'ai_volume': 0, 'adv_volume': 0, 'mkt_volume': 0, 'utl_volume': 0,
+                'ai_included': 0, 'adv_included': 0, 'mkt_included': 0, 'utl_included': 0,
+                'ai_lower_included': 0, 'adv_lower_included': 0, 'mkt_lower_included': 0, 'utl_lower_included': 0,
+                'ai_upper_included': 0, 'adv_upper_included': 0, 'mkt_upper_included': 0, 'utl_upper_included': 0,
+                'ai_required_included': 0, 'adv_required_included': 0, 'mkt_required_included': 0, 'utl_required_included': 0,
+                'adv_gupshup_rate': 0, 'lower_tier_rates': None, 'upper_tier_rates': None
+            },
+            'meta_costs': {'ai': 0, 'advanced': 0, 'marketing': 0, 'utility': 0}
+        }
     
     # Use user-chosen prices for both routes
     # First try from inputs, then from pricing_inputs parameter
@@ -1873,7 +1899,8 @@ def calculate_pricing_simulation(inputs, pricing_inputs=None):
     utl_final_bundle = utl_final
     # Calculate the required committed amount to cover all message volumes
     # This is the minimum committed amount needed to cover the client's actual usage
-    required_committed_amount = (ai_volume * ai_final_bundle) + (advanced_volume * adv_final_bundle) + (basic_marketing_volume * mkt_final_bundle) + (basic_utility_volume * utl_final_bundle)
+    # Use user's chosen rates (not bundle rates with meta costs) for fair comparison
+    required_committed_amount = (ai_volume * ai_price) + (advanced_volume * adv_price) + (basic_marketing_volume * mkt_price) + (basic_utility_volume * utl_price)
     
     # Find the nearest programmed bundle amount
     from pricing_config import committed_amount_slabs
@@ -1888,16 +1915,26 @@ def calculate_pricing_simulation(inputs, pricing_inputs=None):
     # Remove duplicates and sort
     programmed_bundles = sorted(list(set(programmed_bundles)))
     
-    # Find the nearest upper and lower bundles
-    lower_bundles = [bundle for bundle in programmed_bundles if bundle <= required_committed_amount]
-    upper_bundles = [bundle for bundle in programmed_bundles if bundle >= required_committed_amount]
+    # Determine which amount to use for bundle calculations
+    # If user chose a committed amount (bundle route), use that; otherwise use required amount
+    bundle_calculation_amount = committed_amount if committed_amount > 0 else required_committed_amount
     
-    nearest_lower = max(lower_bundles) if lower_bundles else programmed_bundles[0]
-    nearest_upper = min(upper_bundles) if upper_bundles else programmed_bundles[-1]
+    # Find the nearest upper and lower bundles
+    # Special case: if bundle_calculation_amount is 0, show meaningful bundle options
+    if bundle_calculation_amount == 0:
+        # Show the first two meaningful bundle tiers
+        nearest_lower = 0  # No bundle
+        nearest_upper = programmed_bundles[1] if len(programmed_bundles) > 1 else programmed_bundles[0]  # First meaningful bundle
+    else:
+        lower_bundles = [bundle for bundle in programmed_bundles if bundle <= bundle_calculation_amount]
+        upper_bundles = [bundle for bundle in programmed_bundles if bundle >= bundle_calculation_amount]
+        
+        nearest_lower = max(lower_bundles) if lower_bundles else programmed_bundles[0]
+        nearest_upper = min(upper_bundles) if upper_bundles else programmed_bundles[-1]
     
     # Choose the closer one as the recommended bundle
-    distance_to_lower = abs(required_committed_amount - nearest_lower)
-    distance_to_upper = abs(required_committed_amount - nearest_upper)
+    distance_to_lower = abs(bundle_calculation_amount - nearest_lower)
+    distance_to_upper = abs(bundle_calculation_amount - nearest_upper)
     
     if distance_to_lower <= distance_to_upper:
         nearest_bundle = nearest_lower
@@ -1946,35 +1983,61 @@ def calculate_pricing_simulation(inputs, pricing_inputs=None):
     mkt_upper_included = int(nearest_upper / mkt_price) if mkt_price > 0 else 0
     utl_upper_included = int(nearest_upper / utl_price) if utl_price > 0 else 0
     
-    # Calculate messages covered by required amount
-    ai_required_included = int(required_committed_amount / ai_price) if ai_price > 0 else 0
-    adv_required_included = int(required_committed_amount / adv_price) if adv_price > 0 else 0
-    mkt_required_included = int(required_committed_amount / mkt_price) if mkt_price > 0 else 0
-    utl_required_included = int(required_committed_amount / utl_price) if utl_price > 0 else 0
+    # Calculate messages covered by required amount (use display amount and bundle rates)
+    display_amount = committed_amount if committed_amount > 0 else required_committed_amount
+    ai_required_included = int(display_amount / ai_final_bundle) if ai_final_bundle > 0 else 0
+    adv_required_included = int(display_amount / adv_final_bundle) if adv_final_bundle > 0 else 0
+    mkt_required_included = int(display_amount / mkt_final_bundle) if mkt_final_bundle > 0 else 0
+    utl_required_included = int(display_amount / utl_final_bundle) if utl_final_bundle > 0 else 0
     
     # No overage calculations for committed amount bundle route
     # The committed amount covers all usage without additional charges
     total_bundle = committed_amount + platform_fee
-    return {
-        'volume_route': {
-            'ai_price': ai_final, 'adv_price': adv_final, 'mkt_price': mkt_final, 'utl_price': utl_final,
-            'ai_cost': ai_cost, 'adv_cost': adv_cost, 'mkt_cost': mkt_cost, 'utl_cost': utl_cost,
-            'platform_fee': platform_fee, 'total': total,
-            'ai_volume': ai_volume, 'adv_volume': advanced_volume, 'mkt_volume': basic_marketing_volume, 'utl_volume': basic_utility_volume,
-            'adv_gupshup_rate': adv_gupshup_rate
-        },
-        'bundle_route': {
-            'ai_price': ai_final_bundle, 'adv_price': adv_final_bundle, 'mkt_price': mkt_final_bundle, 'utl_price': utl_final_bundle,
-            'committed_amount': committed_amount, 'required_committed_amount': required_committed_amount, 'nearest_bundle': nearest_bundle, 'nearest_lower': nearest_lower, 'nearest_upper': nearest_upper, 'platform_fee': platform_fee, 'total': total_bundle,
-            'ai_volume': ai_volume, 'adv_volume': advanced_volume, 'mkt_volume': basic_marketing_volume, 'utl_volume': basic_utility_volume,
-            'ai_included': ai_included, 'adv_included': adv_included, 'mkt_included': mkt_included, 'utl_included': utl_included,
-            'ai_lower_included': ai_lower_included, 'adv_lower_included': adv_lower_included, 'mkt_lower_included': mkt_lower_included, 'utl_lower_included': utl_lower_included,
-            'ai_upper_included': ai_upper_included, 'adv_upper_included': adv_upper_included, 'mkt_upper_included': mkt_upper_included, 'utl_upper_included': utl_upper_included,
-            'ai_required_included': ai_required_included, 'adv_required_included': adv_required_included, 'mkt_required_included': mkt_required_included, 'utl_required_included': utl_required_included,
-            'adv_gupshup_rate': adv_gupshup_rate, 'lower_tier_rates': lower_tier_rates, 'upper_tier_rates': upper_tier_rates
-        },
-        'meta_costs': meta_costs
-    }
+    
+    try:
+        return {
+            'volume_route': {
+                'ai_price': ai_final, 'adv_price': adv_final, 'mkt_price': mkt_final, 'utl_price': utl_final,
+                'ai_cost': ai_cost, 'adv_cost': adv_cost, 'mkt_cost': mkt_cost, 'utl_cost': utl_cost,
+                'platform_fee': platform_fee, 'total': total,
+                'ai_volume': ai_volume, 'adv_volume': advanced_volume, 'mkt_volume': basic_marketing_volume, 'utl_volume': basic_utility_volume,
+                'adv_gupshup_rate': adv_gupshup_rate
+            },
+            'bundle_route': {
+                'ai_price': ai_final_bundle, 'adv_price': adv_final_bundle, 'mkt_price': mkt_final_bundle, 'utl_price': utl_final_bundle,
+                'committed_amount': committed_amount, 'required_committed_amount': required_committed_amount, 'display_committed_amount': committed_amount if committed_amount > 0 else required_committed_amount, 'nearest_bundle': nearest_bundle, 'nearest_lower': nearest_lower, 'nearest_upper': nearest_upper, 'platform_fee': platform_fee, 'total': total_bundle,
+                'ai_volume': ai_volume, 'adv_volume': advanced_volume, 'mkt_volume': basic_marketing_volume, 'utl_volume': basic_utility_volume,
+                'ai_included': ai_included, 'adv_included': adv_included, 'mkt_included': mkt_included, 'utl_included': utl_included,
+                'ai_lower_included': ai_lower_included, 'adv_lower_included': adv_lower_included, 'mkt_lower_included': mkt_lower_included, 'utl_lower_included': utl_lower_included,
+                'ai_upper_included': ai_upper_included, 'adv_upper_included': adv_upper_included, 'mkt_upper_included': mkt_upper_included, 'utl_upper_included': utl_upper_included,
+                'ai_required_included': ai_required_included, 'adv_required_included': adv_required_included, 'mkt_required_included': mkt_required_included, 'utl_required_included': utl_required_included,
+                'adv_gupshup_rate': adv_gupshup_rate, 'lower_tier_rates': lower_tier_rates, 'upper_tier_rates': upper_tier_rates
+            },
+            'meta_costs': meta_costs
+        }
+    except Exception as e:
+        print(f"ERROR in calculate_pricing_simulation return: {e}", file=sys.stderr, flush=True)
+        # Return a minimal valid structure to ensure internal section shows
+        return {
+            'volume_route': {
+                'ai_price': 0, 'adv_price': 0, 'mkt_price': 0, 'utl_price': 0,
+                'ai_cost': 0, 'adv_cost': 0, 'mkt_cost': 0, 'utl_cost': 0,
+                'platform_fee': 0, 'total': 0,
+                'ai_volume': 0, 'adv_volume': 0, 'mkt_volume': 0, 'utl_volume': 0,
+                'adv_gupshup_rate': 0
+            },
+            'bundle_route': {
+                'ai_price': 0, 'adv_price': 0, 'mkt_price': 0, 'utl_price': 0,
+                'committed_amount': 0, 'required_committed_amount': 0, 'nearest_bundle': 0, 'nearest_lower': 0, 'nearest_upper': 0, 'platform_fee': 0, 'total': 0,
+                'ai_volume': 0, 'adv_volume': 0, 'mkt_volume': 0, 'utl_volume': 0,
+                'ai_included': 0, 'adv_included': 0, 'mkt_included': 0, 'utl_included': 0,
+                'ai_lower_included': 0, 'adv_lower_included': 0, 'mkt_lower_included': 0, 'utl_lower_included': 0,
+                'ai_upper_included': 0, 'adv_upper_included': 0, 'mkt_upper_included': 0, 'utl_upper_included': 0,
+                'ai_required_included': 0, 'adv_required_included': 0, 'mkt_required_included': 0, 'utl_required_included': 0,
+                'adv_gupshup_rate': 0, 'lower_tier_rates': None, 'upper_tier_rates': None
+            },
+            'meta_costs': {'ai': 0, 'advanced': 0, 'marketing': 0, 'utility': 0}
+        }
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
