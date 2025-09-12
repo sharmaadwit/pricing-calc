@@ -1374,6 +1374,9 @@ def index():
         # Recalculate pricing simulation
         pricing_simulation = calculate_pricing_simulation(inputs, pricing_inputs)
         
+        # Calculate total mandays for template
+        total_mandays = calculate_total_mandays(inputs)
+        
         return render_template(
             'index.html',
             step='results',
@@ -1391,7 +1394,8 @@ def index():
             calculation_id=calculation_id,
             pricing_simulation=pricing_simulation,
             platform_pricing_guidance=PLATFORM_PRICING_GUIDANCE,
-            min_fees=min_fees
+            min_fees=min_fees,
+            total_mandays=total_mandays
         )
     # Default: show volume input form (this handles "Start Over" and initial page load)
     # Clear calculation_id when starting fresh
