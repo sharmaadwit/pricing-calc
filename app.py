@@ -1377,6 +1377,10 @@ def index():
         # Calculate total mandays for template
         total_mandays = calculate_total_mandays(inputs)
         
+        # Ensure manday_breakdown has the correct structure
+        if not manday_breakdown or 'bot_ui' not in manday_breakdown:
+            manday_breakdown = calculate_total_mandays_breakdown(inputs)
+        
         return render_template(
             'index.html',
             step='results',
