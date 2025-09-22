@@ -218,7 +218,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for label, key in [('Platform Fee', 'platform_fee'), ('AI Message', 'ai'), ('Advanced Message', 'advanced'), ('Basic Marketing Message', 'basic_marketing'), ('Basic Utility', 'basic_utility'), ('Committed Amount', 'committed_amount')] %}
+          {% for label, key in [('Platform Fee', 'platform_fee'), ('AI Message', 'ai'), ('Advanced Message', 'advanced'), ('Basic Marketing Message', 'basic_marketing'), ('Basic Utility', 'basic_utility'), ('Voice Notes', 'voice_notes_rate'), ('Committed Amount', 'committed_amount')] %}
             <tr>
               <td><b>{{ label }}</b></td>
                 <td>{{ fmt_num_currency(stat[key]['avg'], currency) }}</td>

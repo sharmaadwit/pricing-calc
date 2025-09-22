@@ -1534,6 +1534,7 @@ def analytics():
                         country_adv = [a.advanced_price for a in region_analytics if a.advanced_price is not None]
                         country_mark = [a.basic_marketing_price for a in region_analytics if a.basic_marketing_price is not None]
                         country_util = [a.basic_utility_price for a in region_analytics if a.basic_utility_price is not None]
+                        country_voice_notes = [a.voice_notes_rate for a in region_analytics if a.voice_notes_rate is not None]
                         country_committed = [a.committed_amount for a in region_analytics if a.committed_amount not in (None, 0, '0', '', 'None')]
                         # --- One Time Dev Cost Aggregation ---
                         dev_costs = []
@@ -1588,6 +1589,12 @@ def analytics():
                                     'min': min(country_util) if country_util else 0,
                                     'max': max(country_util) if country_util else 0,
                                     'median': sorted(country_util)[len(country_util)//2] if country_util else 0
+                                },
+                                'voice_notes_rate': {
+                                    'avg': sum(country_voice_notes)/len(country_voice_notes) if country_voice_notes else 0,
+                                    'min': min(country_voice_notes) if country_voice_notes else 0,
+                                    'max': max(country_voice_notes) if country_voice_notes else 0,
+                                    'median': sorted(country_voice_notes)[len(country_voice_notes)//2] if country_voice_notes else 0
                                 }
                             },
                             'committed_amount': stat_dict(country_committed),
