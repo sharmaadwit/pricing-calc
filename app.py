@@ -966,6 +966,10 @@ def index():
         session['rate_card_platform_fee'] = rate_card_platform_fee
         session['user_selections'] = user_selections
         session['inclusions'] = inclusions
+        session['dev_cost_breakdown'] = dev_cost_breakdown
+        session['dev_cost_currency'] = dev_cost_currency
+        session['manday_breakdown'] = manday_breakdown
+        session['manday_rates'] = manday_rates
         # Add platform fee as a line item if not already present (for volume path)
         platform_fee_line = {
             'line_item': 'Platform Fee (Chosen)',
