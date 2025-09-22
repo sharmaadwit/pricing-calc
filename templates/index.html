@@ -520,9 +520,29 @@
                 devLocGroup.style.display = 'none';
             }
         }
+        
+        function toggleVoiceNotesModel() {
+            var voiceNotes = document.getElementById('voice_notes_price').value;
+            var modelGroup = document.getElementById('voice_notes_model_group');
+            if (voiceNotes === 'Yes') {
+                modelGroup.style.display = '';
+                updateVoiceNotesPricing();
+            } else {
+                modelGroup.style.display = 'none';
+                document.getElementById('voice_notes_model').value = '';
+            }
+        }
+        
+        function updateVoiceNotesPricing() {
+            // Voice notes pricing is now handled in the pricing section
+            // No need to update dropdown option text with prices
+        }
+        
         window.onload = function() {
             updateMinPlatformFee();
             toggleDevLocation();
+            toggleVoiceNotesModel();
+            updateVoiceNotesPricing();
         };
         </script>
         <!-- Section 1: One Time Dev Charges -->
@@ -579,6 +599,32 @@
                         <label for="num_ai_workspace_faq_price">No of AI Workspace - FAQ:</label>
                         <input type="number" name="num_ai_workspace_faq_price" id="num_ai_workspace_faq_price" min="0" value="{{ inputs.get('num_ai_workspace_faq_price', '') }}">
                     </div>
+                    
+                    <div class="form-group">
+                        <label for="voice_notes_price">Voice Notes Required?:</label>
+                        <select name="voice_notes_price" id="voice_notes_price" onchange="toggleVoiceNotesModel()">
+                            <option value="No" {% if inputs and inputs.voice_notes_price == 'No' %}selected{% endif %}>No</option>
+                            <option value="Yes" {% if inputs and inputs.voice_notes_price == 'Yes' %}selected{% endif %}>Yes</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="voice_notes_model_group" style="display: none;">
+                        <label for="voice_notes_model">Voice Notes Model:</label>
+                        <select name="voice_notes_model" id="voice_notes_model">
+                            <option value="">Select Model</option>
+                            <optgroup label="Speech-to-Text (STT)">
+                                <option value="deepgram_nova3" data-price-india="0.58" data-price-usd="0.007" {% if inputs and inputs.voice_notes_model == 'deepgram_nova3' %}selected{% endif %}>Deepgram Nova-3 (Pre-recorded)</option>
+                                <option value="google_stt_v2" data-price-india="2.16" data-price-usd="0.026" {% if inputs and inputs.voice_notes_model == 'google_stt_v2' %}selected{% endif %}>Google Cloud STT V2 (Standard)</option>
+                                <option value="azure_stt" data-price-india="2.25" data-price-usd="0.027" {% if inputs and inputs.voice_notes_model == 'azure_stt' %}selected{% endif %}>Azure AI Speech (Standard)</option>
+                            </optgroup>
+                            <optgroup label="Text-to-Speech (TTS)">
+                                <option value="google_tts_neural2" data-price-india="1.49" data-price-usd="0.018" {% if inputs and inputs.voice_notes_model == 'google_tts_neural2' %}selected{% endif %}>Google Cloud TTS (Neural2/Polyglot)</option>
+                                <option value="google_tts_wavenet" data-price-india="0.37" data-price-usd="0.004" {% if inputs and inputs.voice_notes_model == 'google_tts_wavenet' %}selected{% endif %}>Google Cloud TTS (WaveNet/Standard)</option>
+                                <option value="cartesia_pro" data-price-india="4.67" data-price-usd="0.056" {% if inputs and inputs.voice_notes_model == 'cartesia_pro' %}selected{% endif %}>Cartesia (Pro Plan)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    
                 </div>
                 <!-- Section 2: Volume Estimation -->
                 <div class="form-section">
@@ -732,6 +778,7 @@
                 <li>No of Journeys: <b>{{ inputs.get('num_journeys_price', '0') }}</b></li>
                 <li>No of AI Workspace - Commerce: <b>{{ inputs.get('num_ai_workspace_commerce_price', '0') }}</b></li>
                 <li>No of AI Workspace - FAQ: <b>{{ inputs.get('num_ai_workspace_faq_price', '0') }}</b></li>
+                <li>Voice Notes: <b>{{ inputs.get('voice_notes_price', 'No') }}</b>{% if inputs.get('voice_notes_price') == 'Yes' and inputs.get('voice_notes_model') %} - {{ inputs.get('voice_notes_model') }}{% endif %}</li>
             </ul>
         </div>
         <h2>Rate Card Pricing</h2>
@@ -755,6 +802,15 @@
             <label>Basic Utility/Authentication Message Markup Rate Card:</label>
             {{ currency_symbol }}<input type="text" name="basic_utility_price" class="comma-number" value="{{ suggested.basic_utility_price }}" required>
         </div>
+        <!-- Voice Notes Pricing Card -->
+        {% if inputs.get('voice_notes_price') == 'Yes' and inputs.get('voice_notes_model') %}
+        <div style="background: #fff3e0; border: 1px solid #ffb74d; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+            <h3 style="margin-top:0;">Voice Notes Pricing</h3>
+            <label>Voice Notes Rate (per minute):</label>
+            {{ currency_symbol }}<input type="text" name="voice_notes_rate" class="comma-number" value="{{ suggested.voice_notes_rate if suggested and suggested.get('voice_notes_rate') else '' }}" required><br>
+            <small>Rate for {{ inputs.get('voice_notes_model') }} - {{ currency_symbol }}{{ suggested.voice_notes_rate if suggested and suggested.get('voice_notes_rate') else '0.00' }}/min</small>
+        </div>
+        {% endif %}
         <!-- Manday Rates Card -->
         <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
             <h3 style="margin-top:0;">Manday Rates</h3>
@@ -820,6 +876,7 @@
                 </ul>
               </li>
               <li><b>AI Messages:</b> Any message that uses AI for responding to the customer</li>
+              <li><b>Voice Notes:</b> Voice Notes features allows user inputs to come in as voice notes, gupshup will process the voice notes, extract intent and entity, produce desired output and then be able to either show the output as text or convert it into voice as a response.</li>
             </ul>
           </div>
           {% if final_price_details %}

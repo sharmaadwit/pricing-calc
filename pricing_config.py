@@ -187,6 +187,13 @@ ACTIVITY_MANDAYS = {
     "onboarding": 0.5,
     "testing": 1,
     "ux": 1,
+    "security_audit": 2,
+    "performance_optimization": 1.5,
+    "integration_setup": 2,
+    "data_migration": 3,
+    "custom_component": 0.5,
+    "webhook": 0.25,
+    "ai_workspace_support": 2,
 }
 
 # =============================================================================
@@ -204,6 +211,76 @@ COUNTRY_CURRENCY = {
     'Europe': '$',  # Use USD for Europe
     'APAC': '$',
 }
+
+# Voice Notes Pricing Configuration (INR per minute)
+# USD conversion rate: 1 USD = 83 INR (approximate)
+VOICE_NOTES_PRICING = {
+    'India': {
+        'deepgram_nova3': 0.58,      # INR per minute
+        'google_stt_v2': 2.16,       # INR per minute
+        'azure_stt': 2.25,           # INR per minute
+        'google_tts_neural2': 1.49,  # INR per minute
+        'google_tts_wavenet': 0.37,  # INR per minute
+        'cartesia_pro': 4.67,        # INR per minute
+    },
+    'MENA': {
+        'deepgram_nova3': 0.007,     # USD per minute (0.58 INR / 83)
+        'google_stt_v2': 0.026,      # USD per minute (2.16 INR / 83)
+        'azure_stt': 0.027,          # USD per minute (2.25 INR / 83)
+        'google_tts_neural2': 0.018, # USD per minute (1.49 INR / 83)
+        'google_tts_wavenet': 0.004, # USD per minute (0.37 INR / 83)
+        'cartesia_pro': 0.056,       # USD per minute (4.67 INR / 83)
+    },
+    'LATAM': {
+        'deepgram_nova3': 0.007,     # USD per minute
+        'google_stt_v2': 0.026,      # USD per minute
+        'azure_stt': 0.027,          # USD per minute
+        'google_tts_neural2': 0.018, # USD per minute
+        'google_tts_wavenet': 0.004, # USD per minute
+        'cartesia_pro': 0.056,       # USD per minute
+    },
+    'Africa': {
+        'deepgram_nova3': 0.007,     # USD per minute
+        'google_stt_v2': 0.026,      # USD per minute
+        'azure_stt': 0.027,          # USD per minute
+        'google_tts_neural2': 0.018, # USD per minute
+        'google_tts_wavenet': 0.004, # USD per minute
+        'cartesia_pro': 0.056,       # USD per minute
+    },
+    'Europe': {
+        'deepgram_nova3': 0.007,     # USD per minute
+        'google_stt_v2': 0.026,      # USD per minute
+        'azure_stt': 0.027,          # USD per minute
+        'google_tts_neural2': 0.018, # USD per minute
+        'google_tts_wavenet': 0.004, # USD per minute
+        'cartesia_pro': 0.056,       # USD per minute
+    },
+    'APAC': {
+        'deepgram_nova3': 0.007,     # USD per minute
+        'google_stt_v2': 0.026,      # USD per minute
+        'azure_stt': 0.027,          # USD per minute
+        'google_tts_neural2': 0.018, # USD per minute
+        'google_tts_wavenet': 0.004, # USD per minute
+        'cartesia_pro': 0.056,       # USD per minute
+    },
+}
+
+def get_voice_notes_price(country, model):
+    """
+    Get voice notes price based on country and selected model.
+    
+    Args:
+        country: Country name (e.g., 'India', 'MENA', 'LATAM', etc.)
+        model: Voice notes model (e.g., 'deepgram_nova3', 'google_stt_v2', etc.)
+    
+    Returns:
+        float: Price per minute for the selected model in the given country
+    """
+    if not model or model == '':
+        return 0.0
+    
+    country_pricing = VOICE_NOTES_PRICING.get(country, VOICE_NOTES_PRICING.get('APAC', {}))
+    return country_pricing.get(model, 0.0)
 
 PLATFORM_PRICING_GUIDANCE = {
     'India': {

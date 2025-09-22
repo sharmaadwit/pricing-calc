@@ -15,7 +15,7 @@ from datetime import datetime
 from sqlalchemy import func
 import uuid
 from calculator import get_committed_amount_rates
-from pricing_config import committed_amount_slabs, PLATFORM_PRICING_GUIDANCE
+from pricing_config import committed_amount_slabs, PLATFORM_PRICING_GUIDANCE, VOICE_NOTES_PRICING, get_voice_notes_price
 from calculator import get_committed_amount_rate_for_volume
 
 # 🍕 PIZZA EASTER EGG SYSTEM 🍕
@@ -354,6 +354,10 @@ class Analytics(db.Model):
     bot_ui_mandays = db.Column(db.Float)
     custom_ai_mandays = db.Column(db.Float)
     committed_amount = db.Column(db.Float, nullable=True)  # New column for message bundle amount
+    # Voice notes fields
+    voice_notes_price = db.Column(db.String(8))  # "Yes" or "No"
+    voice_notes_model = db.Column(db.String(64))  # Model selected
+    voice_notes_rate = db.Column(db.Float)  # Rate per minute
     # Add more fields as needed
     calculation_route = db.Column(db.String(16))  # "volumes" or "bundle"
 
@@ -477,6 +481,9 @@ def index():
         num_journeys_price = request.form.get('num_journeys_price', '0')
         num_ai_workspace_commerce_price = request.form.get('num_ai_workspace_commerce_price', '0')
         num_ai_workspace_faq_price = request.form.get('num_ai_workspace_faq_price', '0')
+        # Voice notes fields
+        voice_notes_price = request.form.get('voice_notes_price', 'No')
+        voice_notes_model = request.form.get('voice_notes_model', '')
         platform_fee, fee_currency = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas, increased_tps)
         currency_symbol = COUNTRY_CURRENCY.get(country, '$')
         # Always update session['inputs'] with latest form data
@@ -503,7 +510,10 @@ def index():
             'num_apis_price': num_apis_price,
             'num_journeys_price': num_journeys_price,
             'num_ai_workspace_commerce_price': num_ai_workspace_commerce_price,
-            'num_ai_workspace_faq_price': num_ai_workspace_faq_price
+            'num_ai_workspace_faq_price': num_ai_workspace_faq_price,
+            # Voice notes fields
+            'voice_notes_price': voice_notes_price,
+            'voice_notes_model': voice_notes_model
         }
         print("DEBUG: session['inputs'] just set to:", session['inputs'], file=sys.stderr, flush=True)
         if all(float(v) == 0.0 for v in [ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume]):
@@ -520,6 +530,7 @@ def index():
             'advanced_price': get_suggested_price(country, 'advanced', advanced_volume) if not is_zero(advanced_volume) else get_lowest_tier_price(country, 'advanced'),
             'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if not is_zero(basic_marketing_volume) else get_lowest_tier_price(country, 'basic_marketing'),
             'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_committed_amount_rate_for_volume(country, 'basic_utility', 0),
+            'voice_notes_rate': get_voice_notes_price(country, session.get('inputs', {}).get('voice_notes_model', '')) if session.get('inputs', {}).get('voice_notes_price') == 'Yes' else 0.0,
         }
         suggested_prices = patch_suggested_prices(suggested_prices, session.get('inputs', {}))
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
@@ -591,6 +602,7 @@ def index():
                 'advanced_price': suggested_advanced,
                 'basic_marketing_price': suggested_marketing,
                 'basic_utility_price': suggested_utility,
+                'voice_notes_rate': get_voice_notes_price(country, inputs.get('voice_notes_model', '')) if inputs.get('voice_notes_price') == 'Yes' else 0.0,
             }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             # Re-render the pricing page with user input and error
@@ -656,7 +668,8 @@ def index():
         # Use one-time dev activity fields from form if present, else from session
         dev_fields = [
             'onboarding_price', 'ux_price', 'testing_qa_price', 'aa_setup_price',
-            'num_apis_price', 'num_journeys_price', 'num_ai_workspace_commerce_price', 'num_ai_workspace_faq_price'
+            'num_apis_price', 'num_journeys_price', 'num_ai_workspace_commerce_price', 'num_ai_workspace_faq_price',
+            'voice_notes_price', 'voice_notes_model', 'voice_notes_rate'
         ]
         patched_form = (request.form.copy() if hasattr(request.form, 'copy') else dict(request.form)) or {}
         for field in dev_fields:
@@ -722,7 +735,8 @@ def index():
                 ai_price=ai_price,
                 advanced_price=advanced_price,
                 basic_marketing_price=basic_marketing_price,
-                basic_utility_price=basic_utility_price
+                basic_utility_price=basic_utility_price,
+                voice_notes_rate=float(inputs.get('voice_notes_rate', 0) or 0) if inputs.get('voice_notes_price') == 'Yes' else None
             )
             print(f"DEBUG: Calculation successful, results: {results}", file=sys.stderr, flush=True)
         except Exception as e:
@@ -732,8 +746,9 @@ def index():
                 'ai_price': suggested_ai,
                 'advanced_price': suggested_advanced,
                 'basic_marketing_price': suggested_marketing,
-                'basic_utility_price': suggested_utility,
-            }
+            'basic_utility_price': suggested_utility,
+            'voice_notes_rate': get_voice_notes_price(country, inputs.get('voice_notes_model', '')) if inputs.get('voice_notes_price') == 'Yes' else 0.0,
+        }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
         
@@ -755,8 +770,9 @@ def index():
                 'ai_price': suggested_ai,
                 'advanced_price': suggested_advanced,
                 'basic_marketing_price': suggested_marketing,
-                'basic_utility_price': suggested_utility,
-            }
+            'basic_utility_price': suggested_utility,
+            'voice_notes_rate': get_voice_notes_price(country, inputs.get('voice_notes_model', '')) if inputs.get('voice_notes_price') == 'Yes' else 0.0,
+        }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
         print("PASSED results validation, about to render results page", file=sys.stderr, flush=True)
@@ -804,7 +820,8 @@ def index():
                     ai_price=ai_price,
                     advanced_price=advanced_price,
                     basic_marketing_price=basic_marketing_price,
-                    basic_utility_price=basic_utility_price
+                    basic_utility_price=basic_utility_price,
+                    voice_notes_rate=float(inputs.get('voice_notes_rate', 0) or 0) if inputs.get('voice_notes_price') == 'Yes' else None
                 )
                 print(f"DEBUG: Calculation successful, results: {results}", file=sys.stderr, flush=True)
             except Exception as e:
@@ -814,8 +831,9 @@ def index():
                     'ai_price': suggested_ai,
                     'advanced_price': suggested_advanced,
                     'basic_marketing_price': suggested_marketing,
-                    'basic_utility_price': suggested_utility,
-                }
+            'basic_utility_price': suggested_utility,
+            'voice_notes_rate': get_voice_notes_price(country, inputs.get('voice_notes_model', '')) if inputs.get('voice_notes_price') == 'Yes' else 0.0,
+        }
                 currency_symbol = COUNTRY_CURRENCY.get(country, '$')
                 return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
         except Exception as e:
@@ -918,6 +936,9 @@ def index():
         # Smart CPaaS
         if inputs.get('smart_cpaas', 'No') == 'Yes':
             final_inclusions += inclusions['Smart CPaaS Yes']
+        # Voice Notes
+        if inputs.get('voice_notes_price', 'No') == 'Yes':
+            final_inclusions.append('Voice notes processing through STT/TTS features')
         # BFSI Tier (highest only)
         bfsi_tier = inputs.get('bfsi_tier', 'NA')
         if bfsi_tier == 'Tier 3':
@@ -1061,6 +1082,10 @@ def index():
             bot_ui_mandays=manday_breakdown.get('bot_ui', 0),
             custom_ai_mandays=manday_breakdown.get('custom_ai', 0),
             committed_amount=inputs.get('committed_amount', None),
+            # Voice notes fields
+            voice_notes_price=inputs.get('voice_notes_price', 'No'),
+            voice_notes_model=inputs.get('voice_notes_model', ''),
+            voice_notes_rate=float(inputs.get('voice_notes_rate', 0)) if inputs.get('voice_notes_rate') else None,
         )
         analytics_kwargs['calculation_id'] = session.get('calculation_id')
         # Set calculation_route for analytics
@@ -1459,6 +1484,12 @@ def analytics():
                 advanced_stats = get_stats('advanced_price')
                 marketing_stats = get_stats('basic_marketing_price')
                 utility_stats = get_stats('basic_utility_price')
+                # Voice notes stats
+                voice_notes_stats = get_stats('voice_notes_rate')
+                # Voice notes usage stats
+                voice_notes_usage = Analytics.query.filter(Analytics.voice_notes_price == 'Yes').count()
+                voice_notes_total = Analytics.query.count()
+                voice_notes_percentage = (voice_notes_usage / voice_notes_total * 100) if voice_notes_total > 0 else 0
                 # Message volume distribution (sum, min, max, median for each type)
                 def get_volume_stats(field):
                     vals = [getattr(a, field) for a in Analytics.query.all() if getattr(a, field) is not None]
@@ -1703,6 +1734,9 @@ def analytics():
                     'advanced_stats': advanced_stats,
                     'marketing_stats': marketing_stats,
                     'utility_stats': utility_stats,
+                    'voice_notes_stats': voice_notes_stats,
+                    'voice_notes_usage': voice_notes_usage,
+                    'voice_notes_percentage': voice_notes_percentage,
                     'message_volumes': message_volumes,
                     'platform_fee_discount_triggered': platform_fee_discount_triggered,
                     'margin_chosen': margin_chosen,

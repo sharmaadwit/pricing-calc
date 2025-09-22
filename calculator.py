@@ -49,7 +49,8 @@ def get_next_tier_price(country, msg_type, volume):
 
 def calculate_pricing(
     country, ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume, platform_fee,
-    ai_price=None, advanced_price=None, basic_marketing_price=None, basic_utility_price=None
+    ai_price=None, advanced_price=None, basic_marketing_price=None, basic_utility_price=None,
+    voice_notes_rate=None
 ):
     """
     Calculate all pricing, revenue, costs, and margin for the given inputs.
@@ -84,7 +85,8 @@ def calculate_pricing(
     advanced_revenue = user_advanced_price * advanced_volume  # Only markup for advanced
     basic_marketing_revenue = (costs['marketing'] + user_basic_marketing_price) * basic_marketing_volume
     basic_utility_revenue = (costs['utility'] + user_basic_utility_price) * basic_utility_volume
-    revenue = ai_revenue + advanced_revenue + basic_marketing_revenue + basic_utility_revenue
+    voice_notes_revenue = 0  # Billed on actuals, no volume input
+    revenue = ai_revenue + advanced_revenue + basic_marketing_revenue + basic_utility_revenue + voice_notes_revenue
 
     # Revenue (suggested)
     ai_final_price_s = costs['ai'] + suggested_ai_price
@@ -96,7 +98,8 @@ def calculate_pricing(
     advanced_revenue_s = advanced_final_price_s * advanced_volume
     basic_marketing_revenue_s = basic_marketing_final_price_s * basic_marketing_volume
     basic_utility_revenue_s = basic_utility_final_price_s * basic_utility_volume
-    suggested_revenue = ai_revenue_s + advanced_revenue_s + basic_marketing_revenue_s + basic_utility_revenue_s
+    voice_notes_revenue_s = 0  # Billed on actuals, no volume input
+    suggested_revenue = ai_revenue_s + advanced_revenue_s + basic_marketing_revenue_s + basic_utility_revenue_s + voice_notes_revenue_s
 
     # Channel cost (as per your logic)
     adv_marketing_vol = 0.0
@@ -175,6 +178,19 @@ def calculate_pricing(
             'suggested_revenue': basic_utility_revenue_s
         },
     ]
+    
+    # Add voice notes to line items if enabled
+    if voice_notes_rate:
+        line_items.append({
+            'label': 'Voice Notes',
+            'volume': 0,  # Billed on actuals, no volume input
+            'chosen_price': voice_notes_rate,
+            'suggested_price': voice_notes_rate,
+            'meta_cost': 0,  # No meta cost for voice notes
+            'final_price': voice_notes_rate,
+            'revenue': voice_notes_revenue,
+            'suggested_revenue': voice_notes_revenue_s
+        })
 
     return {
         'line_items': line_items,
@@ -228,9 +244,10 @@ def calculate_total_mandays(inputs):
     set_mandays, rem_apis, rem_journeys = _calculate_set_mandays(num_apis, num_journeys)
     total_mandays += set_mandays
     total_mandays += rem_apis + rem_journeys
-    # AI Agents (Commerce + FAQ)
+    # AI Agents (Commerce + FAQ + Support)
     total_mandays += int(inputs.get('num_ai_workspace_commerce_price') or 0) * ACTIVITY_MANDAYS['ai_agents']
     total_mandays += int(inputs.get('num_ai_workspace_faq_price') or 0) * ACTIVITY_MANDAYS['ai_agents']
+    total_mandays += int(inputs.get('num_ai_workspace_support_price') or 0) * ACTIVITY_MANDAYS['ai_workspace_support']
     # Extras
     total_mandays += _calculate_extras_mandays(inputs, ACTIVITY_MANDAYS)
     return total_mandays
@@ -244,6 +261,7 @@ def calculate_total_mandays_breakdown(inputs):
     num_apis = int(inputs.get('num_apis_price') or 0)
     num_ai_commerce = int(inputs.get('num_ai_workspace_commerce_price') or 0)
     num_ai_faq = int(inputs.get('num_ai_workspace_faq_price') or 0)
+    num_ai_support = int(inputs.get('num_ai_workspace_support_price') or 0)
     bot_ui_mandays, rem_apis, rem_journeys = _calculate_set_mandays(num_apis, num_journeys)
     bot_ui_mandays += rem_apis + rem_journeys
     # Extras for bot_ui
@@ -254,6 +272,8 @@ def calculate_total_mandays_breakdown(inputs):
         custom_ai_mandays += num_ai_commerce * ACTIVITY_MANDAYS['ai_agents']
     if num_ai_faq > 0:
         custom_ai_mandays += num_ai_faq * ACTIVITY_MANDAYS['ai_agents']
+    if num_ai_support > 0:
+        custom_ai_mandays += num_ai_support * ACTIVITY_MANDAYS['ai_workspace_support']
     return {
         'bot_ui': bot_ui_mandays,
         'custom_ai': custom_ai_mandays,
