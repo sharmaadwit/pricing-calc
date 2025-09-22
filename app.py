@@ -1400,6 +1400,21 @@ def index():
         manday_rates = session.get('manday_rates', {})
         dev_cost_currency = session.get('dev_cost_currency', 'INR')
         
+        # If dev_cost_breakdown is missing or empty, calculate it
+        if not dev_cost_breakdown or 'total_cost' not in dev_cost_breakdown:
+            try:
+                total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(inputs, manday_rates)
+                manday_breakdown = dev_cost_breakdown.get('mandays_breakdown', {})
+                # Store in session for future use
+                session['dev_cost_breakdown'] = dev_cost_breakdown
+                session['dev_cost_currency'] = dev_cost_currency
+                session['manday_breakdown'] = manday_breakdown
+            except Exception as e:
+                print(f"Error calculating dev_cost_breakdown: {e}", file=sys.stderr, flush=True)
+                # Fallback to empty structure
+                dev_cost_breakdown = {'total_cost': 0, 'ba_cost': 0, 'qa_cost': 0, 'pm_cost': 0, 'uplift_amount': 0}
+                dev_cost_currency = 'INR'
+        
         # Recalculate pricing simulation
         pricing_simulation = calculate_pricing_simulation(inputs, pricing_inputs)
         
