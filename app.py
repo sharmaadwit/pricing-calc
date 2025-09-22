@@ -1538,7 +1538,7 @@ def analytics():
                     for a in country_analytics:
                         region = getattr(a, 'region', '') or 'All'
                         if region == 'All' or not region:
-                            region = a.country
+                            region = 'All'  # Keep as 'All' instead of changing to country name
                         if region not in region_map:
                             region_map[region] = []
                         region_map[region].append(a)
