@@ -1619,7 +1619,7 @@ def analytics():
                         }
                     # For backward compatibility, keep the old stats[country] as the sum of all regions
                     # Ensure stats[country] has the msg_types structure
-                    if 'All' in stats_by_region[country]:
+                    if 'All' in stats_by_region[country] and 'msg_types' in stats_by_region[country]['All']:
                         stats[country] = stats_by_region[country]['All']
                     else:
                         # Get the first region that has msg_types
@@ -1628,8 +1628,21 @@ def analytics():
                                 stats[country] = region_data
                                 break
                         else:
-                            # Fallback to first region
-                            stats[country] = list(stats_by_region[country].values())[0]
+                            # Fallback: create a basic structure with msg_types
+                            stats[country] = {
+                                'platform_fee': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                                'msg_types': {
+                                    'ai': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                                    'advanced': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                                    'basic_marketing': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                                    'basic_utility': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                                    'voice_notes_rate': {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
+                                },
+                                'committed_amount': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                                'one_time_dev_cost': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                                'bot_ui_manday_cost': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                                'custom_ai_manday_cost': {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
+                            }
                 # --- Add average discount per country for all message types and manday rates ---
                 def avg_discount(chosen_list, rate_card_list):
                     pairs = [
