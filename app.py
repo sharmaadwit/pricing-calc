@@ -1742,6 +1742,7 @@ def analytics():
                         'advanced': get_user_stats('advanced_price'),
                         'basic_marketing': get_user_stats('basic_marketing_price'),
                         'basic_utility': get_user_stats('basic_utility_price'),
+                        'voice_notes_rate': get_user_stats('voice_notes_rate'),
                         'committed_amount': get_user_stats('committed_amount'),
                         'one_time_dev_cost': one_time_dev_cost_stats,
                         'per_manday_cost': per_manday_cost_stats

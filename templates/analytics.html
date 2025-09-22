@@ -222,13 +222,17 @@
             <tr>
               <td><b>{{ label }}</b></td>
                 {% if key == 'voice_notes_rate' %}
-                  <!-- DEBUG: stat keys: {{ stat.keys() | list }} -->
-                  <!-- DEBUG: has msg_types: {{ 'msg_types' in stat }} -->
-                  <!-- DEBUG: msg_types keys: {{ stat.msg_types.keys() | list if 'msg_types' in stat else 'NO MSG_TYPES' }} -->
-                  <td>{{ fmt_num_currency(stat.msg_types[key]['avg'], currency) }}</td>
-                  <td>{{ fmt_num_currency(stat.msg_types[key]['min'], currency) }}</td>
-                  <td>{{ fmt_num_currency(stat.msg_types[key]['max'], currency) }}</td>
-                  <td>{{ fmt_num_currency(stat.msg_types[key]['median'], currency) }}</td>
+                  {% if 'msg_types' in stat %}
+                    <td>{{ fmt_num_currency(stat.msg_types[key]['avg'], currency) }}</td>
+                    <td>{{ fmt_num_currency(stat.msg_types[key]['min'], currency) }}</td>
+                    <td>{{ fmt_num_currency(stat.msg_types[key]['max'], currency) }}</td>
+                    <td>{{ fmt_num_currency(stat.msg_types[key]['median'], currency) }}</td>
+                  {% else %}
+                    <td>{{ fmt_num_currency(stat[key]['avg'], currency) }}</td>
+                    <td>{{ fmt_num_currency(stat[key]['min'], currency) }}</td>
+                    <td>{{ fmt_num_currency(stat[key]['max'], currency) }}</td>
+                    <td>{{ fmt_num_currency(stat[key]['median'], currency) }}</td>
+                  {% endif %}
                 {% else %}
                   <td>{{ fmt_num_currency(stat[key]['avg'], currency) }}</td>
                   <td>{{ fmt_num_currency(stat[key]['min'], currency) }}</td>
