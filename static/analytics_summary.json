@@ -3,7 +3,7 @@
   "unique_users": 24,
   "total_revenue": 51336804.0,
   "countries": 6,
-  "last_updated": "2025-09-22 12:45:12",
+  "last_updated": "2025-09-22 13:08:31",
   "top_users": {
     "Kat": 12425000.0,
     "Ankit": 8275000.0,
@@ -59,6 +59,12 @@
         "max": 0.0076,
         "median": 0.0076,
         "list": 0.003
+      },
+      "voice_notes_rate": {
+        "average": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0
       },
       "committed_amount": {
         "average": 5000.0,
@@ -217,6 +223,12 @@
         "median": 0.0041,
         "list": 0.008
       },
+      "voice_notes_rate": {
+        "average": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
       "committed_amount": {
         "average": 0,
         "min": 0,
@@ -356,6 +368,12 @@
         "max": 0.05,
         "median": 0.03,
         "list": 0.03
+      },
+      "voice_notes_rate": {
+        "average": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0
       },
       "committed_amount": {
         "average": 188192.64285714287,
@@ -582,6 +600,12 @@
         "median": 0.0015,
         "list": 0.008
       },
+      "voice_notes_rate": {
+        "average": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
       "committed_amount": {
         "average": 0.0,
         "min": 0.0,
@@ -761,6 +785,12 @@
         "median": 0.008,
         "list": 0.008
       },
+      "voice_notes_rate": {
+        "average": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
       "committed_amount": {
         "average": 0,
         "min": 0,
@@ -937,6 +967,12 @@
         "median": 0.0013,
         "list": 0.0
       },
+      "voice_notes_rate": {
+        "average": 0,
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
       "committed_amount": {
         "average": 250.0,
         "min": 0.0,
@@ -1109,6 +1145,12 @@
           "median": 0.0053,
           "list": 0.003
         },
+        "voice_notes_rate": {
+          "average": 0,
+          "min": 0,
+          "max": 0,
+          "median": 0
+        },
         "committed_amount": {
           "average": 4000.0,
           "min": 4000.0,
@@ -1178,6 +1220,12 @@
           "median": 0.0076,
           "list": 0.003
         },
+        "voice_notes_rate": {
+          "average": 0,
+          "min": 0,
+          "max": 0,
+          "median": 0
+        },
         "committed_amount": {
           "average": 3000.0,
           "min": 3000.0,
@@ -1246,6 +1294,12 @@
           "max": 0.0076,
           "median": 0.0076,
           "list": 0.003
+        },
+        "voice_notes_rate": {
+          "average": 0,
+          "min": 0,
+          "max": 0,
+          "median": 0
         },
         "committed_amount": {
           "average": 6500.0,
@@ -1318,6 +1372,12 @@
           "median": 0.03,
           "list": 0.03
         },
+        "voice_notes_rate": {
+          "average": 0,
+          "min": 0,
+          "max": 0,
+          "median": 0
+        },
         "committed_amount": {
           "average": 285393.9428571428,
           "min": 0.0,
@@ -1387,6 +1447,12 @@
           "median": 0.025,
           "list": 0.03
         },
+        "voice_notes_rate": {
+          "average": 0,
+          "min": 0,
+          "max": 0,
+          "median": 0
+        },
         "committed_amount": {
           "average": 50000.0,
           "min": 0.0,
@@ -1455,6 +1521,12 @@
           "max": 0.03,
           "median": 0.03,
           "list": 0.03
+        },
+        "voice_notes_rate": {
+          "average": 0,
+          "min": 0,
+          "max": 0,
+          "median": 0
         },
         "committed_amount": {
           "average": 0.0,
@@ -1527,6 +1599,12 @@
           "median": 0.008,
           "list": 0.008
         },
+        "voice_notes_rate": {
+          "average": 0,
+          "min": 0,
+          "max": 0,
+          "median": 0
+        },
         "committed_amount": {
           "average": 0.0,
           "min": 0.0,
@@ -1595,6 +1673,12 @@
           "max": 0.0015,
           "median": 0.0015,
           "list": 0.008
+        },
+        "voice_notes_rate": {
+          "average": 0,
+          "min": 0,
+          "max": 0,
+          "median": 0
         },
         "committed_amount": {
           "average": 0.0,
@@ -1667,6 +1751,12 @@
           "median": 0.008,
           "list": 0.008
         },
+        "voice_notes_rate": {
+          "average": 0,
+          "min": 0,
+          "max": 0,
+          "median": 0
+        },
         "committed_amount": {
           "average": 0,
           "min": 0,
@@ -1735,6 +1825,12 @@
           "max": 0.008,
           "median": 0.008,
           "list": 0.008
+        },
+        "voice_notes_rate": {
+          "average": 0,
+          "min": 0,
+          "max": 0,
+          "median": 0
         },
         "committed_amount": {
           "average": 0,
