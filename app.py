@@ -1618,7 +1618,18 @@ def analytics():
                             'custom_ai_manday_cost': stat_dict(custom_ai_rates)
                         }
                     # For backward compatibility, keep the old stats[country] as the sum of all regions
-                    stats[country] = stats_by_region[country].get('All', list(stats_by_region[country].values())[0])
+                    # Ensure stats[country] has the msg_types structure
+                    if 'All' in stats_by_region[country]:
+                        stats[country] = stats_by_region[country]['All']
+                    else:
+                        # Get the first region that has msg_types
+                        for region_data in stats_by_region[country].values():
+                            if 'msg_types' in region_data:
+                                stats[country] = region_data
+                                break
+                        else:
+                            # Fallback to first region
+                            stats[country] = list(stats_by_region[country].values())[0]
                 # --- Add average discount per country for all message types and manday rates ---
                 def avg_discount(chosen_list, rate_card_list):
                     pairs = [
