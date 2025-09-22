@@ -222,6 +222,9 @@
             <tr>
               <td><b>{{ label }}</b></td>
                 {% if key == 'voice_notes_rate' %}
+                  <!-- DEBUG: stat keys: {{ stat.keys() | list }} -->
+                  <!-- DEBUG: has msg_types: {{ 'msg_types' in stat }} -->
+                  <!-- DEBUG: msg_types keys: {{ stat.msg_types.keys() | list if 'msg_types' in stat else 'NO MSG_TYPES' }} -->
                   <td>{{ fmt_num_currency(stat.msg_types[key]['avg'], currency) }}</td>
                   <td>{{ fmt_num_currency(stat.msg_types[key]['min'], currency) }}</td>
                   <td>{{ fmt_num_currency(stat.msg_types[key]['max'], currency) }}</td>
