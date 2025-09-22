@@ -1677,15 +1677,29 @@ def analytics():
                         'bot_ui_manday': avg_discount(bot_ui_chosen, bot_ui_rate),
                         'custom_ai_manday': avg_discount(custom_ai_chosen, custom_ai_rate),
                     }
-                # Defensive: Ensure every stat in analytics['stats'] is a dict
+                # Defensive: Ensure every stat in analytics['stats'] is a dict with msg_types
                 for country in list(stats.keys()):
                     if not isinstance(stats[country], dict):
                         stats[country] = {}
+                    
+                    # Ensure msg_types structure exists
+                    if 'msg_types' not in stats[country]:
+                        print(f'DEBUG: Adding msg_types fallback for {country}', file=sys.stderr, flush=True)
+                        stats[country]['msg_types'] = {
+                            'ai': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                            'advanced': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                            'basic_marketing': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                            'basic_utility': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
+                            'voice_notes_rate': {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
+                        }
                 # Debug: Print stats structure before rendering
                 print('DEBUG: analytics["stats"] structure:', file=sys.stderr, flush=True)
                 for country, stat in stats.items():
-                    # Debug: Check if stat is a dict or something else
-                    # print(f'  {country}: {type(stat)} = {stat}')
+                    print(f'  {country}: {type(stat)} = {list(stat.keys()) if isinstance(stat, dict) else "NOT A DICT"}', file=sys.stderr, flush=True)
+                    if isinstance(stat, dict) and 'msg_types' in stat:
+                        print(f'    msg_types keys: {list(stat["msg_types"].keys())}', file=sys.stderr, flush=True)
+                    else:
+                        print(f'    NO msg_types in {country}', file=sys.stderr, flush=True)
                     pass
                 print('--- END DEBUG ---', file=sys.stderr, flush=True)
                 # Per-user stats for table
