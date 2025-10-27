@@ -1,9 +1,9 @@
 {
-  "total_calculations": 367,
+  "total_calculations": 368,
   "unique_users": 37,
-  "total_revenue": 58155954.0,
+  "total_revenue": 58157204.0,
   "countries": 7,
-  "last_updated": "2025-10-27 03:52:02",
+  "last_updated": "2025-10-27 06:34:23",
   "top_users": {
     "Kat": 12925000.0,
     "Ankit": 8975850.0,
@@ -15,13 +15,13 @@
     "India": 311,
     "LATAM": 15,
     "MENA": 15,
-    "Africa": 10,
+    "Africa": 11,
     "Rest of the World": 10,
     "APAC": 5,
     "Europe": 1
   },
   "route_breakdown": {
-    "volumes": 320,
+    "volumes": 321,
     "bundle": 47
   },
   "country_stats": {
@@ -194,34 +194,34 @@
     "Africa": {
       "currency": "$",
       "platform_fee": {
-        "average": 1720.0,
+        "average": 1677.2727272727273,
         "min": 850.0,
         "max": 3000.0,
-        "median": 1450.0
+        "median": 1250.0
       },
       "ai_message": {
-        "average": 0.010400000000000001,
+        "average": 0.010818181818181819,
         "min": 0.0035,
         "max": 0.015,
         "median": 0.015,
         "list": 0.015
       },
       "advanced_message": {
-        "average": 0.0036000000000000003,
+        "average": 0.0038181818181818182,
         "min": 0.0,
         "max": 0.006,
         "median": 0.006,
         "list": 0.006
       },
       "basic_marketing_message": {
-        "average": 0.016960000000000003,
+        "average": 0.015690909090909092,
         "min": 0.003,
         "max": 0.0379,
         "median": 0.003,
         "list": 0.003
       },
       "basic_utility_message": {
-        "average": 0.0048400000000000006,
+        "average": 0.004672727272727274,
         "min": 0.003,
         "max": 0.0076,
         "median": 0.003,
@@ -277,7 +277,8 @@
         0.0,
         0.0,
         4600.0,
-        1650.0
+        1650.0,
+        1250.0
       ],
       "weekly_revenue_labels": [
         "2025-08-10",
@@ -291,10 +292,11 @@
         "2025-10-05",
         "2025-10-12",
         "2025-10-19",
-        "2025-10-26"
+        "2025-10-26",
+        "2025-11-02"
       ],
       "clv": [
-        15550.0,
+        16800.0,
         1650.0
       ],
       "clv_labels": [
@@ -302,10 +304,10 @@
         "Saathwik - Dummy commercials "
       ],
       "service_usage": [
-        0.16960000000000003,
-        0.10400000000000001,
-        0.048400000000000006,
-        0.036000000000000004
+        0.17260000000000003,
+        0.11900000000000001,
+        0.05140000000000001,
+        0.042
       ],
       "service_labels": [
         "basic_marketing_price",
@@ -314,7 +316,7 @@
         "advanced_price"
       ],
       "manday_efficiency": [
-        150.97087378640776,
+        157.00934579439252,
         57.89473684210526
       ],
       "manday_efficiency_labels": [
@@ -322,17 +324,19 @@
         "Saathwik - Dummy commercials "
       ],
       "hourly_counts": [
+        1,
         2,
         4,
         4
       ],
       "hourly_labels": [
+        "6:00",
         "10:00",
         "11:00",
         "12:00"
       ],
       "weekday_counts": [
-        1.0,
+        2.0,
         1.0,
         2.0,
         4.0,
@@ -350,7 +354,7 @@
         "Sunday"
       ],
       "route_revenue": [
-        14200.0,
+        15450.0,
         3000.0
       ],
       "route_labels": [
@@ -358,7 +362,7 @@
         "bundle"
       ],
       "route_counts": [
-        9,
+        10,
         1
       ],
       "bot_ui_manday_rate": {
@@ -1323,34 +1327,34 @@
       "Nigeria": {
         "currency": "$",
         "platform_fee": {
-          "average": 1566.6666666666667,
+          "average": 1487.5,
           "min": 1250.0,
           "max": 2200.0,
           "median": 1250.0
         },
         "ai_message": {
-          "average": 0.011166666666666667,
+          "average": 0.012125,
           "min": 0.0035,
           "max": 0.015,
           "median": 0.015,
           "list": 0.015
         },
         "advanced_message": {
-          "average": 0.004,
+          "average": 0.0045000000000000005,
           "min": 0.0,
           "max": 0.006,
           "median": 0.006,
           "list": 0.006
         },
         "basic_marketing_message": {
-          "average": 0.014633333333333333,
+          "average": 0.011725000000000001,
           "min": 0.003,
           "max": 0.0379,
           "median": 0.003,
           "list": 0.003
         },
         "basic_utility_message": {
-          "average": 0.004533333333333334,
+          "average": 0.00415,
           "min": 0.003,
           "max": 0.0076,
           "median": 0.003,
@@ -2080,7 +2084,7 @@
   },
   "platform_fee_by_country": [
     930.0,
-    1720.0,
+    1677.2727272727273,
     1650.0,
     186580.86816720257,
     2920.266666666667,
@@ -2089,7 +2093,7 @@
   ],
   "ai_message_by_country": [
     0.0105,
-    0.010400000000000001,
+    0.010818181818181819,
     0.0267,
     0.8608254019292605,
     0.036153333333333336,
