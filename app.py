@@ -177,6 +177,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logger.info("Flask app logger initialized")
+# --- Session helpers ---
+def clear_calc_session(preserve_auth: bool = True):
+    """Clear all calculation-related session keys. Optionally preserve auth."""
+    keys_to_clear = [
+        'chosen_platform_fee', 'pricing_inputs', 'rate_card_platform_fee', 'results',
+        'selected_components', 'user_selections', 'inclusions', 'calculation_id',
+        'bundle_choice', 'manday_rates', 'inputs', 'voice_pricing'
+    ]
+    for k in keys_to_clear:
+        if k in session:
+            session.pop(k)
+    if not preserve_auth and 'authenticated' in session:
+        session.pop('authenticated')
+
 
 # Health check endpoint - moved to top for immediate availability
 @app.route('/health')
@@ -360,6 +374,26 @@ class Analytics(db.Model):
     voice_notes_rate = db.Column(db.Float)  # Rate per minute
     # Add more fields as needed
     calculation_route = db.Column(db.String(16))  # "volumes" or "bundle"
+    # --- Voice channel analytics (nullable to remain backward compatible) ---
+    channel_type = db.Column(db.String(32), nullable=True)  # text_only, voice_only, text_voice
+    voice_mandays = db.Column(db.Float, nullable=True)
+    voice_dev_cost = db.Column(db.Float, nullable=True)
+    voice_platform_fee = db.Column(db.Float, nullable=True)
+    whatsapp_setup_fee = db.Column(db.Float, nullable=True)
+    pstn_inbound_ai_minutes = db.Column(db.Float, nullable=True)
+    pstn_inbound_committed = db.Column(db.Float, nullable=True)
+    pstn_outbound_ai_minutes = db.Column(db.Float, nullable=True)
+    pstn_outbound_committed = db.Column(db.Float, nullable=True)
+    pstn_manual_minutes = db.Column(db.Float, nullable=True)
+    pstn_manual_committed = db.Column(db.Float, nullable=True)
+    whatsapp_voice_outbound_minutes = db.Column(db.Float, nullable=True)
+    whatsapp_voice_inbound_minutes = db.Column(db.Float, nullable=True)
+    voice_cost_pstn_inbound = db.Column(db.Float, nullable=True)
+    voice_cost_pstn_outbound = db.Column(db.Float, nullable=True)
+    voice_cost_pstn_manual = db.Column(db.Float, nullable=True)
+    voice_cost_wa_outbound = db.Column(db.Float, nullable=True)
+    voice_cost_wa_inbound = db.Column(db.Float, nullable=True)
+    voice_total_cost = db.Column(db.Float, nullable=True)
 
 # os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
 
@@ -388,7 +422,20 @@ def login():
             return redirect(url_for('index'))
         else:
             flash('Incorrect password. Please try again.', 'error')
+    else:
+        # Reset session fully on GET to handle relogin or stale sessions
+        try:
+            session.clear()
+        except Exception:
+            pass
     return render_template('login.html')
+
+@app.route('/start-over', methods=['GET'])
+def start_over():
+    """Explicit route to wipe calculation state and return to the start."""
+    clear_calc_session(preserve_auth=True)
+    flash('Started a fresh calculation.', 'success')
+    return redirect(url_for('index'))
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -484,6 +531,28 @@ def index():
         # Voice notes fields
         voice_notes_price = request.form.get('voice_notes_price', 'No')
         voice_notes_model = request.form.get('voice_notes_model', '')
+        # Voice channel fields
+        channel_type = request.form.get('channel_type', 'text_only')
+        # Enforce: Voice supported only for India
+        if country != 'India' and channel_type in ['voice_only', 'text_voice']:
+            channel_type = 'text_only'
+        def pv(name):
+            return parse_volume(request.form.get(name, ''))
+        pstn_inbound_ai_minutes = pv('pstn_inbound_ai_minutes')
+        pstn_inbound_committed = pv('pstn_inbound_committed')
+        pstn_outbound_ai_minutes = pv('pstn_outbound_ai_minutes')
+        pstn_outbound_committed = pv('pstn_outbound_committed')
+        pstn_manual_minutes = pv('pstn_manual_minutes')
+        pstn_manual_committed = pv('pstn_manual_committed')
+        whatsapp_voice_outbound_minutes = pv('whatsapp_voice_outbound_minutes')
+        whatsapp_voice_inbound_minutes = pv('whatsapp_voice_inbound_minutes')
+        voice_ai_enabled = request.form.get('voice_ai_enabled', 'No')
+        num_voice_journeys = request.form.get('num_voice_journeys', '0')
+        num_voice_apis = request.form.get('num_voice_apis', '0')
+        num_additional_voice_languages = request.form.get('num_additional_voice_languages', '0')
+        agent_handover_pstn = request.form.get('agent_handover_pstn', 'None')
+        whatsapp_voice_platform = request.form.get('whatsapp_voice_platform', 'None')
+        virtual_number_required = request.form.get('virtual_number_required', 'No')
         platform_fee, fee_currency = calculate_platform_fee(country, bfsi_tier, personalize_load, human_agents, ai_module, smart_cpaas, increased_tps)
         currency_symbol = COUNTRY_CURRENCY.get(country, '$')
         # Always update session['inputs'] with latest form data
@@ -513,10 +582,32 @@ def index():
             'num_ai_workspace_faq_price': num_ai_workspace_faq_price,
             # Voice notes fields
             'voice_notes_price': voice_notes_price,
-            'voice_notes_model': voice_notes_model
+            'voice_notes_model': voice_notes_model,
+            # Voice channel fields
+            'channel_type': channel_type,
+            'voice_ai_enabled': voice_ai_enabled,
+            'num_voice_journeys': num_voice_journeys,
+            'num_voice_apis': num_voice_apis,
+            'num_additional_voice_languages': num_additional_voice_languages,
+            'agent_handover_pstn': agent_handover_pstn,
+            'whatsapp_voice_platform': whatsapp_voice_platform,
+            'virtual_number_required': virtual_number_required,
+            'pstn_inbound_ai_minutes': pstn_inbound_ai_minutes,
+            'pstn_inbound_committed': pstn_inbound_committed,
+            'pstn_outbound_ai_minutes': pstn_outbound_ai_minutes,
+            'pstn_outbound_committed': pstn_outbound_committed,
+            'pstn_manual_minutes': pstn_manual_minutes,
+            'pstn_manual_committed': pstn_manual_committed,
+            'whatsapp_voice_outbound_minutes': whatsapp_voice_outbound_minutes,
+            'whatsapp_voice_inbound_minutes': whatsapp_voice_inbound_minutes,
         }
         print("DEBUG: session['inputs'] just set to:", session['inputs'], file=sys.stderr, flush=True)
-        if all(float(v) == 0.0 for v in [ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume]):
+        # Only route to bundle if all text volumes are zero AND this is not a voice-only scenario
+        total_voice_minutes = (
+            pstn_inbound_ai_minutes + pstn_outbound_ai_minutes + pstn_manual_minutes +
+            whatsapp_voice_outbound_minutes + whatsapp_voice_inbound_minutes
+        )
+        if all(float(v) == 0.0 for v in [ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume]) and channel_type != 'voice_only' and total_voice_minutes == 0:
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             return render_template('index.html', step='bundle', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
         # Suggest prices
@@ -723,7 +814,7 @@ def index():
         # Debug: Log inputs being used for calculation
         print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}", file=sys.stderr, flush=True)
         
-        # Calculate pricing results
+        # Calculate pricing results (text channels)
         try:
             results = calculate_pricing(
                 country=inputs.get('country', 'India'),
@@ -824,6 +915,14 @@ def index():
                     voice_notes_rate=float(inputs.get('voice_notes_rate', 0) or 0) if inputs.get('voice_notes_price') == 'Yes' else None
                 )
                 print(f"DEBUG: Calculation successful, results: {results}", file=sys.stderr, flush=True)
+                # Voice pricing (if selected)
+                channel_type = inputs.get('channel_type', 'text_only')
+                has_text_ai = inputs.get('ai_module', 'NA') == 'Yes'
+                if channel_type in ['voice_only', 'text_voice']:
+                    from calculator import calculate_voice_pricing
+                    voice_pricing = calculate_voice_pricing(inputs, country=inputs.get('country', 'India'), has_text_ai=has_text_ai)
+                    session['voice_pricing'] = voice_pricing
+                    results['voice_pricing'] = voice_pricing
             except Exception as e:
                 print(f"DEBUG: Calculation failed with error: {e}", file=sys.stderr, flush=True)
                 flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
@@ -1091,6 +1190,30 @@ def index():
             voice_notes_model=inputs.get('voice_notes_model', ''),
             voice_notes_rate=float(inputs.get('voice_notes_rate', 0)) if inputs.get('voice_notes_rate') else None,
         )
+        # Voice channel fields (if present)
+        analytics_kwargs['channel_type'] = inputs.get('channel_type')
+        try:
+            vp = results.get('voice_pricing', None)
+            if vp:
+                analytics_kwargs.update({
+                    'voice_mandays': vp.get('voice_mandays'),
+                    'voice_dev_cost': vp.get('voice_dev_cost'),
+                    'voice_platform_fee': vp.get('voice_platform_fee'),
+                    'whatsapp_setup_fee': vp.get('whatsapp_setup_fee'),
+                    'voice_cost_pstn_inbound': vp.get('calling_costs', {}).get('pstn_inbound_ai'),
+                    'voice_cost_pstn_outbound': vp.get('calling_costs', {}).get('pstn_outbound_ai'),
+                    'voice_cost_pstn_manual': vp.get('calling_costs', {}).get('pstn_manual_c2c'),
+                    'voice_cost_wa_outbound': vp.get('calling_costs', {}).get('whatsapp_voice_outbound'),
+                    'voice_cost_wa_inbound': vp.get('calling_costs', {}).get('whatsapp_voice_inbound'),
+                    'voice_total_cost': vp.get('total_voice_cost'),
+                })
+                # Minutes from inputs
+                for key in [
+                    'pstn_inbound_ai_minutes','pstn_inbound_committed','pstn_outbound_ai_minutes','pstn_outbound_committed',
+                    'pstn_manual_minutes','pstn_manual_committed','whatsapp_voice_outbound_minutes','whatsapp_voice_inbound_minutes']:
+                    analytics_kwargs[key] = float(inputs.get(key, 0) or 0)
+        except Exception as _:
+            pass
         analytics_kwargs['calculation_id'] = session.get('calculation_id')
         # Set calculation_route for analytics
         if all(float(inputs.get(v, 0)) == 0.0 for v in ['ai_volume', 'advanced_volume', 'basic_marketing_volume', 'basic_utility_volume']) and float(inputs.get('committed_amount', 0) or 0) > 0:
@@ -1815,6 +1938,36 @@ def analytics():
                     'all_analytics': all_analytics,
                     'stats_by_region': stats_by_region,
                 }
+                # --- Voice overview analytics ---
+                try:
+                    voice_q = Analytics.query.filter(Analytics.channel_type.in_(['voice_only','text_voice']))
+                    voice_count = voice_q.count()
+                    def _agg(col, func_name='avg'):
+                        fn = getattr(func, func_name)
+                        val = db.session.query(fn(col)).scalar()
+                        try:
+                            return float(val) if val is not None else 0.0
+                        except Exception:
+                            return 0.0
+                    voice_overview = {
+                        'calculations': voice_count,
+                        'avg_total_cost': _agg(Analytics.voice_total_cost, 'avg'),
+                        'avg_mandays': _agg(Analytics.voice_mandays, 'avg'),
+                        'avg_platform_fee': _agg(Analytics.voice_platform_fee, 'avg'),
+                        'avg_setup_fee': _agg(Analytics.whatsapp_setup_fee, 'avg'),
+                        'sum_wa_outbound_minutes': _agg(Analytics.whatsapp_voice_outbound_minutes, 'sum'),
+                        'sum_wa_inbound_minutes': _agg(Analytics.whatsapp_voice_inbound_minutes, 'sum'),
+                        'sum_pstn_inbound_minutes': _agg(Analytics.pstn_inbound_ai_minutes, 'sum'),
+                        'sum_pstn_outbound_minutes': _agg(Analytics.pstn_outbound_ai_minutes, 'sum'),
+                        'sum_pstn_manual_minutes': _agg(Analytics.pstn_manual_minutes, 'sum'),
+                        'channel_type_counts': {
+                            'voice_only': Analytics.query.filter_by(channel_type='voice_only').count(),
+                            'text_voice': Analytics.query.filter_by(channel_type='text_voice').count(),
+                        }
+                    }
+                    analytics['voice_overview'] = voice_overview
+                except Exception as _:
+                    analytics['voice_overview'] = None
                 # --- Advanced Analytics Calculations ---
                 # 1. Discount calculations (by type and platform fee)
                 def get_discount_stats(price_field, rate_card_field):

@@ -374,3 +374,106 @@ PLATFORM_PRICING_GUIDANCE = {
         'Smart_CPaaS': 200,
     },
 } 
+
+# =============================================================================
+# VOICE CHANNEL PRICING CONFIGURATION (India-first)
+# =============================================================================
+
+# Voice Bot Development Effort (Mandays)
+VOICE_DEV_EFFORT = {
+    'journey': 3,
+    'api_integration': 1,
+    'additional_language_multiplier': 0.30,
+    'agent_handover_pstn_knowlarity': 1,
+    'agent_handover_pstn_other': 5,
+    'whatsapp_voice_knowlarity': 1,
+    'whatsapp_voice_other': 5,
+    'whatsapp_voice_setup_fee_other': 50000,
+}
+
+# Voice Platform Fees (INR)
+VOICE_PLATFORM_FEES = {
+    'voice_ai': 150000,
+    'knowlarity_platform': 25000,
+    'virtual_number': 500,
+}
+
+# PSTN Calling Charges (INR per minute)
+PSTN_CALLING_CHARGES = {
+    'inbound_ai': {
+        'bundled': 4.5,
+        'overage': 6.0,
+    },
+    'outbound_ai': {
+        'bundled': 4.8,
+        'overage': 6.0,
+    },
+    'manual_c2c': {
+        'bundled': 0.55,
+        'overage': 0.6,
+    },
+}
+
+# WhatsApp Voice Calling Charges (INR per minute) - Volume-based tiers
+WHATSAPP_VOICE_CHARGES = {
+    'India': [
+        {
+            'min_minutes': 0,
+            'max_minutes': 50000,
+            'outbound': 0.49,
+            'inbound': 0.06,
+            'meta_rate': 0.3885,
+            'gupshup_margin_pct': 25,
+        },
+        {
+            'min_minutes': 50001,
+            'max_minutes': 250000,
+            'outbound': 0.35,
+            'inbound': 0.05,
+            'meta_rate': 0.2785,
+            'gupshup_margin_pct': 25,
+        },
+        {
+            'min_minutes': 250001,
+            'max_minutes': 1000000,
+            'outbound': 0.22,
+            'inbound': 0.04,
+            'meta_rate': 0.1759,
+            'gupshup_margin_pct': 25,
+        },
+        {
+            'min_minutes': 1000001,
+            'max_minutes': 2500000,
+            'outbound': 0.16,
+            'inbound': 0.03,
+            'meta_rate': 0.1319,
+            'gupshup_margin_pct': 25,
+        },
+        {
+            'min_minutes': 2500001,
+            'max_minutes': 5000000,
+            'outbound': 0.11,
+            'inbound': 0.02,
+            'meta_rate': 0.0880,
+            'gupshup_margin_pct': 25,
+        },
+        {
+            'min_minutes': 5000001,
+            'max_minutes': float('inf'),
+            'outbound': 0.07,
+            'inbound': 0.02,
+            'meta_rate': 0.0586,
+            'gupshup_margin_pct': 25,
+        },
+    ],
+}
+
+def get_whatsapp_voice_rate(country, minutes, call_type='outbound'):
+    if country != 'India':
+        tier = WHATSAPP_VOICE_CHARGES['India'][-1]
+        return tier[call_type]
+    tiers = WHATSAPP_VOICE_CHARGES.get(country, WHATSAPP_VOICE_CHARGES['India'])
+    for tier in tiers:
+        if tier['min_minutes'] <= minutes <= tier['max_minutes']:
+            return tier[call_type]
+    return tiers[-1][call_type]

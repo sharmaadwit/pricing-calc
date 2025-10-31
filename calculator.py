@@ -9,7 +9,17 @@
 # --- Cost Table by Country ---
 # Meta costs for each country and message type.
 
-from pricing_config import meta_costs_table, COUNTRY_MANDAY_RATES, ACTIVITY_MANDAYS, committed_amount_slabs
+from pricing_config import (
+    meta_costs_table,
+    COUNTRY_MANDAY_RATES,
+    ACTIVITY_MANDAYS,
+    committed_amount_slabs,
+    VOICE_DEV_EFFORT,
+    VOICE_PLATFORM_FEES,
+    PSTN_CALLING_CHARGES,
+    WHATSAPP_VOICE_CHARGES,
+    get_whatsapp_voice_rate,
+)
 import sys
 
 # New function to map volume to committed amount slab rate
@@ -372,3 +382,140 @@ def get_committed_amount_rates(country, committed_amount):
 
 def get_committed_amount_rates_india(committed_amount):
     return get_committed_amount_rates('India', committed_amount)
+
+# =============================================================================
+# Voice Channel Helpers
+# =============================================================================
+
+def calculate_voice_dev_mandays(inputs):
+    """
+    Calculate total mandays for voice development work based on inputs and VOICE_DEV_EFFORT.
+    """
+    total_mandays = 0
+    try:
+        num_voice_journeys = int(inputs.get('num_voice_journeys', 0) or 0)
+        total_mandays += num_voice_journeys * VOICE_DEV_EFFORT['journey']
+    except Exception:
+        pass
+    try:
+        num_voice_apis = int(inputs.get('num_voice_apis', 0) or 0)
+        total_mandays += num_voice_apis * VOICE_DEV_EFFORT['api_integration']
+    except Exception:
+        pass
+    try:
+        num_additional_languages = int(inputs.get('num_additional_voice_languages', 0) or 0)
+        if num_additional_languages > 0:
+            base_effort = total_mandays
+            total_mandays += base_effort * VOICE_DEV_EFFORT['additional_language_multiplier'] * num_additional_languages
+    except Exception:
+        pass
+    agent_handover_pstn = inputs.get('agent_handover_pstn', 'None')
+    if agent_handover_pstn == 'Knowlarity':
+        total_mandays += VOICE_DEV_EFFORT['agent_handover_pstn_knowlarity']
+    elif agent_handover_pstn == 'Other':
+        total_mandays += VOICE_DEV_EFFORT['agent_handover_pstn_other']
+    whatsapp_voice_platform = inputs.get('whatsapp_voice_platform', 'None')
+    if whatsapp_voice_platform == 'Knowlarity':
+        total_mandays += VOICE_DEV_EFFORT['whatsapp_voice_knowlarity']
+    elif whatsapp_voice_platform == 'Other':
+        total_mandays += VOICE_DEV_EFFORT['whatsapp_voice_other']
+    return total_mandays
+
+def calculate_voice_platform_fee(inputs, has_text_ai=False):
+    """
+    Calculate voice platform fee components in INR.
+    """
+    total_fee = 0.0
+    if inputs.get('voice_ai_enabled', 'No') == 'Yes':
+        if not has_text_ai:
+            total_fee += VOICE_PLATFORM_FEES['voice_ai']
+    if inputs.get('agent_handover_pstn', 'None') == 'Knowlarity':
+        total_fee += VOICE_PLATFORM_FEES['knowlarity_platform']
+    if inputs.get('virtual_number_required', 'No') == 'Yes':
+        total_fee += VOICE_PLATFORM_FEES['virtual_number']
+    return total_fee
+
+def _parse_float(val):
+    try:
+        return float(str(val).replace(',', '')) if val not in (None, '') else 0.0
+    except Exception:
+        return 0.0
+
+def calculate_voice_calling_costs(inputs, country='India'):
+    """
+    Calculate PSTN and WhatsApp voice calling costs as per configured rates.
+    Returns a dict with line items and total.
+    """
+    costs = {
+        'pstn_inbound_ai': 0.0,
+        'pstn_outbound_ai': 0.0,
+        'pstn_manual_c2c': 0.0,
+        'whatsapp_voice_outbound': 0.0,
+        'whatsapp_voice_inbound': 0.0,
+        'total': 0.0,
+    }
+    # PSTN bundled vs overage
+    inbound_min = _parse_float(inputs.get('pstn_inbound_ai_minutes', 0))
+    inbound_commit = _parse_float(inputs.get('pstn_inbound_committed', 0))
+    outbound_min = _parse_float(inputs.get('pstn_outbound_ai_minutes', 0))
+    outbound_commit = _parse_float(inputs.get('pstn_outbound_committed', 0))
+    manual_min = _parse_float(inputs.get('pstn_manual_minutes', 0))
+    manual_commit = _parse_float(inputs.get('pstn_manual_committed', 0))
+    if inbound_min > 0:
+        bundled = min(inbound_min, inbound_commit)
+        overage = max(0.0, inbound_min - inbound_commit)
+        costs['pstn_inbound_ai'] = bundled * PSTN_CALLING_CHARGES['inbound_ai']['bundled'] + overage * PSTN_CALLING_CHARGES['inbound_ai']['overage']
+    if outbound_min > 0:
+        bundled = min(outbound_min, outbound_commit)
+        overage = max(0.0, outbound_min - outbound_commit)
+        costs['pstn_outbound_ai'] = bundled * PSTN_CALLING_CHARGES['outbound_ai']['bundled'] + overage * PSTN_CALLING_CHARGES['outbound_ai']['overage']
+    if manual_min > 0:
+        bundled = min(manual_min, manual_commit)
+        overage = max(0.0, manual_min - manual_commit)
+        costs['pstn_manual_c2c'] = bundled * PSTN_CALLING_CHARGES['manual_c2c']['bundled'] + overage * PSTN_CALLING_CHARGES['manual_c2c']['overage']
+    # WhatsApp Voice
+    wa_out_min = _parse_float(inputs.get('whatsapp_voice_outbound_minutes', 0))
+    wa_in_min = _parse_float(inputs.get('whatsapp_voice_inbound_minutes', 0))
+    total_wa_min = wa_out_min + wa_in_min
+    if wa_out_min > 0:
+        outbound_rate = get_whatsapp_voice_rate(country, total_wa_min, 'outbound')
+        costs['whatsapp_voice_outbound'] = wa_out_min * outbound_rate
+    if wa_in_min > 0:
+        inbound_rate = get_whatsapp_voice_rate(country, total_wa_min, 'inbound')
+        costs['whatsapp_voice_inbound'] = wa_in_min * inbound_rate
+    costs['total'] = (
+        costs['pstn_inbound_ai']
+        + costs['pstn_outbound_ai']
+        + costs['pstn_manual_c2c']
+        + costs['whatsapp_voice_outbound']
+        + costs['whatsapp_voice_inbound']
+    )
+    return costs
+
+def calculate_voice_pricing(inputs, country='India', has_text_ai=False):
+    """
+    High-level aggregator for voice pricing: development, platform, calling.
+    Returns a dict with mandays, cost breakdown and total.
+    """
+    voice_mandays = calculate_voice_dev_mandays(inputs)
+    # Use custom_ai rate for voice work when available, else bot_ui
+    rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
+    if isinstance(rates.get('custom_ai'), dict):
+        # Country like LATAM has per dev_location dict; default to country key or any
+        dev_location = (inputs.get('dev_location') or 'India').strip()
+        custom_ai_rate = rates['custom_ai'].get(dev_location, list(rates['custom_ai'].values())[0])
+    else:
+        custom_ai_rate = rates.get('custom_ai', rates.get('bot_ui', 0))
+    voice_dev_cost = voice_mandays * float(custom_ai_rate or 0)
+    whatsapp_setup_fee = VOICE_DEV_EFFORT['whatsapp_voice_setup_fee_other'] if inputs.get('whatsapp_voice_platform', 'None') == 'Other' else 0
+    voice_platform_fee = calculate_voice_platform_fee(inputs, has_text_ai)
+    calling_costs = calculate_voice_calling_costs(inputs, country)
+    total_voice_cost = voice_dev_cost + whatsapp_setup_fee + voice_platform_fee + calling_costs['total']
+    return {
+        'voice_mandays': voice_mandays,
+        'voice_dev_cost': voice_dev_cost,
+        'whatsapp_setup_fee': whatsapp_setup_fee,
+        'voice_platform_fee': voice_platform_fee,
+        'calling_costs': calling_costs,
+        'total_voice_cost': total_voice_cost,
+    }

@@ -440,6 +440,15 @@
                 <option value="APAC" {% if inputs and inputs.country == 'APAC' %}selected{% endif %}>APAC</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="channel_type">Channel Type:</label>
+                    <select name="channel_type" id="channel_type">
+                        <option value="text_only" {% if inputs and inputs.channel_type == 'text_only' %}selected{% endif %}>Text Only</option>
+                        <option value="voice_only" {% if inputs and inputs.channel_type == 'voice_only' %}selected{% endif %}>Voice Only</option>
+                        <option value="text_voice" {% if inputs and inputs.channel_type == 'text_voice' %}selected{% endif %}>Text + Voice</option>
+                    </select>
+                    <div class="help-text">Choose whether to price Text, Voice, or both.</div>
+                </div>
                 <div id="region-dropdown-container" class="form-group" style="display: none;">
             <label for="region">Region:</label>
             <select name="region" id="region-select" required>
@@ -546,8 +555,8 @@
         };
         </script>
         <!-- Section 1: One Time Dev Charges -->
-                <div class="form-section">
-                    <h2>One Time Dev Charges</h2>
+                <div class="form-section" id="text-dev-section">
+                    <h2>One time dev charges - Text only</h2>
                     <div class="form-group">
                         <label for="onboarding_price">Onboarding Required?:</label>
                         <select name="onboarding_price" id="onboarding_price">
@@ -627,7 +636,7 @@
                     
                 </div>
                 <!-- Section 2: Volume Estimation -->
-                <div class="form-section">
+                <div class="form-section" id="text-channel-section">
                     <h2>Volume Estimation</h2>
                     <div class="form-group">
                         <label for="ai_volume">AI Message Volume (per month):</label>
@@ -651,6 +660,87 @@
                         <label for="basic_utility_volume">Basic Utility/Authentication Message Volume (per month):</label>
                         <input type="text" name="basic_utility_volume" id="basic_utility_volume" class="comma-number" value="{{ inputs.get('basic_utility_volume', '') }}">
                         <div class="help-text">Enter the expected number of basic utility/authentication messages per month</div>
+                    </div>
+                </div>
+                <!-- Voice Channel Section -->
+                <div class="form-section" id="voice-channel-section" style="display: none;">
+                    <h2>Voice Channel Configuration</h2>
+                    <div class="form-group">
+                        <label for="voice_ai_enabled">Voice AI Enabled:</label>
+                        <select name="voice_ai_enabled" id="voice_ai_enabled">
+                            <option value="No" {% if inputs and inputs.voice_ai_enabled == 'No' %}selected{% endif %}>No</option>
+                            <option value="Yes" {% if inputs and inputs.voice_ai_enabled == 'Yes' %}selected{% endif %}>Yes</option>
+                        </select>
+                        <div class="help-text">If Text AI is selected in Platform Fee, Voice AI platform fee is waived.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="num_voice_journeys">Number of Voice Journeys:</label>
+                        <input type="number" name="num_voice_journeys" id="num_voice_journeys" min="0" value="{{ inputs.get('num_voice_journeys', '0') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="num_voice_apis">Number of Voice API Integrations:</label>
+                        <input type="number" name="num_voice_apis" id="num_voice_apis" min="0" value="{{ inputs.get('num_voice_apis', '0') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="num_additional_voice_languages">Additional Languages (above Hindi/English):</label>
+                        <input type="number" name="num_additional_voice_languages" id="num_additional_voice_languages" min="0" value="{{ inputs.get('num_additional_voice_languages', '0') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="agent_handover_pstn">Agent Handover - PSTN:</label>
+                        <select name="agent_handover_pstn" id="agent_handover_pstn">
+                            <option value="None" {% if inputs and inputs.agent_handover_pstn == 'None' %}selected{% endif %}>None</option>
+                            <option value="Knowlarity" {% if inputs and inputs.agent_handover_pstn == 'Knowlarity' %}selected{% endif %}>Knowlarity</option>
+                            <option value="Other" {% if inputs and inputs.agent_handover_pstn == 'Other' %}selected{% endif %}>Other Platform</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="whatsapp_voice_platform">WhatsApp Voice Platform:</label>
+                        <select name="whatsapp_voice_platform" id="whatsapp_voice_platform">
+                            <option value="None" {% if inputs and inputs.whatsapp_voice_platform == 'None' %}selected{% endif %}>None</option>
+                            <option value="Knowlarity" {% if inputs and inputs.whatsapp_voice_platform == 'Knowlarity' %}selected{% endif %}>Knowlarity</option>
+                            <option value="Other" {% if inputs and inputs.whatsapp_voice_platform == 'Other' %}selected{% endif %}>Other Platform</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="virtual_number_required">Virtual Number Required:</label>
+                        <select name="virtual_number_required" id="virtual_number_required">
+                            <option value="No" {% if inputs and inputs.virtual_number_required == 'No' %}selected{% endif %}>No</option>
+                            <option value="Yes" {% if inputs and inputs.virtual_number_required == 'Yes' %}selected{% endif %}>Yes</option>
+                        </select>
+                    </div>
+                    <h3>PSTN Calling (per month)</h3>
+                    <div class="form-group">
+                        <label for="pstn_inbound_ai_minutes">PSTN Inbound AI Minutes:</label>
+                        <input type="text" name="pstn_inbound_ai_minutes" id="pstn_inbound_ai_minutes" class="comma-number" value="{{ inputs.get('pstn_inbound_ai_minutes', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="pstn_inbound_committed">PSTN Inbound Committed Minutes:</label>
+                        <input type="text" name="pstn_inbound_committed" id="pstn_inbound_committed" class="comma-number" value="{{ inputs.get('pstn_inbound_committed', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="pstn_outbound_ai_minutes">PSTN Outbound AI Minutes:</label>
+                        <input type="text" name="pstn_outbound_ai_minutes" id="pstn_outbound_ai_minutes" class="comma-number" value="{{ inputs.get('pstn_outbound_ai_minutes', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="pstn_outbound_committed">PSTN Outbound Committed Minutes:</label>
+                        <input type="text" name="pstn_outbound_committed" id="pstn_outbound_committed" class="comma-number" value="{{ inputs.get('pstn_outbound_committed', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="pstn_manual_minutes">PSTN Manual C2C (Human Agent) Minutes:</label>
+                        <input type="text" name="pstn_manual_minutes" id="pstn_manual_minutes" class="comma-number" value="{{ inputs.get('pstn_manual_minutes', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="pstn_manual_committed">PSTN Manual Committed Minutes:</label>
+                        <input type="text" name="pstn_manual_committed" id="pstn_manual_committed" class="comma-number" value="{{ inputs.get('pstn_manual_committed', '') }}">
+                    </div>
+                    <h3>WhatsApp Voice (per month)</h3>
+                    <div class="form-group">
+                        <label for="whatsapp_voice_outbound_minutes">WhatsApp Voice Outbound Minutes:</label>
+                        <input type="text" name="whatsapp_voice_outbound_minutes" id="whatsapp_voice_outbound_minutes" class="comma-number" value="{{ inputs.get('whatsapp_voice_outbound_minutes', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="whatsapp_voice_inbound_minutes">WhatsApp Voice Inbound Minutes:</label>
+                        <input type="text" name="whatsapp_voice_inbound_minutes" id="whatsapp_voice_inbound_minutes" class="comma-number" value="{{ inputs.get('whatsapp_voice_inbound_minutes', '') }}">
                     </div>
                 </div>
                 <!-- Section 3: Monthly Fixed Platform Fee Calculation -->
@@ -694,7 +784,7 @@
                         <div class="help-text">Access to Workspace Configuration and data retraining screens</div>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="form-group" id="smart_cpaas_group">
                         <label for="smart_cpaas">Smart CPaaS:</label>
                         <select name="smart_cpaas" id="smart_cpaas">
                             <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
@@ -713,7 +803,7 @@
                         <div class="help-text">Required to support high volume campaigns</div>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="form-group" id="human_agents_group">
                         <label for="human_agents">Number of Human Agents (Agent Assist):</label>
                         <select name="human_agents" id="human_agents">
                             <option value="NA" {% if inputs and inputs.human_agents == 'NA' %}selected{% endif %}><20 already part of standard platform fee</option>
@@ -728,9 +818,11 @@
                     </div>
                 </div>
             </form>
+    <script id="min-fees-data" type="application/json">{{ min_fees | tojson | safe }}</script>
     <script>
-    // Make backend config available to JS
-    const MIN_FEES = {{ min_fees | tojson | safe }};
+    // Make backend config available to JS via JSON script tag to avoid template linting issues
+    // eslint-disable-next-line
+    const MIN_FEES = JSON.parse(document.getElementById('min-fees-data').textContent || '{}');
     function updateMinPlatformFee() {
         var country = document.getElementById('country-select').value;
         var minFee = MIN_FEES[country] || MIN_FEES['APAC'];
@@ -758,6 +850,85 @@
         document.querySelectorAll('.comma-number').forEach(function(input) {
             input.value = input.value.replace(/,/g, '');
         });
+        // Voice supported only for India
+        var countryEl = document.getElementById('country-select');
+        var chanEl = document.getElementById('channel_type');
+        var countryVal = countryEl ? countryEl.value : 'India';
+        var chanVal = chanEl ? chanEl.value : 'text_only';
+        if ((chanVal === 'voice_only' || chanVal === 'text_voice') && countryVal !== 'India') {
+            alert('Voice is currently supported only for India. Please change country to India or select Text Only.');
+            e.preventDefault();
+            return false;
+        }
+        // Enforce AI Module selection for voice flows
+        var channelSelEl = document.getElementById('channel_type');
+        var aiModuleEl = document.getElementById('ai_module');
+        var channelVal = channelSelEl ? channelSelEl.value : 'text_only';
+        if ((channelVal === 'voice_only' || channelVal === 'text_voice') && aiModuleEl && aiModuleEl.value !== 'Yes') {
+            alert('For Voice or Text + Voice, "AI Module" must be set to Yes.');
+            aiModuleEl.focus();
+            e.preventDefault();
+            return false;
+        }
+    });
+    // Channel toggle for Text vs Voice fields
+    function enforceVoiceCountryConstraint() {
+        var countrySel = document.getElementById('country-select');
+        var chanSel = document.getElementById('channel_type');
+        if (!countrySel || !chanSel) return;
+        var country = countrySel.value;
+        var voiceOnlyOpt = Array.from(chanSel.options).find(function(o){ return o.value === 'voice_only'; });
+        var textVoiceOpt = Array.from(chanSel.options).find(function(o){ return o.value === 'text_voice'; });
+        if (country !== 'India') {
+            if (voiceOnlyOpt) voiceOnlyOpt.disabled = true;
+            if (textVoiceOpt) textVoiceOpt.disabled = true;
+            if (chanSel.value === 'voice_only' || chanSel.value === 'text_voice') {
+                chanSel.value = 'text_only';
+            }
+        } else {
+            if (voiceOnlyOpt) voiceOnlyOpt.disabled = false;
+            if (textVoiceOpt) textVoiceOpt.disabled = false;
+        }
+    }
+    function toggleChannelFields() {
+        var channel = document.getElementById('channel_type') ? document.getElementById('channel_type').value : 'text_only';
+        var textSection = document.getElementById('text-channel-section');
+        var voiceSection = document.getElementById('voice-channel-section');
+        var aiModule = document.getElementById('ai_module');
+        var textDevSection = document.getElementById('text-dev-section');
+        var smartCpaasGroup = document.getElementById('smart_cpaas_group');
+        var humanAgentsGroup = document.getElementById('human_agents_group');
+        enforceVoiceCountryConstraint();
+        if (!textSection || !voiceSection) return;
+        if (channel === 'text_only') {
+            textSection.style.display = '';
+            voiceSection.style.display = 'none';
+            if (aiModule) { aiModule.disabled = false; }
+            if (textDevSection) { textDevSection.style.display = ''; }
+            if (smartCpaasGroup) { smartCpaasGroup.style.display = ''; }
+            if (humanAgentsGroup) { humanAgentsGroup.style.display = ''; }
+        } else if (channel === 'voice_only') {
+            textSection.style.display = 'none';
+            voiceSection.style.display = '';
+            if (aiModule) { aiModule.value = 'Yes'; aiModule.disabled = true; }
+            if (textDevSection) { textDevSection.style.display = 'none'; }
+            if (smartCpaasGroup) { smartCpaasGroup.style.display = 'none'; }
+            if (humanAgentsGroup) { humanAgentsGroup.style.display = 'none'; }
+        } else {
+            textSection.style.display = '';
+            voiceSection.style.display = '';
+            if (aiModule) { aiModule.value = 'Yes'; aiModule.disabled = true; }
+            if (textDevSection) { textDevSection.style.display = ''; }
+            if (smartCpaasGroup) { smartCpaasGroup.style.display = ''; }
+            if (humanAgentsGroup) { humanAgentsGroup.style.display = ''; }
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var channelSel = document.getElementById('channel_type');
+        var countrySel = document.getElementById('country-select');
+        if (channelSel) channelSel.addEventListener('change', toggleChannelFields);
+        if (countrySel) countrySel.addEventListener('change', toggleChannelFields);
+        toggleChannelFields();
     });
     </script>
     {% endif %}
@@ -963,6 +1134,72 @@
               </tbody>
             </table>
           </div>
+          {% if results and results.voice_pricing %}
+          <!-- Voice Channel Pricing Card -->
+          <div style="background: #fffaf2; border: 1.5px solid #ffd89a; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Voice Channel Pricing</h3>
+            <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
+              <tr>
+                <td><b>Voice Development ({{ results.voice_pricing.voice_mandays }} mandays)</b></td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.voice_dev_cost|int }}</td>
+              </tr>
+              {% if results.voice_pricing.whatsapp_setup_fee and results.voice_pricing.whatsapp_setup_fee > 0 %}
+              <tr>
+                <td><b>WhatsApp Setup Fee</b></td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.whatsapp_setup_fee|int }}</td>
+              </tr>
+              {% endif %}
+              <tr>
+                <td><b>Voice Platform Fee</b></td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.voice_platform_fee|int }}</td>
+              </tr>
+              <tr>
+                <td><b>PSTN Inbound AI</b></td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.calling_costs.pstn_inbound_ai|int }}</td>
+              </tr>
+              <tr>
+                <td><b>PSTN Outbound AI</b></td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.calling_costs.pstn_outbound_ai|int }}</td>
+              </tr>
+              <tr>
+                <td><b>PSTN Manual C2C</b></td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.calling_costs.pstn_manual_c2c|int }}</td>
+              </tr>
+              <tr>
+                <td><b>WhatsApp Voice Outbound</b></td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.calling_costs.whatsapp_voice_outbound|int }}</td>
+              </tr>
+              <tr>
+                <td><b>WhatsApp Voice Inbound</b></td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.calling_costs.whatsapp_voice_inbound|int }}</td>
+              </tr>
+              <tr style="background: #fff4dc; border-top: 2px solid #ffcc80;">
+                <td><b>Total Voice Cost</b></td>
+                <td style="text-align:right; font-weight: bold; font-size: 1.2em;">{{ currency_symbol }}{{ results.voice_pricing.total_voice_cost|int }}</td>
+              </tr>
+            </table>
+          </div>
+          <!-- Combined Totals Card -->
+          <div style="background: #eef7ff; border: 1.5px solid #b3d7ff; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Combined Totals</h3>
+            {% set text_total = results.revenue|default(0) %}
+            {% set voice_total = results.voice_pricing.total_voice_cost|default(0) %}
+            <div style="display:flex; justify-content: space-between;">
+              <div>Text Subtotal</div>
+              <div>{{ currency_symbol }}{{ text_total|int }}</div>
+            </div>
+            <div style="display:flex; justify-content: space-between;">
+              <div>Voice Subtotal</div>
+              <div>{{ currency_symbol }}{{ voice_total|int }}</div>
+            </div>
+            <hr>
+            <div style="display:flex; justify-content: space-between; font-weight:bold; font-size:1.1em;">
+              <div>Combined Invoice</div>
+              <div>{{ currency_symbol }}{{ (text_total + voice_total)|int }}</div>
+            </div>
+            <div style="margin-top:6px; color:#6c757d; font-size:0.92em;">Margin shown above pertains to text channels only.</div>
+          </div>
+          {% endif %}
           <!-- Inclusions Card -->
           <div style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <h3 style="margin-top:0;">Inclusions</h3>
@@ -1227,7 +1464,7 @@
             {% endif %}
           </div>
         </div>
-        <form method="get" action="/" style="margin-top: 32px; text-align: center;">
+        <form method="get" action="/start-over" style="margin-top: 32px; text-align: center;">
             <input type="submit" value="Start Over">
         </form>
     {% endif %}

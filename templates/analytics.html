@@ -111,6 +111,27 @@
     </li>
   </ul>
 
+  {% if analytics.voice_overview %}
+  <h2>Voice Channel Overview</h2>
+  <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
+    <tbody>
+      <tr><td><b>Voice Calculations</b></td><td style="text-align:right;">{{ analytics.voice_overview.calculations }}</td></tr>
+      <tr><td><b>Avg Voice Total Cost</b></td><td style="text-align:right;">{{ currency_symbol }}{{ fmt_num(analytics.voice_overview.avg_total_cost) }}</td></tr>
+      <tr><td><b>Avg Voice Mandays</b></td><td style="text-align:right;">{{ fmt_num(analytics.voice_overview.avg_mandays) }}</td></tr>
+      <tr><td><b>Avg Voice Platform Fee</b></td><td style="text-align:right;">{{ currency_symbol }}{{ fmt_num(analytics.voice_overview.avg_platform_fee) }}</td></tr>
+      <tr><td><b>Avg WhatsApp Setup Fee</b></td><td style="text-align:right;">{{ currency_symbol }}{{ fmt_num(analytics.voice_overview.avg_setup_fee) }}</td></tr>
+      <tr><td><b>WA Outbound Minutes (Sum)</b></td><td style="text-align:right;">{{ fmt_num(analytics.voice_overview.sum_wa_outbound_minutes) }}</td></tr>
+      <tr><td><b>WA Inbound Minutes (Sum)</b></td><td style="text-align:right;">{{ fmt_num(analytics.voice_overview.sum_wa_inbound_minutes) }}</td></tr>
+      <tr><td><b>PSTN Inbound Minutes (Sum)</b></td><td style="text-align:right;">{{ fmt_num(analytics.voice_overview.sum_pstn_inbound_minutes) }}</td></tr>
+      <tr><td><b>PSTN Outbound Minutes (Sum)</b></td><td style="text-align:right;">{{ fmt_num(analytics.voice_overview.sum_pstn_outbound_minutes) }}</td></tr>
+      <tr><td><b>PSTN Manual Minutes (Sum)</b></td><td style="text-align:right;">{{ fmt_num(analytics.voice_overview.sum_pstn_manual_minutes) }}</td></tr>
+      <tr><td><b>Channel Types</b></td>
+          <td style="text-align:right;">Voice Only: {{ analytics.voice_overview.channel_type_counts.voice_only }}, Text + Voice: {{ analytics.voice_overview.channel_type_counts.text_voice }}</td>
+      </tr>
+    </tbody>
+  </table>
+  {% endif %}
+
   {% if authorized and analytics.get('stats_by_region') %}
     {% for country, region_map in analytics.stats_by_region.items() %}
       <h2>Country: {{ country }}</h2>

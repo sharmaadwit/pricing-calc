@@ -75,6 +75,14 @@ A modern, Flask-based pricing calculator for messaging services with advanced UI
    - Main Calculator: `http://localhost:5000/`
    - Analytics Dashboard: `http://localhost:5000/analyticsv2`
 
+### Database Migrations
+
+If you pull a version that adds or modifies database columns, run:
+```bash
+flask db upgrade
+```
+This repository includes Alembic migrations under `migrations/versions/`.
+
 ## 📊 Analytics Automation
 
 ### Automated Daily Updates
@@ -143,6 +151,7 @@ python3 scripts/update_analytics_daily.py
 3. **Results Step**
    - **Volume Route Analysis** - Pay-per-use breakdown
    - **Committed Amount Route Analysis** - Bundle options comparison
+   - **Voice Channel Pricing** - If Voice is selected (India only), a dedicated card lists Voice development, platform, PSTN and WhatsApp costs, plus a Combined Totals summary
    - **Required Amount Analysis** - What you actually need
    - **Platform Fee Information** - Transparent fee structure
 
@@ -172,6 +181,15 @@ Comprehensive dashboard featuring:
 - PostgreSQL database (primary)
 - `analytics.csv` (exported data)
 - Real-time summary statistics
+
+### Voice Channel Analytics (New)
+
+The analytics now include Voice channel (India-only) metrics:
+- Voice calculations (count) and channel type split (Voice Only vs Text + Voice)
+- Average Voice total cost, mandays, platform fee, WhatsApp setup fee
+- Sum of WhatsApp Voice minutes (outbound/inbound) and PSTN minutes (inbound/outbound/manual)
+
+These are persisted in the `analytics` table via a migration (see Migrations section).
 
 ## ⚙️ Configuration
 
@@ -246,6 +264,12 @@ python3 app.py
 2. Check database server status
 3. Ensure credentials are correct
 
+#### Alembic Migration Errors
+If you see missing `down_revision` or similar errors:
+1. Ensure you pulled all `migrations/versions/*` files
+2. Run `flask db current` to inspect current head
+3. Run `flask db upgrade` again; if the error mentions a specific revision id, verify the `down_revision` chain in the new migration
+
 #### Analytics Not Updating
 1. Check cron service status:
    ```bash
@@ -310,6 +334,15 @@ pricing-calc/
 [Your License Here]
 
 ## 🆕 Recent Updates
+### v2.1.0 - Voice Channel (India) + Analytics Updates
+- 🗣️ Voice channel pricing (India-only) via new UI section and combined totals on Results page
+- 🔒 Enforced AI Module = Yes for Voice or Text+Voice
+- 🌏 Voice disabled for non-India countries (UI and backend)
+- 🧹 New Start Over route `/start-over` that reliably clears calculation session state
+- 🧾 Analytics persistence for Voice: mandays, costs, minutes, platform/setup fees
+- 📊 Analytics dashboard: new Voice Channel Overview section
+- 🗃️ Migration: `add_voice_fields_to_analytics` (run `flask db upgrade`)
+
 
 ### v2.0.0 - Major UI/UX Overhaul
 - ✨ Modern, responsive design with gradient backgrounds
