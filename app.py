@@ -616,6 +616,30 @@ def index():
                 return float(val) == 0.0
             except Exception:
                 return True
+        # --- Voice rate card (read-only) for Prices page ---
+        voice_rate_card = None
+        try:
+            chan = session.get('inputs', {}).get('channel_type', 'text_only')
+            if country == 'India' and chan in ['voice_only', 'text_voice']:
+                from pricing_config import PSTN_CALLING_CHARGES, get_whatsapp_voice_rate
+                wa_out = float(session['inputs'].get('whatsapp_voice_outbound_minutes', 0) or 0)
+                wa_in = float(session['inputs'].get('whatsapp_voice_inbound_minutes', 0) or 0)
+                total_wa_min = wa_out + wa_in
+                voice_rate_card = {
+                    'pstn': {
+                        'inbound': PSTN_CALLING_CHARGES['inbound_ai'],
+                        'outbound': PSTN_CALLING_CHARGES['outbound_ai'],
+                        'manual': PSTN_CALLING_CHARGES['manual_c2c'],
+                    },
+                    'whatsapp': {
+                        'outbound': get_whatsapp_voice_rate(country, total_wa_min, 'outbound'),
+                        'inbound': get_whatsapp_voice_rate(country, total_wa_min, 'inbound'),
+                        'total_minutes': total_wa_min,
+                    }
+                }
+        except Exception:
+            voice_rate_card = None
+
         suggested_prices = {
             'ai_price': get_suggested_price(country, 'ai', ai_volume) if not is_zero(ai_volume) else get_lowest_tier_price(country, 'ai'),
             'advanced_price': get_suggested_price(country, 'advanced', advanced_volume) if not is_zero(advanced_volume) else get_lowest_tier_price(country, 'advanced'),
@@ -624,7 +648,7 @@ def index():
             'voice_notes_rate': get_voice_notes_price(country, session.get('inputs', {}).get('voice_notes_model', '')) if session.get('inputs', {}).get('voice_notes_price') == 'Yes' else 0.0,
         }
         suggested_prices = patch_suggested_prices(suggested_prices, session.get('inputs', {}))
-        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
+        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees, voice_rate_card=voice_rate_card)
 
     elif step == 'prices' and request.method == 'POST':
         print('HANDLER: Entered prices POST step', file=sys.stderr, flush=True)
@@ -650,6 +674,19 @@ def index():
             'bot_ui': bot_ui_manday_rate,
             'custom_ai': custom_ai_manday_rate
         }
+        # Capture optional Voice rate overrides
+        voice_rate_overrides = {}
+        for k in ['vr_pstn_in_bundled','vr_pstn_in_overage','vr_pstn_out_bundled','vr_pstn_out_overage','vr_pstn_manual_bundled','vr_pstn_manual_overage','vr_wa_out_per_min','vr_wa_in_per_min']:
+            v = request.form.get(k, '')
+            try:
+                voice_rate_overrides[k] = float(v.replace(',', '')) if v and str(v).strip() else None
+            except Exception:
+                voice_rate_overrides[k] = None
+        # Merge voice overrides into inputs for downstream calculation
+        for k, v in voice_rate_overrides.items():
+            if v is not None:
+                inputs[k] = v
+
         # Get suggested prices for validation
         country = inputs.get('country', 'India')
         ai_volume = float(inputs.get('ai_volume', 0) or 0)
@@ -688,6 +725,30 @@ def index():
             for msg in discount_errors:
                 flash(msg, 'error')
             flash("Probability of deal desk rejection is high.", 'error')
+            # Recompute voice rate card on error re-render
+            voice_rate_card = None
+            try:
+                chan = inputs.get('channel_type', 'text_only')
+                if country == 'India' and chan in ['voice_only', 'text_voice']:
+                    from pricing_config import PSTN_CALLING_CHARGES, get_whatsapp_voice_rate
+                    wa_out = float(inputs.get('whatsapp_voice_outbound_minutes', 0) or 0)
+                    wa_in = float(inputs.get('whatsapp_voice_inbound_minutes', 0) or 0)
+                    total_wa_min = wa_out + wa_in
+                    voice_rate_card = {
+                        'pstn': {
+                            'inbound': PSTN_CALLING_CHARGES['inbound_ai'],
+                            'outbound': PSTN_CALLING_CHARGES['outbound_ai'],
+                            'manual': PSTN_CALLING_CHARGES['manual_c2c'],
+                        },
+                        'whatsapp': {
+                            'outbound': get_whatsapp_voice_rate(country, total_wa_min, 'outbound'),
+                            'inbound': get_whatsapp_voice_rate(country, total_wa_min, 'inbound'),
+                            'total_minutes': total_wa_min,
+                        }
+                    }
+            except Exception:
+                voice_rate_card = None
+
             suggested_prices = {
                 'ai_price': suggested_ai,
                 'advanced_price': suggested_advanced,
@@ -697,7 +758,7 @@ def index():
             }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             # Re-render the pricing page with user input and error
-            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
+            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees, voice_rate_card=voice_rate_card)
         print('HANDLER: No discount errors, continuing to results calculation', file=sys.stderr, flush=True)
 
         # Always recalculate platform fee before saving to session['pricing_inputs']

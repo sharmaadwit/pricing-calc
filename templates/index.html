@@ -973,6 +973,45 @@
             <label>Basic Utility/Authentication Message Markup Rate Card:</label>
             {{ currency_symbol }}<input type="text" name="basic_utility_price" class="comma-number" value="{{ suggested.basic_utility_price }}" required>
         </div>
+
+        {% if voice_rate_card %}
+        <!-- Voice Calling Rate Card (Editable) -->
+        <div style="background: #fff3e0; border: 1px solid #ffcc80; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
+          <h3 style="margin-top:0;">Voice Calling Rate Card</h3>
+          <div style="font-size: 0.98em; color:#444; margin-bottom:8px;">Edit these rates as needed. WhatsApp rates apply per minute; PSTN has bundled/overage per minute.</div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 12px;">
+            <div>
+              <h4 style="margin:4px 0;">PSTN Inbound AI</h4>
+              <label>Bundled (INR/min):</label>
+              <input type="text" name="vr_pstn_in_bundled" class="comma-number" value="{{ voice_rate_card.pstn.inbound.bundled }}">
+              <label style="margin-top:6px; display:block;">Overage (INR/min):</label>
+              <input type="text" name="vr_pstn_in_overage" class="comma-number" value="{{ voice_rate_card.pstn.inbound.overage }}">
+            </div>
+            <div>
+              <h4 style="margin:4px 0;">PSTN Outbound AI</h4>
+              <label>Bundled (INR/min):</label>
+              <input type="text" name="vr_pstn_out_bundled" class="comma-number" value="{{ voice_rate_card.pstn.outbound.bundled }}">
+              <label style="margin-top:6px; display:block;">Overage (INR/min):</label>
+              <input type="text" name="vr_pstn_out_overage" class="comma-number" value="{{ voice_rate_card.pstn.outbound.overage }}">
+            </div>
+            <div>
+              <h4 style="margin:4px 0;">PSTN Manual C2C</h4>
+              <label>Bundled (INR/min):</label>
+              <input type="text" name="vr_pstn_manual_bundled" class="comma-number" value="{{ voice_rate_card.pstn.manual.bundled }}">
+              <label style="margin-top:6px; display:block;">Overage (INR/min):</label>
+              <input type="text" name="vr_pstn_manual_overage" class="comma-number" value="{{ voice_rate_card.pstn.manual.overage }}">
+            </div>
+            <div>
+              <h4 style="margin:4px 0;">WhatsApp Voice</h4>
+              <label>Outbound (INR/min):</label>
+              <input type="text" name="vr_wa_out_per_min" class="comma-number" value="{{ voice_rate_card.whatsapp.outbound }}">
+              <label style="margin-top:6px; display:block;">Inbound (INR/min):</label>
+              <input type="text" name="vr_wa_in_per_min" class="comma-number" value="{{ voice_rate_card.whatsapp.inbound }}">
+              <div style="margin-top:8px; font-size:0.9em; color:#666;">Total WA minutes considered: {{ voice_rate_card.whatsapp.total_minutes|int }}</div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
         <!-- Voice Notes Pricing Card -->
         {% if inputs.get('voice_notes_price') == 'Yes' and inputs.get('voice_notes_model') %}
         <div style="background: #fff3e0; border: 1px solid #ffb74d; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">

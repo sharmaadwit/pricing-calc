@@ -454,6 +454,40 @@ def calculate_voice_calling_costs(inputs, country='India'):
         'whatsapp_voice_inbound': 0.0,
         'total': 0.0,
     }
+    # Optional user override rates for PSTN/WhatsApp
+    try:
+        pstn_in_bundled_rate = float(inputs.get('vr_pstn_in_bundled', 0) or 0)
+    except Exception:
+        pstn_in_bundled_rate = 0
+    try:
+        pstn_in_overage_rate = float(inputs.get('vr_pstn_in_overage', 0) or 0)
+    except Exception:
+        pstn_in_overage_rate = 0
+    try:
+        pstn_out_bundled_rate = float(inputs.get('vr_pstn_out_bundled', 0) or 0)
+    except Exception:
+        pstn_out_bundled_rate = 0
+    try:
+        pstn_out_overage_rate = float(inputs.get('vr_pstn_out_overage', 0) or 0)
+    except Exception:
+        pstn_out_overage_rate = 0
+    try:
+        pstn_manual_bundled_rate = float(inputs.get('vr_pstn_manual_bundled', 0) or 0)
+    except Exception:
+        pstn_manual_bundled_rate = 0
+    try:
+        pstn_manual_overage_rate = float(inputs.get('vr_pstn_manual_overage', 0) or 0)
+    except Exception:
+        pstn_manual_overage_rate = 0
+    try:
+        wa_out_rate_override = float(inputs.get('vr_wa_out_per_min', 0) or 0)
+    except Exception:
+        wa_out_rate_override = 0
+    try:
+        wa_in_rate_override = float(inputs.get('vr_wa_in_per_min', 0) or 0)
+    except Exception:
+        wa_in_rate_override = 0
+
     # PSTN bundled vs overage
     inbound_min = _parse_float(inputs.get('pstn_inbound_ai_minutes', 0))
     inbound_commit = _parse_float(inputs.get('pstn_inbound_committed', 0))
@@ -464,24 +498,30 @@ def calculate_voice_calling_costs(inputs, country='India'):
     if inbound_min > 0:
         bundled = min(inbound_min, inbound_commit)
         overage = max(0.0, inbound_min - inbound_commit)
-        costs['pstn_inbound_ai'] = bundled * PSTN_CALLING_CHARGES['inbound_ai']['bundled'] + overage * PSTN_CALLING_CHARGES['inbound_ai']['overage']
+        in_bundled = pstn_in_bundled_rate or PSTN_CALLING_CHARGES['inbound_ai']['bundled']
+        in_overage = pstn_in_overage_rate or PSTN_CALLING_CHARGES['inbound_ai']['overage']
+        costs['pstn_inbound_ai'] = bundled * in_bundled + overage * in_overage
     if outbound_min > 0:
         bundled = min(outbound_min, outbound_commit)
         overage = max(0.0, outbound_min - outbound_commit)
-        costs['pstn_outbound_ai'] = bundled * PSTN_CALLING_CHARGES['outbound_ai']['bundled'] + overage * PSTN_CALLING_CHARGES['outbound_ai']['overage']
+        out_bundled = pstn_out_bundled_rate or PSTN_CALLING_CHARGES['outbound_ai']['bundled']
+        out_overage = pstn_out_overage_rate or PSTN_CALLING_CHARGES['outbound_ai']['overage']
+        costs['pstn_outbound_ai'] = bundled * out_bundled + overage * out_overage
     if manual_min > 0:
         bundled = min(manual_min, manual_commit)
         overage = max(0.0, manual_min - manual_commit)
-        costs['pstn_manual_c2c'] = bundled * PSTN_CALLING_CHARGES['manual_c2c']['bundled'] + overage * PSTN_CALLING_CHARGES['manual_c2c']['overage']
+        man_bundled = pstn_manual_bundled_rate or PSTN_CALLING_CHARGES['manual_c2c']['bundled']
+        man_overage = pstn_manual_overage_rate or PSTN_CALLING_CHARGES['manual_c2c']['overage']
+        costs['pstn_manual_c2c'] = bundled * man_bundled + overage * man_overage
     # WhatsApp Voice
     wa_out_min = _parse_float(inputs.get('whatsapp_voice_outbound_minutes', 0))
     wa_in_min = _parse_float(inputs.get('whatsapp_voice_inbound_minutes', 0))
     total_wa_min = wa_out_min + wa_in_min
     if wa_out_min > 0:
-        outbound_rate = get_whatsapp_voice_rate(country, total_wa_min, 'outbound')
+        outbound_rate = wa_out_rate_override or get_whatsapp_voice_rate(country, total_wa_min, 'outbound')
         costs['whatsapp_voice_outbound'] = wa_out_min * outbound_rate
     if wa_in_min > 0:
-        inbound_rate = get_whatsapp_voice_rate(country, total_wa_min, 'inbound')
+        inbound_rate = wa_in_rate_override or get_whatsapp_voice_rate(country, total_wa_min, 'inbound')
         costs['whatsapp_voice_inbound'] = wa_in_min * inbound_rate
     costs['total'] = (
         costs['pstn_inbound_ai']
