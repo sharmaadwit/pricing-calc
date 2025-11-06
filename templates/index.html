@@ -907,17 +907,17 @@
             if (textDevSection) { textDevSection.style.display = ''; }
             if (smartCpaasGroup) { smartCpaasGroup.style.display = ''; }
             if (humanAgentsGroup) { humanAgentsGroup.style.display = ''; }
-        } else if (channel === 'voice_only') {
+  } else if (channel === 'voice_only') {
             textSection.style.display = 'none';
             voiceSection.style.display = '';
-            if (aiModule) { aiModule.value = 'Yes'; aiModule.disabled = true; }
+      if (aiModule) { aiModule.value = 'Yes'; aiModule.disabled = false; }
             if (textDevSection) { textDevSection.style.display = 'none'; }
             if (smartCpaasGroup) { smartCpaasGroup.style.display = 'none'; }
             if (humanAgentsGroup) { humanAgentsGroup.style.display = 'none'; }
         } else {
             textSection.style.display = '';
             voiceSection.style.display = '';
-            if (aiModule) { aiModule.value = 'Yes'; aiModule.disabled = true; }
+      if (aiModule) { aiModule.value = 'Yes'; aiModule.disabled = false; }
             if (textDevSection) { textDevSection.style.display = ''; }
             if (smartCpaasGroup) { smartCpaasGroup.style.display = ''; }
             if (humanAgentsGroup) { humanAgentsGroup.style.display = ''; }
@@ -1259,21 +1259,13 @@
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #c8e6c9;">
               <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Cost Breakdown</h4>
               <div style="font-size: 1.05em; line-height: 1.6;">
-                <div style="margin-bottom:6px;"><b>Build Cost (Bot/UI + Custom/AI):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.build_cost)|smart_format }}</div>
-                <div style="margin-top:8px; font-weight:bold;">Inputs used for One Time Dev calculation</div>
-                <ul style="margin: 6px 0 0 18px; padding: 0;">
-                  <li>Onboarding: {{ inputs.get('onboarding_price', 'No') }}</li>
-                  <li>Journey Design (UX): {{ inputs.get('ux_price', 'No') }}</li>
-                  <li>Testing/QA: {{ inputs.get('testing_qa_price', 'No') }}</li>
-                  <li>Agent Assist Setup: {{ inputs.get('aa_setup_price', 'No') }}</li>
-                  <li>No. of APIs: {{ inputs.get('num_apis_price', '0') }}</li>
-                  <li>No. of Journeys: {{ inputs.get('num_journeys_price', '0') }}</li>
-                  <li>No. of AI Workspace - Commerce: {{ inputs.get('num_ai_workspace_commerce_price', '0') }}</li>
-                  <li>No. of AI Workspace - FAQ: {{ inputs.get('num_ai_workspace_faq_price', '0') }}</li>
-                  {% if inputs.get('num_ai_workspace_support_price') is not none %}
-                  <li>No. of AI Workspace - Support: {{ inputs.get('num_ai_workspace_support_price', '0') }}</li>
-                  {% endif %}
-                </ul>
+                <div><b>Build Cost (Bot/UI + Custom/AI):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.build_cost)|smart_format }}</div>
+                <div><b>BA Effort (15%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.ba_cost)|smart_format }}</div>
+                <div><b>QA Effort (10%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.qa_cost)|smart_format }}</div>
+                <div><b>Project Manager (5%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.pm_cost)|smart_format }}</div>
+                <hr>
+                <div><b>Uplift (Total):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.uplift_amount)|smart_format }}</div>
+                <div style="font-weight: bold; margin-top: 10px;">Total One Time Dev Cost (with BA, QA, PM): {{ dev_cost_currency }}{{ (dev_cost_breakdown.total_cost)|smart_format }}</div>
               </div>
             </div>
           </div>
