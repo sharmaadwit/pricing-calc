@@ -1255,6 +1255,17 @@
             <div style="margin-top: 10px; font-size: 1.08em;">
               <b>Breakdown:</b> Bot/UI: {{ '{:,.1f}'.format(manday_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.1f}'.format(manday_breakdown.custom_ai) }}
             </div>
+            <div style="margin-top: 6px; font-size: 0.98em; color: #444;">
+              <b>Scope:</b>
+              APIs: {{ inputs.get('num_apis_price', '0') }},
+              Journeys: {{ inputs.get('num_journeys_price', '0') }}
+              {% set aic = (inputs.get('num_ai_workspace_commerce_price', '0') or '0')|int %}
+              {% set aif = (inputs.get('num_ai_workspace_faq_price', '0') or '0')|int %}
+              {% set ais = (inputs.get('num_ai_workspace_support_price', '0') or '0')|int %}
+              {% if aic > 0 or aif > 0 or ais > 0 %}
+                , AI Workspaces — Commerce: {{ aic }}, FAQ: {{ aif }}{% if inputs.get('num_ai_workspace_support_price') is not none %}, Support: {{ ais }}{% endif %}
+              {% endif %}
+            </div>
             <!-- Cost Breakdown Section -->
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #c8e6c9;">
               <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Cost Breakdown</h4>
