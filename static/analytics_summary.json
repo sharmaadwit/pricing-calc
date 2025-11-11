@@ -1,9 +1,9 @@
 {
-  "total_calculations": 404,
+  "total_calculations": 405,
   "unique_users": 27,
-  "total_revenue": 60436304.0,
+  "total_revenue": 60437154.0,
   "countries": 7,
-  "last_updated": "2025-11-11 09:23:18",
+  "last_updated": "2025-11-11 12:42:58",
   "top_users": {
     "Kat": 14950000.0,
     "Ankit": 8975850.0,
@@ -17,24 +17,24 @@
     "LATAM": 19,
     "MENA": 16,
     "Rest of the World": 10,
-    "APAC": 7,
+    "APAC": 8,
     "Europe": 3
   },
   "route_breakdown": {
-    "volumes": 356,
+    "volumes": 357,
     "bundle": 48
   },
   "country_stats": {
     "APAC": {
       "currency": "$",
       "platform_fee": {
-        "average": 1021.4285714285714,
+        "average": 1000.0,
         "min": 850.0,
         "max": 1250.0,
         "median": 850.0
       },
       "ai_message": {
-        "average": 0.010499999999999999,
+        "average": 0.0105,
         "min": 0.0105,
         "max": 0.0105,
         "median": 0.0105,
@@ -55,7 +55,7 @@
         "list": 0.0021
       },
       "basic_utility_message": {
-        "average": 0.0013000000000000002,
+        "average": 0.0013,
         "min": 0.0013,
         "max": 0.0013,
         "median": 0.0013,
@@ -105,7 +105,9 @@
         2100.0,
         850.0,
         0.0,
-        2500.0
+        2500.0,
+        0.0,
+        850.0
       ],
       "weekly_revenue_labels": [
         "2025-09-28",
@@ -113,10 +115,12 @@
         "2025-10-12",
         "2025-10-19",
         "2025-10-26",
-        "2025-11-02"
+        "2025-11-02",
+        "2025-11-09",
+        "2025-11-16"
       ],
       "clv": [
-        5050.0,
+        5900.0,
         1250.0,
         850.0
       ],
@@ -126,10 +130,10 @@
         "Ankit"
       ],
       "service_usage": [
-        0.0735,
-        0.049,
-        0.014699999999999998,
-        0.0091
+        0.084,
+        0.056,
+        0.0168,
+        0.0104
       ],
       "service_labels": [
         "ai_price",
@@ -140,7 +144,7 @@
       "manday_efficiency": [
         250.0,
         188.88888888888889,
-        183.63636363636363
+        166.19718309859155
       ],
       "manday_efficiency_labels": [
         "Ankit ",
@@ -151,7 +155,7 @@
         1,
         2,
         1,
-        1,
+        2,
         2
       ],
       "hourly_labels": [
@@ -163,7 +167,7 @@
       ],
       "weekday_counts": [
         1.0,
-        2.0,
+        3.0,
         3.0,
         null,
         1.0,
@@ -180,13 +184,13 @@
         "Sunday"
       ],
       "route_revenue": [
-        7150.0
+        8000.0
       ],
       "route_labels": [
         "volumes"
       ],
       "route_counts": [
-        7
+        8
       ],
       "bot_ui_manday_rate": {
         "list": 300.0,
@@ -2117,7 +2121,7 @@
     }
   },
   "platform_fee_by_country": [
-    1021.4285714285714,
+    1000.0,
     1435.7142857142858,
     1650.0,
     183770.2743902439,
@@ -2126,7 +2130,7 @@
     2535.0
   ],
   "ai_message_by_country": [
-    0.010499999999999999,
+    0.0105,
     0.01280952380952381,
     0.0267,
     0.8796240853658537,
