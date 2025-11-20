@@ -1,9 +1,9 @@
 {
-  "total_calculations": 418,
-  "unique_users": 27,
-  "total_revenue": 62437154.0,
+  "total_calculations": 419,
+  "unique_users": 28,
+  "total_revenue": 62438004.0,
   "countries": 7,
-  "last_updated": "2025-11-20 09:22:08",
+  "last_updated": "2025-11-20 12:42:32",
   "top_users": {
     "Kat": 15200000.0,
     "Ankit": 9125850.0,
@@ -17,18 +17,18 @@
     "LATAM": 19,
     "MENA": 16,
     "Rest of the World": 10,
-    "APAC": 8,
+    "APAC": 9,
     "Europe": 3
   },
   "route_breakdown": {
-    "volumes": 370,
+    "volumes": 371,
     "bundle": 48
   },
   "country_stats": {
     "APAC": {
       "currency": "$",
       "platform_fee": {
-        "average": 1000.0,
+        "average": 983.3333333333334,
         "min": 850.0,
         "max": 1250.0,
         "median": 850.0
@@ -107,6 +107,7 @@
         0.0,
         2500.0,
         0.0,
+        850.0,
         850.0
       ],
       "weekly_revenue_labels": [
@@ -117,23 +118,26 @@
         "2025-10-26",
         "2025-11-02",
         "2025-11-09",
-        "2025-11-16"
+        "2025-11-16",
+        "2025-11-23"
       ],
       "clv": [
         5900.0,
         1250.0,
+        850.0,
         850.0
       ],
       "clv_labels": [
         "Saathwik",
         "Ankit ",
-        "Ankit"
+        "Ankit",
+        "Ankit Kanwara"
       ],
       "service_usage": [
-        0.084,
-        0.056,
-        0.0168,
-        0.0104
+        0.0945,
+        0.063,
+        0.0189,
+        0.011699999999999999
       ],
       "service_labels": [
         "ai_price",
@@ -144,18 +148,20 @@
       "manday_efficiency": [
         250.0,
         188.88888888888889,
-        166.19718309859155
+        166.19718309859155,
+        100.0
       ],
       "manday_efficiency_labels": [
         "Ankit ",
         "Ankit",
-        "Saathwik"
+        "Saathwik",
+        "Ankit Kanwara"
       ],
       "hourly_counts": [
         1,
         2,
         1,
-        2,
+        3,
         2
       ],
       "hourly_labels": [
@@ -169,7 +175,7 @@
         1.0,
         3.0,
         3.0,
-        null,
+        1.0,
         1.0,
         null,
         null
@@ -184,13 +190,13 @@
         "Sunday"
       ],
       "route_revenue": [
-        8000.0
+        8850.0
       ],
       "route_labels": [
         "volumes"
       ],
       "route_counts": [
-        8
+        9
       ],
       "bot_ui_manday_rate": {
         "list": 300.0,
@@ -2123,7 +2129,7 @@
     }
   },
   "platform_fee_by_country": [
-    1000.0,
+    983.3333333333334,
     1435.7142857142858,
     1650.0,
     182629.47214076246,
