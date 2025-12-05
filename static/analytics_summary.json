@@ -1,18 +1,18 @@
 {
-  "total_calculations": 426,
+  "total_calculations": 432,
   "unique_users": 29,
-  "total_revenue": 63813004.0,
+  "total_revenue": 64913004.0,
   "countries": 7,
-  "last_updated": "2025-12-05 09:23:26",
+  "last_updated": "2025-12-05 12:44:03",
   "top_users": {
-    "Kat": 15200000.0,
+    "Kat": 16300000.0,
     "Ankit": 9325850.0,
     "Puru Chauhan": 7100000.0,
     "Puru": 6915000.0,
     "Nikhil": 6175000.0
   },
   "country_breakdown": {
-    "India": 348,
+    "India": 354,
     "Africa": 21,
     "LATAM": 19,
     "MENA": 16,
@@ -21,7 +21,7 @@
     "Europe": 3
   },
   "route_breakdown": {
-    "volumes": 378,
+    "volumes": 384,
     "bundle": 48
   },
   "country_stats": {
@@ -557,34 +557,34 @@
     "India": {
       "currency": "\u20b9",
       "platform_fee": {
-        "average": 182907.04022988505,
+        "average": 182914.26553672316,
         "min": 1650.0,
         "max": 1500000.0,
         "median": 150000.0
       },
       "ai_message": {
-        "average": 0.8862548850574712,
+        "average": 0.8880415254237289,
         "min": 0.0,
         "max": 5.0,
         "median": 1.0,
         "list": 1.0
       },
       "advanced_message": {
-        "average": 0.41383620689655176,
+        "average": 0.4138841807909604,
         "min": 0.015,
         "max": 1.5,
         "median": 0.45,
         "list": 0.5
       },
       "basic_marketing_message": {
-        "average": 0.11978448275862069,
+        "average": 0.11927966101694916,
         "min": 0.0,
         "max": 0.5,
         "median": 0.15,
         "list": 0.15
       },
       "basic_utility_message": {
-        "average": 0.027126436781609194,
+        "average": 0.02695480225988701,
         "min": 0.0,
         "max": 0.05,
         "median": 0.03,
@@ -603,28 +603,28 @@
         "median": 0.0
       },
       "one_time_dev_cost": {
-        "average": 19357.626436781607,
+        "average": 19368.514124293786,
         "min": 0.0,
         "max": 25000.0,
         "median": 20000.0
       },
       "bot_ui_manday_cost": {
-        "average": 19357.626436781607,
+        "average": 19368.514124293786,
         "min": 0.0,
         "max": 25000.0,
         "median": 20000.0
       },
       "custom_ai_manday_cost": {
-        "average": 29297.189655172413,
+        "average": 29309.101694915254,
         "min": 0.0,
         "max": 40000.0,
         "median": 30000.0
       },
       "discounts": {
-        "ai_message": 0.8285772130165715,
-        "advanced_message": 0.45727062754926534,
-        "basic_marketing_message": 4.485458612975391,
-        "basic_utility_message": 2.4054982817869415,
+        "ai_message": 0.8122773334162461,
+        "advanced_message": 0.4489313455878806,
+        "basic_marketing_message": 4.396929824561403,
+        "basic_utility_message": 2.3569023569023564,
         "bot_ui_manday_rate": 0,
         "custom_ai_manday_rate": 0
       },
@@ -650,7 +650,7 @@
         1650000.0,
         600000.0,
         450000.0,
-        925000.0
+        2025000.0
       ],
       "weekly_revenue_labels": [
         "2025-07-13",
@@ -677,7 +677,7 @@
         "2025-12-07"
       ],
       "clv": [
-        15200000.0,
+        16300000.0,
         9325000.0,
         7100000.0,
         6915000.0,
@@ -701,10 +701,10 @@
         "kat"
       ],
       "service_usage": [
-        308.4167,
-        144.01500000000001,
-        41.685,
-        9.44
+        314.36670000000004,
+        146.515,
+        42.225,
+        9.542000000000002
       ],
       "service_labels": [
         "ai_price",
@@ -722,7 +722,7 @@
         13640.730067243036,
         13533.834586466166,
         12578.034682080925,
-        11851.851851851852
+        12400.152149106125
       ],
       "manday_efficiency_labels": [
         "Ravindra",
@@ -746,7 +746,7 @@
         71,
         39,
         31,
-        23,
+        29,
         11,
         8,
         2,
@@ -775,7 +775,7 @@
         52,
         83,
         91,
-        48,
+        54,
         2,
         2
       ],
@@ -789,7 +789,7 @@
         "Sunday"
       ],
       "route_revenue": [
-        55521650.0,
+        56621650.0,
         8130000.0
       ],
       "route_labels": [
@@ -797,16 +797,16 @@
         "bundle"
       ],
       "route_counts": [
-        306,
+        312,
         42
       ],
       "bot_ui_manday_rate": {
         "list": 20000,
-        "average": 19357.626436781607
+        "average": 19368.514124293786
       },
       "custom_ai_manday_rate": {
         "list": 30000,
-        "average": 29297.189655172413
+        "average": 29309.101694915254
       }
     },
     "LATAM": {
@@ -1679,34 +1679,34 @@
       "South": {
         "currency": "\u20b9",
         "platform_fee": {
-          "average": 185638.62275449102,
+          "average": 185558.67052023122,
           "min": 1650.0,
           "max": 850000.0,
           "median": 150000.0
         },
         "ai_message": {
-          "average": 0.848602994011976,
+          "average": 0.853564739884393,
           "min": 0.0,
           "max": 5.0,
           "median": 0.95,
           "list": 1.0
         },
         "advanced_message": {
-          "average": 0.3930239520958084,
+          "average": 0.39384393063583817,
           "min": 0.015,
           "max": 1.5,
           "median": 0.45,
           "list": 0.5
         },
         "basic_marketing_message": {
-          "average": 0.10655688622754492,
+          "average": 0.10598265895953758,
           "min": 0.0,
           "max": 0.5,
           "median": 0.12,
           "list": 0.15
         },
         "basic_utility_message": {
-          "average": 0.025209580838323357,
+          "average": 0.024924855491329476,
           "min": 0.0,
           "max": 0.05,
           "median": 0.025,
@@ -1725,28 +1725,28 @@
           "median": 0.0
         },
         "one_time_dev_cost": {
-          "average": 18989.82035928144,
+          "average": 19024.85549132948,
           "min": 0.0,
           "max": 25000.0,
           "median": 20000.0
         },
         "bot_ui_manday_cost": {
-          "average": 18989.82035928144,
+          "average": 19024.85549132948,
           "min": 0.0,
           "max": 25000.0,
           "median": 20000.0
         },
         "custom_ai_manday_cost": {
-          "average": 28655.221556886227,
+          "average": 28701.861271676302,
           "min": 0.0,
           "max": 40000.0,
           "median": 30000.0
         },
         "discounts": {
-          "ai_message": -0.3894926075377211,
-          "advanced_message": -1.3977353149327667,
-          "basic_marketing_message": 6.321839080459769,
-          "basic_utility_message": 1.5458937198067626,
+          "ai_message": -0.3742183876342799,
+          "advanced_message": -1.3462849352419899,
+          "basic_marketing_message": 6.07064017660044,
+          "basic_utility_message": 1.481481481481481,
           "bot_ui_manday_rate": 0,
           "custom_ai_manday_rate": 0
         }
@@ -2136,7 +2136,7 @@
     983.3333333333334,
     1435.7142857142858,
     1650.0,
-    182907.04022988505,
+    182914.26553672316,
     2829.157894736842,
     2393.75,
     2535.0
@@ -2145,7 +2145,7 @@
     0.0105,
     0.01280952380952381,
     0.0267,
-    0.8862548850574712,
+    0.8880415254237289,
     0.03356842105263158,
     0.017118750000000002,
     0.01095
