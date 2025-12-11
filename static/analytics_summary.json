@@ -1,12 +1,12 @@
 {
-  "total_calculations": 439,
+  "total_calculations": 441,
   "unique_users": 29,
-  "total_revenue": 65019754.0,
+  "total_revenue": 65021454.0,
   "countries": 7,
-  "last_updated": "2025-12-11 09:27:13",
+  "last_updated": "2025-12-11 12:49:02",
   "top_users": {
     "Kat": 16300850.0,
-    "Ankit": 9430900.0,
+    "Ankit": 9432600.0,
     "Puru Chauhan": 7100000.0,
     "Puru": 6915000.0,
     "Nikhil": 6175000.0
@@ -16,19 +16,19 @@
     "Africa": 23,
     "LATAM": 19,
     "MENA": 17,
-    "APAC": 12,
+    "APAC": 14,
     "Rest of the World": 10,
     "Europe": 3
   },
   "route_breakdown": {
-    "volumes": 391,
+    "volumes": 393,
     "bundle": 48
   },
   "country_stats": {
     "APAC": {
       "currency": "$",
       "platform_fee": {
-        "average": 950.0,
+        "average": 935.7142857142857,
         "min": 850.0,
         "max": 1250.0,
         "median": 850.0
@@ -55,7 +55,7 @@
         "list": 0.0021
       },
       "basic_utility_message": {
-        "average": 0.0012999999999999997,
+        "average": 0.0012999999999999995,
         "min": 0.0013,
         "max": 0.0013,
         "median": 0.0013,
@@ -111,7 +111,7 @@
         850.0,
         0.0,
         0.0,
-        2550.0
+        4250.0
       ],
       "weekly_revenue_labels": [
         "2025-09-28",
@@ -129,7 +129,7 @@
       ],
       "clv": [
         5900.0,
-        3400.0,
+        5100.0,
         1250.0,
         850.0
       ],
@@ -140,10 +140,10 @@
         "Ankit Kanwara"
       ],
       "service_usage": [
-        0.126,
-        0.08400000000000002,
-        0.025200000000000004,
-        0.015599999999999996
+        0.14700000000000002,
+        0.09800000000000003,
+        0.029400000000000006,
+        0.018199999999999994
       ],
       "service_labels": [
         "ai_price",
@@ -153,21 +153,21 @@
       ],
       "manday_efficiency": [
         250.0,
+        200.0,
         166.19718309859155,
-        133.33333333333334,
         100.0
       ],
       "manday_efficiency_labels": [
         "Ankit ",
-        "Saathwik",
         "Ankit",
+        "Saathwik",
         "Ankit Kanwara"
       ],
       "hourly_counts": [
         1,
         2,
         1,
-        1,
+        3,
         5,
         2
       ],
@@ -183,7 +183,7 @@
         1.0,
         4.0,
         5.0,
-        1.0,
+        3.0,
         1.0,
         null,
         null
@@ -198,13 +198,13 @@
         "Sunday"
       ],
       "route_revenue": [
-        11400.0
+        13100.0
       ],
       "route_labels": [
         "volumes"
       ],
       "route_counts": [
-        12
+        14
       ],
       "bot_ui_manday_rate": {
         "list": 300.0,
@@ -2177,7 +2177,7 @@
     }
   },
   "platform_fee_by_country": [
-    950.0,
+    935.7142857142857,
     1384.7826086956522,
     1650.0,
     182680.70422535212,
