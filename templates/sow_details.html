@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SOW Details (Beta)</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            padding: 32px 32px 40px;
+        }
+        h1, h2, h3 {
+            margin-top: 0;
+            font-weight: 600;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        h2 {
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+        }
+        .section {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        textarea, input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            font-size: 0.95rem;
+            resize: vertical;
+        }
+        textarea {
+            min-height: 60px;
+        }
+        .help-text {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+        .inline-group {
+            display: flex;
+            gap: 16px;
+        }
+        .inline-group > div {
+            flex: 1;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            margin-top: 4px;
+        }
+        .checkbox-group label {
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .actions {
+            margin-top: 32px;
+            text-align: right;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Scope of Work Details (Beta)</h1>
+        <p class="help-text">
+            Fill these fields once per deal. They will be used to enrich the SOW document.
+        </p>
+
+        <form method="post">
+            <div class="section">
+                <h2>1. Business Objectives Discovered</h2>
+                <label for="business_objective">Business Objective</label>
+                <textarea id="business_objective" name="business_objective">{{ sow.business_objective or '' }}</textarea>
+
+                <label for="business_problem">Business Problem</label>
+                <textarea id="business_problem" name="business_problem">{{ sow.business_problem or '' }}</textarea>
+
+                <label for="use_case_narrative">Use Case Narrative</label>
+                <textarea id="use_case_narrative" name="use_case_narrative">{{ sow.use_case_narrative or '' }}</textarea>
+                <div class="help-text">
+                    e.g. Deploying a bot on WhatsApp for students with Live Chat and Video Calling integration.
+                </div>
+
+                <div class="inline-group" style="margin-top: 12px;">
+                    <div>
+                        <label for="expected_volumes">Expected Volumes</label>
+                        <textarea id="expected_volumes" name="expected_volumes">{{ sow.expected_volumes or '' }}</textarea>
+                    </div>
+                    <div>
+                        <label for="target_audience">Target Audience</label>
+                        <textarea id="target_audience" name="target_audience">{{ sow.target_audience or '' }}</textarea>
+                        <div class="help-text">e.g. Active / Dormant / Churned users.</div>
+                    </div>
+                </div>
+
+                <label for="kpis" style="margin-top: 12px;">KPI’s / Success Criteria</label>
+                <textarea id="kpis" name="kpis">{{ sow.kpis or '' }}</textarea>
+            </div>
+
+            <div class="section">
+                <h2>2. Technical Requirements – Overall</h2>
+                <div class="inline-group">
+                    <div>
+                        <label for="num_journeys">Number of Journeys</label>
+                        <input type="number" id="num_journeys" name="num_journeys" value="{{ sow.num_journeys or defaults.num_journeys or '' }}">
+                    </div>
+                    <div>
+                        <label for="num_apis">Number of APIs / Backend Services</label>
+                        <input type="number" id="num_apis" name="num_apis" value="{{ sow.num_apis or defaults.num_apis or '' }}">
+                    </div>
+                </div>
+
+                <label style="margin-top: 12px;">Channels in Scope</label>
+                <div class="checkbox-group">
+                    {% set selected_channels = sow.channels or [] %}
+                    {% for ch in ['WhatsApp', 'WhatsApp Voice', 'SMS', 'Email', 'Instagram', 'PSTN Voice', 'Others'] %}
+                    <label>
+                        <input type="checkbox" name="channels" value="{{ ch }}" {% if ch in selected_channels %}checked{% endif %}>
+                        {{ ch }}
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <label for="bot_language" style="margin-top: 12px;">Bot Language(s)</label>
+                <input type="text" id="bot_language" name="bot_language" value="{{ sow.bot_language or '' }}">
+
+                <label for="backend_systems" style="margin-top: 12px;">Backend Systems in Scope</label>
+                <textarea id="backend_systems" name="backend_systems">{{ sow.backend_systems or '' }}</textarea>
+                <div class="help-text">Comma-separated list, e.g. CRM, ERP, Data Warehouse.</div>
+
+                <label for="total_mandays" style="margin-top: 12px;">Development Timelines (Total Mandays)</label>
+                <input type="text" id="total_mandays" name="total_mandays" value="{{ sow.total_mandays or defaults.total_mandays or '' }}">
+            </div>
+
+            <div class="section">
+                <h2>3. Deployment & Capacity Toggles</h2>
+
+                <label>Deployment / Hosting – Use default (Gupshup India AWS)?</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="radio" name="dep_use_default" value="yes" {% if sow.dep_use_default != 'no' %}checked{% endif %}>
+                        Yes
+                    </label>
+                    <label>
+                        <input type="radio" name="dep_use_default" value="no" {% if sow.dep_use_default == 'no' %}checked{% endif %}>
+                        No
+                    </label>
+                </div>
+
+                <label style="margin-top: 12px;">TPS – Use default config (Standard 80)?</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="radio" name="tps_use_default" value="yes" {% if sow.tps_use_default != 'no' %}checked{% endif %}>
+                        Yes
+                    </label>
+                    <label>
+                        <input type="radio" name="tps_use_default" value="no" {% if sow.tps_use_default == 'no' %}checked{% endif %}>
+                        No
+                    </label>
+                </div>
+
+                <label style="margin-top: 12px;">Data Retention – Use default (2 years – Standard)?</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="radio" name="dr_use_default" value="yes" {% if sow.dr_use_default != 'no' %}checked{% endif %}>
+                        Yes
+                    </label>
+                    <label>
+                        <input type="radio" name="dr_use_default" value="no" {% if sow.dr_use_default == 'no' %}checked{% endif %}>
+                        No
+                    </label>
+                </div>
+
+                <label style="margin-top: 12px;">Profile Storage Requirements – Include Personalize?</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="radio" name="include_personalize" value="yes" {% if sow.include_personalize != 'no' %}checked{% endif %}>
+                        Yes
+                    </label>
+                    <label>
+                        <input type="radio" name="include_personalize" value="no" {% if sow.include_personalize == 'no' %}checked{% endif %}>
+                        No
+                    </label>
+                </div>
+
+                <label style="margin-top: 12px;">Security & Privacy Package – Additional security package required?</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="radio" name="additional_security" value="yes" {% if sow.additional_security == 'yes' %}checked{% endif %}>
+                        Yes
+                    </label>
+                    <label>
+                        <input type="radio" name="additional_security" value="no" {% if sow.additional_security != 'yes' %}checked{% endif %}>
+                        No
+                    </label>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn-primary">Generate SOW (Download .docx)</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+
+

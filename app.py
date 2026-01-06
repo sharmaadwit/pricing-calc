@@ -448,7 +448,7 @@ def login():
         password = request.form.get('password', '')
         if password == CALC_PASSWORD:
             session['authenticated'] = True
-            return redirect(url_for('index'))
+            return redirect(url_for('profile_email'))
         else:
             flash('Incorrect password. Please try again.', 'error')
     else:
@@ -458,6 +458,60 @@ def login():
         except Exception:
             pass
     return render_template('login.html')
+
+
+@app.route('/profile-email', methods=['GET', 'POST'])
+def profile_email():
+    """
+    Lightweight email capture step after password login.
+    If we can find an existing profile for this email, skip profile page and go to volumes.
+    Otherwise, show full profile page next.
+    """
+    if not session.get('authenticated'):
+        return redirect(url_for('login'))
+
+    from pricing_config import get_default_location_for_email
+
+    profile = session.get('profile') or {}
+
+    if request.method == 'POST':
+        email = (request.form.get('user_email') or '').strip().lower()
+        if not email:
+            flash('Please enter a valid work email.', 'error')
+            return render_template('profile_email.html', profile=profile)
+
+        # Start building/refreshing profile with email
+        profile['email'] = email
+
+        # Try to infer defaults from mapping
+        mapped = get_default_location_for_email(email)
+        if mapped:
+            country, region = mapped
+            profile.setdefault('country', country)
+            if region:
+                profile.setdefault('region', region)
+
+        # Try to hydrate from last Analytics entry for this email (pseudo-profile)
+        existing = Analytics.query.filter_by(user_email=email).order_by(Analytics.timestamp.desc()).first()
+        if existing:
+            if existing.user_name:
+                profile.setdefault('name', existing.user_name)
+            if existing.country:
+                profile.setdefault('country', existing.country)
+            if existing.region:
+                profile.setdefault('region', existing.region)
+
+        session['profile'] = profile
+
+        # Decide next step:
+        # If we have at least name + country, treat profile as existing and go to volumes.
+        if profile.get('name') and profile.get('country'):
+            return redirect(url_for('index', step='volumes'))
+        # Otherwise collect remaining details on profile page
+        return redirect(url_for('index', step='profile'))
+
+    # GET: just show email field, prefilled if we know it
+    return render_template('profile_email.html', profile=profile)
 
 @app.route('/start-over', methods=['GET'])
 def start_over():
@@ -511,13 +565,9 @@ def index():
 
     min_fees = {country: data['minimum'] for country, data in PLATFORM_PRICING_GUIDANCE.items()}
 
-    # If no profile is set yet and user is starting fresh, route them to the
-    # lightweight profile step before volumes.
-    if not session.get('profile') and step == 'volumes' and request.method == 'GET' and not session.get('results'):
-        step = 'profile'
-
     # ---------------------------------------------------------------------
-    # Profile step – lightweight user details captured once per session
+    # Profile step – still available but no longer forced before volumes.
+    # We now primarily capture profile data via email + fields on Volumes.
     # ---------------------------------------------------------------------
     if step == 'profile':
         profile = session.get('profile', {}) or {}
@@ -596,6 +646,7 @@ def index():
                 session.pop(key)
         # Calculation ID will be generated when user moves to page 2 (prices or bundle)
         user_name = request.form.get('user_name', '')
+        user_email = (request.form.get('user_email') or '').strip()
         # Step 1: User submitted volumes and platform fee options
         country = request.form['country'].strip()  # Always strip country
         region = request.form.get('region', '')
@@ -680,6 +731,7 @@ def index():
         # Always update session['inputs'] with latest form data
         session['inputs'] = {
             'user_name': user_name,
+            'user_email': user_email,
             'country': country,
             'region': region,
             'ai_volume': ai_volume,
@@ -725,15 +777,26 @@ def index():
             'whatsapp_voice_outbound_minutes': whatsapp_voice_outbound_minutes,
             'whatsapp_voice_inbound_minutes': whatsapp_voice_inbound_minutes,
         }
-        # Ensure profile-derived fields are preserved if present
+        # Ensure profile is updated and mirrored into inputs
         profile = session.get('profile') or {}
-        if profile:
-            if profile.get('name'):
-                session['inputs']['user_name'] = profile['name']
-            if profile.get('country'):
-                session['inputs']['country'] = profile['country']
-            if profile.get('region') is not None:
-                session['inputs']['region'] = profile['region']
+        if user_email:
+            profile['email'] = user_email
+        if user_name:
+            profile.setdefault('name', user_name)
+        if country:
+            profile.setdefault('country', country)
+        if region is not None:
+            profile.setdefault('region', region)
+        session['profile'] = profile
+
+        if profile.get('name'):
+            session['inputs']['user_name'] = profile['name']
+        if profile.get('email'):
+            session['inputs']['user_email'] = profile['email']
+        if profile.get('country'):
+            session['inputs']['country'] = profile['country']
+        if profile.get('region') is not None:
+            session['inputs']['region'] = profile['region']
         print("DEBUG: session['inputs'] just set to:", session['inputs'], file=sys.stderr, flush=True)
         # Only route to bundle if all text volumes are zero AND this is not a voice-only scenario
         total_voice_minutes = (
@@ -1620,14 +1683,26 @@ def index():
         )
     # Defensive: handle GET or POST for edit actions
     elif step == 'volumes':
-        inputs = session.get('inputs', {})
+        inputs = session.get('inputs', {}) or {}
+        profile = session.get('profile') or {}
+        # If we have a profile but no inputs yet, prefill name/country/region from profile
+        if profile and not inputs:
+            if profile.get('name'):
+                inputs['user_name'] = profile['name']
+            if profile.get('email'):
+                inputs['user_email'] = profile['email']
+            if profile.get('country'):
+                inputs['country'] = profile['country']
+            if profile.get('region') is not None:
+                inputs['region'] = profile['region']
+            session['inputs'] = inputs
         if not inputs:
             if request.method == 'POST':
                 flash('Session expired or missing. Please start again.', 'error')
             currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
-            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={}, calculation_id=calculation_id, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
+            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={}, profile=profile, calculation_id=calculation_id, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
-        return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs, calculation_id=calculation_id, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
+        return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs, profile=profile, calculation_id=calculation_id, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
     elif step == 'prices':
         inputs = session.get('inputs', {})
         pricing_inputs = session.get('pricing_inputs', {}) or {}
@@ -1816,55 +1891,146 @@ def index():
     return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), calculation_id=None, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
 
 
-def generate_sow_docx(inputs, results, final_price_details, profile, calculation_id=None):
+def generate_sow_docx(inputs, results, final_price_details, profile, sow_details=None, calculation_id=None):
     """
-    Construct a simple Scope of Work .docx document in memory.
-
-    This is intentionally minimal but structured so it can be evolved over time.
+    Construct a Scope of Work .docx document in memory using the master template.
     """
-    doc = Document()
+    from pathlib import Path
+    from datetime import datetime
+    # Load master SOW template so all static sections stay intact
+    template_path = Path(__file__).resolve().parent / 'sow_templates' / 'Latest SOW Master Copy August 2025.docx'
+    doc = Document(str(template_path))
 
-    # Title
-    doc.add_heading('Scope of Work - Messaging & AI Platform', level=1)
-
-    # Basic profile / deal context
+    # Basic profile / deal context (used where relevant)
     name = (profile or {}).get('name') or inputs.get('user_name', '')
     email = (profile or {}).get('email', '')
     country = (profile or {}).get('country') or inputs.get('country', '')
     region = (profile or {}).get('region') or inputs.get('region', '')
 
-    p = doc.add_paragraph()
-    p.add_run('Prepared For: ').bold = True
+    # Update cover page fields if present (prepend simple prepared-for block near top)
+    try:
+        # Insert a new paragraph at the top with Prepared For
+        first_para = doc.paragraphs[0]
+        p = first_para.insert_paragraph_before()
+    except Exception:
+        p = doc.add_paragraph()
+    run = p.add_run('Prepared For: ')
+    run.bold = True
     p.add_run(name or 'Client')
     if email:
         p.add_run(f"  <{email}>")
-
-    loc_line = []
-    if country:
-        loc_line.append(country)
-    if region:
-        loc_line.append(region)
-    if loc_line:
-        doc.add_paragraph('Location: ' + ', '.join(loc_line))
-
+    # Insert location and calculation ID just after
+    if country or region:
+        loc_line = ', '.join([v for v in [country, region] if v])
+        doc.add_paragraph(f"Location: {loc_line}")
     if calculation_id:
-        doc.add_paragraph(f'Calculation ID: {calculation_id}')
+        doc.add_paragraph(f"Calculation ID: {calculation_id}")
 
-    doc.add_paragraph()  # spacer
+    # Revision History – fill first data row (Table 0)
+    try:
+        rev_table = doc.tables[0]
+        if len(rev_table.rows) >= 2:
+            rev_row = rev_table.rows[1]
+            rev_row.cells[0].text = '1.0'
+            rev_row.cells[1].text = datetime.utcnow().strftime('%Y-%m-%d')
+            rev_row.cells[2].text = '1st draft'
+            rev_row.cells[3].text = name or ''
+            # Approver Name left blank
+    except Exception:
+        pass
 
-    # Project overview
-    doc.add_heading('1. Project Overview', level=2)
-    doc.add_paragraph(
-        'This Scope of Work (SOW) outlines the proposed messaging and AI engagement '
-        'using Gupshup’s platform, including platform services, AI/advanced messaging, '
-        'and estimated commercial terms based on the current pricing calculator run.'
-    )
+    # Business Objectives Discovered – fill Table A in Section 1
+    sow_details = sow_details or {}
+    try:
+        bo_table = doc.tables[3]  # Table 3: Business Objectives (Description / Client requirement)
+        for row in bo_table.rows[1:]:
+            desc = row.cells[0].text.strip()
+            if desc == 'Business Objective':
+                row.cells[1].text = sow_details.get('business_objective', '')
+            elif desc == 'Business Problem':
+                row.cells[1].text = sow_details.get('business_problem', '')
+            elif desc == 'Use Case Narrative':
+                row.cells[1].text = sow_details.get('use_case_narrative', '')
+            elif desc == 'Expected Volumes':
+                row.cells[1].text = sow_details.get('expected_volumes', '')
+            elif desc == 'Target Audience':
+                row.cells[1].text = sow_details.get('target_audience', '')
+            elif desc.startswith('KPI'):
+                row.cells[1].text = sow_details.get('kpis', '')
+    except Exception:
+        pass
 
-    # Scope / inclusions
-    doc.add_heading('2. Scope of Work & Inclusions', level=2)
-    doc.add_paragraph(
-        'The solution includes the following key capabilities and components:'
-    )
+    # Overall Requirement – Table A in Technical Requirements (Table 4)
+    try:
+        overall = doc.tables[4]
+        channels_selected = sow_details.get('channels', []) or []
+        # Helper to map channels into template groups
+        def group_channels(group_names):
+            return ', '.join([c for c in channels_selected if c in group_names])
+        for row in overall.rows[1:]:
+            desc = row.cells[0].text.strip()
+            if desc == 'Number of journeys':
+                val = sow_details.get('num_journeys') or inputs.get('num_journeys_price') or ''
+                row.cells[1].text = str(val)
+            elif desc == 'Channels':
+                # Three buckets: WA/WA Voice, SMS/Others, Instagram/PSTN Voice
+                row.cells[1].text = group_channels(['WhatsApp', 'WA', 'WhatsApp Voice', 'WA Voice'])
+                row.cells[2].text = group_channels(['SMS', 'Others'])
+                row.cells[3].text = group_channels(['Instagram', 'PSTN Voice'])
+            elif desc == 'Bot Language':
+                row.cells[1].text = sow_details.get('bot_language', '')
+            elif desc.startswith('No. of APIs/Backend Services'):
+                val = sow_details.get('num_apis') or inputs.get('num_apis_price') or ''
+                row.cells[1].text = str(val)
+            elif desc.startswith('Name of the backend systems in scope'):
+                row.cells[1].text = sow_details.get('backend_systems', '')
+            elif desc.startswith('Development Timelines'):
+                val = sow_details.get('total_mandays', '')
+                row.cells[1].text = str(val)
+    except Exception:
+        pass
+
+    # AI Specifications – Table B (Table 5)
+    try:
+        ai_table = doc.tables[5]
+        ai_module = inputs.get('ai_module', 'NA')
+        if ai_module != 'Yes':
+            # Omit AI Specifications table for non-AI SOWs
+            tbl = ai_table._tbl
+            tbl.getparent().remove(tbl)
+        else:
+            complexity = inputs.get('ai_agent_complexity', '') or sow_details.get('bot_complexity', '')
+            model = inputs.get('ai_agent_model', '') or sow_details.get('llm_model', '')
+            for row in ai_table.rows[1:]:
+                desc = row.cells[0].text.strip()
+                if desc == 'Bot Complexity':
+                    row.cells[1].text = complexity
+                elif desc == 'LLM Model':
+                    row.cells[1].text = model
+    except Exception:
+        pass
+
+    # Deployment / Hosting – Table D (Table 7)
+    try:
+        dep_table = doc.tables[7]
+        dep_use_default = (sow_details.get('dep_use_default', 'yes') == 'yes')
+        if dep_use_default:
+            # Set default client requirement
+            for row in dep_table.rows[1:]:
+                desc = row.cells[0].text.strip()
+                if desc == 'Deployment/Hosting':
+                    row.cells[1].text = 'Gupshup India AWS'
+                    break
+            # Remove Questions and Presales Findings columns (last two)
+            for col_idx in [3, 2]:
+                for row in dep_table.rows:
+                    cell = row.cells[col_idx]
+                    cell._tc.getparent().remove(cell._tc)
+    except Exception:
+        pass
+
+    # Scope / inclusions – we keep the static prose from the template, but can
+    # optionally append dynamic inclusions list at the end of that section.
     inclusions = session.get('inclusions') or {}
     final_inclusions = session.get('final_inclusions') or []
     # Prefer the flattened list passed to the template; fall back to dict if needed.
@@ -1873,67 +2039,87 @@ def generate_sow_docx(inputs, results, final_price_details, profile, calculation
         for vals in inclusions.values():
             inclusion_items.extend(vals or [])
     if inclusion_items:
+        # Append to end of document as an “Included Features” list so we
+        # don’t disturb the master copy layout. Use default paragraph style
+        # to avoid relying on template-specific bullet styles.
+        doc.add_paragraph()  # spacer
+        heading_par = doc.add_paragraph()
+        run = heading_par.add_run('Included Features (from calculator):')
+        run.bold = True
         for item in inclusion_items:
-            doc.add_paragraph(str(item), style='List Bullet')
-    else:
-        doc.add_paragraph(
-            'Platform fee entitlements and feature inclusions as per standard '
-            'Gupshup pricing calculator configuration.',
-            style='List Bullet'
-        )
+            doc.add_paragraph(str(item))
 
-    # Assumptions
-    doc.add_heading('3. Assumptions & Dependencies', level=2)
-    assumptions = [
-        'Final commercials are subject to internal approvals and any applicable taxes.',
-        'Channel (e.g., Meta/WhatsApp) fees are based on current public pricing and may change.',
-        'Volumes and mix across AI / Advanced / Basic messages are based on estimates provided at the time of this calculation.',
-        'Implementation timelines and detailed responsibilities will be confirmed in the Master Services Agreement / Order Form.',
-    ]
-    for a in assumptions:
-        doc.add_paragraph(a, style='List Bullet')
+    # Capacity & Compliance – Table E (Table 8)
+    try:
+        cap = doc.tables[8]
+        tps_default = (sow_details.get('tps_use_default', 'yes') == 'yes')
+        dr_default = (sow_details.get('dr_use_default', 'yes') == 'yes')
+        include_personalize = (sow_details.get('include_personalize', 'yes') == 'yes')
+        additional_security = (sow_details.get('additional_security', 'no') == 'yes')
 
-    # Commercials / pricing
-    doc.add_heading('4. Commercials / Pricing Summary', level=2)
-    currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
-    total_invoice = results.get('revenue', 0) if isinstance(results, dict) else 0
+        rows_to_remove = []
+        in_tps_block = False
+        in_dr_block = False
+        for idx, row in enumerate(cap.rows[1:], start=1):
+            desc = row.cells[0].text.strip()
+            # Track which block we're in (TPS/Data Retention) for multi-row sections
+            if desc == 'TPS':
+                in_tps_block = True
+                in_dr_block = False
+            elif desc == 'Data Retention':
+                in_dr_block = True
+                in_tps_block = False
+            elif desc:
+                in_tps_block = False
+                in_dr_block = False
 
-    doc.add_paragraph(
-        f'Indicative monthly minimum billing (excluding taxes): '
-        f'{currency_symbol}{int(total_invoice or 0):,}'
-    )
+            if desc == 'TPS' and tps_default:
+                row.cells[1].text = 'Standard 80'
+                # Clear Questions and Presales columns as per instructions
+                row.cells[2].text = ''
+                row.cells[3].text = ''
+            elif in_tps_block and tps_default:
+                # For subsequent TPS rows, clear Questions/Presales content
+                row.cells[2].text = ''
+                row.cells[3].text = ''
+            elif desc == 'Data Retention' and dr_default:
+                row.cells[1].text = '2 years - Standard'
+                row.cells[2].text = ''
+                row.cells[3].text = ''
+            elif in_dr_block and dr_default:
+                # Subsequent Data Retention rows: clear Questions/Presales only
+                row.cells[2].text = ''
+                row.cells[3].text = ''
 
-    table = doc.add_table(rows=1, cols=4)
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = 'Line Item'
-    hdr_cells[1].text = 'Included Volume'
-    hdr_cells[2].text = 'Per-Unit Price'
-    hdr_cells[3].text = 'Notes'
+            if desc == 'Profile Storage Requirements' and not include_personalize:
+                rows_to_remove.append(idx)
+            elif desc == 'Security and Privacy Package' and not additional_security:
+                rows_to_remove.append(idx)
 
-    if final_price_details:
-        def _add_row(label, block):
-            row = table.add_row().cells
-            row[0].text = label
-            row[1].text = str(block.get('volume', 0))
-            price = block.get('price_per_msg') or block.get('markup_per_msg') or 0
-            row[2].text = f"{currency_symbol}{round(float(price or 0), 4)}"
-            row[3].text = ''
+        # Remove marked rows from bottom up
+        for idx in sorted(rows_to_remove, reverse=True):
+            cap._tbl.remove(cap.rows[idx]._tr)
 
-        _add_row('Platform Fee (Fixed)', {'volume': '-', 'price_per_msg': final_price_details.get('platform_fee_total', 0)})
-        _add_row('AI Messages', final_price_details.get('ai_messages', {}))
-        _add_row('Advanced Messages', final_price_details.get('advanced_messages', {}))
-        mkt = final_price_details.get('marketing_message', {})
-        if mkt.get('volume', 0) > 0:
-            _add_row('Basic Marketing Messages', mkt)
-        utl = final_price_details.get('utility_message', {})
-        if utl.get('volume', 0) > 0:
-            _add_row('Basic Utility / Authentication Messages', utl)
+        # If standard configs are used for both TPS and Data Retention,
+        # remove the last two columns (Questions, Presales Findings) for
+        # the entire table to simplify the layout.
+        if tps_default and dr_default:
+            for col_idx in [3, 2]:
+                for row in cap.rows:
+                    cell = row.cells[col_idx]
+                    cell._tc.getparent().remove(cell._tc)
+    except Exception:
+        pass
 
-    doc.add_paragraph()
-    doc.add_paragraph(
-        'The above pricing is indicative and intended for solution scoping. '
-        'Final commercials, SLAs, and legal terms will be captured in the definitive agreement.'
-    )
+    # Delivery – insert Presales name into credentials column (Table 11)
+    try:
+        roles = doc.tables[11]
+        for row in roles.rows[1:]:
+            if row.cells[0].text.strip() == 'Presales':
+                row.cells[2].text = name or ''
+                break
+    except Exception:
+        pass
 
     bio = BytesIO()
     doc.save(bio)
@@ -1959,6 +2145,7 @@ def generate_sow():
     inputs = session.get('inputs')
     results = session.get('results')
     final_price_details = session.get('final_price_details')
+    sow_details = session.get('sow_details') or {}
     profile = session.get('profile') or {}
     calculation_id = session.get('calculation_id')
 
@@ -1966,7 +2153,7 @@ def generate_sow():
         flash('No completed calculation found for SOW generation. Please run a pricing calculation first.', 'error')
         return redirect(url_for('index'))
 
-    docx_io = generate_sow_docx(inputs, results, final_price_details, profile, calculation_id)
+    docx_io = generate_sow_docx(inputs, results, final_price_details, profile, sow_details, calculation_id)
     filename = f"SOW_{calculation_id or 'pricing'}.docx"
     return send_file(
         docx_io,
@@ -1974,6 +2161,76 @@ def generate_sow():
         as_attachment=True,
         download_name=filename,
     )
+
+
+@app.route('/sow-details', methods=['GET', 'POST'])
+def sow_details():
+    """Intermediate SOW details page shown before generating the SOW doc."""
+    if not session.get('authenticated'):
+        return redirect(url_for('login'))
+
+    profile = session.get('profile') or {}
+    email_for_sow = (profile.get('email') or '').strip().lower()
+    if not email_for_sow or email_for_sow not in SOW_BETA_EMAILS:
+        flash('SOW generation (beta) is currently enabled only for a limited set of internal users.', 'error')
+        return redirect(url_for('index', step='results'))
+
+    inputs = session.get('inputs') or {}
+    results = session.get('results')
+    if not inputs or not results:
+        flash('No completed calculation found for SOW generation. Please run a pricing calculation first.', 'error')
+        return redirect(url_for('index'))
+
+    existing = session.get('sow_details') or {}
+
+    if request.method == 'POST':
+        # Collect Business Objectives section
+        sow = {
+            'business_objective': request.form.get('business_objective', '').strip(),
+            'business_problem': request.form.get('business_problem', '').strip(),
+            'use_case_narrative': request.form.get('use_case_narrative', '').strip(),
+            'expected_volumes': request.form.get('expected_volumes', '').strip(),
+            'target_audience': request.form.get('target_audience', '').strip(),
+            'kpis': request.form.get('kpis', '').strip(),
+            # Overall technical numbers
+            'num_journeys': request.form.get('num_journeys', '').strip(),
+            'num_apis': request.form.get('num_apis', '').strip(),
+            'bot_language': request.form.get('bot_language', '').strip(),
+            'backend_systems': request.form.get('backend_systems', '').strip(),
+            'total_mandays': request.form.get('total_mandays', '').strip(),
+            # Channels multi-select
+            'channels': request.form.getlist('channels'),
+            # Deployment & capacity toggles
+            'dep_use_default': request.form.get('dep_use_default', 'yes'),
+            'tps_use_default': request.form.get('tps_use_default', 'yes'),
+            'dr_use_default': request.form.get('dr_use_default', 'yes'),
+            'include_personalize': request.form.get('include_personalize', 'yes'),
+            'additional_security': request.form.get('additional_security', 'no'),
+        }
+        session['sow_details'] = sow
+        # After capturing details, trigger SOW generation
+        return redirect(url_for('generate_sow'))
+
+    # Defaults for initial load
+    try:
+        from calculator import calculate_total_mandays
+        default_total_mandays = calculate_total_mandays(inputs)
+    except Exception:
+        default_total_mandays = ''
+    defaults = {
+        'num_journeys': inputs.get('num_journeys_price', ''),
+        'num_apis': inputs.get('num_apis_price', ''),
+        'total_mandays': default_total_mandays,
+    }
+
+    class Obj:  # simple helper to allow dot-access in template
+        def __init__(self, d):
+            for k, v in d.items():
+                setattr(self, k, v)
+
+    sow_obj = Obj(existing)
+    defaults_obj = Obj(defaults)
+    return render_template('sow_details.html', sow=sow_obj, defaults=defaults_obj)
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():

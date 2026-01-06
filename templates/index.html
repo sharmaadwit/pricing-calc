@@ -490,6 +490,11 @@
         <label for="user_name">Enter your name:</label>
                     <input type="text" name="user_name" id="user_name" value="{{ inputs.get('user_name', '') }}" required>
                 </div>
+                <div class="form-group">
+                    <label for="user_email">Work Email:</label>
+                    <input type="email" name="user_email" id="user_email" value="{{ (profile.email if profile and profile.email is defined else inputs.get('user_email', '')) }}" required>
+                    <div class="help-text">Used to recall your profile and map you to the right country/region.</div>
+                </div>
                 
                 <div class="form-group">
                     <label for="country-select">Country:</label>
@@ -1696,7 +1701,7 @@
         </form>
         {% if sow_beta_enabled %}
         <div style="margin-top: 16px; text-align: center;">
-            <a href="{{ url_for('generate_sow') }}" class="btn-secondary" target="_blank">Generate SOW (beta)</a>
+            <a href="{{ url_for('sow_details') }}" class="btn-secondary" target="_blank">Generate SOW (beta)</a>
         </div>
         {% endif %}
     {% endif %}
