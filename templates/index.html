@@ -35,7 +35,6 @@
             color: white;
             padding: 40px;
             text-align: center;
-            position: relative;
         }
         
         .header h1 {
@@ -45,22 +44,23 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        .header-doc-link {
-            position: absolute;
+        .readme-fab {
+            position: fixed;
             top: 18px;
             right: 24px;
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.35);
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.5);
             color: #ffffff;
             padding: 8px 14px;
             border-radius: 999px;
             font-size: 0.85em;
             text-decoration: none;
             backdrop-filter: blur(6px);
+            z-index: 1000;
         }
 
-        .header-doc-link:hover {
-            background: rgba(255,255,255,0.22);
+        .readme-fab:hover {
+            background: rgba(255,255,255,0.25);
         }
         
         .progress-container {
@@ -385,9 +385,9 @@
     </script>
 </head>
 <body>
+    <a href="{{ url_for('readme') }}" target="_blank" class="readme-fab">README</a>
     <div class="container">
         <div class="header">
-            <a href="{{ url_for('readme') }}" target="_blank" class="header-doc-link">Open README / Docs</a>
             <h1>Pricing Calculator</h1>
             {% if step != 'volumes' and calculation_id %}
                 <div class="calculation-id">
