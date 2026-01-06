@@ -228,9 +228,18 @@ COUNTRY_CURRENCY = {
 #   - 'country': e.g. 'India'
 #   - 'region': e.g. 'North'
 USER_DEFAULTS = {
-    # Example mappings – adjust to your org’s needs
-    'adwit.sharma@gupshup.io': {'country': 'India', 'region': 'West'},
-    '@gupshup.io': {'country': 'India', 'region': 'West'},
+    # Explicitly mapped internal users
+    'adwit.sharma@gupshup.io': {'country': 'India', 'region': 'North'},
+    'ankit.kanwara@gupshup.io': {'country': 'India', 'region': 'South'},
+    'gargi.upadhyay@gupshup.io': {'country': 'MENA', 'region': 'KSA'},
+    'kathyayani.nayak@gupshup.io': {'country': 'India', 'region': 'South'},
+    'mauricio.martins@gupshup.io': {'country': 'LATAM', 'region': 'Brazil'},
+    'mridul.kumawat@gupshup.io': {'country': 'India', 'region': 'West'},
+    'nikhil.sharma@knowlarity.com': {'country': 'India', 'region': 'North'},
+    'nikhil.sharma@gupshup.io': {'country': 'India', 'region': 'North'},
+    'purusottam.singh@gupshup.io': {'country': 'India', 'region': 'West'},
+    'siddharth.singh@gupshup.io': {'country': 'MENA', 'region': 'UAE'},
+    'yashas.reddy@gupshup.io': {'country': 'Africa', 'region': 'South Africa'},
 }
 
 

@@ -171,6 +171,21 @@ def calculate_safe_overage_price(rate_card_price, meta_cost, markup_multiplier=1
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for session
 
+# SOW beta allowlist – only these emails see the Generate SOW (beta) option
+SOW_BETA_EMAILS = {
+    'adwit.sharma@gupshup.io',
+    'ankit.kanwara@gupshup.io',
+    'gargi.upadhyay@gupshup.io',
+    'kathyayani.nayak@gupshup.io',
+    'mauricio.martins@gupshup.io',
+    'mridul.kumawat@gupshup.io',
+    'nikhil.sharma@knowlarity.com',
+    'nikhil.sharma@gupshup.io',
+    'purusottam.singh@gupshup.io',
+    'siddharth.singh@gupshup.io',
+    'yashas.reddy@gupshup.io',
+}
+
 # Test log to verify logging is working
 print("=== FLASK APP STARTING UP ===", file=sys.stderr, flush=True)
 print(f"Python version: {sys.version}", file=sys.stderr, flush=True)
@@ -354,6 +369,7 @@ class Analytics(db.Model):
     calculation_id = db.Column(db.String(64), unique=False, nullable=True)  # Transaction ID for each calculation
     timestamp = db.Column(db.DateTime, nullable=False)
     user_name = db.Column(db.String(128))
+    user_email = db.Column(db.String(256), nullable=True)
     country = db.Column(db.String(64))
     region = db.Column(db.String(64))  # Added region column for region-specific analytics
     platform_fee = db.Column(db.Float)
@@ -1357,6 +1373,7 @@ def index():
         analytics_kwargs = dict(
             timestamp=datetime.utcnow(),
             user_name=profile.get('name', inputs.get('user_name', '')),
+            user_email=profile.get('email', None),
             country=profile.get('country', inputs.get('country', '')),
             region=profile.get('region', inputs.get('region', '')),
             platform_fee=platform_fee,
@@ -1429,6 +1446,10 @@ def index():
         results['suggested_revenue'] = (results.get('suggested_revenue', 0) - platform_fee) + rate_card_platform_fee
         print("RENDERING RESULTS PAGE", file=sys.stderr, flush=True)
         contradiction_warning = None
+        # Determine if SOW beta should be enabled for this user
+        profile = session.get('profile') or {}
+        email_for_sow = (profile.get('email') or '').strip().lower()
+        sow_beta_enabled = bool(email_for_sow and email_for_sow in SOW_BETA_EMAILS)
         # Always calculate final_price_details for all routes
         committed_amount = float(inputs.get('committed_amount', 0) or 0)
         country = inputs.get('country', 'India')
@@ -1542,6 +1563,7 @@ def index():
                 dev_cost_breakdown=dev_cost_breakdown,
                 final_price_details=final_price_details,
                 pricing_simulation=pricing_simulation,
+                sow_beta_enabled=sow_beta_enabled,
                 platform_pricing_guidance=PLATFORM_PRICING_GUIDANCE,
                 min_fees=min_fees
             )
@@ -1592,6 +1614,7 @@ def index():
             dev_cost_breakdown=dev_cost_breakdown,
             final_price_details=final_price_details,
             pricing_simulation=pricing_simulation,
+            sow_beta_enabled=sow_beta_enabled,
             platform_pricing_guidance=PLATFORM_PRICING_GUIDANCE,
             min_fees=min_fees
         )
@@ -1756,6 +1779,10 @@ def index():
         # Ensure manday_breakdown has the correct structure
         if not manday_breakdown or 'bot_ui' not in manday_breakdown:
             manday_breakdown = calculate_total_mandays_breakdown(inputs)
+        # Determine if SOW beta should be enabled for this user (refresh case)
+        profile = session.get('profile') or {}
+        email_for_sow = (profile.get('email') or '').strip().lower()
+        sow_beta_enabled = bool(email_for_sow and email_for_sow in SOW_BETA_EMAILS)
         
         return render_template(
             'index.html',
@@ -1775,7 +1802,8 @@ def index():
             pricing_simulation=pricing_simulation,
             platform_pricing_guidance=PLATFORM_PRICING_GUIDANCE,
             min_fees=min_fees,
-            total_mandays=total_mandays
+            total_mandays=total_mandays,
+            sow_beta_enabled=sow_beta_enabled
         )
     # Default: show volume input form (this handles "Start Over" and initial page load)
     # Clear calculation_id when starting fresh
@@ -1920,6 +1948,13 @@ def generate_sow():
     """
     if not session.get('authenticated'):
         return redirect(url_for('login'))
+
+    # Enforce SOW beta allowlist
+    profile = session.get('profile') or {}
+    email_for_sow = (profile.get('email') or '').strip().lower()
+    if not email_for_sow or email_for_sow not in SOW_BETA_EMAILS:
+        flash('SOW generation (beta) is currently enabled only for a limited set of internal users.', 'error')
+        return redirect(url_for('index', step='results'))
 
     inputs = session.get('inputs')
     results = session.get('results')
@@ -2177,16 +2212,63 @@ def analytics():
                             'basic_utility': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
                             'voice_notes_rate': {'avg': 0, 'min': 0, 'max': 0, 'median': 0}
                         }
-                # Debug: Print stats structure before rendering
-                print('DEBUG: analytics["stats"] structure:', file=sys.stderr, flush=True)
-                for country, stat in stats.items():
-                    print(f'  {country}: {type(stat)} = {list(stat.keys()) if isinstance(stat, dict) else "NOT A DICT"}', file=sys.stderr, flush=True)
-                    if isinstance(stat, dict) and 'msg_types' in stat:
-                        print(f'    msg_types keys: {list(stat["msg_types"].keys())}', file=sys.stderr, flush=True)
-                    else:
-                        print(f'    NO msg_types in {country}', file=sys.stderr, flush=True)
-                    pass
-                print('--- END DEBUG ---', file=sys.stderr, flush=True)
+                # Profile-based usage summary (by profile/email)
+                profile_usage = []
+                profiles = {}
+                for a in Analytics.query.all():
+                    email = getattr(a, 'user_email', None)
+                    name = a.user_name or ''
+                    key = email or name or 'Unknown'
+                    entry = profiles.setdefault(key, {
+                        'email': email,
+                        'name': name,
+                        'countries': set(),
+                        'regions': set(),
+                        'count': 0,
+                        'last_ts': None,
+                    })
+                    entry['count'] += 1
+                    if a.country:
+                        entry['countries'].add(a.country)
+                    if a.region:
+                        entry['regions'].add(a.region)
+                    if a.timestamp and (entry['last_ts'] is None or a.timestamp > entry['last_ts']):
+                        entry['last_ts'] = a.timestamp
+                for entry in profiles.values():
+                    profile_usage.append({
+                        'email': entry['email'],
+                        'name': entry['name'],
+                        'countries': ', '.join(sorted(entry['countries'])),
+                        'regions': ', '.join(sorted(entry['regions'])),
+                        'calculations': entry['count'],
+                        'last_seen': entry['last_ts'],
+                    })
+
+                # Account/domain-level usage (group by email domain)
+                account_usage = []
+                domains = {}
+                for a in Analytics.query.all():
+                    email = getattr(a, 'user_email', None)
+                    if not email or '@' not in email:
+                        continue
+                    domain = email.split('@', 1)[1].lower()
+                    entry = domains.setdefault(domain, {
+                        'count': 0,
+                        'countries': set(),
+                        'regions': set(),
+                    })
+                    entry['count'] += 1
+                    if a.country:
+                        entry['countries'].add(a.country)
+                    if a.region:
+                        entry['regions'].add(a.region)
+                for dom, entry in domains.items():
+                    account_usage.append({
+                        'domain': dom,
+                        'calculations': entry['count'],
+                        'countries': ', '.join(sorted(entry['countries'])),
+                        'regions': ', '.join(sorted(entry['regions'])),
+                    })
                 # Per-user stats for table
                 user_stats = {}
                 user_country_currency_list = db.session.query(Analytics.user_name, Analytics.country, Analytics.currency).distinct().all()
@@ -2308,6 +2390,8 @@ def analytics():
                     'ai_model_counts': ai_model_counts,
                     'ai_complexity_counts': ai_complexity_counts,
                     'stats_by_region': stats_by_region,
+                    'profile_usage': profile_usage,
+                    'account_usage': account_usage,
                 }
                 # --- Voice overview analytics ---
                 try:
@@ -2443,8 +2527,6 @@ def analytics():
                     'platform_fee_vs_deal_correlation': correlation,
                     'seasonality': seasonality
                 })
-                # Debug: Log manday rates and breakdown before saving to Analytics
-                #print(f"DEBUG: About to save Analytics record with bot_ui_manday_rate={manday_rates.get('bot_ui')}, custom_ai_manday_rate={manday_rates.get('custom_ai')}, bot_ui_mandays={manday_breakdown.get('bot_ui', 0)}, custom_ai_mandays={manday_breakdown.get('custom_ai', 0)}")
                 return render_template('analytics.html', authorized=True, analytics=analytics)
             else:
                 flash('Incorrect keyword.', 'error')

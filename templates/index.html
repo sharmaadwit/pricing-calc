@@ -1694,9 +1694,11 @@
         <form method="get" action="/start-over" style="margin-top: 32px; text-align: center;">
             <input type="submit" value="Start Over">
         </form>
+        {% if sow_beta_enabled %}
         <div style="margin-top: 16px; text-align: center;">
-            <a href="{{ url_for('generate_sow') }}" class="btn-secondary" target="_blank">Download Scope of Work (.docx)</a>
+            <a href="{{ url_for('generate_sow') }}" class="btn-secondary" target="_blank">Generate SOW (beta)</a>
         </div>
+        {% endif %}
     {% endif %}
 
         </div>
