@@ -280,6 +280,12 @@
                   </div>
                 </div> -->
             </div>
+            <div class="section">
+                <h2>AI Model & Complexity Usage</h2>
+                <div id="aiModelComplexityContainer" class="insights">
+                    <p>Loading AI model analytics...</p>
+                </div>
+            </div>
             <!-- Resource Utilization Section (merged) -->
             <div class="section">
                 <h2>Resource Utilization</h2>
@@ -382,6 +388,48 @@
           
           const lastUpdated = document.getElementById('lastUpdated');
           lastUpdated.textContent = `Last updated: ${analyticsData.last_updated}`;
+      }
+
+      // Render global AI model and complexity analytics
+      function renderAiModelComplexityAnalytics() {
+          if (!analyticsData) return;
+          const container = document.getElementById('aiModelComplexityContainer');
+          if (!container) return;
+
+          const modelCounts = analyticsData.ai_model_counts_global || {};
+          const complexityCounts = analyticsData.ai_complexity_counts_global || {};
+
+          const modelEntries = Object.entries(modelCounts);
+          const complexityEntries = Object.entries(complexityCounts);
+
+          let html = '<div class="insights">';
+          html += '<h4>AI Models Used (Global Top)</h4>';
+          if (modelEntries.length) {
+              html += '<table border="1" cellpadding="6" style="border-collapse:collapse; margin-bottom:12px; width:100%;">';
+              html += '<tr><th>Model</th><th>Calculations</th></tr>';
+              modelEntries.forEach(([model, count]) => {
+                  html += `<tr><td>${model}</td><td style="text-align:right;">${count}</td></tr>`;
+              });
+              html += '</table>';
+          } else {
+              html += '<p>No AI model data available yet.</p>';
+          }
+
+          html += '<h4>Use Case Complexity Mix (Global)</h4>';
+          if (complexityEntries.length) {
+              html += '<table border="1" cellpadding="6" style="border-collapse:collapse; margin-bottom:4px; width:100%;">';
+              html += '<tr><th>Complexity</th><th>Calculations</th></tr>';
+              complexityEntries.forEach(([comp, count]) => {
+                  const label = comp.charAt(0).toUpperCase() + comp.slice(1);
+                  html += `<tr><td>${label}</td><td style="text-align:right;">${count}</td></tr>`;
+              });
+              html += '</table>';
+          } else {
+              html += '<p>No AI complexity data available yet.</p>';
+          }
+
+          html += '</div>';
+          container.innerHTML = html;
       }
 
       // Add after updateSummaryCards()
@@ -827,6 +875,7 @@
               analyticsData = await response.json();
               updateSummaryCards();
               updateLastUpdated();
+              renderAiModelComplexityAnalytics();
               initializeCharts();
               renderCountrySummaryTables(); // Call here after data is loaded
           } catch (error) {

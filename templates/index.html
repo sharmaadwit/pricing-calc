@@ -1219,18 +1219,18 @@
               </tr>
               <tr>
                 <td><b>Advanced messages (Channel fee + Gupshup markup)</b></td>
-                <td style="text-align:right;">#{{ final_price_details.advanced_messages.volume }} ( {{ currency_symbol }}{{ final_price_details.advanced_messages.price_per_msg|round(3) }} per Msg )</td>
+                <td style="text-align:right;">#{{ final_price_details.advanced_messages.volume }} ( {{ currency_symbol }}{{ final_price_details.advanced_messages.markup_per_msg|round(3) }} per Msg )</td>
               </tr>
               {% if final_price_details.marketing_message.volume > 0 %}
               <tr>
                 <td><b>Basic marketing messages (Channel fee + Gupshup markup)</b></td>
-                <td style="text-align:right;">#{{ final_price_details.marketing_message.volume }} ( {{ currency_symbol }}{{ final_price_details.marketing_message.price_per_msg|round(3) }} per Msg )</td>
+                <td style="text-align:right;">#{{ final_price_details.marketing_message.volume }} ( Channel cost + {{ currency_symbol }}{{ final_price_details.marketing_message.markup_per_msg|round(3) }} per Msg )</td>
               </tr>
               {% endif %}
               {% if final_price_details.utility_message.volume > 0 %}
               <tr>
                 <td><b>Basic utility/authentication messages (Channel fee + Gupshup markup)</b></td>
-                <td style="text-align:right;">#{{ final_price_details.utility_message.volume }} ( {{ currency_symbol }}{{ final_price_details.utility_message.price_per_msg|round(3) }} per Msg )</td>
+                <td style="text-align:right;">#{{ final_price_details.utility_message.volume }} ( Channel cost + {{ currency_symbol }}{{ final_price_details.utility_message.markup_per_msg|round(3) }} per Msg )</td>
               </tr>
               {% endif %}
               <tr>
@@ -1253,7 +1253,7 @@
                   <th style="text-align:left;">Line Item</th>
                   <th style="text-align:center;">Volume</th>
                   <th style="text-align:center;">Gupshup Markup/message</th>
-                  <th style="text-align:right;">Fixed Price</th>
+                  <th style="text-align:right;">Minimum Monthly Billing</th>
                 </tr>
               </thead>
               <tbody>
@@ -1263,7 +1263,12 @@
                       <td style="text-align:center;">{{ row.volume }}</td>
                       <td style="text-align:center;">{{ row.chosen_price }}</td>
                       <td class="right">
-                          {% if row.line_item == 'Platform Fee (Chosen)' %}
+                          {% set item_name = row.line_item or row.label %}
+                          {% if item_name == 'Advanced Message' %}
+                              {{ row.volume }} * {{ row.chosen_price }}
+                          {% elif item_name in ['Basic Marketing Message', 'Basic Utility/Authentication Message'] %}
+                              {{ row.volume }} * (Channel Cost + {{ row.chosen_price }})
+                          {% elif item_name == 'Platform Fee (Chosen)' %}
                               {{ currency_symbol }}{{ row.revenue }}
                               {% if user_selections and user_selections|length > 0 %}<br>
                                   <span style="font-size:0.92em; color:#888;">
@@ -1272,7 +1277,7 @@
                         {% endfor %}
                                   </span>
                               {% endif %}
-                          {% elif row.line_item == 'Committed Amount' %}
+                          {% elif item_name == 'Committed Amount' %}
                               {{ currency_symbol }}{{ row.revenue }}
                           {% else %}
                               &nbsp;

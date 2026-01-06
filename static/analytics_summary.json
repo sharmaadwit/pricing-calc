@@ -3,7 +3,7 @@
   "unique_users": 33,
   "total_revenue": 73931104.0,
   "countries": 7,
-  "last_updated": "2026-01-06 06:36:41",
+  "last_updated": "2026-01-06 12:07:22",
   "top_users": {
     "Kat": 16402950.0,
     "Ankit": 10485150.0,
@@ -23,6 +23,62 @@
   "route_breakdown": {
     "volumes": 450,
     "bundle": 50
+  },
+  "ai_model_counts_global": {
+    "nan": 495,
+    "ACE Agent Lite Experimental (gpt-5-nano)": 5
+  },
+  "ai_model_counts_by_country": {
+    "APAC": {
+      "nan": 18
+    },
+    "Africa": {
+      "nan": 25
+    },
+    "Europe": {
+      "nan": 3
+    },
+    "India": {
+      "nan": 401,
+      "ACE Agent Lite Experimental (gpt-5-nano)": 5
+    },
+    "LATAM": {
+      "nan": 20
+    },
+    "MENA": {
+      "nan": 18
+    },
+    "Rest of the World": {
+      "nan": 10
+    }
+  },
+  "ai_complexity_counts_global": {
+    "nan": 495,
+    "complex": 5
+  },
+  "ai_complexity_counts_by_country": {
+    "APAC": {
+      "nan": 18
+    },
+    "Africa": {
+      "nan": 25
+    },
+    "Europe": {
+      "nan": 3
+    },
+    "India": {
+      "nan": 401,
+      "complex": 5
+    },
+    "LATAM": {
+      "nan": 20
+    },
+    "MENA": {
+      "nan": 18
+    },
+    "Rest of the World": {
+      "nan": 10
+    }
   },
   "country_stats": {
     "APAC": {
@@ -1225,8 +1281,8 @@
       "clv_labels": [
         "Siddharth",
         "Gargi Upadhyay",
-        "Ankit",
-        "Adwit-test"
+        "Adwit-test",
+        "Ankit"
       ],
       "service_usage": [
         0.5198,

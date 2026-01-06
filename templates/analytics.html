@@ -91,6 +91,28 @@
     <li><b>Average Margin (Rate Card):</b> {{ analytics.margin_rate_card|sum / (analytics.margin_rate_card|length or 1) }}%
       <br><span style="font-size:0.97em; color:#444;">This is the average margin if all prices were set at the default rate card (no discounts), including platform fee and all message types.</span>
     </li>
+    <li><b>AI Models Used (Top 10):</b>
+      <ul>
+        {% if analytics.ai_model_counts %}
+          {% for model, count in analytics.ai_model_counts %}
+            <li>{{ model }}: {{ count }}</li>
+          {% endfor %}
+        {% else %}
+          <li>No AI model data available yet.</li>
+        {% endif %}
+      </ul>
+    </li>
+    <li><b>AI Use Case Complexity Mix:</b>
+      <ul>
+        {% if analytics.ai_complexity_counts %}
+          {% for complexity, count in analytics.ai_complexity_counts %}
+            <li>{{ complexity|capitalize }}: {{ count }}</li>
+          {% endfor %}
+        {% else %}
+          <li>No AI complexity data available yet.</li>
+        {% endif %}
+      </ul>
+    </li>
     <li><b>All Users (by Calculations):</b>
       <table border="1" cellpadding="5" style="border-collapse: collapse; margin-bottom: 1em;">
         <thead>

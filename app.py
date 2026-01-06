@@ -379,6 +379,9 @@ class Analytics(db.Model):
     voice_notes_price = db.Column(db.String(8))  # "Yes" or "No"
     voice_notes_model = db.Column(db.String(64))  # Model selected
     voice_notes_rate = db.Column(db.Float)  # Rate per minute
+    # AI agent selection fields
+    ai_agent_model = db.Column(db.String(128), nullable=True)
+    ai_agent_complexity = db.Column(db.String(32), nullable=True)
     # Add more fields as needed
     calculation_route = db.Column(db.String(16))  # "volumes" or "bundle"
     # --- Voice channel analytics (nullable to remain backward compatible) ---
@@ -1277,6 +1280,9 @@ def index():
             advanced_volume=advanced_volume,
             basic_marketing_volume=basic_marketing_volume,
             basic_utility_volume=basic_utility_volume,
+            # AI agent selection (model + complexity) for analytics
+            ai_agent_model=inputs.get('ai_agent_model', ''),
+            ai_agent_complexity=inputs.get('ai_agent_complexity', 'regular'),
             # Store user-submitted manday rates
             bot_ui_manday_rate=manday_rates.get('bot_ui'),
             custom_ai_manday_rate=manday_rates.get('custom_ai'),
@@ -1344,28 +1350,34 @@ def index():
         else:
             ai_price = session.get('pricing_inputs', {}).get('ai_price', 0)
             advanced_price = session.get('pricing_inputs', {}).get('advanced_price', 0)
+        marketing_price = session.get('pricing_inputs', {}).get('basic_marketing_price', 0)
+        utility_price = session.get('pricing_inputs', {}).get('basic_utility_price', 0)
         final_price_details = {
             'platform_fee_total': platform_fee_total,
             'fixed_platform_fee': platform_fee,
             'ai_messages': {
                 'volume': int(ai_volume),
                 'price_per_msg': round(ai_price + meta_costs['ai'], 4),
+                'markup_per_msg': round(ai_price, 4),
                 'overage_price': calculate_safe_overage_price(ai_price, meta_costs['ai'])
             },
             'advanced_messages': {
                 'volume': int(advanced_volume),
                 'price_per_msg': round(advanced_price + meta_costs.get('advanced', 0), 4),
+                'markup_per_msg': round(advanced_price, 4),
                 'overage_price': calculate_safe_overage_price(advanced_price, meta_costs.get('advanced', 0))
             },
             'marketing_message': {
                 'volume': int(inputs.get('basic_marketing_volume', 0) or 0),
-                'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_marketing_price', 0) + meta_costs.get('marketing', 0), 4),
-                'overage_price': calculate_safe_overage_price(session.get('pricing_inputs', {}).get('basic_marketing_price', 0), meta_costs.get('marketing', 0))
+                'price_per_msg': round(marketing_price + meta_costs.get('marketing', 0), 4),
+                'markup_per_msg': round(marketing_price, 4),
+                'overage_price': calculate_safe_overage_price(marketing_price, meta_costs.get('marketing', 0))
             },
             'utility_message': {
                 'volume': int(inputs.get('basic_utility_volume', 0) or 0),
-                'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_utility_price', 0) + meta_costs.get('utility', 0), 4),
-                'overage_price': calculate_safe_overage_price(session.get('pricing_inputs', {}).get('basic_utility_price', 0), meta_costs.get('utility', 0))
+                'price_per_msg': round(utility_price + meta_costs.get('utility', 0), 4),
+                'markup_per_msg': round(utility_price, 4),
+                'overage_price': calculate_safe_overage_price(utility_price, meta_costs.get('utility', 0))
             }
         }
         print("DEBUG: advanced_price =", advanced_price)
@@ -1996,9 +2008,16 @@ def analytics():
                         'count': len([a for a in country_analytics if a.platform_fee is not None])
                     }
                 # Top users by number of calculations (show all, not just top 5)
-                user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
-                top_users = Counter(user_names).most_common()  # Remove the 5 limit
                 all_analytics = Analytics.query.all()
+                user_names = [row.user_name for row in all_analytics if row.user_name]
+                top_users = Counter(user_names).most_common()  # Remove the 5 limit
+                # --- AI model & complexity analytics ---
+                ai_models = [getattr(a, 'ai_agent_model', None) for a in all_analytics]
+                ai_models = [m for m in ai_models if m]
+                ai_model_counts = Counter(ai_models).most_common(10)
+                ai_complexities = [getattr(a, 'ai_agent_complexity', None) or 'regular' for a in all_analytics]
+                ai_complexities = [c for c in ai_complexities if c]
+                ai_complexity_counts = Counter(ai_complexities).most_common()
                 # Add calculation route counts
                 volumes_count = Analytics.query.filter_by(calculation_route='volumes').count()
                 bundle_count = Analytics.query.filter_by(calculation_route='bundle').count()
@@ -2034,6 +2053,8 @@ def analytics():
                     'top_users': top_users,
                     'user_stats': user_stats,
                     'all_analytics': all_analytics,
+                    'ai_model_counts': ai_model_counts,
+                    'ai_complexity_counts': ai_complexity_counts,
                     'stats_by_region': stats_by_region,
                 }
                 # --- Voice overview analytics ---

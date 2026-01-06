@@ -208,10 +208,14 @@ DB_URL = "your_postgresql_connection_string"
 CSV_PATH = "analytics.csv"
 ```
 
+The daily summary written to `static/analytics_summary.json` now also includes:
+- Global and per-country **AI model usage counts** (`ai_model_counts_*`)
+- Global and per-country **AI complexity usage counts** (`ai_complexity_counts_*`)
+
 ### Pricing Configuration
 
 Modify pricing tiers in `pricing_config.py`:
-- `meta_costs_table` - Channel-specific costs
+- `meta_costs_table` - Channel-specific costs (all AI channel costs are set to `0.0`; AI is priced entirely as Gupshup markup)
 - `committed_amount_slabs` - Bundle pricing tiers
 - `currency_symbols` - Region-specific currencies
 - `VOICE_NOTES_PRICING` and `get_voice_notes_price()` - Voice notes per-minute rates
@@ -227,7 +231,7 @@ AI model & complexity behaviour:
   - The raw vendor cost per call is read from `AI_AGENT_PRICING[pricing_key][model][complexity]`, where `pricing_key` is `India` (INR) or `International` (USD).
   - Thresholds and multipliers come from `AI_AGENT_SETTINGS` (currently `1.0` INR and `0.0105` USD, with a `5.0` multiplier).
   - If the vendor cost is **below the threshold**, the app ignores the model and keeps the slab-based AI markup unchanged.
-  - If the vendor cost is **at/above the threshold**, the final AI price per message becomes `cost × multiplier`; the AI markup shown on the rate card is `max(0, final_price - meta_costs_table[country]['ai'])`, so that channel fee + markup equals this model-driven price.
+  - If the vendor cost is **at/above the threshold**, the final AI price per message becomes `cost × multiplier`; since `meta_costs_table[country]['ai']` is `0.0`, this full amount is treated and displayed as **Gupshup markup** (the UI labels this as `Channel Cost + Markup` for non-AI text message types).
 
 ## 🔧 Development
 

@@ -294,6 +294,41 @@ def update_analytics_summary():
             'route_breakdown': df['calculation_route'].value_counts().to_dict()
         }
 
+        # --- AI model & complexity analytics for v2 dashboard ---
+        if 'ai_agent_model' in df.columns:
+            model_series = df['ai_agent_model'].astype(str).fillna('')
+            model_series = model_series[model_series != '']
+            summary['ai_model_counts_global'] = model_series.value_counts().head(10).to_dict()
+            ai_model_counts_by_country = {}
+            for country, group in df.groupby('country'):
+                if 'ai_agent_model' not in group.columns:
+                    continue
+                s = group['ai_agent_model'].astype(str).fillna('')
+                s = s[s != '']
+                if not s.empty:
+                    ai_model_counts_by_country[country] = s.value_counts().to_dict()
+            summary['ai_model_counts_by_country'] = ai_model_counts_by_country
+        else:
+            summary['ai_model_counts_global'] = {}
+            summary['ai_model_counts_by_country'] = {}
+
+        if 'ai_agent_complexity' in df.columns:
+            comp_series = df['ai_agent_complexity'].astype(str).fillna('')
+            comp_series = comp_series[comp_series != '']
+            summary['ai_complexity_counts_global'] = comp_series.value_counts().to_dict()
+            ai_complexity_counts_by_country = {}
+            for country, group in df.groupby('country'):
+                if 'ai_agent_complexity' not in group.columns:
+                    continue
+                s = group['ai_agent_complexity'].astype(str).fillna('')
+                s = s[s != '']
+                if not s.empty:
+                    ai_complexity_counts_by_country[country] = s.value_counts().to_dict()
+            summary['ai_complexity_counts_by_country'] = ai_complexity_counts_by_country
+        else:
+            summary['ai_complexity_counts_global'] = {}
+            summary['ai_complexity_counts_by_country'] = {}
+
         # Per-country stats
         country_stats = {}
         region_stats = {}

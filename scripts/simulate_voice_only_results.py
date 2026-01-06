@@ -2,7 +2,7 @@
 Simulate a Voice Only pricing flow and output the rendered Results page HTML.
 
 Usage (from repo root, venv active):
-    python scripts/simulate_voice_only_results.py > results_voice_only.html
+    python3 scripts/simulate_voice_only_results.py > results_voice_only.html
 
 The script uses Flask's test client to perform the actual route steps so the
 rendered HTML matches the live application behavior.
@@ -10,6 +10,14 @@ rendered HTML matches the live application behavior.
 
 from bs4 import BeautifulSoup  # type: ignore
 from typing import Dict
+import os
+import sys
+
+# Ensure the project root (containing app.py) is on sys.path even when this
+# script is executed from the scripts/ directory.
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 from app import app  # Import the Flask app
 
