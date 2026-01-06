@@ -49,6 +49,9 @@ def main() -> None:
             # Channel selection
             'channel_type': 'voice_only',
 
+            # Ensure AI module setting is explicit for voice flows
+            'ai_module': 'Yes',
+
             # Voice configuration
             'voice_ai_enabled': 'Yes',
             'num_voice_journeys': '2',

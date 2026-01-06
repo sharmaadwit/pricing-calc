@@ -529,7 +529,66 @@
                 devLocGroup.style.display = 'none';
             }
         }
-        
+
+        function enforceAiModuleForWorkspace() {
+            var aiModuleEl = document.getElementById('ai_module');
+            var wsCommerceEl = document.getElementById('num_ai_workspace_commerce_price');
+            var wsFaqEl = document.getElementById('num_ai_workspace_faq_price');
+            if (!aiModuleEl) return;
+            function parseCount(el) {
+                if (!el || !el.value) return 0;
+                try {
+                    return parseInt(el.value, 10) || 0;
+                } catch (e) {
+                    return 0;
+                }
+            }
+            var commerce = parseCount(wsCommerceEl);
+            var faq = parseCount(wsFaqEl);
+            if (commerce > 0 || faq > 0) {
+                aiModuleEl.value = 'Yes';
+            }
+        }
+
+        function isAiQualified() {
+            var aiModuleEl = document.getElementById('ai_module');
+            var aiVolumeEl = document.getElementById('ai_volume');
+            var moduleVal = aiModuleEl ? aiModuleEl.value : 'NA';
+            var vol = 0;
+            if (aiVolumeEl && aiVolumeEl.value) {
+                try {
+                    vol = parseFloat(aiVolumeEl.value.replace(/,/g, '')) || 0;
+                } catch (e) {
+                    vol = 0;
+                }
+            }
+            return moduleVal === 'Yes' && vol > 0;
+        }
+
+        function toggleAiAgentFields() {
+            var modelGroup = document.getElementById('ai_agent_model_group');
+            var complexityGroup = document.getElementById('ai_agent_complexity_group');
+            var modelSelect = document.getElementById('ai_agent_model');
+            var complexitySelect = document.getElementById('ai_agent_complexity');
+            if (!modelGroup || !complexityGroup) return;
+            var qualified = isAiQualified();
+            if (qualified) {
+                modelGroup.style.display = '';
+                complexityGroup.style.display = '';
+                if (modelSelect) modelSelect.required = true;
+                if (complexitySelect) complexitySelect.required = true;
+            } else {
+                modelGroup.style.display = 'none';
+                complexityGroup.style.display = 'none';
+                if (modelSelect) {
+                    modelSelect.required = false;
+                }
+                if (complexitySelect) {
+                    complexitySelect.required = false;
+                }
+            }
+        }
+
         function toggleVoiceNotesModel() {
             var voiceNotes = document.getElementById('voice_notes_price').value;
             var modelGroup = document.getElementById('voice_notes_model_group');
@@ -551,6 +610,8 @@
             updateMinPlatformFee();
             toggleDevLocation();
             toggleVoiceNotesModel();
+            enforceAiModuleForWorkspace();
+            toggleAiAgentFields();
             updateVoiceNotesPricing();
         };
         </script>
@@ -643,7 +704,32 @@
                         <input type="text" name="ai_volume" id="ai_volume" class="comma-number" value="{{ inputs.get('ai_volume', '') }}">
                         <div class="help-text">Enter the expected number of AI-powered messages per month</div>
                     </div>
-                    
+
+                    <div class="form-group" id="ai_agent_model_group">
+                        <label for="ai_agent_model">AI Agent Model:</label>
+                        <select name="ai_agent_model" id="ai_agent_model">
+                            <option value="">-- Select Model --</option>
+                            {% if ai_agent_pricing %}
+                                {% set pricing_key = 'India' if inputs and inputs.country == 'India' else 'International' %}
+                                {% for model_name in ai_agent_pricing[pricing_key].keys() %}
+                                    <option value="{{ model_name }}" {% if inputs and inputs.ai_agent_model == model_name %}selected{% endif %}>{{ model_name }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                        <div class="help-text">Required when AI Module is Yes and AI volume &gt; 0.</div>
+                    </div>
+
+                    <div class="form-group" id="ai_agent_complexity_group">
+                        <label for="ai_agent_complexity">Use Case Complexity:</label>
+                        <select name="ai_agent_complexity" id="ai_agent_complexity">
+                            <option value="">-- Select Complexity --</option>
+                            <option value="regular" {% if inputs and inputs.ai_agent_complexity == 'regular' %}selected{% endif %}>Regular Use Case</option>
+                            <option value="hard" {% if inputs and inputs.ai_agent_complexity == 'hard' %}selected{% endif %}>Hard Use Case</option>
+                            <option value="complex" {% if inputs and inputs.ai_agent_complexity == 'complex' %}selected{% endif %}>Complex Use Case</option>
+                        </select>
+                        <div class="help-text">Complexity level helps estimate LLM cost per message.</div>
+                    </div>
+
                     <div class="form-group">
                         <label for="advanced_volume">Advanced Message Volume (per month):</label>
                         <input type="text" name="advanced_volume" id="advanced_volume" class="comma-number" value="{{ inputs.get('advanced_volume', '') }}">
@@ -850,6 +936,21 @@
         document.querySelectorAll('.comma-number').forEach(function(input) {
             input.value = input.value.replace(/,/g, '');
         });
+        // Enforce AI model + complexity when AI is qualified
+        if (isAiQualified()) {
+            var modelSelect = document.getElementById('ai_agent_model');
+            var complexitySelect = document.getElementById('ai_agent_complexity');
+            if (!modelSelect || !complexitySelect || !modelSelect.value || !complexitySelect.value) {
+                alert('Please select both AI Agent Model and Use Case Complexity when AI Module is Yes and AI volume is greater than 0.');
+                if (modelSelect && !modelSelect.value) {
+                    modelSelect.focus();
+                } else if (complexitySelect && !complexitySelect.value) {
+                    complexitySelect.focus();
+                }
+                e.preventDefault();
+                return false;
+            }
+        }
         // Voice supported only for India
         var countryEl = document.getElementById('country-select');
         var chanEl = document.getElementById('channel_type');
@@ -926,9 +1027,18 @@
     document.addEventListener('DOMContentLoaded', function() {
         var channelSel = document.getElementById('channel_type');
         var countrySel = document.getElementById('country-select');
+        var aiModuleEl = document.getElementById('ai_module');
+        var aiVolumeEl = document.getElementById('ai_volume');
+        var wsCommerceEl = document.getElementById('num_ai_workspace_commerce_price');
+        var wsFaqEl = document.getElementById('num_ai_workspace_faq_price');
         if (channelSel) channelSel.addEventListener('change', toggleChannelFields);
         if (countrySel) countrySel.addEventListener('change', toggleChannelFields);
+        if (aiModuleEl) aiModuleEl.addEventListener('change', toggleAiAgentFields);
+        if (aiVolumeEl) aiVolumeEl.addEventListener('input', toggleAiAgentFields);
+        if (wsCommerceEl) wsCommerceEl.addEventListener('input', enforceAiModuleForWorkspace);
+        if (wsFaqEl) wsFaqEl.addEventListener('input', enforceAiModuleForWorkspace);
         toggleChannelFields();
+        toggleAiAgentFields();
     });
     </script>
     {% endif %}

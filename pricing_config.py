@@ -25,12 +25,15 @@
 # PURPOSE: Meta's charges for each message type, added to Gupshup markup to get final price
 # FUNCTIONS: calculate_pricing() in calculator.py
 meta_costs_table = {
-    'India': {'marketing': 0.7846, 'utility': 0.1150, 'ai': 0.30, 'advanced': 0},
-    'MENA': {'marketing': 0.0384, 'utility': 0.0157, 'ai': 0.0035, 'advanced': 0},
-    'LATAM': {'marketing': 0.0625, 'utility': 0.0068, 'ai': 0.0035, 'advanced': 0},
-    'Africa': {'marketing': 0.0379, 'utility': 0.0076, 'ai': 0.0035, 'advanced': 0},
-    'Europe': {'marketing': 0.1597, 'utility': 0.05, 'ai': 0.0035, 'advanced': 0},
-    'APAC': {'marketing': 0.0592, 'utility': 0.0171, 'ai': 0.0035, 'advanced': 0},
+    # NOTE: For AI, we now use LLM prices from AI_AGENT_PRICING and treat the
+    # entire AI per-message price as Gupshup markup (no separate Meta AI cost).
+    # Hence, all 'ai' meta costs are set to 0.0 below.
+    'India': {'marketing': 0.7846, 'utility': 0.1150, 'ai': 0.0, 'advanced': 0},
+    'MENA': {'marketing': 0.0384, 'utility': 0.0157, 'ai': 0.0, 'advanced': 0},
+    'LATAM': {'marketing': 0.0625, 'utility': 0.0068, 'ai': 0.0, 'advanced': 0},
+    'Africa': {'marketing': 0.0379, 'utility': 0.0076, 'ai': 0.0, 'advanced': 0},
+    'Europe': {'marketing': 0.1597, 'utility': 0.05, 'ai': 0.0, 'advanced': 0},
+    'APAC': {'marketing': 0.0592, 'utility': 0.0171, 'ai': 0.0, 'advanced': 0},
 }
 
 # =============================================================================
@@ -477,3 +480,212 @@ def get_whatsapp_voice_rate(country, minutes, call_type='outbound'):
         if tier['min_minutes'] <= minutes <= tier['max_minutes']:
             return tier[call_type]
     return tiers[-1][call_type]
+
+# =============================================================================
+# AI AGENT PRICING (per LLM call)
+# =============================================================================
+#
+# Each ACE model has vendor costs for Regular, Hard, and Complex use cases.
+# These are the underlying LLM costs per call in INR (India) or USD
+# (International). Pricing logic:
+#   - If model cost < threshold (1 INR or 0.0105 USD), we ignore model pricing
+#     and continue to use the existing per-message tier logic for AI.
+#   - If model cost >= threshold, final AI price per message is:
+#         final_price = cost * multiplier
+#     where multiplier is currently 5x. In that case, we back out the AI
+#     markup as:
+#         ai_markup = max(0, final_price - meta_costs_table[country]['ai'])
+#     so that:
+#         meta_costs_table[country]['ai'] + ai_markup == final_price.
+#
+# NOTE: All thresholds and multipliers MUST be read from this config; do not
+#       hard-code them in app.py or calculator.py.
+
+AI_AGENT_PRICING = {
+    'India': {  # Costs in INR per call
+        'ACE Agent Lite (Qwen-Qwen3-8B)': {
+            'regular': 0.0693208,
+            'hard': 0.1299766,
+            'complex': 0.1733021,
+        },
+        'ACE Agent Lite Experimental (gpt-5-nano)': {
+            'regular': 0.0736534,
+            'hard': 0.1381001,
+            'complex': 0.1841335,
+        },
+        'ACE Agentic pro (gpt-4o-mini)': {
+            'regular': 0.1689695,
+            'hard': 0.3168179,
+            'complex': 0.4224238,
+        },
+        'ACE Agentic Pro Experimental (gpt-4.1-mini)': {
+            'regular': 0.4505854,
+            'hard': 0.8448476,
+            'complex': 1.1264635,
+        },
+        'ACE Agent Premium (gpt-4o)': {
+            'regular': 2.8161588,
+            'hard': 5.2802978,
+            'complex': 7.0403970,
+        },
+        'ACE Agent Premium Experimental (gpt-5-mini)': {
+            'regular': 1.8413346,
+            'hard': 3.4525024,
+            'complex': 4.6033365,
+        },
+        'ACE Agent Premium Experimental (gpt-4.1)': {
+            'regular': 2.2529270,
+            'hard': 4.2242382,
+            'complex': 5.6323176,
+        },
+        'ACE Agent Nano Experimental (gpt-4.1-nano)': {
+            'regular': 0.1126464,
+            'hard': 0.2112119,
+            'complex': 0.2816159,
+        },
+        'ACE Flash Agent Pro (gemini-2.5-flash-lite)': {
+            'regular': 0.1126464,
+            'hard': 0.2112119,
+            'complex': 0.2816159,
+        },
+        'ACE Flash Agent Premium (gemini-2.5-flash)': {
+            'regular': 0.4505854,
+            'hard': 0.8448476,
+            'complex': 1.1264635,
+        },
+    },
+    'International': {  # Costs in USD per call
+        'ACE Agent Lite (Qwen-Qwen3-8B)': {
+            'regular': 0.0007680,
+            'hard': 0.0014400,
+            'complex': 0.0019200,
+        },
+        'ACE Agent Lite Experimental (gpt-5-nano)': {
+            'regular': 0.0008160,
+            'hard': 0.0015300,
+            'complex': 0.0020400,
+        },
+        'ACE Agentic pro (gpt-4o-mini)': {
+            'regular': 0.0018720,
+            'hard': 0.0035100,
+            'complex': 0.0046800,
+        },
+        'ACE Agentic Pro Experimental (gpt-4.1-mini)': {
+            'regular': 0.0049920,
+            'hard': 0.0093600,
+            'complex': 0.0124800,
+        },
+        'ACE Agent Premium (gpt-4o)': {
+            'regular': 0.0312000,
+            'hard': 0.0585000,
+            'complex': 0.0780000,
+        },
+        'ACE Agent Premium Experimental (gpt-5-mini)': {
+            'regular': 0.0204000,
+            'hard': 0.0382500,
+            'complex': 0.0510000,
+        },
+        'ACE Agent Premium Experimental (gpt-4.1)': {
+            'regular': 0.0249600,
+            'hard': 0.0468000,
+            'complex': 0.0624000,
+        },
+        'ACE Agent Nano Experimental (gpt-4.1-nano)': {
+            'regular': 0.0012480,
+            'hard': 0.0023400,
+            'complex': 0.0031200,
+        },
+        'ACE Flash Agent Pro (gemini-2.5-flash-lite)': {
+            'regular': 0.0012480,
+            'hard': 0.0023400,
+            'complex': 0.0031200,
+        },
+        'ACE Flash Agent Premium (gemini-2.5-flash)': {
+            'regular': 0.0049920,
+            'hard': 0.0093600,
+            'complex': 0.0124800,
+        },
+    },
+}
+
+AI_AGENT_SETTINGS = {
+    # Thresholds are in the same currency as the underlying costs
+    'India': {
+        'threshold': 1.0,      # INR
+        'multiplier': 5.0,
+    },
+    'International': {
+        'threshold': 0.0105,   # USD
+        'multiplier': 5.0,
+    },
+}
+
+
+def get_ai_pricing_key(country: str) -> str:
+    """
+    Map a selected country to the AI pricing key.
+
+    India uses INR pricing, all other countries use the International USD table.
+    """
+    return 'India' if country == 'India' else 'International'
+
+
+def get_ai_model_cost(pricing_key: str, model: str, complexity: str) -> float:
+    """
+    Look up the raw vendor cost per call for a given model + complexity.
+
+    Returns 0.0 if the model or complexity is not found.
+    """
+    if not model or model == 'None':
+        return 0.0
+    models = AI_AGENT_PRICING.get(pricing_key, {})
+    model_data = models.get(model)
+    if not model_data:
+        return 0.0
+    return float(model_data.get(complexity, 0.0) or 0.0)
+
+
+def compute_ai_price_components(country: str, model: str, complexity: str, tier_ai_markup: float):
+    """
+    Compute the effective AI per-message final price and markup.
+
+    Args:
+        country: Selected country (e.g., 'India', 'MENA', etc.)
+        model: Selected AI agent model name (or 'None' / empty for standard AI)
+        complexity: 'regular', 'hard', or 'complex'
+        tier_ai_markup: The existing tier-based AI markup (per message) that
+                        would be used if models were ignored.
+
+    Returns:
+        dict with keys:
+            - 'final_price': Final AI price per message (channel + Gupshup markup)
+            - 'markup': AI markup per message to show on the rate card
+            - 'used_model': True if model pricing overrode the tier logic
+    """
+    # Base channel AI meta cost (e.g., Meta's per-message AI fee)
+    costs = meta_costs_table.get(country, meta_costs_table['APAC'])
+    meta_ai_cost = float(costs.get('ai', 0.0) or 0.0)
+
+    pricing_key = get_ai_pricing_key(country)
+    settings = AI_AGENT_SETTINGS.get(pricing_key, AI_AGENT_SETTINGS['International'])
+    threshold = float(settings.get('threshold', 0.0) or 0.0)
+    multiplier = float(settings.get('multiplier', 1.0) or 1.0)
+
+    raw_cost = get_ai_model_cost(pricing_key, model, complexity)
+    if raw_cost <= 0.0 or raw_cost < threshold:
+        # Below threshold (or no valid model): use existing tier-based pricing
+        final_price = meta_ai_cost + float(tier_ai_markup or 0.0)
+        return {
+            'final_price': final_price,
+            'markup': float(tier_ai_markup or 0.0),
+            'used_model': False,
+        }
+
+    # Above threshold: use cost * multiplier as the final AI price
+    final_price = raw_cost * multiplier
+    markup = max(0.0, final_price - meta_ai_cost)
+    return {
+        'final_price': final_price,
+        'markup': markup,
+        'used_model': True,
+    }

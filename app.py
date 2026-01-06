@@ -15,7 +15,14 @@ from datetime import datetime
 from sqlalchemy import func
 import uuid
 from calculator import get_committed_amount_rates
-from pricing_config import committed_amount_slabs, PLATFORM_PRICING_GUIDANCE, VOICE_NOTES_PRICING, get_voice_notes_price
+from pricing_config import (
+    committed_amount_slabs,
+    PLATFORM_PRICING_GUIDANCE,
+    VOICE_NOTES_PRICING,
+    get_voice_notes_price,
+    AI_AGENT_PRICING,
+    compute_ai_price_components,
+)
 from calculator import get_committed_amount_rate_for_volume
 
 # 🍕 PIZZA EASTER EGG SYSTEM 🍕
@@ -528,9 +535,23 @@ def index():
         num_journeys_price = request.form.get('num_journeys_price', '0')
         num_ai_workspace_commerce_price = request.form.get('num_ai_workspace_commerce_price', '0')
         num_ai_workspace_faq_price = request.form.get('num_ai_workspace_faq_price', '0')
+        # If any AI workspace is selected, AI Module must be Yes
+        try:
+            ws_commerce_count = int(str(num_ai_workspace_commerce_price).strip() or '0')
+        except Exception:
+            ws_commerce_count = 0
+        try:
+            ws_faq_count = int(str(num_ai_workspace_faq_price).strip() or '0')
+        except Exception:
+            ws_faq_count = 0
+        if ws_commerce_count > 0 or ws_faq_count > 0:
+            ai_module = 'Yes'
         # Voice notes fields
         voice_notes_price = request.form.get('voice_notes_price', 'No')
         voice_notes_model = request.form.get('voice_notes_model', '')
+        # AI agent model & complexity (optional, may be required for AI module flows)
+        ai_agent_model = request.form.get('ai_agent_model', '')
+        ai_agent_complexity = request.form.get('ai_agent_complexity', 'regular')
         # Voice channel fields
         channel_type = request.form.get('channel_type', 'text_only')
         # Enforce: Voice supported only for India
@@ -569,6 +590,8 @@ def index():
             'personalize_load': personalize_load,
             'human_agents': human_agents,
             'ai_module': ai_module,
+            'ai_agent_model': ai_agent_model,
+            'ai_agent_complexity': ai_agent_complexity,
             'smart_cpaas': smart_cpaas,
             'increased_tps': increased_tps,
             # One time dev fields
@@ -640,8 +663,14 @@ def index():
         except Exception:
             voice_rate_card = None
 
+        # --- AI pricing: combine tier-based markup with optional model + complexity ---
+        base_ai_markup = get_suggested_price(country, 'ai', ai_volume) if not is_zero(ai_volume) else get_lowest_tier_price(country, 'ai')
+        ai_model = session['inputs'].get('ai_agent_model', '')
+        ai_complexity = session['inputs'].get('ai_agent_complexity', 'regular')
+        ai_components = compute_ai_price_components(country, ai_model, ai_complexity, base_ai_markup)
+
         suggested_prices = {
-            'ai_price': get_suggested_price(country, 'ai', ai_volume) if not is_zero(ai_volume) else get_lowest_tier_price(country, 'ai'),
+            'ai_price': ai_components['markup'],
             'advanced_price': get_suggested_price(country, 'advanced', advanced_volume) if not is_zero(advanced_volume) else get_lowest_tier_price(country, 'advanced'),
             'basic_marketing_price': get_suggested_price(country, 'basic_marketing', basic_marketing_volume) if not is_zero(basic_marketing_volume) else get_lowest_tier_price(country, 'basic_marketing'),
             'basic_utility_price': get_suggested_price(country, 'basic_utility', basic_utility_volume) if not is_zero(basic_utility_volume) else get_committed_amount_rate_for_volume(country, 'basic_utility', 0),
@@ -693,7 +722,11 @@ def index():
         advanced_volume = float(inputs.get('advanced_volume', 0) or 0)
         basic_marketing_volume = float(inputs.get('basic_marketing_volume', 0) or 0)
         basic_utility_volume = float(inputs.get('basic_utility_volume', 0) or 0)
-        suggested_ai = get_suggested_price(country, 'ai', ai_volume)
+        base_ai_markup = get_suggested_price(country, 'ai', ai_volume)
+        ai_model = inputs.get('ai_agent_model', '')
+        ai_complexity = inputs.get('ai_agent_complexity', 'regular')
+        ai_components = compute_ai_price_components(country, ai_model, ai_complexity, base_ai_markup)
+        suggested_ai = ai_components['markup']
         suggested_advanced = get_suggested_price(country, 'advanced', advanced_volume)
         suggested_marketing = get_suggested_price(country, 'basic_marketing', basic_marketing_volume)
         suggested_utility = get_suggested_price(country, 'basic_utility', basic_utility_volume)
@@ -1093,6 +1126,10 @@ def index():
         # AI Module
         if inputs.get('ai_module', 'No') == 'Yes':
             final_inclusions += inclusions['AI Module Yes']
+            # If a specific AI agent model is selected, include it explicitly (without complexity text)
+            ai_model = inputs.get('ai_agent_model', '')
+            if ai_model and ai_model != 'None':
+                final_inclusions.append(f"AI responses powered by {ai_model}")
         # Smart CPaaS
         if inputs.get('smart_cpaas', 'No') == 'Yes':
             final_inclusions += inclusions['Smart CPaaS Yes']
@@ -1454,9 +1491,9 @@ def index():
             if request.method == 'POST':
                 flash('Session expired or missing. Please start again.', 'error')
             currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
-            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={}, calculation_id=calculation_id, min_fees=min_fees)
+            return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={}, calculation_id=calculation_id, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
-        return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs, calculation_id=calculation_id, min_fees=min_fees)
+        return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs, calculation_id=calculation_id, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
     elif step == 'prices':
         inputs = session.get('inputs', {})
         pricing_inputs = session.get('pricing_inputs', {}) or {}
@@ -1490,7 +1527,7 @@ def index():
                     'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
                     'bot_ui_manday_rate': default_bot_ui,
                     'custom_ai_manday_rate': default_custom_ai,
-                }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id, min_fees=min_fees)
+                }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
             # Save user rates for use in results
             session['manday_rates'] = {
                 'bot_ui': user_bot_ui,
@@ -1637,7 +1674,7 @@ def index():
     
     country = session.get('inputs', {}).get('country', 'India')
     currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-    return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), calculation_id=None, min_fees=min_fees)
+    return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), calculation_id=None, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():

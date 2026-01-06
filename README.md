@@ -214,6 +214,20 @@ Modify pricing tiers in `pricing_config.py`:
 - `meta_costs_table` - Channel-specific costs
 - `committed_amount_slabs` - Bundle pricing tiers
 - `currency_symbols` - Region-specific currencies
+- `VOICE_NOTES_PRICING` and `get_voice_notes_price()` - Voice notes per-minute rates
+- `AI_AGENT_PRICING`, `AI_AGENT_SETTINGS`, and `compute_ai_price_components()` - AI model + complexity pricing
+
+AI model & complexity behaviour:
+
+- Baseline AI message pricing continues to come from the per-message slabs via `get_suggested_price(country, 'ai', volume)`.
+- On the Volumes step, when **AI Module = Yes** and **AI volume > 0**, the user must choose:
+  - an **AI Agent Model** (from `AI_AGENT_PRICING`), and
+  - a **Use Case Complexity** (`regular`, `hard`, `complex`).
+- For pricing:
+  - The raw vendor cost per call is read from `AI_AGENT_PRICING[pricing_key][model][complexity]`, where `pricing_key` is `India` (INR) or `International` (USD).
+  - Thresholds and multipliers come from `AI_AGENT_SETTINGS` (currently `1.0` INR and `0.0105` USD, with a `5.0` multiplier).
+  - If the vendor cost is **below the threshold**, the app ignores the model and keeps the slab-based AI markup unchanged.
+  - If the vendor cost is **at/above the threshold**, the final AI price per message becomes `cost × multiplier`; the AI markup shown on the rate card is `max(0, final_price - meta_costs_table[country]['ai'])`, so that channel fee + markup equals this model-driven price.
 
 ## 🔧 Development
 

@@ -6,7 +6,14 @@ Shows Meta costs, Gupshup markup, internal sections, and pricing options
 
 from app import calculate_pricing_simulation, calculate_platform_fee
 from calculator import calculate_pricing, get_suggested_price, get_committed_amount_rate_for_volume
-from pricing_config import COUNTRY_CURRENCY, meta_costs_table, committed_amount_slabs, get_voice_notes_price
+from pricing_config import (
+    COUNTRY_CURRENCY,
+    meta_costs_table,
+    committed_amount_slabs,
+    get_voice_notes_price,
+    compute_ai_price_components,
+    AI_AGENT_PRICING,
+)
 import json
 
 def format_currency(amount, currency_symbol):
@@ -65,6 +72,39 @@ print(f"   • Human Agents: {inputs_template['human_agents']}")
 print(f"   • AI Module: {inputs_template['ai_module']}")
 print(f"   • Smart CPaaS: {inputs_template['smart_cpaas']}")
 print(f"   • Increased TPS: {inputs_template['increased_tps']}")
+
+print_section_header("🤖 AI Model Pricing Check (India example)")
+base_ai_markup_india = get_suggested_price('India', 'ai', inputs_template['ai_volume'])
+ai_components_india = compute_ai_price_components(
+    country='India',
+    model='ACE Agent Premium (gpt-4o)',
+    complexity='complex',
+    tier_ai_markup=base_ai_markup_india,
+)
+print(f"  Baseline AI markup from tiers (India): {base_ai_markup_india:.4f}")
+print(f"  Model-driven AI final price (India, ACE Agent Premium gpt-4o, complex): {ai_components_india['final_price']:.4f}")
+print(f"  Implied AI markup used in calculator: {ai_components_india['markup']:.4f}")
+
+print_section_header("🌍 AI Model Pricing Matrix (All Countries & Models)")
+for country in countries:
+    # Map to pricing key used in AI_AGENT_PRICING
+    pricing_key = 'India' if country == 'India' else 'International'
+    base_ai_markup = get_suggested_price(country, 'ai', inputs_template['ai_volume'])
+    print_subsection_header(f"{country} (pricing_key={pricing_key}) — baseline AI markup: {base_ai_markup:.4f}")
+    models = AI_AGENT_PRICING.get(pricing_key, {})
+    for model_name, complexities in models.items():
+        for complexity, _ in complexities.items():
+            comps = compute_ai_price_components(
+                country=country,
+                model=model_name,
+                complexity=complexity,
+                tier_ai_markup=base_ai_markup,
+            )
+            tag = "MODEL_USED" if comps['used_model'] else "TIER_ONLY"
+            print(
+                f"    [{tag}] {model_name} / {complexity:<7} -> "
+                f"final_price={comps['final_price']:.6f}, markup={comps['markup']:.6f}"
+            )
 
 # Summary table
 print_separator("📈 SUMMARY TABLE")
