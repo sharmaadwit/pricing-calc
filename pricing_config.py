@@ -215,6 +215,62 @@ COUNTRY_CURRENCY = {
     'APAC': '$',
 }
 
+# --- User profile & defaults configuration ---
+#
+# Lightweight, code-based mapping so we can infer country/region defaults from
+# email (or email domain). This keeps v1 simple and developer-maintained while
+# making it easy to later move to a DB + admin UI.
+#
+# Keys can be:
+#   - Full email ID: 'alice@example.com'
+#   - Email domain: '@example.com'
+# Values are dicts with at least:
+#   - 'country': e.g. 'India'
+#   - 'region': e.g. 'North'
+USER_DEFAULTS = {
+    # Example mappings – adjust to your org’s needs
+    'adwit.sharma@gupshup.io': {'country': 'India', 'region': 'West'},
+    '@gupshup.io': {'country': 'India', 'region': 'West'},
+}
+
+
+def _normalize_email(email: str) -> str:
+    """Normalize email for lookup – lowercase and strip spaces."""
+    if not email:
+        return ''
+    return email.strip().lower()
+
+
+def get_default_location_for_email(email: str):
+    """
+    Infer default (country, region) for a given email.
+
+    Resolution order:
+      1. Exact email match in USER_DEFAULTS
+      2. Domain match (e.g. '@gupshup.io')
+      3. Fallback: None (caller responsible for using existing defaults)
+
+    Returns:
+        tuple | None: (country, region) or None if no mapping found.
+    """
+    normalized = _normalize_email(email)
+    if not normalized:
+        return None
+
+    # 1) Exact match
+    exact = USER_DEFAULTS.get(normalized)
+    if exact and exact.get('country'):
+        return exact.get('country'), exact.get('region', '')
+
+    # 2) Domain match
+    if '@' in normalized:
+        domain = '@' + normalized.split('@', 1)[1]
+        dom_cfg = USER_DEFAULTS.get(domain)
+        if dom_cfg and dom_cfg.get('country'):
+            return dom_cfg.get('country'), dom_cfg.get('region', '')
+
+    return None
+
 # Voice Notes Pricing Configuration (INR per minute)
 # USD conversion rate: 1 USD = 83 INR (approximate)
 VOICE_NOTES_PRICING = {

@@ -2,7 +2,7 @@
 # This app provides a pricing calculator for messaging services with dynamic inclusions, platform fees, and analytics.
 # Key features: dynamic inclusions, robust error handling, session management, and professional UI.
 
-from flask import Flask, render_template, request, session, redirect, url_for, flash
+from flask import Flask, render_template, request, session, redirect, url_for, flash, send_file
 from calculator import calculate_pricing, get_suggested_price, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES, calculate_total_mandays_breakdown, get_committed_amount_rate_for_volume, get_lowest_tier_price
 import os
 import sys
@@ -15,6 +15,8 @@ from datetime import datetime
 from sqlalchemy import func
 import uuid
 from calculator import get_committed_amount_rates
+from io import BytesIO
+from docx import Document
 from pricing_config import (
     committed_amount_slabs,
     PLATFORM_PRICING_GUIDANCE,
@@ -22,6 +24,7 @@ from pricing_config import (
     get_voice_notes_price,
     AI_AGENT_PRICING,
     compute_ai_price_components,
+    get_default_location_for_email,
 )
 from calculator import get_committed_amount_rate_for_volume
 
@@ -456,7 +459,9 @@ def index():
     Manages session data, input validation, pricing logic, and inclusions logic.
     """
     print("DEBUG: session at start of request:", dict(session), file=sys.stderr, flush=True)
-    step = request.form.get('step', 'volumes')
+    # Determine current step; default to 'volumes' for backward compatibility.
+    # We will explicitly route to 'profile' when needed below.
+    step = request.form.get('step', request.args.get('step', 'volumes'))
     
     # If no form data (page refresh) and we have results in session, assume results step
     if not request.form and session.get('results') and session.get('inputs'):
@@ -489,6 +494,83 @@ def index():
     currency_symbol = None
 
     min_fees = {country: data['minimum'] for country, data in PLATFORM_PRICING_GUIDANCE.items()}
+
+    # If no profile is set yet and user is starting fresh, route them to the
+    # lightweight profile step before volumes.
+    if not session.get('profile') and step == 'volumes' and request.method == 'GET' and not session.get('results'):
+        step = 'profile'
+
+    # ---------------------------------------------------------------------
+    # Profile step – lightweight user details captured once per session
+    # ---------------------------------------------------------------------
+    if step == 'profile':
+        profile = session.get('profile', {}) or {}
+        if request.method == 'POST':
+            name = (request.form.get('user_name') or '').strip()
+            email = (request.form.get('user_email') or '').strip()
+            country = (request.form.get('country') or '').strip() or 'India'
+            region = (request.form.get('region') or '').strip()
+
+            # Basic email validation – allow blank, but if present require simple syntax
+            if email and ('@' not in email or '.' not in email.split('@')[-1]):
+                flash('Please enter a valid work email address.', 'error')
+                profile = {
+                    'name': name,
+                    'email': email,
+                    'country': country,
+                    'region': region,
+                }
+                return render_template(
+                    'index.html',
+                    step='profile',
+                    profile=profile,
+                    calculation_id=calculation_id,
+                    min_fees=min_fees,
+                )
+
+            # Auto-prefill country/region if mapping exists and user did not override
+            mapped = get_default_location_for_email(email) if email else None
+            if mapped:
+                mapped_country, mapped_region = mapped
+                if not request.form.get('country'):
+                    country = mapped_country
+                if not request.form.get('region') and mapped_region:
+                    region = mapped_region
+
+            profile = {
+                'name': name,
+                'email': email,
+                'country': country,
+                'region': region,
+            }
+            session['profile'] = profile
+
+            # Mirror key fields into session['inputs'] so existing code keeps working
+            inputs = session.get('inputs', {}) or {}
+            if name:
+                inputs['user_name'] = name
+            if country:
+                inputs['country'] = country
+            if region is not None:
+                inputs['region'] = region
+            session['inputs'] = inputs
+
+            # Continue to volumes step
+            return redirect(url_for('index', step='volumes'))
+
+        # GET: show profile form, prefilling from existing profile/inputs
+        inputs = session.get('inputs', {}) or {}
+        profile.setdefault('name', inputs.get('user_name', ''))
+        profile.setdefault('email', '')
+        profile.setdefault('country', inputs.get('country', 'India'))
+        profile.setdefault('region', inputs.get('region', ''))
+        return render_template(
+            'index.html',
+            step='profile',
+            profile=profile,
+            calculation_id=calculation_id,
+            min_fees=min_fees,
+        )
 
     # Defensive: ensure session data exists for edit actions
     if step == 'volumes' and request.method == 'POST':
@@ -627,6 +709,15 @@ def index():
             'whatsapp_voice_outbound_minutes': whatsapp_voice_outbound_minutes,
             'whatsapp_voice_inbound_minutes': whatsapp_voice_inbound_minutes,
         }
+        # Ensure profile-derived fields are preserved if present
+        profile = session.get('profile') or {}
+        if profile:
+            if profile.get('name'):
+                session['inputs']['user_name'] = profile['name']
+            if profile.get('country'):
+                session['inputs']['country'] = profile['country']
+            if profile.get('region') is not None:
+                session['inputs']['region'] = profile['region']
         print("DEBUG: session['inputs'] just set to:", session['inputs'], file=sys.stderr, flush=True)
         # Only route to bundle if all text volumes are zero AND this is not a voice-only scenario
         total_voice_minutes = (
@@ -1261,11 +1352,13 @@ def index():
                 if key in item and (isinstance(item[key], (int, float)) or (isinstance(item[key], str) and item[key].replace('.', '', 1).isdigit())) and item[key] != '':
                     item[key] = fmt(item[key])
         # Log analytics for volumes flow
+        # Prefer profile data where available, falling back to legacy inputs
+        profile = session.get('profile') or {}
         analytics_kwargs = dict(
             timestamp=datetime.utcnow(),
-            user_name=inputs.get('user_name', ''),
-            country=inputs.get('country', ''),
-            region=inputs.get('region', ''),
+            user_name=profile.get('name', inputs.get('user_name', '')),
+            country=profile.get('country', inputs.get('country', '')),
+            region=profile.get('region', inputs.get('region', '')),
             platform_fee=platform_fee,
             ai_price=ai_price,
             advanced_price=advanced_price,
@@ -1418,6 +1511,9 @@ def index():
             }
             # Calculate pricing simulation for internal analysis
             pricing_simulation = calculate_pricing_simulation(inputs, session.get('pricing_inputs'))
+            # Persist for SOW downloads and results refresh
+            session['final_price_details'] = final_price_details
+            session['final_inclusions'] = final_inclusions
             return render_template(
                 'index.html',
                 step='results',
@@ -1465,6 +1561,9 @@ def index():
             session['pricing_inputs']['platform_fee'] = platform_fee
         # Use this platform_fee for all downstream calculations and rendering
         pricing_simulation = calculate_pricing_simulation(inputs, session.get('pricing_inputs'))
+        # Persist for SOW downloads and results refresh
+        session['final_price_details'] = final_price_details
+        session['final_inclusions'] = final_inclusions
         return render_template(
             'index.html',
             step='results',
@@ -1687,6 +1786,159 @@ def index():
     country = session.get('inputs', {}).get('country', 'India')
     currency_symbol = COUNTRY_CURRENCY.get(country, '$')
     return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=session.get('inputs', {}), calculation_id=None, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
+
+
+def generate_sow_docx(inputs, results, final_price_details, profile, calculation_id=None):
+    """
+    Construct a simple Scope of Work .docx document in memory.
+
+    This is intentionally minimal but structured so it can be evolved over time.
+    """
+    doc = Document()
+
+    # Title
+    doc.add_heading('Scope of Work - Messaging & AI Platform', level=1)
+
+    # Basic profile / deal context
+    name = (profile or {}).get('name') or inputs.get('user_name', '')
+    email = (profile or {}).get('email', '')
+    country = (profile or {}).get('country') or inputs.get('country', '')
+    region = (profile or {}).get('region') or inputs.get('region', '')
+
+    p = doc.add_paragraph()
+    p.add_run('Prepared For: ').bold = True
+    p.add_run(name or 'Client')
+    if email:
+        p.add_run(f"  <{email}>")
+
+    loc_line = []
+    if country:
+        loc_line.append(country)
+    if region:
+        loc_line.append(region)
+    if loc_line:
+        doc.add_paragraph('Location: ' + ', '.join(loc_line))
+
+    if calculation_id:
+        doc.add_paragraph(f'Calculation ID: {calculation_id}')
+
+    doc.add_paragraph()  # spacer
+
+    # Project overview
+    doc.add_heading('1. Project Overview', level=2)
+    doc.add_paragraph(
+        'This Scope of Work (SOW) outlines the proposed messaging and AI engagement '
+        'using Gupshup’s platform, including platform services, AI/advanced messaging, '
+        'and estimated commercial terms based on the current pricing calculator run.'
+    )
+
+    # Scope / inclusions
+    doc.add_heading('2. Scope of Work & Inclusions', level=2)
+    doc.add_paragraph(
+        'The solution includes the following key capabilities and components:'
+    )
+    inclusions = session.get('inclusions') or {}
+    final_inclusions = session.get('final_inclusions') or []
+    # Prefer the flattened list passed to the template; fall back to dict if needed.
+    inclusion_items = final_inclusions or []
+    if not inclusion_items and isinstance(inclusions, dict):
+        for vals in inclusions.values():
+            inclusion_items.extend(vals or [])
+    if inclusion_items:
+        for item in inclusion_items:
+            doc.add_paragraph(str(item), style='List Bullet')
+    else:
+        doc.add_paragraph(
+            'Platform fee entitlements and feature inclusions as per standard '
+            'Gupshup pricing calculator configuration.',
+            style='List Bullet'
+        )
+
+    # Assumptions
+    doc.add_heading('3. Assumptions & Dependencies', level=2)
+    assumptions = [
+        'Final commercials are subject to internal approvals and any applicable taxes.',
+        'Channel (e.g., Meta/WhatsApp) fees are based on current public pricing and may change.',
+        'Volumes and mix across AI / Advanced / Basic messages are based on estimates provided at the time of this calculation.',
+        'Implementation timelines and detailed responsibilities will be confirmed in the Master Services Agreement / Order Form.',
+    ]
+    for a in assumptions:
+        doc.add_paragraph(a, style='List Bullet')
+
+    # Commercials / pricing
+    doc.add_heading('4. Commercials / Pricing Summary', level=2)
+    currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
+    total_invoice = results.get('revenue', 0) if isinstance(results, dict) else 0
+
+    doc.add_paragraph(
+        f'Indicative monthly minimum billing (excluding taxes): '
+        f'{currency_symbol}{int(total_invoice or 0):,}'
+    )
+
+    table = doc.add_table(rows=1, cols=4)
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = 'Line Item'
+    hdr_cells[1].text = 'Included Volume'
+    hdr_cells[2].text = 'Per-Unit Price'
+    hdr_cells[3].text = 'Notes'
+
+    if final_price_details:
+        def _add_row(label, block):
+            row = table.add_row().cells
+            row[0].text = label
+            row[1].text = str(block.get('volume', 0))
+            price = block.get('price_per_msg') or block.get('markup_per_msg') or 0
+            row[2].text = f"{currency_symbol}{round(float(price or 0), 4)}"
+            row[3].text = ''
+
+        _add_row('Platform Fee (Fixed)', {'volume': '-', 'price_per_msg': final_price_details.get('platform_fee_total', 0)})
+        _add_row('AI Messages', final_price_details.get('ai_messages', {}))
+        _add_row('Advanced Messages', final_price_details.get('advanced_messages', {}))
+        mkt = final_price_details.get('marketing_message', {})
+        if mkt.get('volume', 0) > 0:
+            _add_row('Basic Marketing Messages', mkt)
+        utl = final_price_details.get('utility_message', {})
+        if utl.get('volume', 0) > 0:
+            _add_row('Basic Utility / Authentication Messages', utl)
+
+    doc.add_paragraph()
+    doc.add_paragraph(
+        'The above pricing is indicative and intended for solution scoping. '
+        'Final commercials, SLAs, and legal terms will be captured in the definitive agreement.'
+    )
+
+    bio = BytesIO()
+    doc.save(bio)
+    bio.seek(0)
+    return bio
+
+
+@app.route('/generate-sow', methods=['GET'])
+def generate_sow():
+    """
+    Generate and return a Scope of Work .docx based on the last completed calculation.
+    """
+    if not session.get('authenticated'):
+        return redirect(url_for('login'))
+
+    inputs = session.get('inputs')
+    results = session.get('results')
+    final_price_details = session.get('final_price_details')
+    profile = session.get('profile') or {}
+    calculation_id = session.get('calculation_id')
+
+    if not inputs or not results or not final_price_details:
+        flash('No completed calculation found for SOW generation. Please run a pricing calculation first.', 'error')
+        return redirect(url_for('index'))
+
+    docx_io = generate_sow_docx(inputs, results, final_price_details, profile, calculation_id)
+    filename = f"SOW_{calculation_id or 'pricing'}.docx"
+    return send_file(
+        docx_io,
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        as_attachment=True,
+        download_name=filename,
+    )
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
