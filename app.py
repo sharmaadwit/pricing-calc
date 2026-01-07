@@ -1575,21 +1575,25 @@ def index():
                 'ai_messages': {
                     'volume': int(ai_volume),
                     'price_per_msg': round(rates['ai'] + meta_costs['ai'], 4),
+                    'markup_per_msg': round(rates['ai'], 4),
                     'overage_price': calculate_safe_overage_price(rates['ai'], meta_costs['ai'])
                 },
                 'advanced_messages': {
                     'volume': int(advanced_volume),
-                    'price_per_msg': round(rates['advanced'] + meta_costs['ai'], 4),
-                    'overage_price': calculate_safe_overage_price(rates['advanced'], meta_costs['ai'])
+                    'price_per_msg': round(rates['advanced'] + meta_costs.get('advanced', 0), 4),
+                    'markup_per_msg': round(rates['advanced'], 4),
+                    'overage_price': calculate_safe_overage_price(rates['advanced'], meta_costs.get('advanced', 0))
                 },
                 'marketing_message': {
                     'volume': int(inputs.get('basic_marketing_volume', 0) or 0),
                     'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_marketing_price', 0) + meta_costs.get('marketing', 0), 4),
+                    'markup_per_msg': round(session.get('pricing_inputs', {}).get('basic_marketing_price', 0), 4),
                     'overage_price': calculate_safe_overage_price(session.get('pricing_inputs', {}).get('basic_marketing_price', 0), meta_costs.get('marketing', 0))
                 },
                 'utility_message': {
                     'volume': int(inputs.get('basic_utility_volume', 0) or 0),
                     'price_per_msg': round(session.get('pricing_inputs', {}).get('basic_utility_price', 0) + meta_costs.get('utility', 0), 4),
+                    'markup_per_msg': round(session.get('pricing_inputs', {}).get('basic_utility_price', 0), 4),
                     'overage_price': calculate_safe_overage_price(session.get('pricing_inputs', {}).get('basic_utility_price', 0), meta_costs.get('utility', 0))
                 }
             }
@@ -2124,6 +2128,18 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
     bio = BytesIO()
     doc.save(bio)
     bio.seek(0)
+    try:
+        logger.info(
+            "SOW_GENERATED",
+            extra={
+                "calculation_id": calculation_id,
+                "user_email": (profile or {}).get("email"),
+                "country": (profile or {}).get("country") or inputs.get("country"),
+            },
+        )
+    except Exception:
+        # Logging must never break SOW generation
+        pass
     return bio
 
 
@@ -2152,6 +2168,19 @@ def generate_sow():
     if not inputs or not results or not final_price_details:
         flash('No completed calculation found for SOW generation. Please run a pricing calculation first.', 'error')
         return redirect(url_for('index'))
+
+    try:
+        logger.info(
+            "SOW_GENERATE_REQUEST",
+            extra={
+                "calculation_id": calculation_id,
+                "user_email": profile.get("email"),
+                "country": inputs.get("country"),
+                "route": "bundle" if float(inputs.get("committed_amount", 0) or 0) > 0 else "volumes",
+            },
+        )
+    except Exception:
+        pass
 
     docx_io = generate_sow_docx(inputs, results, final_price_details, profile, sow_details, calculation_id)
     filename = f"SOW_{calculation_id or 'pricing'}.docx"
@@ -2208,6 +2237,18 @@ def sow_details():
             'additional_security': request.form.get('additional_security', 'no'),
         }
         session['sow_details'] = sow
+        try:
+            logger.info(
+                "SOW_DETAILS_SAVED",
+                extra={
+                    "user_email": profile.get("email"),
+                    "country": inputs.get("country", ""),
+                    "has_ai": inputs.get("ai_module") == "Yes",
+                    "route": "bundle" if float(inputs.get("committed_amount", 0) or 0) > 0 else "volumes",
+                },
+            )
+        except Exception:
+            pass
         # After capturing details, trigger SOW generation
         return redirect(url_for('generate_sow'))
 
