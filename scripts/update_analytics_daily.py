@@ -27,6 +27,7 @@ warnings.filterwarnings('ignore')
 # Configuration
 DB_URL = "postgresql://postgres:prdeuXwtBzpLZaOGpxgRspfjfLNEQrys@gondola.proxy.rlwy.net:25504/railway"
 CSV_PATH = "analytics.csv"
+FUNNEL_CSV_PATH = "funnel_events.csv"
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
 
@@ -68,6 +69,49 @@ def export_analytics_to_csv():
         
     except Exception as e:
         log_message(f"Error exporting CSV: {e}")
+        return False
+
+
+def export_funnel_to_csv():
+    """Export funnel_events data from PostgreSQL to CSV (if table exists)."""
+    try:
+        log_message("Starting funnel_events CSV export from PostgreSQL...")
+
+        conn = psycopg2.connect(DB_URL)
+        cur = conn.cursor()
+
+        # Check if funnel_events table exists
+        cur.execute(
+            "SELECT to_regclass('public.funnel_events');"
+        )
+        exists = cur.fetchone()[0]
+        if not exists:
+            log_message("No funnel_events table found, skipping funnel export.")
+            cur.close()
+            conn.close()
+            return False
+
+        cur.execute("SELECT * FROM funnel_events ORDER BY timestamp DESC")
+        if cur.description is None:
+            log_message("No data found in funnel_events table")
+            cur.close()
+            conn.close()
+            return False
+
+        columns = [desc[0] for desc in cur.description]
+        with open(FUNNEL_CSV_PATH, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(columns)
+            for row in cur.fetchall():
+                writer.writerow(row)
+
+        cur.close()
+        conn.close()
+
+        log_message(f"Successfully exported funnel data to {FUNNEL_CSV_PATH}")
+        return True
+    except Exception as e:
+        log_message(f"Error exporting funnel CSV: {e}")
         return False
 
 def generate_analytics_charts():
@@ -541,6 +585,41 @@ def update_analytics_summary():
             }
         summary['country_stats'] = country_stats
         summary['region_stats'] = region_stats
+
+        # --- Funnel analytics (volumes -> prices -> results -> SOW) ---
+        funnel_counts = {
+            'volumes': 0,
+            'prices': 0,
+            'results': 0,
+            'sow_details': 0,
+            'sow_download': 0,
+        }
+        funnel_conversion = {}
+        try:
+            if os.path.exists(FUNNEL_CSV_PATH):
+                fdf = pd.read_csv(FUNNEL_CSV_PATH, parse_dates=['timestamp'])
+                if 'step' in fdf.columns:
+                    for step in funnel_counts.keys():
+                        funnel_counts[step] = int((fdf['step'] == step).sum())
+
+                    def safe_rate(numerator, denominator):
+                        if denominator in (0, None):
+                            return 0.0
+                        return float(numerator) / float(denominator) * 100.0
+
+                    funnel_conversion = {
+                        'volumes_to_prices': safe_rate(funnel_counts['prices'], funnel_counts['volumes']),
+                        'prices_to_results': safe_rate(funnel_counts['results'], funnel_counts['prices']),
+                        'results_to_sow_details': safe_rate(funnel_counts['sow_details'], funnel_counts['results']),
+                        'sow_details_to_sow_download': safe_rate(funnel_counts['sow_download'], funnel_counts['sow_details']),
+                    }
+        except Exception as e:
+            log_message(f"Error computing funnel analytics: {e}")
+
+        summary['funnel'] = {
+            'counts': funnel_counts,
+            'conversion': funnel_conversion,
+        }
         # Add aggregate arrays for Distribution by Country
         summary['platform_fee_by_country'] = [country_stats[c]['platform_fee']['average'] for c in country_stats]
         summary['ai_message_by_country'] = [country_stats[c]['ai_message']['average'] for c in country_stats]
@@ -580,6 +659,8 @@ def main():
     if not export_analytics_to_csv():
         log_message("Failed to export CSV. Exiting.")
         sys.exit(1)
+    # Export funnel events (non-fatal if missing)
+    export_funnel_to_csv()
     print(f"[DEBUG] After DB export: {time.time() - start_time:.3f} seconds elapsed")
     
     # Step 2: Generate analytics charts

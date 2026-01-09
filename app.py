@@ -363,6 +363,29 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+
+def record_funnel_event(step, inputs=None, profile=None):
+    """
+    Safely record a step-level funnel event for later analytics.
+    Never breaks user flow if anything goes wrong.
+    """
+    try:
+        inputs = inputs or session.get('inputs') or {}
+        profile = profile or session.get('profile') or {}
+        route = 'bundle' if float(inputs.get('committed_amount', 0) or 0) > 0 else 'volumes'
+        ev = FunnelEvent(
+            user_email=(profile or {}).get('email'),
+            calculation_id=session.get('calculation_id'),
+            step=step,
+            route=route,
+            country=inputs.get('country'),
+            region=inputs.get('region'),
+        )
+        db.session.add(ev)
+        db.session.commit()
+    except Exception:
+        logger.exception("Failed to record funnel event for step '%s'", step)
+
 # Example Analytics model (expand as needed)
 class Analytics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -426,6 +449,23 @@ class Analytics(db.Model):
     # --- SOW funnel analytics ---
     sow_generate_clicked = db.Column(db.Boolean, nullable=True, default=False)
     sow_downloaded = db.Column(db.Boolean, nullable=True, default=False)
+
+
+class FunnelEvent(db.Model):
+    """
+    Lightweight step-level funnel tracking for the calculator.
+    Each row represents a user hitting a specific step in the flow.
+    """
+    __tablename__ = 'funnel_events'
+
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    user_email = db.Column(db.String(256), nullable=True)
+    calculation_id = db.Column(db.String(64), nullable=True)
+    step = db.Column(db.String(32), nullable=False)  # volumes, prices, results, sow_details, sow_download
+    route = db.Column(db.String(16), nullable=True)  # volumes or bundle
+    country = db.Column(db.String(64), nullable=True)
+    region = db.Column(db.String(64), nullable=True)
 
 # os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
 
@@ -1656,6 +1696,8 @@ def index():
         # Persist for SOW downloads and results refresh
         session['final_price_details'] = final_price_details
         session['final_inclusions'] = final_inclusions
+        # Record successful results step for funnel analytics
+        record_funnel_event('results', inputs=inputs, profile=session.get('profile') or {})
         return render_template(
             'index.html',
             step='results',
@@ -1707,8 +1749,10 @@ def index():
             if request.method == 'POST':
                 flash('Session expired or missing. Please start again.', 'error')
             currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
+            record_funnel_event('volumes', inputs={}, profile=profile)
             return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={}, profile=profile, calculation_id=calculation_id, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
         currency_symbol = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
+        record_funnel_event('volumes', inputs=inputs, profile=profile)
         return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs=inputs, profile=profile, calculation_id=calculation_id, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
     elif step == 'prices':
         inputs = session.get('inputs', {})
@@ -1736,6 +1780,7 @@ def index():
             user_custom_ai = parse_number(request.form.get('custom_ai_manday_rate', default_custom_ai))
             if user_bot_ui < 0.5 * default_bot_ui or user_custom_ai < 0.5 * default_custom_ai:
                 flash('Manday rates cannot be discounted by more than 50% from the default rate.', 'error')
+                record_funnel_event('prices', inputs=inputs)
                 return render_template('index.html', step='prices', suggested={
                     'ai_price': pricing_inputs.get('ai_price', ''),
                     'advanced_price': pricing_inputs.get('advanced_price', ''),
@@ -1753,6 +1798,7 @@ def index():
             }
         else:
             # GET: pre-fill with defaults
+            record_funnel_event('prices', inputs=inputs)
             return render_template('index.html', step='prices', suggested={
                 'ai_price': pricing_inputs.get('ai_price', ''),
                 'advanced_price': pricing_inputs.get('advanced_price', ''),
@@ -1814,6 +1860,7 @@ def index():
             'custom_ai_manday_rate': default_custom_ai,
         }
         suggested_prices = patch_suggested_prices(suggested_prices, inputs)
+        record_funnel_event('prices', inputs=inputs)
         return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id, min_fees=min_fees)
     elif step == 'results':
         # Handle GET request for results page (page refresh)
@@ -1821,6 +1868,7 @@ def index():
         if not inputs or not session.get('results'):
             flash('Session expired or missing. Please start again.', 'error')
             currency_symbol = COUNTRY_CURRENCY.get('India', '₹')
+            record_funnel_event('volumes', inputs={}, profile=session.get('profile') or {})
             return render_template('index.html', step='volumes', currency_symbol=currency_symbol, inputs={}, calculation_id=calculation_id, min_fees=min_fees)
         
         # Re-render results page with existing session data
@@ -1865,7 +1913,7 @@ def index():
         profile = session.get('profile') or {}
         email_for_sow = (profile.get('email') or '').strip().lower()
         sow_beta_enabled = bool(email_for_sow and email_for_sow in SOW_BETA_EMAILS)
-        
+        record_funnel_event('results', inputs=inputs, profile=profile)
         return render_template(
             'index.html',
             step='results',
@@ -2202,6 +2250,9 @@ def generate_sow():
     except Exception:
         pass
 
+    # Record SOW download step for funnel analytics
+    record_funnel_event('sow_download', inputs=inputs, profile=profile)
+
     docx_io = generate_sow_docx(inputs, results, final_price_details, profile, sow_details, calculation_id)
     filename = f"SOW_{calculation_id or 'pricing'}.docx"
     return send_file(
@@ -2230,6 +2281,9 @@ def sow_details():
     if not inputs or not results:
         flash('No completed calculation found for SOW generation. Please run a pricing calculation first.', 'error')
         return redirect(url_for('index'))
+
+    # Record entry into SOW details step for funnel analytics
+    record_funnel_event('sow_details', inputs=inputs, profile=profile)
 
     # Mark that the user has entered the SOW funnel for this calculation (for abandon analysis)
     if calculation_id:

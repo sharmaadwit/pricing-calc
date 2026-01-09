@@ -341,6 +341,17 @@
                     </div>
                 </div>
             </div>
+            <div class="section">
+                <h2>Funnel Analytics (Volumes → Prices → Results → SOW)</h2>
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <h3>Step Drop-offs</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="funnelChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -698,6 +709,17 @@
               Object.keys(analyticsData.route_breakdown) : 
               ['volumes', 'bundle'];
 
+          // Funnel data (step counts)
+          const funnelCounts = analyticsData.funnel && analyticsData.funnel.counts ? analyticsData.funnel.counts : null;
+          const funnelLabels = ['Volumes', 'Prices', 'Results', 'SOW Form', 'SOW Download'];
+          const funnelData = funnelCounts ? [
+              funnelCounts.volumes || 0,
+              funnelCounts.prices || 0,
+              funnelCounts.results || 0,
+              funnelCounts.sow_details || 0,
+              funnelCounts.sow_download || 0,
+          ] : [0, 0, 0, 0, 0];
+
           const serviceData = [450000, 380000, 320000, 280000];
           const revenueData = [120000, 180000, 220000, 280000, 320000, 380000, 420000, 480000];
           const efficiencyData = [25000, 22000, 20000, 18000, 16000, 15000, 14000, 13000, 12000, 11000];
@@ -760,6 +782,13 @@
                   labels: routeLabels,
                   label: 'Usage',
                   colors: ['#667eea', '#764ba2']
+              },
+              funnel: {
+                  type: 'bar',
+                  data: funnelData,
+                  labels: funnelLabels,
+                  label: 'Sessions hitting step',
+                  color: '#667eea'
               }
           };
 
