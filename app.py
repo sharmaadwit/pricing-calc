@@ -423,6 +423,9 @@ class Analytics(db.Model):
     voice_cost_wa_outbound = db.Column(db.Float, nullable=True)
     voice_cost_wa_inbound = db.Column(db.Float, nullable=True)
     voice_total_cost = db.Column(db.Float, nullable=True)
+    # --- SOW funnel analytics ---
+    sow_generate_clicked = db.Column(db.Boolean, nullable=True, default=False)
+    sow_downloaded = db.Column(db.Boolean, nullable=True, default=False)
 
 # os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
 
@@ -2169,6 +2172,23 @@ def generate_sow():
         flash('No completed calculation found for SOW generation. Please run a pricing calculation first.', 'error')
         return redirect(url_for('index'))
 
+    # Mark that the SOW was actually downloaded for this calculation
+    if calculation_id:
+        try:
+            analytics_row = (
+                Analytics.query.filter_by(calculation_id=calculation_id)
+                .order_by(Analytics.timestamp.desc())
+                .first()
+            )
+            if analytics_row:
+                # Ensure click is marked as well for robustness
+                if not analytics_row.sow_generate_clicked:
+                    analytics_row.sow_generate_clicked = True
+                analytics_row.sow_downloaded = True
+                db.session.commit()
+        except Exception:
+            logger.exception("Failed to mark sow_downloaded in Analytics")
+
     try:
         logger.info(
             "SOW_GENERATE_REQUEST",
@@ -2206,9 +2226,25 @@ def sow_details():
 
     inputs = session.get('inputs') or {}
     results = session.get('results')
+    calculation_id = session.get('calculation_id')
     if not inputs or not results:
         flash('No completed calculation found for SOW generation. Please run a pricing calculation first.', 'error')
         return redirect(url_for('index'))
+
+    # Mark that the user has entered the SOW funnel for this calculation (for abandon analysis)
+    if calculation_id:
+        try:
+            analytics_row = (
+                Analytics.query.filter_by(calculation_id=calculation_id)
+                .order_by(Analytics.timestamp.desc())
+                .first()
+            )
+            if analytics_row and not analytics_row.sow_generate_clicked:
+                analytics_row.sow_generate_clicked = True
+                db.session.commit()
+        except Exception:
+            # Never break user flow if analytics update fails
+            logger.exception("Failed to mark sow_generate_clicked in Analytics")
 
     existing = session.get('sow_details') or {}
 

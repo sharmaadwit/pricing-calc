@@ -17,8 +17,8 @@ depends_on = None
 
 
 def upgrade():
-    with op.batch_alter_table('analytics', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('user_email', sa.String(length=256), nullable=True))
+    # Column was already manually added in production; use IF NOT EXISTS to keep migration idempotent.
+    op.execute("ALTER TABLE analytics ADD COLUMN IF NOT EXISTS user_email VARCHAR(256);")
 
 
 def downgrade():
