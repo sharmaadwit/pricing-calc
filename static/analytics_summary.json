@@ -1,15 +1,15 @@
 {
   "total_calculations": 509,
-  "unique_users": 30,
+  "unique_users": 24,
   "total_revenue": 75403604.0,
   "countries": 7,
-  "last_updated": "2026-01-09 12:48:36",
+  "last_updated": "2026-01-09 15:26:27",
   "top_users": {
-    "Kat": 16402950.0,
-    "Nikhil": 11150000.0,
-    "Puru Chauhan": 10850000.0,
-    "Ankit": 10485150.0,
-    "Puru": 7065000.0
+    "Kathyayani Nayak": 17403800.0,
+    "Nikhil Sharma": 11525000.0,
+    "Puru Chauhan": 10950000.0,
+    "Ankit Kanwara": 10638900.0,
+    "Purusottam Singh": 7065000.0
   },
   "country_breakdown": {
     "India": 416,
@@ -186,18 +186,14 @@
         "2025-12-21"
       ],
       "clv": [
-        6800.0,
+        8900.0,
         5900.0,
-        2100.0,
-        1250.0,
-        850.0
+        2100.0
       ],
       "clv_labels": [
-        "Ankit",
+        "Ankit Kanwara",
         "Saathwik",
-        "Kat",
-        "Ankit ",
-        "Ankit Kanwara"
+        "Kathyayani Nayak"
       ],
       "service_usage": [
         0.18900000000000003,
@@ -212,18 +208,14 @@
         "basic_utility_price"
       ],
       "manday_efficiency": [
-        250.0,
         166.19718309859155,
-        138.77551020408163,
-        116.66666666666667,
-        100.0
+        142.4,
+        116.66666666666667
       ],
       "manday_efficiency_labels": [
-        "Ankit ",
         "Saathwik",
-        "Ankit",
-        "Kat",
-        "Ankit Kanwara"
+        "Ankit Kanwara",
+        "Kathyayani Nayak"
       ],
       "hourly_counts": [
         1,
@@ -401,17 +393,15 @@
       ],
       "clv": [
         30150.0,
-        850.0,
-        850.0,
+        1700.0,
         850.0,
         850.0
       ],
       "clv_labels": [
         "Saathwik",
-        "Ankit",
-        "Kat",
-        "Mark",
-        "kat"
+        "Kathyayani Nayak",
+        "Ankit Kanwara",
+        "Mark"
       ],
       "service_usage": [
         0.329,
@@ -429,15 +419,13 @@
         850.0,
         242.85714285714286,
         169.85915492957747,
-        130.76923076923077,
-        80.95238095238095
+        100.0
       ],
       "manday_efficiency_labels": [
         "Mark",
-        "Ankit",
+        "Ankit Kanwara",
         "Saathwik",
-        "kat",
-        "Kat"
+        "Kathyayani Nayak"
       ],
       "hourly_counts": [
         1,
@@ -791,28 +779,28 @@
         "2026-01-11"
       ],
       "clv": [
-        16400000.0,
-        11150000.0,
-        10850000.0,
-        10475000.0,
+        17400000.0,
+        11525000.0,
+        10950000.0,
+        10625000.0,
         7065000.0,
         5690000.0,
         3651650.0,
         2720000.0,
         2100000.0,
-        1000000.0
+        700000.0
       ],
       "clv_labels": [
-        "Kat",
-        "Nikhil",
+        "Kathyayani Nayak",
+        "Nikhil Sharma",
         "Puru Chauhan",
-        "Ankit",
-        "Puru",
-        "Mridul",
+        "Ankit Kanwara",
+        "Purusottam Singh",
+        "Mridul Kumawat",
         "Saathwik",
         "Gourav",
         "Saurabh",
-        "kat"
+        "Nitin"
       ],
       "service_usage": [
         375.3667,
@@ -829,26 +817,26 @@
       "manday_efficiency": [
         475000.0,
         200000.0,
-        31790.59180576631,
+        30797.101449275364,
         28571.428571428572,
         26510.31894934334,
         15384.615384615385,
-        13888.888888888889,
         12887.882219705549,
-        12315.550510783201,
-        12293.853073463268
+        12375.533428165007,
+        12186.978297161937,
+        10294.117647058823
       ],
       "manday_efficiency_labels": [
         "Ravindra",
         "Sai Pranay",
-        "Ankit",
-        "Siddharth",
-        "Puru",
+        "Ankit Kanwara",
+        "Siddharth Singh",
+        "Purusottam Singh",
         "Nitin",
-        "kat",
-        "Mridul",
+        "Mridul Kumawat",
+        "Kathyayani Nayak",
         "Puru Chauhan",
-        "Kat"
+        "Saurabh"
       ],
       "hourly_counts": [
         2,
@@ -1063,7 +1051,7 @@
         "Mariana",
         "Matheus",
         "Saathwik",
-        "Ankit "
+        "Ankit Kanwara"
       ],
       "service_usage": [
         0.6645000000000001,
@@ -1087,7 +1075,7 @@
         "Saathwik",
         "Mariana",
         "Matheus",
-        "Ankit "
+        "Ankit Kanwara"
       ],
       "hourly_counts": [
         1,
@@ -1270,9 +1258,9 @@
         2500.0
       ],
       "clv_labels": [
-        "Siddharth",
+        "Siddharth Singh",
         "Gargi Upadhyay",
-        "Ankit"
+        "Ankit Kanwara"
       ],
       "service_usage": [
         0.2893,
@@ -1292,8 +1280,8 @@
         151.67464114832535
       ],
       "manday_efficiency_labels": [
-        "Siddharth",
-        "Ankit",
+        "Siddharth Singh",
+        "Ankit Kanwara",
         "Gargi Upadhyay"
       ],
       "hourly_counts": [
@@ -1441,7 +1429,7 @@
       ],
       "clv_labels": [
         "Saathwik",
-        "Adwit",
+        "Adwit Sharma",
         "Abhiraj"
       ],
       "service_usage": [
@@ -1463,7 +1451,7 @@
       ],
       "manday_efficiency_labels": [
         "Saathwik",
-        "Adwit",
+        "Adwit Sharma",
         "Abhiraj"
       ],
       "hourly_counts": [
@@ -2282,6 +2270,21 @@
           "custom_ai_manday_rate": 0
         }
       }
+    }
+  },
+  "funnel": {
+    "counts": {
+      "volumes": 1,
+      "prices": 0,
+      "results": 0,
+      "sow_details": 0,
+      "sow_download": 0
+    },
+    "conversion": {
+      "volumes_to_prices": 0.0,
+      "prices_to_results": 0.0,
+      "results_to_sow_details": 0.0,
+      "sow_details_to_sow_download": 0.0
     }
   },
   "platform_fee_by_country": [
