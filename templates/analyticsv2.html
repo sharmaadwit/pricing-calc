@@ -410,8 +410,21 @@
           const modelCounts = analyticsData.ai_model_counts_global || {};
           const complexityCounts = analyticsData.ai_complexity_counts_global || {};
 
-          const modelEntries = Object.entries(modelCounts);
-          const complexityEntries = Object.entries(complexityCounts);
+          // Filter out null/NaN/empty keys so we don't show them in the tables
+          const isValidKey = (key) => {
+              if (key === undefined || key === null) return false;
+              const s = String(key).trim();
+              if (!s) return false;
+              const lower = s.toLowerCase();
+              return !['nan', 'none', 'null'].includes(lower);
+          };
+
+          const modelEntries = Object.entries(modelCounts).filter(
+              ([model, count]) => isValidKey(model) && count > 0
+          );
+          const complexityEntries = Object.entries(complexityCounts).filter(
+              ([comp, count]) => isValidKey(comp) && count > 0
+          );
 
           let html = '<div class="insights">';
           html += '<h4>AI Models Used (Global Top)</h4>';
