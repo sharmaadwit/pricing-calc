@@ -674,13 +674,15 @@ AI_AGENT_PRICING = {
 }
 
 AI_AGENT_SETTINGS = {
-    # Thresholds are in the same currency as the underlying costs
+    # Thresholds are in the same currency as the underlying costs.
+    # Lowered thresholds to ensure model-based pricing kicks in when it 
+    # exceeds the standard tier pricing (e.g. price > 1.0 INR or > 0.01 USD).
     'India': {
-        'threshold': 1.0,      # INR
+        'threshold': 0.2,      # INR (0.2 * 5x = 1.0 price floor)
         'multiplier': 5.0,
     },
     'International': {
-        'threshold': 0.0105,   # USD
+        'threshold': 0.002,   # USD (0.002 * 5x = 0.01 price floor)
         'multiplier': 5.0,
     },
 }
@@ -737,20 +739,22 @@ def compute_ai_price_components(country: str, model: str, complexity: str, tier_
     multiplier = float(settings.get('multiplier', 1.0) or 1.0)
 
     raw_cost = get_ai_model_cost(pricing_key, model, complexity)
-    if raw_cost <= 0.0 or raw_cost < threshold:
-        # Below threshold (or no valid model): use existing tier-based pricing
-        final_price = meta_ai_cost + float(tier_ai_markup or 0.0)
+    model_markup = raw_cost * multiplier
+    
+    # Logic: Only use model-based pricing if cost is above threshold AND 
+    # resulting price is higher than the standard tier-based price.
+    if raw_cost >= threshold and model_markup > float(tier_ai_markup or 0.0):
+        final_price = meta_ai_cost + model_markup
         return {
             'final_price': final_price,
-            'markup': float(tier_ai_markup or 0.0),
-            'used_model': False,
+            'markup': model_markup,
+            'used_model': True,
         }
 
-    # Above threshold: use cost * multiplier as the final AI price
-    final_price = raw_cost * multiplier
-    markup = max(0.0, final_price - meta_ai_cost)
+    # Fallback: use existing tier-based pricing
+    final_price = meta_ai_cost + float(tier_ai_markup or 0.0)
     return {
         'final_price': final_price,
-        'markup': markup,
-        'used_model': True,
+        'markup': float(tier_ai_markup or 0.0),
+        'used_model': False,
     }
