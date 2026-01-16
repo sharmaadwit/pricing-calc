@@ -737,20 +737,28 @@ def compute_ai_price_components(country: str, model: str, complexity: str, tier_
     multiplier = float(settings.get('multiplier', 1.0) or 1.0)
 
     raw_cost = get_ai_model_cost(pricing_key, model, complexity)
-    if raw_cost <= 0.0 or raw_cost < threshold:
-        # Below threshold (or no valid model): use existing tier-based pricing
-        final_price = meta_ai_cost + float(tier_ai_markup or 0.0)
+    
+    # Calculate potential model-based markup
+    model_markup = raw_cost * multiplier
+    
+    # Logic: 
+    # 1. We keep the original raw_cost < threshold rule.
+    # 2. BUT, we also ensure that model pricing only kicks in if it's BETTER (higher)
+    #    than the standard tier markup. This ensures prices "adjust accordingly"
+    #    upwards for higher complexity/models, but don't drop below the rate card.
+    
+    if raw_cost >= threshold and model_markup > float(tier_ai_markup or 0.0):
+        final_price = meta_ai_cost + model_markup
         return {
             'final_price': final_price,
-            'markup': float(tier_ai_markup or 0.0),
-            'used_model': False,
+            'markup': model_markup,
+            'used_model': True,
         }
 
-    # Above threshold: use cost * multiplier as the final AI price
-    final_price = raw_cost * multiplier
-    markup = max(0.0, final_price - meta_ai_cost)
+    # Fallback: use existing tier-based pricing
+    final_price = meta_ai_cost + float(tier_ai_markup or 0.0)
     return {
         'final_price': final_price,
-        'markup': markup,
-        'used_model': True,
+        'markup': float(tier_ai_markup or 0.0),
+        'used_model': False,
     }

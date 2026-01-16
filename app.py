@@ -820,27 +820,23 @@ def index():
             'whatsapp_voice_outbound_minutes': whatsapp_voice_outbound_minutes,
             'whatsapp_voice_inbound_minutes': whatsapp_voice_inbound_minutes,
         }
-        # Ensure profile is updated and mirrored into inputs
+        # Ensure profile is updated from form data
         profile = session.get('profile') or {}
         if user_email:
             profile['email'] = user_email
         if user_name:
-            profile.setdefault('name', user_name)
+            profile['name'] = user_name  # Update name if provided
         if country:
-            profile.setdefault('country', country)
+            profile['country'] = country # Update country from form
         if region is not None:
-            profile.setdefault('region', region)
+            profile['region'] = region   # Update region from form
         session['profile'] = profile
 
-        if profile.get('name'):
-            session['inputs']['user_name'] = profile['name']
-        if profile.get('email'):
-            session['inputs']['user_email'] = profile['email']
-        if profile.get('country'):
-            session['inputs']['country'] = profile['country']
-        if profile.get('region') is not None:
-            session['inputs']['region'] = profile['region']
-        print("DEBUG: session['inputs'] just set to:", session['inputs'], file=sys.stderr, flush=True)
+        # session['inputs'] already has the form data from lines 775-822.
+        # We DO NOT overwrite session['inputs'] from profile here, as that would
+        # revert user's form selections to profile defaults.
+        
+        print("DEBUG: session['inputs'] correctly set to form data:", session['inputs'], file=sys.stderr, flush=True)
         # Only route to bundle if all text volumes are zero AND this is not a voice-only scenario
         total_voice_minutes = (
             pstn_inbound_ai_minutes + pstn_outbound_ai_minutes + pstn_manual_minutes +
