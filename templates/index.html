@@ -1159,30 +1159,30 @@
           <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 12px;">
             <div>
               <h4 style="margin:4px 0;">PSTN Inbound AI</h4>
-              <label>Bundled (INR/min):</label>
+              <label>Bundled ({{ currency_symbol }}/min):</label>
               <input type="text" name="vr_pstn_in_bundled" class="comma-number" value="{{ voice_rate_card.pstn.inbound.bundled }}">
-              <label style="margin-top:6px; display:block;">Overage (INR/min):</label>
+              <label style="margin-top:6px; display:block;">Overage ({{ currency_symbol }}/min):</label>
               <input type="text" name="vr_pstn_in_overage" class="comma-number" value="{{ voice_rate_card.pstn.inbound.overage }}">
             </div>
             <div>
               <h4 style="margin:4px 0;">PSTN Outbound AI</h4>
-              <label>Bundled (INR/min):</label>
+              <label>Bundled ({{ currency_symbol }}/min):</label>
               <input type="text" name="vr_pstn_out_bundled" class="comma-number" value="{{ voice_rate_card.pstn.outbound.bundled }}">
-              <label style="margin-top:6px; display:block;">Overage (INR/min):</label>
+              <label style="margin-top:6px; display:block;">Overage ({{ currency_symbol }}/min):</label>
               <input type="text" name="vr_pstn_out_overage" class="comma-number" value="{{ voice_rate_card.pstn.outbound.overage }}">
             </div>
             <div>
               <h4 style="margin:4px 0;">PSTN Manual C2C</h4>
-              <label>Bundled (INR/min):</label>
+              <label>Bundled ({{ currency_symbol }}/min):</label>
               <input type="text" name="vr_pstn_manual_bundled" class="comma-number" value="{{ voice_rate_card.pstn.manual.bundled }}">
-              <label style="margin-top:6px; display:block;">Overage (INR/min):</label>
+              <label style="margin-top:6px; display:block;">Overage ({{ currency_symbol }}/min):</label>
               <input type="text" name="vr_pstn_manual_overage" class="comma-number" value="{{ voice_rate_card.pstn.manual.overage }}">
             </div>
             <div>
               <h4 style="margin:4px 0;">WhatsApp Voice</h4>
-              <label>Outbound (INR/min):</label>
+              <label>Outbound ({{ currency_symbol }}/min):</label>
               <input type="text" name="vr_wa_out_per_min" class="comma-number" value="{{ voice_rate_card.whatsapp.outbound }}">
-              <label style="margin-top:6px; display:block;">Inbound (INR/min):</label>
+              <label style="margin-top:6px; display:block;">Inbound ({{ currency_symbol }}/min):</label>
               <input type="text" name="vr_wa_in_per_min" class="comma-number" value="{{ voice_rate_card.whatsapp.inbound }}">
               <div style="margin-top:8px; font-size:0.9em; color:#666;">Total WA minutes considered: {{ voice_rate_card.whatsapp.total_minutes|int }}</div>
             </div>
