@@ -2382,7 +2382,12 @@ def sow_details():
 
     sow_obj = Obj(existing)
     defaults_obj = Obj(defaults)
-    return render_template('sow_details.html', sow=sow_obj, defaults=defaults_obj)
+    return render_template(
+        'sow_details.html',
+        sow=sow_obj,
+        defaults=defaults_obj,
+        calculation_id=calculation_id,
+    )
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():

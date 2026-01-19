@@ -96,6 +96,9 @@
         <p class="help-text">
             Fill these fields once per deal. They will be used to enrich the SOW document.
         </p>
+        {% if calculation_id %}
+        <p class="help-text">Calculation ID: {{ calculation_id }}</p>
+        {% endif %}
 
         <form method="post">
             <div class="section">
