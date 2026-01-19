@@ -1977,10 +1977,31 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
     if calculation_id:
         doc.add_paragraph(f"Calculation ID: {calculation_id}")
 
-    # Revision History – fill first data row (Table 0)
+    def _row_text(table, row_idx):
+        if not table or row_idx >= len(table.rows):
+            return []
+        return [cell.text.strip() for cell in table.rows[row_idx].cells]
+
+    def _find_table_by_headers(headers):
+        for table in doc.tables:
+            row0 = _row_text(table, 0)
+            if row0 and all(h in row0 for h in headers):
+                return table
+        return None
+
+    def _find_table_by_row_label(label, row_idx=1):
+        for table in doc.tables:
+            row = _row_text(table, row_idx)
+            if row and row[0] == label:
+                return table
+        return None
+
+    # Revision History – fill first data row
     try:
-        rev_table = doc.tables[0]
-        if len(rev_table.rows) >= 2:
+        rev_table = _find_table_by_headers(
+            ['Version Number', 'Last Update Date', 'Change Description', 'Author/Editor Name']
+        )
+        if rev_table and len(rev_table.rows) >= 2:
             rev_row = rev_table.rows[1]
             rev_row.cells[0].text = '1.0'
             rev_row.cells[1].text = datetime.utcnow().strftime('%Y-%m-%d')
@@ -1993,63 +2014,65 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
     # Business Objectives Discovered – fill Table A in Section 1
     sow_details = sow_details or {}
     try:
-        bo_table = doc.tables[3]  # Table 3: Business Objectives (Description / Client requirement)
-        for row in bo_table.rows[1:]:
-            desc = row.cells[0].text.strip()
-            if desc == 'Business Objective':
-                row.cells[1].text = sow_details.get('business_objective', '')
-            elif desc == 'Business Problem':
-                row.cells[1].text = sow_details.get('business_problem', '')
-            elif desc == 'Use Case Narrative':
-                row.cells[1].text = sow_details.get('use_case_narrative', '')
-            elif desc == 'Expected Volumes':
-                row.cells[1].text = sow_details.get('expected_volumes', '')
-            elif desc == 'Target Audience':
-                row.cells[1].text = sow_details.get('target_audience', '')
-            elif desc.startswith('KPI'):
-                row.cells[1].text = sow_details.get('kpis', '')
+        bo_table = _find_table_by_row_label('Business Objective', row_idx=1)
+        if bo_table:
+            for row in bo_table.rows[1:]:
+                desc = row.cells[0].text.strip()
+                if desc == 'Business Objective':
+                    row.cells[1].text = sow_details.get('business_objective', '')
+                elif desc == 'Business Problem':
+                    row.cells[1].text = sow_details.get('business_problem', '')
+                elif desc == 'Use Case Narrative':
+                    row.cells[1].text = sow_details.get('use_case_narrative', '')
+                elif desc == 'Expected Volumes':
+                    row.cells[1].text = sow_details.get('expected_volumes', '')
+                elif desc == 'Target Audience':
+                    row.cells[1].text = sow_details.get('target_audience', '')
+                elif desc.startswith('KPI'):
+                    row.cells[1].text = sow_details.get('kpis', '')
     except Exception:
         pass
 
     # Overall Requirement – Table A in Technical Requirements (Table 4)
     try:
-        overall = doc.tables[4]
+        overall = _find_table_by_row_label('Number of journeys', row_idx=1)
         channels_selected = sow_details.get('channels', []) or []
         # Helper to map channels into template groups
         def group_channels(group_names):
             return ', '.join([c for c in channels_selected if c in group_names])
-        for row in overall.rows[1:]:
-            desc = row.cells[0].text.strip()
-            if desc == 'Number of journeys':
-                val = sow_details.get('num_journeys') or inputs.get('num_journeys_price') or ''
-                row.cells[1].text = str(val)
-            elif desc == 'Channels':
-                # Three buckets: WA/WA Voice, SMS/Others, Instagram/PSTN Voice
-                row.cells[1].text = group_channels(['WhatsApp', 'WA', 'WhatsApp Voice', 'WA Voice'])
-                row.cells[2].text = group_channels(['SMS', 'Others'])
-                row.cells[3].text = group_channels(['Instagram', 'PSTN Voice'])
-            elif desc == 'Bot Language':
-                row.cells[1].text = sow_details.get('bot_language', '')
-            elif desc.startswith('No. of APIs/Backend Services'):
-                val = sow_details.get('num_apis') or inputs.get('num_apis_price') or ''
-                row.cells[1].text = str(val)
-            elif desc.startswith('Name of the backend systems in scope'):
-                row.cells[1].text = sow_details.get('backend_systems', '')
-            elif desc.startswith('Development Timelines'):
-                val = sow_details.get('total_mandays', '')
-                row.cells[1].text = str(val)
+        if overall:
+            for row in overall.rows[1:]:
+                desc = row.cells[0].text.strip()
+                if desc == 'Number of journeys':
+                    val = sow_details.get('num_journeys') or inputs.get('num_journeys_price') or ''
+                    row.cells[1].text = str(val)
+                elif desc == 'Channels':
+                    # Three buckets: WA/WA Voice, SMS/Others, Instagram/PSTN Voice
+                    row.cells[1].text = group_channels(['WhatsApp', 'WA', 'WhatsApp Voice', 'WA Voice'])
+                    row.cells[2].text = group_channels(['SMS', 'Others'])
+                    row.cells[3].text = group_channels(['Instagram', 'PSTN Voice'])
+                elif desc == 'Bot Language':
+                    row.cells[1].text = sow_details.get('bot_language', '')
+                elif desc.startswith('No. of APIs/Backend Services'):
+                    val = sow_details.get('num_apis') or inputs.get('num_apis_price') or ''
+                    row.cells[1].text = str(val)
+                elif desc.startswith('Name of the backend systems in scope'):
+                    row.cells[1].text = sow_details.get('backend_systems', '')
+                elif desc.startswith('Development Timelines'):
+                    val = sow_details.get('total_mandays', '')
+                    row.cells[1].text = str(val)
     except Exception:
         pass
 
     # AI Specifications – Table B (Table 5)
     try:
-        ai_table = doc.tables[5]
+        ai_table = _find_table_by_row_label('Bot type', row_idx=1)
         ai_module = inputs.get('ai_module', 'NA')
-        if ai_module != 'Yes':
+        if ai_table and ai_module != 'Yes':
             # Omit AI Specifications table for non-AI SOWs
             tbl = ai_table._tbl
             tbl.getparent().remove(tbl)
-        else:
+        elif ai_table:
             complexity = inputs.get('ai_agent_complexity', '') or sow_details.get('bot_complexity', '')
             model = inputs.get('ai_agent_model', '') or sow_details.get('llm_model', '')
             for row in ai_table.rows[1:]:
@@ -2063,9 +2086,9 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
 
     # Deployment / Hosting – Table D (Table 7)
     try:
-        dep_table = doc.tables[7]
+        dep_table = _find_table_by_row_label('Deployment/Hosting', row_idx=1)
         dep_use_default = (sow_details.get('dep_use_default', 'yes') == 'yes')
-        if dep_use_default:
+        if dep_table and dep_use_default:
             # Set default client requirement
             for row in dep_table.rows[1:]:
                 desc = row.cells[0].text.strip()
@@ -2102,7 +2125,7 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
 
     # Capacity & Compliance – Table E (Table 8)
     try:
-        cap = doc.tables[8]
+        cap = _find_table_by_row_label('TPS', row_idx=1)
         tps_default = (sow_details.get('tps_use_default', 'yes') == 'yes')
         dr_default = (sow_details.get('dr_use_default', 'yes') == 'yes')
         include_personalize = (sow_details.get('include_personalize', 'yes') == 'yes')
@@ -2111,41 +2134,42 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
         rows_to_remove = []
         in_tps_block = False
         in_dr_block = False
-        for idx, row in enumerate(cap.rows[1:], start=1):
-            desc = row.cells[0].text.strip()
-            # Track which block we're in (TPS/Data Retention) for multi-row sections
-            if desc == 'TPS':
-                in_tps_block = True
-                in_dr_block = False
-            elif desc == 'Data Retention':
-                in_dr_block = True
-                in_tps_block = False
-            elif desc:
-                in_tps_block = False
-                in_dr_block = False
+        if cap:
+            for idx, row in enumerate(cap.rows[1:], start=1):
+                desc = row.cells[0].text.strip()
+                # Track which block we're in (TPS/Data Retention) for multi-row sections
+                if desc == 'TPS':
+                    in_tps_block = True
+                    in_dr_block = False
+                elif desc == 'Data Retention':
+                    in_dr_block = True
+                    in_tps_block = False
+                elif desc:
+                    in_tps_block = False
+                    in_dr_block = False
 
-            if desc == 'TPS' and tps_default:
-                row.cells[1].text = 'Standard 80'
-                # Clear Questions and Presales columns as per instructions
-                row.cells[2].text = ''
-                row.cells[3].text = ''
-            elif in_tps_block and tps_default:
-                # For subsequent TPS rows, clear Questions/Presales content
-                row.cells[2].text = ''
-                row.cells[3].text = ''
-            elif desc == 'Data Retention' and dr_default:
-                row.cells[1].text = '2 years - Standard'
-                row.cells[2].text = ''
-                row.cells[3].text = ''
-            elif in_dr_block and dr_default:
-                # Subsequent Data Retention rows: clear Questions/Presales only
-                row.cells[2].text = ''
-                row.cells[3].text = ''
+                if desc == 'TPS' and tps_default:
+                    row.cells[1].text = 'Standard 80'
+                    # Clear Questions and Presales columns as per instructions
+                    row.cells[2].text = ''
+                    row.cells[3].text = ''
+                elif in_tps_block and tps_default:
+                    # For subsequent TPS rows, clear Questions/Presales content
+                    row.cells[2].text = ''
+                    row.cells[3].text = ''
+                elif desc == 'Data Retention' and dr_default:
+                    row.cells[1].text = '2 years - Standard'
+                    row.cells[2].text = ''
+                    row.cells[3].text = ''
+                elif in_dr_block and dr_default:
+                    # Subsequent Data Retention rows: clear Questions/Presales only
+                    row.cells[2].text = ''
+                    row.cells[3].text = ''
 
-            if desc == 'Profile Storage Requirements' and not include_personalize:
-                rows_to_remove.append(idx)
-            elif desc == 'Security and Privacy Package' and not additional_security:
-                rows_to_remove.append(idx)
+                if desc == 'Profile Storage Requirements' and not include_personalize:
+                    rows_to_remove.append(idx)
+                elif desc == 'Security and Privacy Package' and not additional_security:
+                    rows_to_remove.append(idx)
 
         # Remove marked rows from bottom up
         for idx in sorted(rows_to_remove, reverse=True):
@@ -2154,7 +2178,7 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
         # If standard configs are used for both TPS and Data Retention,
         # remove the last two columns (Questions, Presales Findings) for
         # the entire table to simplify the layout.
-        if tps_default and dr_default:
+        if cap and tps_default and dr_default:
             for col_idx in [3, 2]:
                 for row in cap.rows:
                     cell = row.cells[col_idx]
@@ -2164,11 +2188,12 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
 
     # Delivery – insert Presales name into credentials column (Table 11)
     try:
-        roles = doc.tables[11]
-        for row in roles.rows[1:]:
-            if row.cells[0].text.strip() == 'Presales':
-                row.cells[2].text = name or ''
-                break
+        roles = _find_table_by_headers(['Roles', 'Responsibilities', 'Credentials'])
+        if roles:
+            for row in roles.rows[1:]:
+                if row.cells[0].text.strip() == 'Presales':
+                    row.cells[2].text = name or ''
+                    break
     except Exception:
         pass
 
