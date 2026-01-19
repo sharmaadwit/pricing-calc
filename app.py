@@ -2298,8 +2298,9 @@ def sow_details():
 
     inputs = session.get('inputs') or {}
     results = session.get('results')
+    final_price_details = session.get('final_price_details')
     calculation_id = session.get('calculation_id')
-    if not inputs or not results:
+    if not inputs or not results or not final_price_details:
         flash('No completed calculation found for SOW generation. Please run a pricing calculation first.', 'error')
         return redirect(url_for('index'))
 
@@ -2360,8 +2361,48 @@ def sow_details():
             )
         except Exception:
             pass
-        # After capturing details, trigger SOW generation
-        return redirect(url_for('generate_sow'))
+        # After capturing details, generate the doc immediately to avoid
+        # any session/cookie persistence issues between requests.
+        try:
+            logger.info(
+                "SOW_GENERATE_REQUEST",
+                extra={
+                    "calculation_id": calculation_id,
+                    "user_email": profile.get("email"),
+                    "country": inputs.get("country"),
+                    "route": "bundle" if float(inputs.get("committed_amount", 0) or 0) > 0 else "volumes",
+                },
+            )
+        except Exception:
+            pass
+
+        # Record SOW download step for funnel analytics
+        record_funnel_event('sow_download', inputs=inputs, profile=profile)
+
+        # Mark that the SOW was actually downloaded for this calculation
+        if calculation_id:
+            try:
+                analytics_row = (
+                    Analytics.query.filter_by(calculation_id=calculation_id)
+                    .order_by(Analytics.timestamp.desc())
+                    .first()
+                )
+                if analytics_row:
+                    if not analytics_row.sow_generate_clicked:
+                        analytics_row.sow_generate_clicked = True
+                    analytics_row.sow_downloaded = True
+                    db.session.commit()
+            except Exception:
+                logger.exception("Failed to mark sow_downloaded in Analytics")
+
+        docx_io = generate_sow_docx(inputs, results, final_price_details, profile, sow, calculation_id)
+        filename = f"SOW_{calculation_id or 'pricing'}.docx"
+        return send_file(
+            docx_io,
+            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            as_attachment=True,
+            download_name=filename,
+        )
 
     # Defaults for initial load
     try:
