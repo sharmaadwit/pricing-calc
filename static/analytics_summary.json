@@ -3,7 +3,7 @@
   "unique_users": 26,
   "total_revenue": 78022404.0,
   "countries": 7,
-  "last_updated": "2026-01-20 06:38:53",
+  "last_updated": "2026-01-20 09:34:47",
   "top_users": {
     "Kathyayani Nayak": 17403800.0,
     "Nikhil Sharma": 11525000.0,
@@ -2336,14 +2336,14 @@
   },
   "funnel": {
     "counts": {
-      "volumes": 35,
+      "volumes": 37,
       "prices": 15,
       "results": 17,
       "sow_details": 11,
       "sow_download": 6
     },
     "conversion": {
-      "volumes_to_prices": 42.857142857142854,
+      "volumes_to_prices": 40.54054054054054,
       "prices_to_results": 113.33333333333333,
       "results_to_sow_details": 64.70588235294117,
       "sow_details_to_sow_download": 54.54545454545454
