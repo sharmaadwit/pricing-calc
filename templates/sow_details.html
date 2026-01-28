@@ -118,7 +118,7 @@
                 <div class="inline-group" style="margin-top: 12px;">
                     <div>
                         <label for="expected_volumes">Expected Volumes</label>
-                        <textarea id="expected_volumes" name="expected_volumes">{{ sow.expected_volumes or '' }}</textarea>
+                        <textarea id="expected_volumes" name="expected_volumes">{{ sow.expected_volumes or defaults.expected_volumes or '' }}</textarea>
                     </div>
                     <div>
                         <label for="target_audience">Target Audience</label>
@@ -164,10 +164,407 @@
 
                 <label for="total_mandays" style="margin-top: 12px;">Development Timelines (Total Mandays)</label>
                 <input type="text" id="total_mandays" name="total_mandays" value="{{ sow.total_mandays or defaults.total_mandays or '' }}">
+
+                <label style="margin-top: 12px;">Primary Entry Point</label>
+                <div class="checkbox-group">
+                    {% set selected_entry_points = sow.primary_entry_points or [] %}
+                    {% for opt in ['User Initiated', 'CTWA', 'QR Code', 'Campaign Journey'] %}
+                    <label>
+                        <input type="checkbox" name="primary_entry_points" value="{{ opt }}" {% if opt in selected_entry_points %}checked{% endif %}>
+                        {{ opt }}
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <label for="language_detection_type" style="margin-top: 12px;">Language Detection Type (Multilingual)</label>
+                <input type="text" id="language_detection_type" name="language_detection_type" value="{{ sow.language_detection_type or '' }}" placeholder="Automatic">
+
+                <label for="session_persistence" style="margin-top: 12px;">Session Persistence (Duration)</label>
+                <select id="session_persistence" name="session_persistence">
+                    {% set sp = sow.session_persistence or '' %}
+                    {% for opt in ['Default (24 hrs)', 'Long-term (Database-backed)', 'Cross-device Sync', 'Custom'] %}
+                    <option value="{{ opt }}" {% if sp == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+
+                <label style="margin-top: 12px;">Custom Analytics Requirement</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="radio" name="custom_analytics_required" value="yes" {% if sow.custom_analytics_required == 'yes' %}checked{% endif %}>
+                        Yes
+                    </label>
+                    <label>
+                        <input type="radio" name="custom_analytics_required" value="no" {% if sow.custom_analytics_required != 'yes' %}checked{% endif %}>
+                        No
+                    </label>
+                </div>
+                <label for="custom_analytics_points" style="margin-top: 8px;">Custom Analytics Data Points</label>
+                <textarea id="custom_analytics_points" name="custom_analytics_points">{{ sow.custom_analytics_points or '' }}</textarea>
+
+                <label style="margin-top: 12px;">Modules in Scope</label>
+                <div class="checkbox-group">
+                    {% set selected_modules = sow.modules_in_scope or [] %}
+                    {% for opt in ['Campaign Manager', 'Automated Campaigns', 'Journey Builder', 'AI Admin', 'Goals', 'Whatsapp Flows', 'CTX', 'Agent Assist', 'Personalize', 'Integrations', 'Analyzer and Optimizer'] %}
+                    <label>
+                        <input type="checkbox" name="modules_in_scope" value="{{ opt }}" {% if opt in selected_modules %}checked{% endif %}>
+                        {{ opt }}
+                    </label>
+                    {% endfor %}
+                </div>
             </div>
 
             <div class="section">
-                <h2>3. Deployment & Capacity Toggles</h2>
+                <h2>3. AI Specifications</h2>
+
+                <label for="ai_model_name">Model Name</label>
+                <select id="ai_model_name" name="ai_model_name">
+                {% set model_name = sow.ai_model_name or defaults.ai_model_name or '' %}
+                    {% for opt in ['Ace Lite (Qwen-3-4B)', 'Ace Pro (Gemma 2-2b, Azure OpenAI Gpt-4o-mini)', 'Ace Advanced (Qwen-3-4B, Azure OpenAI Gpt-4o-mini)', 'Ace Premium ( Azure OpenAI Gpt-4o-mini)', 'Client LLM (Specify)'] %}
+                    <option value="{{ opt }}" {% if model_name == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="ai_bot_type" style="margin-top: 12px;">Bot Type</label>
+                <select id="ai_bot_type" name="ai_bot_type">
+                    {% set bt = sow.ai_bot_type or '' %}
+                    {% for opt in ['Agentic', 'Voice', 'Hybrid'] %}
+                    <option value="{{ opt }}" {% if bt == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="ai_channel" style="margin-top: 12px;">Channel</label>
+                <select id="ai_channel" name="ai_channel">
+                    {% set ch = sow.ai_channel or '' %}
+                    {% for opt in ['Whatsapp', 'Whatsapp Voice', 'Web', 'PSTN Voice'] %}
+                    <option value="{{ opt }}" {% if ch == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="ai_use_case_category" style="margin-top: 12px;">Use-Case Category</label>
+                <select id="ai_use_case_category" name="ai_use_case_category">
+                    {% set uc = sow.ai_use_case_category or '' %}
+                    {% for opt in ['FAQ', 'Commerce / Sales', 'Support / Service', 'Others'] %}
+                    <option value="{{ opt }}" {% if uc == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="ai_bot_complexity" style="margin-top: 12px;">Bot Complexity</label>
+                <select id="ai_bot_complexity" name="ai_bot_complexity">
+                {% set bc = sow.ai_bot_complexity or defaults.ai_bot_complexity or '' %}
+                    {% for opt in ['Simple', 'Medium', 'High', 'Exceptional'] %}
+                    <option value="{{ opt }}" {% if bc == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="ai_llm_model" style="margin-top: 12px;">LLM Model</label>
+                <input type="text" id="ai_llm_model" name="ai_llm_model" value="{{ sow.ai_llm_model or defaults.ai_llm_model or '' }}">
+
+                <label style="margin-top: 12px;">Type of Training Data</label>
+                <div class="checkbox-group">
+                    {% set training_data = sow.training_data or [] %}
+                    {% for opt in ['CSV', 'Website', 'Text', 'Others'] %}
+                    <label>
+                        <input type="checkbox" name="training_data" value="{{ opt }}" {% if opt in training_data %}checked{% endif %}>
+                        {{ opt }}
+                    </label>
+                    {% endfor %}
+                </div>
+                <label for="training_data_other" style="margin-top: 8px;">Training Data (Other)</label>
+                <input type="text" id="training_data_other" name="training_data_other" value="{{ sow.training_data_other or '' }}">
+
+                <div id="training_schedule_group">
+                    <div class="inline-group" style="margin-top: 12px;">
+                    <div>
+                        <label for="training_start_date">Training Schedule Start Date</label>
+                        <input type="text" id="training_start_date" name="training_start_date" value="{{ sow.training_start_date or '' }}" placeholder="e.g. 30th December 2025">
+                    </div>
+                    <div>
+                        <label for="training_end_date">Training Schedule End Date</label>
+                        <input type="text" id="training_end_date" name="training_end_date" value="{{ sow.training_end_date or '' }}">
+                    </div>
+                    </div>
+                    <div class="inline-group" style="margin-top: 12px;">
+                    <div>
+                        <label for="training_frequency">Training Frequency</label>
+                        <select id="training_frequency" name="training_frequency">
+                            {% set tf = sow.training_frequency or '' %}
+                            <option value="" {% if tf == '' %}selected{% endif %}>-- Select --</option>
+                            {% for opt in ['Daily', 'Weekly', 'Monthly'] %}
+                            <option value="{{ opt }}" {% if tf == opt %}selected{% endif %}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="training_interval">Interval</label>
+                        <input type="number" id="training_interval" name="training_interval" value="{{ sow.training_interval or '' }}">
+                    </div>
+                    </div>
+                </div>
+
+                <label for="ai_languages" style="margin-top: 12px;">AI Languages</label>
+                <input type="text" id="ai_languages" name="ai_languages" value="{{ sow.ai_languages or '' }}">
+
+                <label for="priority_intents" style="margin-top: 12px;">Priority Intents</label>
+                <textarea id="priority_intents" name="priority_intents">{{ sow.priority_intents or '' }}</textarea>
+
+                <label for="related_entities" style="margin-top: 12px;">Related Entities</label>
+                <textarea id="related_entities" name="related_entities">{{ sow.related_entities or '' }}</textarea>
+
+                <label for="estimated_faqs" style="margin-top: 12px;">Estimated No. Questions/Intents/FAQs</label>
+                <input type="number" id="estimated_faqs" name="estimated_faqs" value="{{ sow.estimated_faqs or '' }}">
+
+                <label for="response_guardrails" style="margin-top: 12px;">Response Guardrails</label>
+                <select id="response_guardrails" name="response_guardrails">
+                    {% set rg = sow.response_guardrails or '' %}
+                    {% for opt in ['High (Strictly Knowledge Base)', 'Medium (Creative within Scope)', 'Low (Unrestricted)', 'Zero (Pass-through)'] %}
+                    <option value="{{ opt }}" {% if rg == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="fallback_strategy" style="margin-top: 12px;">Fallback Strategy</label>
+                <select id="fallback_strategy" name="fallback_strategy">
+                    {% set fs = sow.fallback_strategy or '' %}
+                    {% for opt in ['Static Fallback Message', 'Gupshup Agent Handover', 'Search API', '3rd Party Agent Handover'] %}
+                    <option value="{{ opt }}" {% if fs == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+
+                <label style="margin-top: 12px;">Human Handover Trigger</label>
+                <div class="checkbox-group">
+                    {% set handover = sow.human_handover_trigger or [] %}
+                    {% for opt in ['User Intent (Keyword)', 'Bot Failure', 'NPS/ Low confidence', 'Unidentified Intent'] %}
+                    <label>
+                        <input type="checkbox" name="human_handover_trigger" value="{{ opt }}" {% if opt in handover %}checked{% endif %}>
+                        {{ opt }}
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <label for="testing_data" style="margin-top: 12px;">Testing Data (Q&A shared by customer)</label>
+                <textarea id="testing_data" name="testing_data">{{ sow.testing_data or '' }}</textarea>
+            </div>
+
+            <div class="section">
+                <h2>4. Module-wise Configuration Requirements</h2>
+                <label for="whatsapp_flows_type">Whatsapp Flows Type</label>
+                <select id="whatsapp_flows_type" name="whatsapp_flows_type">
+                    {% set wft = sow.whatsapp_flows_type or '' %}
+                    <option value="" {% if wft == '' %}selected{% endif %}>-- Select --</option>
+                    {% for opt in ['Static', 'Dynamic'] %}
+                    <option value="{{ opt }}" {% if wft == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                    <option value="Not Required" {% if wft == 'Not Required' %}selected{% endif %}>Not Required</option>
+                </select>
+                <div id="whatsapp_flows_desc_group">
+                    <label for="whatsapp_flows_desc" style="margin-top: 8px;">Whatsapp Flows Description</label>
+                    <textarea id="whatsapp_flows_desc" name="whatsapp_flows_desc">{{ sow.whatsapp_flows_desc or '' }}</textarea>
+                </div>
+
+                <label for="goals_desc" style="margin-top: 12px;">Goals</label>
+                <textarea id="goals_desc" name="goals_desc">{{ sow.goals_desc or '' }}</textarea>
+
+                <label for="personalize_desc" style="margin-top: 12px;">Personalize</label>
+                <textarea id="personalize_desc" name="personalize_desc">{{ sow.personalize_desc or '' }}</textarea>
+
+                <label for="agent_assist_desc" style="margin-top: 12px;">Agent Assist</label>
+                <textarea id="agent_assist_desc" name="agent_assist_desc">{{ sow.agent_assist_desc or '' }}</textarea>
+                <div class="inline-group" style="margin-top: 12px;">
+                    <div>
+                        <label for="agent_assist_team_setup">Team Setup</label>
+                        <select id="agent_assist_team_setup" name="agent_assist_team_setup">
+                            {% set aats = sow.agent_assist_team_setup or '' %}
+                            <option value="" {% if aats == '' %}selected{% endif %}>-- Select --</option>
+                            {% for opt in ['Yes', 'No'] %}
+                            <option value="{{ opt }}" {% if aats == opt %}selected{% endif %}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="agent_assist_assignment_rules">Assignment Rules Configuration</label>
+                        <select id="agent_assist_assignment_rules" name="agent_assist_assignment_rules">
+                            {% set aaar = sow.agent_assist_assignment_rules or '' %}
+                            <option value="" {% if aaar == '' %}selected{% endif %}>-- Select --</option>
+                            {% for opt in ['Yes', 'No'] %}
+                            <option value="{{ opt }}" {% if aaar == opt %}selected{% endif %}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="inline-group" style="margin-top: 12px;">
+                    <div>
+                        <label for="agent_assist_chat_tags">Chat Tags</label>
+                        <select id="agent_assist_chat_tags" name="agent_assist_chat_tags">
+                            {% set aact = sow.agent_assist_chat_tags or '' %}
+                            <option value="" {% if aact == '' %}selected{% endif %}>-- Select --</option>
+                            {% for opt in ['Yes', 'No'] %}
+                            <option value="{{ opt }}" {% if aact == opt %}selected{% endif %}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <label for="third_party_agent_handover" style="margin-top: 12px;">3rd Party Agent Handover</label>
+                <textarea id="third_party_agent_handover" name="third_party_agent_handover">{{ sow.third_party_agent_handover or '' }}</textarea>
+
+                <div class="inline-group" style="margin-top: 12px;">
+                    <div>
+                        <label for="external_assignment_requirement">External Assignment Requirement</label>
+                        <select id="external_assignment_requirement" name="external_assignment_requirement">
+                            {% set ear = sow.external_assignment_requirement or '' %}
+                            <option value="" {% if ear == '' %}selected{% endif %}>-- Select --</option>
+                            {% for opt in ['Yes', 'No'] %}
+                            <option value="{{ opt }}" {% if ear == opt %}selected{% endif %}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="transcript_api_integration">Transcript API Integration</label>
+                        <select id="transcript_api_integration" name="transcript_api_integration">
+                            {% set tai = sow.transcript_api_integration or '' %}
+                            <option value="" {% if tai == '' %}selected{% endif %}>-- Select --</option>
+                            {% for opt in ['Yes', 'No'] %}
+                            <option value="{{ opt }}" {% if tai == opt %}selected{% endif %}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="inline-group" style="margin-top: 12px;">
+                    <div>
+                        <label for="agent_copilot">Agent Co-pilot</label>
+                        <select id="agent_copilot" name="agent_copilot">
+                            {% set acp = sow.agent_copilot or '' %}
+                            <option value="" {% if acp == '' %}selected{% endif %}>-- Select --</option>
+                            {% for opt in ['Yes', 'No'] %}
+                            <option value="{{ opt }}" {% if acp == opt %}selected{% endif %}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {% if inputs and inputs.get('channel_type') != 'text_only' %}
+            <div class="section">
+                <h2>5. Voice Specifications</h2>
+                <label for="voice_dialer">Dialer</label>
+                <select id="voice_dialer" name="voice_dialer">
+                    {% set vd = sow.voice_dialer or '' %}
+                    <option value="" {% if vd == '' %}selected{% endif %}>-- Select --</option>
+                    {% for opt in ['Knowlarity', 'Other'] %}
+                    <option value="{{ opt }}" {% if vd == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+                <label for="voice_dialer_other" style="margin-top: 8px;">Dialer (Other)</label>
+                <input type="text" id="voice_dialer_other" name="voice_dialer_other" value="{{ sow.voice_dialer_other or '' }}">
+
+                <label style="margin-top: 12px;">Voice Cloning (Add Sample If Yes)</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="radio" name="voice_cloning" value="yes" {% if sow.voice_cloning == 'yes' %}checked{% endif %}>
+                        Yes
+                    </label>
+                    <label>
+                        <input type="radio" name="voice_cloning" value="no" {% if sow.voice_cloning != 'yes' %}checked{% endif %}>
+                        No
+                    </label>
+                    <label>
+                        <input type="radio" name="voice_cloning" value="" {% if sow.voice_cloning == '' or sow.voice_cloning is not defined %}checked{% endif %}>
+                        Not specified
+                    </label>
+                </div>
+
+                <label for="voice_call_type" style="margin-top: 12px;">Call Type</label>
+                <select id="voice_call_type" name="voice_call_type">
+                    {% set vct = sow.voice_call_type or '' %}
+                    <option value="" {% if vct == '' %}selected{% endif %}>-- Select --</option>
+                    {% for opt in ['Inbound', 'Outbound', 'Both'] %}
+                    <option value="{{ opt }}" {% if vct == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="voice_samples" style="margin-top: 12px;">Voice Samples for Cloning</label>
+                <input type="text" id="voice_samples" name="voice_samples" value="{{ sow.voice_samples or '' }}">
+
+                <label style="margin-top: 12px;">Channels</label>
+                <div class="checkbox-group">
+                    {% set voice_channels = sow.voice_channels or [] %}
+                    {% for opt in ['PSTN', 'WA Voice'] %}
+                    <label>
+                        <input type="checkbox" name="voice_channels" value="{{ opt }}" {% if opt in voice_channels %}checked{% endif %}>
+                        {{ opt }}
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <label for="sip_endpoint" style="margin-top: 12px;">SIP EndPoint (WA Voice calls termination)</label>
+                <input type="text" id="sip_endpoint" name="sip_endpoint" value="{{ sow.sip_endpoint or '' }}">
+
+                <label for="waba_number" style="margin-top: 12px;">WABA Number to Enable WA Voice</label>
+                <input type="text" id="waba_number" name="waba_number" value="{{ sow.waba_number or '' }}">
+
+                <label for="websocket_url" style="margin-top: 12px;">Websocket URL (for third-party AI termination)</label>
+                <input type="text" id="websocket_url" name="websocket_url" value="{{ sow.websocket_url or '' }}">
+            </div>
+            {% endif %}
+
+            <div class="section">
+                <h2>6. Additional Scope Elements</h2>
+                <div class="inline-group">
+                    <div>
+                        <label for="dedicated_ba_pm">Dedicated BA & Project Manager</label>
+                        <select id="dedicated_ba_pm" name="dedicated_ba_pm">
+                            {% set dbp = sow.dedicated_ba_pm or '' %}
+                            <option value="" {% if dbp == '' %}selected{% endif %}>-- Select --</option>
+                            {% for opt in ['Yes', 'No'] %}
+                            <option value="{{ opt }}" {% if dbp == opt %}selected{% endif %}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="dedicated_ba_pm_count">If Yes, how many?</label>
+                        <input type="text" id="dedicated_ba_pm_count" name="dedicated_ba_pm_count" value="{{ sow.dedicated_ba_pm_count or '' }}">
+                    </div>
+                </div>
+
+                <div class="inline-group" style="margin-top: 12px;">
+                    <div>
+                        <label for="dedicated_dev">Dedicated Developer</label>
+                        <select id="dedicated_dev" name="dedicated_dev">
+                            {% set dd = sow.dedicated_dev or '' %}
+                            <option value="" {% if dd == '' %}selected{% endif %}>-- Select --</option>
+                            {% for opt in ['Yes', 'No'] %}
+                            <option value="{{ opt }}" {% if dd == opt %}selected{% endif %}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="dedicated_dev_count">If Yes, how many?</label>
+                        <input type="text" id="dedicated_dev_count" name="dedicated_dev_count" value="{{ sow.dedicated_dev_count or '' }}">
+                    </div>
+                </div>
+
+                <label for="solutions_mode_bot" style="margin-top: 12px;">Solutions Mode Bot</label>
+                <select id="solutions_mode_bot" name="solutions_mode_bot">
+                    {% set smb = sow.solutions_mode_bot or '' %}
+                    <option value="" {% if smb == '' %}selected{% endif %}>-- Select --</option>
+                    {% for opt in ['Yes', 'No'] %}
+                    <option value="{{ opt }}" {% if smb == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="third_party_events_personalize" style="margin-top: 12px;">3rd party events integration with personalize</label>
+                <select id="third_party_events_personalize" name="third_party_events_personalize">
+                    {% set tpe = sow.third_party_events_personalize or '' %}
+                    <option value="" {% if tpe == '' %}selected{% endif %}>-- Select --</option>
+                    {% for opt in ['Yes', 'No'] %}
+                    <option value="{{ opt }}" {% if tpe == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+                <label for="third_party_events_system" style="margin-top: 8px;">If Yes, specify system name</label>
+                <input type="text" id="third_party_events_system" name="third_party_events_system" value="{{ sow.third_party_events_system or '' }}">
+            </div>
+
+            <div class="section">
+                <h2>7. Deployment & Capacity Toggles</h2>
 
                 <label>Deployment / Hosting – Use default (Gupshup India AWS)?</label>
                 <div class="checkbox-group">
@@ -205,6 +602,14 @@
                     </label>
                 </div>
 
+                <label for="data_purge_policy" style="margin-top: 12px;">Data Purge Policy</label>
+                <select id="data_purge_policy" name="data_purge_policy">
+                    {% set dpp = sow.data_purge_policy or '' %}
+                    {% for opt in ['Immediate (Post-Transfer)', '24 Hours', '30 Days', 'Compliance-driven (Custom)'] %}
+                    <option value="{{ opt }}" {% if dpp == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+
                 <label style="margin-top: 12px;">Profile Storage Requirements – Include Personalize?</label>
                 <div class="checkbox-group">
                     <label>
@@ -230,11 +635,41 @@
                 </div>
             </div>
 
+
             <div class="actions">
                 <button type="submit" class="btn-primary">Generate SOW (Download .docx)</button>
             </div>
         </form>
     </div>
+    <script>
+        function toggleTrainingSchedule() {
+            const group = document.getElementById('training_schedule_group');
+            const checks = document.querySelectorAll('input[name="training_data"]');
+            const hasWebsite = Array.from(checks).some((el) => el.checked && el.value === 'Website');
+            if (group) {
+                group.style.display = hasWebsite ? '' : 'none';
+            }
+        }
+
+        function toggleWhatsappFlows() {
+            const typeSelect = document.getElementById('whatsapp_flows_type');
+            const descGroup = document.getElementById('whatsapp_flows_desc_group');
+            if (!typeSelect || !descGroup) return;
+            descGroup.style.display = typeSelect.value === 'Not Required' ? 'none' : '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleTrainingSchedule();
+            toggleWhatsappFlows();
+            document.querySelectorAll('input[name="training_data"]').forEach((el) => {
+                el.addEventListener('change', toggleTrainingSchedule);
+            });
+            const typeSelect = document.getElementById('whatsapp_flows_type');
+            if (typeSelect) {
+                typeSelect.addEventListener('change', toggleWhatsappFlows);
+            }
+        });
+    </script>
 </body>
 </html>
 

@@ -1949,7 +1949,7 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
     from pathlib import Path
     from datetime import datetime
     # Load master SOW template so all static sections stay intact
-    template_path = Path(__file__).resolve().parent / 'sow_templates' / 'Latest SOW Master Copy August 2025.docx'
+    template_path = Path(__file__).resolve().parent / 'master sow' / 'Latest SOW Master Copy 2026.docx'
     doc = Document(str(template_path))
 
     # Basic profile / deal context (used where relevant)
@@ -1989,12 +1989,24 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
                 return table
         return None
 
+    def _find_tables_by_headers(headers):
+        matches = []
+        for table in doc.tables:
+            row0 = _row_text(table, 0)
+            if row0 and all(h in row0 for h in headers):
+                matches.append(table)
+        return matches
+
     def _find_table_by_row_label(label, row_idx=1):
         for table in doc.tables:
             row = _row_text(table, row_idx)
             if row and row[0] == label:
                 return table
         return None
+
+    def _checkbox_group(options, selected):
+        selected_set = set([s.strip() for s in (selected or [])])
+        return '\n'.join([f"{'☑' if opt in selected_set else '☐'} {opt}" for opt in options])
 
     # Revision History – fill first data row
     try:
@@ -2041,11 +2053,17 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
         def group_channels(group_names):
             return ', '.join([c for c in channels_selected if c in group_names])
         if overall:
+            modules_written = False
             for row in overall.rows[1:]:
                 desc = row.cells[0].text.strip()
                 if desc == 'Number of journeys':
                     val = sow_details.get('num_journeys') or inputs.get('num_journeys_price') or ''
                     row.cells[1].text = str(val)
+                elif desc == 'Primary Entry Point':
+                    options = ['User Initiated', 'CTWA', 'QR Code', 'Campaign Journey']
+                    entry_text = _checkbox_group(options, sow_details.get('primary_entry_points'))
+                    for idx in range(1, len(row.cells)):
+                        row.cells[idx].text = entry_text
                 elif desc == 'Channels':
                     # Three buckets: WA/WA Voice, SMS/Others, Instagram/PSTN Voice
                     row.cells[1].text = group_channels(['WhatsApp', 'WA', 'WhatsApp Voice', 'WA Voice'])
@@ -2053,11 +2071,42 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
                     row.cells[3].text = group_channels(['Instagram', 'PSTN Voice'])
                 elif desc == 'Bot Language':
                     row.cells[1].text = sow_details.get('bot_language', '')
+                elif desc.startswith('Language Detection Type'):
+                    val = sow_details.get('language_detection_type')
+                    if val:
+                        row.cells[1].text = val
                 elif desc.startswith('No. of APIs/Backend Services'):
                     val = sow_details.get('num_apis') or inputs.get('num_apis_price') or ''
                     row.cells[1].text = str(val)
+                elif desc.startswith('Session Persistence'):
+                    val = sow_details.get('session_persistence')
+                    if val:
+                        row.cells[1].text = val
                 elif desc.startswith('Name of the backend systems in scope'):
                     row.cells[1].text = sow_details.get('backend_systems', '')
+                elif desc.startswith('Custom Analytics Requirement'):
+                    required = sow_details.get('custom_analytics_required', 'no')
+                    selected = ['Yes'] if required == 'yes' else ['No']
+                    points = sow_details.get('custom_analytics_points', '')
+                    text = _checkbox_group(['Yes', 'No'], selected)
+                    if points:
+                        text = f"{text}\n{points}"
+                    for idx in range(1, len(row.cells)):
+                        row.cells[idx].text = text
+                elif desc.startswith('Select all the modules in scope'):
+                    if not modules_written:
+                        options = [
+                            'Campaign Manager', 'Automated Campaigns', 'Journey Builder', 'AI Admin',
+                            'Goals', 'Whatsapp Flows', 'CTX', 'Agent Assist', 'Personalize',
+                            'Integrations', 'Analyzer and Optimizer'
+                        ]
+                        row.cells[1].text = _checkbox_group(options, sow_details.get('modules_in_scope'))
+                        for idx in range(2, len(row.cells)):
+                            row.cells[idx].text = ''
+                        modules_written = True
+                    else:
+                        for idx in range(1, len(row.cells)):
+                            row.cells[idx].text = ''
                 elif desc.startswith('Development Timelines'):
                     val = sow_details.get('total_mandays', '')
                     row.cells[1].text = str(val)
@@ -2066,21 +2115,265 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
 
     # AI Specifications – Table B (Table 5)
     try:
-        ai_table = _find_table_by_row_label('Bot type', row_idx=1)
+        ai_table = _find_table_by_row_label('Model Name', row_idx=1) or _find_table_by_row_label('Bot type', row_idx=1)
         ai_module = inputs.get('ai_module', 'NA')
         if ai_table and ai_module != 'Yes':
             # Omit AI Specifications table for non-AI SOWs
             tbl = ai_table._tbl
             tbl.getparent().remove(tbl)
         elif ai_table:
-            complexity = inputs.get('ai_agent_complexity', '') or sow_details.get('bot_complexity', '')
-            model = inputs.get('ai_agent_model', '') or sow_details.get('llm_model', '')
+            complexity_map = {
+                'regular': 'Simple',
+                'hard': 'Medium',
+                'complex': 'High',
+            }
+            raw_complexity = sow_details.get('ai_bot_complexity') or inputs.get('ai_agent_complexity', '')
+            complexity = complexity_map.get(raw_complexity.lower(), raw_complexity)
+            model = sow_details.get('ai_llm_model') or inputs.get('ai_agent_model', '')
+            training_selected = set(sow_details.get('training_data', []) or [])
+            website_selected = 'Website' in training_selected
             for row in ai_table.rows[1:]:
                 desc = row.cells[0].text.strip()
-                if desc == 'Bot Complexity':
+                if desc == 'Model Name':
+                    row.cells[1].text = sow_details.get('ai_model_name', '')
+                elif desc == 'Bot type':
+                    row.cells[1].text = sow_details.get('ai_bot_type', '')
+                elif desc == 'Channel':
+                    row.cells[1].text = sow_details.get('ai_channel', '')
+                elif desc == 'Use-Case Category':
+                    row.cells[1].text = sow_details.get('ai_use_case_category', '')
+                elif desc == 'Bot Complexity':
                     row.cells[1].text = complexity
                 elif desc == 'LLM Model':
                     row.cells[1].text = model
+                elif desc == 'Type of Training data':
+                    options = ['CSV', 'Website', 'Text', 'Others']
+                    text = _checkbox_group(options, training_selected)
+                    other = sow_details.get('training_data_other', '')
+                    if other:
+                        text = f"{text}\nOthers: {other}"
+                    row.cells[1].text = text
+                elif desc.startswith('Training Schedule'):
+                    if website_selected:
+                        parts = []
+                        if sow_details.get('training_start_date'):
+                            parts.append(f"Start: {sow_details.get('training_start_date')}")
+                        if sow_details.get('training_end_date'):
+                            parts.append(f"End: {sow_details.get('training_end_date')}")
+                        if sow_details.get('training_frequency'):
+                            parts.append(f"Frequency: {sow_details.get('training_frequency')}")
+                        if sow_details.get('training_interval'):
+                            parts.append(f"Interval: {sow_details.get('training_interval')}")
+                        row.cells[1].text = '\\n'.join(parts)
+                elif desc == 'AI Languages':
+                    row.cells[1].text = sow_details.get('ai_languages', '')
+                elif desc.startswith('Priority Intents'):
+                    row.cells[1].text = sow_details.get('priority_intents', '')
+                elif desc.startswith('Related Entities'):
+                    row.cells[1].text = sow_details.get('related_entities', '')
+                elif desc.startswith('Estimated No. Questions'):
+                    row.cells[1].text = str(sow_details.get('estimated_faqs', ''))
+                elif desc.startswith('Response Guardrails'):
+                    row.cells[1].text = sow_details.get('response_guardrails', '')
+                elif desc.startswith('Fallback Strategy'):
+                    row.cells[1].text = sow_details.get('fallback_strategy', '')
+                elif desc.startswith('Human Handover Trigger'):
+                    options = ['User Intent (Keyword)', 'Bot Failure', 'NPS/ Low confidence', 'Unidentified Intent']
+                    row.cells[1].text = _checkbox_group(options, sow_details.get('human_handover_trigger'))
+                elif desc.startswith('Questions & Answers shared by customer'):
+                    row.cells[1].text = sow_details.get('testing_data', '')
+    except Exception:
+        pass
+
+    # Module-wise Configuration Requirements – Table C (Table 8)
+    try:
+        module_table = _find_table_by_row_label('Whatsapp Flows', row_idx=1)
+        if module_table:
+            rows_to_remove = []
+            for idx, row in enumerate(module_table.rows[1:], start=1):
+                desc = row.cells[0].text.strip()
+                if desc == 'Whatsapp Flows':
+                    flow_type = sow_details.get('whatsapp_flows_type', '')
+                    flow_desc = sow_details.get('whatsapp_flows_desc', '')
+                    if flow_type == 'Not Required' or (not flow_type and not flow_desc):
+                        rows_to_remove.append(idx)
+                    elif flow_type and flow_desc:
+                        row.cells[1].text = f"Type: {flow_type}\n{flow_desc}"
+                    elif flow_type:
+                        row.cells[1].text = f"Type: {flow_type}"
+                    else:
+                        row.cells[1].text = flow_desc
+                elif desc == 'Goals':
+                    val = sow_details.get('goals_desc', '')
+                    if val:
+                        row.cells[1].text = val
+                    else:
+                        rows_to_remove.append(idx)
+                elif desc == 'Personalize':
+                    val = sow_details.get('personalize_desc', '')
+                    if val:
+                        row.cells[1].text = val
+                    else:
+                        rows_to_remove.append(idx)
+                elif desc == 'Agent Assist':
+                    parts = []
+                    desc_val = sow_details.get('agent_assist_desc', '')
+                    if desc_val:
+                        parts.append(desc_val)
+                    team_setup = sow_details.get('agent_assist_team_setup', '')
+                    assignment_rules = sow_details.get('agent_assist_assignment_rules', '')
+                    chat_tags = sow_details.get('agent_assist_chat_tags', '')
+                    if team_setup:
+                        parts.append(f"Team Setup: {team_setup}")
+                    if assignment_rules:
+                        parts.append(f"Assignment Rules Configuration: {assignment_rules}")
+                    if chat_tags:
+                        parts.append(f"Chat Tags: {chat_tags}")
+                    if parts:
+                        row.cells[1].text = '\n'.join(parts)
+                    else:
+                        rows_to_remove.append(idx)
+                elif desc == '3rd Party Agent Handover':
+                    val = sow_details.get('third_party_agent_handover', '')
+                    if val:
+                        row.cells[1].text = val
+                    else:
+                        rows_to_remove.append(idx)
+                elif desc == 'External Assignment Requirement':
+                    val = sow_details.get('external_assignment_requirement', '')
+                    if val:
+                        row.cells[1].text = val
+                    else:
+                        rows_to_remove.append(idx)
+                elif desc == 'Transcript API Integration':
+                    val = sow_details.get('transcript_api_integration', '')
+                    if val:
+                        row.cells[1].text = val
+                    else:
+                        rows_to_remove.append(idx)
+                elif desc == 'Agent Co-pilot':
+                    val = sow_details.get('agent_copilot', '')
+                    if val:
+                        row.cells[1].text = val
+                    else:
+                        rows_to_remove.append(idx)
+            for idx in sorted(rows_to_remove, reverse=True):
+                module_table._tbl.remove(module_table.rows[idx]._tr)
+            if len(module_table.rows) <= 1:
+                tbl = module_table._tbl
+                tbl.getparent().remove(tbl)
+    except Exception:
+        pass
+
+    # Voice Specifications – Table D (Table 9)
+    try:
+        voice_table = _find_table_by_row_label('Dialer', row_idx=1)
+        if voice_table:
+            channel_type = (inputs.get('channel_type') or '').lower()
+            if channel_type == 'text_only':
+                tbl = voice_table._tbl
+                tbl.getparent().remove(tbl)
+            else:
+                rows_to_remove = []
+                for idx, row in enumerate(voice_table.rows[1:], start=1):
+                    desc = row.cells[0].text.strip()
+                    if desc == 'Dialer':
+                        dialer = sow_details.get('voice_dialer', '')
+                        other = sow_details.get('voice_dialer_other', '')
+                        if not dialer:
+                            rows_to_remove.append(idx)
+                        else:
+                            row.cells[1].text = f"{dialer} ({other})" if dialer == 'Other' and other else dialer
+                    elif desc.startswith('Voice Cloning'):
+                        val = sow_details.get('voice_cloning', '')
+                        if not val:
+                            rows_to_remove.append(idx)
+                        else:
+                            row.cells[1].text = 'Yes' if val == 'yes' else 'No'
+                    elif desc == 'Call Type':
+                        val = sow_details.get('voice_call_type', '')
+                        if val:
+                            row.cells[1].text = val
+                        else:
+                            rows_to_remove.append(idx)
+                    elif desc == 'Voice Samples for Cloning':
+                        val = sow_details.get('voice_samples', '')
+                        if val:
+                            row.cells[1].text = val
+                        else:
+                            rows_to_remove.append(idx)
+                    elif desc == 'Channels':
+                        channels = sow_details.get('voice_channels', [])
+                        if channels:
+                            options = ['PSTN', 'WA Voice']
+                            row.cells[1].text = _checkbox_group(options, channels)
+                        else:
+                            rows_to_remove.append(idx)
+                    elif desc.startswith('SIP EndPoint'):
+                        val = sow_details.get('sip_endpoint', '')
+                        if val:
+                            row.cells[1].text = val
+                        else:
+                            rows_to_remove.append(idx)
+                    elif desc.startswith('WABA Number'):
+                        val = sow_details.get('waba_number', '')
+                        if val:
+                            row.cells[1].text = val
+                        else:
+                            rows_to_remove.append(idx)
+                    elif desc.startswith('Websocket URL'):
+                        val = sow_details.get('websocket_url', '')
+                        if val:
+                            row.cells[1].text = val
+                        else:
+                            rows_to_remove.append(idx)
+                for idx in sorted(rows_to_remove, reverse=True):
+                    voice_table._tbl.remove(voice_table.rows[idx]._tr)
+                if len(voice_table.rows) <= 1:
+                    tbl = voice_table._tbl
+                    tbl.getparent().remove(tbl)
+    except Exception:
+        pass
+
+    # Additional Scope Elements – Table F (Table 11)
+    try:
+        scope_table = _find_table_by_row_label('Dedicated BA and Project Manager', row_idx=1)
+        if scope_table:
+            rows_to_remove = []
+            for idx, row in enumerate(scope_table.rows[1:], start=1):
+                desc = row.cells[0].text.strip()
+                if desc == 'Dedicated BA and Project Manager':
+                    val = sow_details.get('dedicated_ba_pm', '')
+                    count = sow_details.get('dedicated_ba_pm_count', '')
+                    if not val:
+                        rows_to_remove.append(idx)
+                    else:
+                        row.cells[1].text = f"{val} ({count})" if val == 'Yes' and count else val
+                elif desc == 'Dedicated Developer':
+                    val = sow_details.get('dedicated_dev', '')
+                    count = sow_details.get('dedicated_dev_count', '')
+                    if not val:
+                        rows_to_remove.append(idx)
+                    else:
+                        row.cells[1].text = f"{val} ({count})" if val == 'Yes' and count else val
+                elif desc == 'Solutions Mode Bot':
+                    val = sow_details.get('solutions_mode_bot', '')
+                    if val:
+                        row.cells[1].text = val
+                    else:
+                        rows_to_remove.append(idx)
+                elif desc.startswith('3rd party events integration'):
+                    val = sow_details.get('third_party_events_personalize', '')
+                    system = sow_details.get('third_party_events_system', '')
+                    if not val:
+                        rows_to_remove.append(idx)
+                    else:
+                        row.cells[1].text = f"{val} ({system})" if val == 'Yes' and system else val
+            for idx in sorted(rows_to_remove, reverse=True):
+                scope_table._tbl.remove(scope_table.rows[idx]._tr)
+            if len(scope_table.rows) <= 1:
+                tbl = scope_table._tbl
+                tbl.getparent().remove(tbl)
     except Exception:
         pass
 
@@ -2165,6 +2458,8 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
                     # Subsequent Data Retention rows: clear Questions/Presales only
                     row.cells[2].text = ''
                     row.cells[3].text = ''
+                elif desc == 'Data Purge Policy':
+                    row.cells[1].text = sow_details.get('data_purge_policy', '')
 
                 if desc == 'Profile Storage Requirements' and not include_personalize:
                     rows_to_remove.append(idx)
@@ -2341,6 +2636,67 @@ def sow_details():
             'total_mandays': request.form.get('total_mandays', '').strip(),
             # Channels multi-select
             'channels': request.form.getlist('channels'),
+            # Overall requirement additions
+            'primary_entry_points': request.form.getlist('primary_entry_points'),
+            'language_detection_type': request.form.get('language_detection_type', '').strip(),
+            'session_persistence': request.form.get('session_persistence', '').strip(),
+            'custom_analytics_required': request.form.get('custom_analytics_required', 'no'),
+            'custom_analytics_points': request.form.get('custom_analytics_points', '').strip(),
+            'modules_in_scope': request.form.getlist('modules_in_scope'),
+            # AI specifications
+            'ai_model_name': request.form.get('ai_model_name', '').strip(),
+            'ai_bot_type': request.form.get('ai_bot_type', '').strip(),
+            'ai_channel': request.form.get('ai_channel', '').strip(),
+            'ai_use_case_category': request.form.get('ai_use_case_category', '').strip(),
+            'ai_bot_complexity': request.form.get('ai_bot_complexity', '').strip(),
+            'ai_llm_model': request.form.get('ai_llm_model', '').strip(),
+            'training_data': request.form.getlist('training_data'),
+            'training_data_other': request.form.get('training_data_other', '').strip(),
+            'training_start_date': request.form.get('training_start_date', '').strip(),
+            'training_end_date': request.form.get('training_end_date', '').strip(),
+            'training_frequency': request.form.get('training_frequency', '').strip(),
+            'training_interval': request.form.get('training_interval', '').strip(),
+            'ai_languages': request.form.get('ai_languages', '').strip(),
+            'priority_intents': request.form.get('priority_intents', '').strip(),
+            'related_entities': request.form.get('related_entities', '').strip(),
+            'estimated_faqs': request.form.get('estimated_faqs', '').strip(),
+            'response_guardrails': request.form.get('response_guardrails', '').strip(),
+            'fallback_strategy': request.form.get('fallback_strategy', '').strip(),
+            'human_handover_trigger': request.form.getlist('human_handover_trigger'),
+            'testing_data': request.form.get('testing_data', '').strip(),
+            # Module-wise configuration requirements
+            'whatsapp_flows_type': request.form.get('whatsapp_flows_type', '').strip(),
+            'whatsapp_flows_desc': request.form.get('whatsapp_flows_desc', '').strip(),
+            'goals_desc': request.form.get('goals_desc', '').strip(),
+            'personalize_desc': request.form.get('personalize_desc', '').strip(),
+            'agent_assist_desc': request.form.get('agent_assist_desc', '').strip(),
+            'agent_assist_team_setup': request.form.get('agent_assist_team_setup', '').strip(),
+            'agent_assist_assignment_rules': request.form.get('agent_assist_assignment_rules', '').strip(),
+            'agent_assist_chat_tags': request.form.get('agent_assist_chat_tags', '').strip(),
+            'third_party_agent_handover': request.form.get('third_party_agent_handover', '').strip(),
+            'external_assignment_requirement': request.form.get('external_assignment_requirement', '').strip(),
+            'transcript_api_integration': request.form.get('transcript_api_integration', '').strip(),
+            'agent_copilot': request.form.get('agent_copilot', '').strip(),
+            # Voice specifications
+            'voice_dialer': request.form.get('voice_dialer', '').strip(),
+            'voice_dialer_other': request.form.get('voice_dialer_other', '').strip(),
+            'voice_cloning': request.form.get('voice_cloning', '').strip(),
+            'voice_call_type': request.form.get('voice_call_type', '').strip(),
+            'voice_samples': request.form.get('voice_samples', '').strip(),
+            'voice_channels': request.form.getlist('voice_channels'),
+            'sip_endpoint': request.form.get('sip_endpoint', '').strip(),
+            'waba_number': request.form.get('waba_number', '').strip(),
+            'websocket_url': request.form.get('websocket_url', '').strip(),
+            # Additional scope elements
+            'dedicated_ba_pm': request.form.get('dedicated_ba_pm', '').strip(),
+            'dedicated_ba_pm_count': request.form.get('dedicated_ba_pm_count', '').strip(),
+            'dedicated_dev': request.form.get('dedicated_dev', '').strip(),
+            'dedicated_dev_count': request.form.get('dedicated_dev_count', '').strip(),
+            'solutions_mode_bot': request.form.get('solutions_mode_bot', '').strip(),
+            'third_party_events_personalize': request.form.get('third_party_events_personalize', '').strip(),
+            'third_party_events_system': request.form.get('third_party_events_system', '').strip(),
+            # Capacity & compliance
+            'data_purge_policy': request.form.get('data_purge_policy', '').strip(),
             # Deployment & capacity toggles
             'dep_use_default': request.form.get('dep_use_default', 'yes'),
             'tps_use_default': request.form.get('tps_use_default', 'yes'),
@@ -2410,10 +2766,32 @@ def sow_details():
         default_total_mandays = calculate_total_mandays(inputs)
     except Exception:
         default_total_mandays = ''
+    def _float_val(val):
+        try:
+            return float(str(val).replace(',', '').strip() or 0)
+        except Exception:
+            return 0.0
+    expected_total = (
+        _float_val(inputs.get('ai_volume'))
+        + _float_val(inputs.get('advanced_volume'))
+        + _float_val(inputs.get('basic_marketing_volume'))
+        + _float_val(inputs.get('basic_utility_volume'))
+    )
+    default_expected_volumes = f"{int(expected_total):,}" if expected_total else ''
+    ai_complexity = (inputs.get('ai_agent_complexity') or '').lower()
+    complexity_map = {
+        'regular': 'Simple',
+        'hard': 'Medium',
+        'complex': 'High',
+    }
     defaults = {
         'num_journeys': inputs.get('num_journeys_price', ''),
         'num_apis': inputs.get('num_apis_price', ''),
         'total_mandays': default_total_mandays,
+        'expected_volumes': default_expected_volumes,
+        'ai_llm_model': inputs.get('ai_agent_model', ''),
+        'ai_model_name': inputs.get('ai_agent_model', ''),
+        'ai_bot_complexity': complexity_map.get(ai_complexity, ''),
     }
 
     class Obj:  # simple helper to allow dot-access in template
@@ -2428,6 +2806,7 @@ def sow_details():
         sow=sow_obj,
         defaults=defaults_obj,
         calculation_id=calculation_id,
+        inputs=inputs,
     )
 
 @app.route('/analytics', methods=['GET', 'POST'])
