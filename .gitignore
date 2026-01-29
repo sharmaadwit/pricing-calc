@@ -70,8 +70,6 @@ cookies.txt
 analytics_export_*.csv
 temp_*.csv
 
-# Local master SOW templates
-master sow/
 
 # Flask
 instance/
