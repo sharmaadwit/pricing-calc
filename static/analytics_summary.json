@@ -1,11 +1,11 @@
 {
   "total_calculations": 559,
-  "unique_users": 29,
+  "unique_users": 26,
   "total_revenue": 80135404.0,
   "countries": 7,
-  "last_updated": "2026-01-29 06:51:06",
+  "last_updated": "2026-01-29 09:44:55",
   "top_users": {
-    "Kathyayani Nayak": 17403800.0,
+    "Kathyayani Nayak": 19060900.0,
     "Puru Chauhan": 12200000.0,
     "Nikhil Sharma": 11675000.0,
     "Ankit Kanwara": 10638900.0,
@@ -211,15 +211,13 @@
       ],
       "clv": [
         8900.0,
-        5900.0,
-        5450.0,
-        2100.0
+        7550.0,
+        5900.0
       ],
       "clv_labels": [
         "Ankit Kanwara",
-        "Saathwik",
-        "Kat",
-        "Kathyayani Nayak"
+        "Kathyayani Nayak",
+        "Saathwik"
       ],
       "service_usage": [
         0.23100000000000007,
@@ -236,13 +234,11 @@
       "manday_efficiency": [
         166.19718309859155,
         142.4,
-        118.47826086956522,
-        116.66666666666667
+        117.96875
       ],
       "manday_efficiency_labels": [
         "Saathwik",
         "Ankit Kanwara",
-        "Kat",
         "Kathyayani Nayak"
       ],
       "hourly_counts": [
@@ -442,7 +438,7 @@
       ],
       "clv_labels": [
         "Saathwik",
-        "Yashas",
+        "Yashas Reddy",
         "Mark",
         "Kathyayani Nayak",
         "Ankit Kanwara"
@@ -471,7 +467,7 @@
         "Ankit Kanwara",
         "Saathwik",
         "Kathyayani Nayak",
-        "Yashas"
+        "Yashas Reddy"
       ],
       "hourly_counts": [
         1,
@@ -656,7 +652,7 @@
       ],
       "clv_labels": [
         "Saathwik",
-        "Yashas"
+        "Yashas Reddy"
       ],
       "service_usage": [
         0.1068,
@@ -676,7 +672,7 @@
       ],
       "manday_efficiency_labels": [
         "Saathwik",
-        "Yashas"
+        "Yashas Reddy"
       ],
       "hourly_counts": [
         1,
@@ -861,7 +857,7 @@
         "2026-02-01"
       ],
       "clv": [
-        17400000.0,
+        19050000.0,
         12200000.0,
         11675000.0,
         10625000.0,
@@ -870,7 +866,7 @@
         3651650.0,
         2720000.0,
         2100000.0,
-        1650000.0
+        812500.0
       ],
       "clv_labels": [
         "Kathyayani Nayak",
@@ -882,10 +878,10 @@
         "Saathwik",
         "Gourav",
         "Saurabh",
-        "Kat"
+        "Yashas Reddy"
       ],
       "service_usage": [
-        463.70199549999995,
+        463.7019955,
         190.51500000000004,
         55.475,
         12.192000000000004
@@ -902,11 +898,11 @@
         30797.101449275364,
         28571.428571428572,
         26510.31894934334,
-        19075.14450867052,
         15384.615384615385,
-        14285.714285714286,
+        12763.819095477387,
         12725.274725274725,
-        12375.533428165007
+        11553.030303030304,
+        10370.37037037037
       ],
       "manday_efficiency_labels": [
         "Ravindra",
@@ -914,11 +910,11 @@
         "Ankit Kanwara",
         "Siddharth Singh",
         "Purusottam Singh",
-        "Kat",
         "Nitin",
-        "Adwit",
+        "Kathyayani Nayak",
         "Mridul Kumawat",
-        "Kathyayani Nayak"
+        "Puru Chauhan",
+        "Adwit Sharma"
       ],
       "hourly_counts": [
         2,
@@ -929,7 +925,7 @@
         28,
         52,
         54,
-        47,
+        48,
         80,
         45,
         38,
@@ -938,7 +934,7 @@
         9,
         3,
         1,
-        3,
+        2,
         2,
         1
       ],
@@ -967,8 +963,8 @@
       "weekday_counts": [
         70,
         58,
-        127,
-        103,
+        126,
+        104,
         74,
         2,
         5
@@ -1364,7 +1360,7 @@
         "Siddharth Singh",
         "Gargi Upadhyay",
         "Ankit Kanwara",
-        "Kat"
+        "Kathyayani Nayak"
       ],
       "service_usage": [
         0.3047,
@@ -1387,7 +1383,7 @@
       "manday_efficiency_labels": [
         "Siddharth Singh",
         "Ankit Kanwara",
-        "Kat",
+        "Kathyayani Nayak",
         "Gargi Upadhyay"
       ],
       "hourly_counts": [
@@ -1870,7 +1866,7 @@
           "list": 0.5
         },
         "basic_marketing_message": {
-          "average": 0.13862433862433862,
+          "average": 0.13862433862433865,
           "min": 0.03,
           "max": 0.2,
           "median": 0.15,
@@ -2380,17 +2376,17 @@
   },
   "funnel": {
     "counts": {
-      "volumes": 79,
+      "volumes": 81,
       "prices": 23,
-      "results": 36,
-      "sow_details": 32,
-      "sow_download": 15
+      "results": 39,
+      "sow_details": 41,
+      "sow_download": 20
     },
     "conversion": {
-      "volumes_to_prices": 29.11392405063291,
-      "prices_to_results": 156.52173913043478,
-      "results_to_sow_details": 88.88888888888889,
-      "sow_details_to_sow_download": 46.875
+      "volumes_to_prices": 28.39506172839506,
+      "prices_to_results": 169.56521739130434,
+      "results_to_sow_details": 105.12820512820514,
+      "sow_details_to_sow_download": 48.78048780487805
     }
   },
   "platform_fee_by_country": [
