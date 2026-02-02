@@ -483,7 +483,7 @@ COUNTRY_CURRENCY = {
 SECRET_ANALYTICS_KEYWORD = "letmein123"
 
 # Add this near the top
-CALC_PASSWORD = os.environ.get('CALC_PASSWORD', 'gup$hup.i0')  # Set your password here or via env var
+CALC_PASSWORD = os.environ.get('CALC_PASSWORD', 'gup$hup.2026')  # Set your password here or via env var
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
