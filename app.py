@@ -2049,9 +2049,13 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
     try:
         overall = _find_table_by_row_label('Number of journeys', row_idx=1)
         channels_selected = sow_details.get('channels', []) or []
+        channels_other = (sow_details.get('channels_other') or '').strip()
         # Helper to map channels into template groups
-        def group_channels(group_names):
-            return ', '.join([c for c in channels_selected if c in group_names])
+        def group_channels(group_names, include_other=False):
+            selected = [c for c in channels_selected if c in group_names]
+            if include_other and 'Others' in channels_selected:
+                selected.append(f"Others: {channels_other}" if channels_other else "Others")
+            return ', '.join(selected)
         if overall:
             modules_written = False
             for row in overall.rows[1:]:
@@ -2067,7 +2071,7 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
                 elif desc == 'Channels':
                     # Three buckets: WA/WA Voice, SMS/Others, Instagram/PSTN Voice
                     row.cells[1].text = group_channels(['WhatsApp', 'WA', 'WhatsApp Voice', 'WA Voice'])
-                    row.cells[2].text = group_channels(['SMS', 'Others'])
+                    row.cells[2].text = group_channels(['SMS', 'Email', 'Website', 'Others'], include_other=True)
                     row.cells[3].text = group_channels(['Instagram', 'PSTN Voice'])
                 elif desc == 'Bot Language':
                     row.cells[1].text = sow_details.get('bot_language', '')
@@ -2135,13 +2139,23 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
             for row in ai_table.rows[1:]:
                 desc = row.cells[0].text.strip()
                 if desc == 'Model Name':
-                    row.cells[1].text = sow_details.get('ai_model_name', '')
+                    model_name = sow_details.get('ai_model_name', '')
+                    model_other = (sow_details.get('ai_model_name_other') or '').strip()
+                    if model_name == 'Client LLM (Specify)' and model_other:
+                        row.cells[1].text = f"Client LLM: {model_other}"
+                    else:
+                        row.cells[1].text = model_name
                 elif desc == 'Bot type':
                     row.cells[1].text = sow_details.get('ai_bot_type', '')
                 elif desc == 'Channel':
                     row.cells[1].text = sow_details.get('ai_channel', '')
                 elif desc == 'Use-Case Category':
-                    row.cells[1].text = sow_details.get('ai_use_case_category', '')
+                    use_case = sow_details.get('ai_use_case_category', '')
+                    use_case_other = (sow_details.get('ai_use_case_other') or '').strip()
+                    if use_case == 'Others' and use_case_other:
+                        row.cells[1].text = f"Others: {use_case_other}"
+                    else:
+                        row.cells[1].text = use_case
                 elif desc == 'Bot Complexity':
                     row.cells[1].text = complexity
                 elif desc == 'LLM Model':
@@ -2636,6 +2650,7 @@ def sow_details():
             'total_mandays': request.form.get('total_mandays', '').strip(),
             # Channels multi-select
             'channels': request.form.getlist('channels'),
+            'channels_other': request.form.get('channels_other', '').strip(),
             # Overall requirement additions
             'primary_entry_points': request.form.getlist('primary_entry_points'),
             'language_detection_type': request.form.get('language_detection_type', '').strip(),
@@ -2645,9 +2660,11 @@ def sow_details():
             'modules_in_scope': request.form.getlist('modules_in_scope'),
             # AI specifications
             'ai_model_name': request.form.get('ai_model_name', '').strip(),
+            'ai_model_name_other': request.form.get('ai_model_name_other', '').strip(),
             'ai_bot_type': request.form.get('ai_bot_type', '').strip(),
             'ai_channel': request.form.get('ai_channel', '').strip(),
             'ai_use_case_category': request.form.get('ai_use_case_category', '').strip(),
+            'ai_use_case_other': request.form.get('ai_use_case_other', '').strip(),
             'ai_bot_complexity': request.form.get('ai_bot_complexity', '').strip(),
             'ai_llm_model': request.form.get('ai_llm_model', '').strip(),
             'training_data': request.form.getlist('training_data'),

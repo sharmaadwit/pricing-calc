@@ -147,12 +147,16 @@
                 <label style="margin-top: 12px;">Channels in Scope</label>
                 <div class="checkbox-group">
                     {% set selected_channels = sow.channels or [] %}
-                    {% for ch in ['WhatsApp', 'WhatsApp Voice', 'SMS', 'Email', 'Instagram', 'PSTN Voice', 'Others'] %}
+                    {% for ch in ['WhatsApp', 'WhatsApp Voice', 'SMS', 'Email', 'Website', 'Instagram', 'PSTN Voice', 'Others'] %}
                     <label>
                         <input type="checkbox" name="channels" value="{{ ch }}" {% if ch in selected_channels %}checked{% endif %}>
                         {{ ch }}
                     </label>
                     {% endfor %}
+                </div>
+                <div id="channels_other_group" style="margin-top: 8px;">
+                    <label for="channels_other">Other channels (please specify)</label>
+                    <input type="text" id="channels_other" name="channels_other" value="{{ sow.channels_other or '' }}">
                 </div>
 
                 <label for="bot_language" style="margin-top: 12px;">Bot Language(s)</label>
@@ -223,6 +227,10 @@
                     <option value="{{ opt }}" {% if model_name == opt %}selected{% endif %}>{{ opt }}</option>
                     {% endfor %}
                 </select>
+                <div id="ai_model_name_other_group" style="margin-top: 8px;">
+                    <label for="ai_model_name_other">Client LLM (please specify)</label>
+                    <input type="text" id="ai_model_name_other" name="ai_model_name_other" value="{{ sow.ai_model_name_other or '' }}">
+                </div>
 
                 <label for="ai_bot_type" style="margin-top: 12px;">Bot Type</label>
                 <select id="ai_bot_type" name="ai_bot_type">
@@ -247,6 +255,10 @@
                     <option value="{{ opt }}" {% if uc == opt %}selected{% endif %}>{{ opt }}</option>
                     {% endfor %}
                 </select>
+                <div id="ai_use_case_other_group" style="margin-top: 8px;">
+                    <label for="ai_use_case_other">Use-Case Category (Others)</label>
+                    <input type="text" id="ai_use_case_other" name="ai_use_case_other" value="{{ sow.ai_use_case_other or '' }}">
+                </div>
 
                 <label for="ai_bot_complexity" style="margin-top: 12px;">Bot Complexity</label>
                 <select id="ai_bot_complexity" name="ai_bot_complexity">
@@ -269,8 +281,10 @@
                     </label>
                     {% endfor %}
                 </div>
-                <label for="training_data_other" style="margin-top: 8px;">Training Data (Other)</label>
-                <input type="text" id="training_data_other" name="training_data_other" value="{{ sow.training_data_other or '' }}">
+                <div id="training_data_other_group" style="margin-top: 8px;">
+                    <label for="training_data_other">Training Data (Other)</label>
+                    <input type="text" id="training_data_other" name="training_data_other" value="{{ sow.training_data_other or '' }}">
+                </div>
 
                 <div id="training_schedule_group">
                     <div class="inline-group" style="margin-top: 12px;">
@@ -453,8 +467,10 @@
                     <option value="{{ opt }}" {% if vd == opt %}selected{% endif %}>{{ opt }}</option>
                     {% endfor %}
                 </select>
-                <label for="voice_dialer_other" style="margin-top: 8px;">Dialer (Other)</label>
-                <input type="text" id="voice_dialer_other" name="voice_dialer_other" value="{{ sow.voice_dialer_other or '' }}">
+                <div id="voice_dialer_other_group" style="margin-top: 8px;">
+                    <label for="voice_dialer_other">Dialer (Other)</label>
+                    <input type="text" id="voice_dialer_other" name="voice_dialer_other" value="{{ sow.voice_dialer_other or '' }}">
+                </div>
 
                 <label style="margin-top: 12px;">Voice Cloning (Add Sample If Yes)</label>
                 <div class="checkbox-group">
@@ -658,15 +674,75 @@
             descGroup.style.display = typeSelect.value === 'Not Required' ? 'none' : '';
         }
 
+        function toggleChannelsOther() {
+            const group = document.getElementById('channels_other_group');
+            const checks = document.querySelectorAll('input[name="channels"]');
+            const hasOthers = Array.from(checks).some((el) => el.checked && el.value === 'Others');
+            if (group) {
+                group.style.display = hasOthers ? '' : 'none';
+            }
+        }
+
+        function toggleModelNameOther() {
+            const select = document.getElementById('ai_model_name');
+            const group = document.getElementById('ai_model_name_other_group');
+            if (!select || !group) return;
+            group.style.display = select.value === 'Client LLM (Specify)' ? '' : 'none';
+        }
+
+        function toggleUseCaseOther() {
+            const select = document.getElementById('ai_use_case_category');
+            const group = document.getElementById('ai_use_case_other_group');
+            if (!select || !group) return;
+            group.style.display = select.value === 'Others' ? '' : 'none';
+        }
+
+        function toggleTrainingOther() {
+            const group = document.getElementById('training_data_other_group');
+            const checks = document.querySelectorAll('input[name="training_data"]');
+            const hasOthers = Array.from(checks).some((el) => el.checked && el.value === 'Others');
+            if (group) {
+                group.style.display = hasOthers ? '' : 'none';
+            }
+        }
+
+        function toggleVoiceDialerOther() {
+            const select = document.getElementById('voice_dialer');
+            const group = document.getElementById('voice_dialer_other_group');
+            if (!select || !group) return;
+            group.style.display = select.value === 'Other' ? '' : 'none';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             toggleTrainingSchedule();
             toggleWhatsappFlows();
+            toggleChannelsOther();
+            toggleModelNameOther();
+            toggleUseCaseOther();
+            toggleTrainingOther();
+            toggleVoiceDialerOther();
             document.querySelectorAll('input[name="training_data"]').forEach((el) => {
                 el.addEventListener('change', toggleTrainingSchedule);
+                el.addEventListener('change', toggleTrainingOther);
+            });
+            document.querySelectorAll('input[name="channels"]').forEach((el) => {
+                el.addEventListener('change', toggleChannelsOther);
             });
             const typeSelect = document.getElementById('whatsapp_flows_type');
             if (typeSelect) {
                 typeSelect.addEventListener('change', toggleWhatsappFlows);
+            }
+            const modelSelect = document.getElementById('ai_model_name');
+            if (modelSelect) {
+                modelSelect.addEventListener('change', toggleModelNameOther);
+            }
+            const useCaseSelect = document.getElementById('ai_use_case_category');
+            if (useCaseSelect) {
+                useCaseSelect.addEventListener('change', toggleUseCaseOther);
+            }
+            const voiceDialer = document.getElementById('voice_dialer');
+            if (voiceDialer) {
+                voiceDialer.addEventListener('change', toggleVoiceDialerOther);
             }
         });
     </script>
