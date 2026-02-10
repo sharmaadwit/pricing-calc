@@ -1,9 +1,9 @@
 {
-  "total_calculations": 581,
+  "total_calculations": 584,
   "unique_users": 27,
-  "total_revenue": 83097054.0,
+  "total_revenue": 83101204.0,
   "countries": 7,
-  "last_updated": "2026-02-10 05:05:28",
+  "last_updated": "2026-02-10 07:06:08",
   "top_users": {
     "Kathyayani Nayak": 19162600.0,
     "Puru Chauhan": 12650000.0,
@@ -14,20 +14,20 @@
   "country_breakdown": {
     "India": 464,
     "Africa": 40,
-    "APAC": 24,
+    "APAC": 27,
     "LATAM": 20,
     "MENA": 19,
     "Rest of the World": 10,
     "Europe": 4
   },
   "route_breakdown": {
-    "volumes": 520,
+    "volumes": 523,
     "bundle": 61
   },
   "ai_model_counts_global": {
-    "nan": 555,
+    "nan": 557,
     "ACE Agentic pro (gpt-4o-mini)": 11,
-    "ACE Agent Lite (Qwen-Qwen3-8B)": 8,
+    "ACE Agent Lite (Qwen-Qwen3-8B)": 9,
     "ACE Agent Premium (gpt-4o)": 4,
     "ACE Agent Premium Experimental (gpt-4.1)": 1,
     "ACE Agentic Pro Experimental (gpt-4.1-mini)": 1,
@@ -35,8 +35,9 @@
   },
   "ai_model_counts_by_country": {
     "APAC": {
-      "nan": 22,
-      "ACE Agentic pro (gpt-4o-mini)": 2
+      "nan": 24,
+      "ACE Agentic pro (gpt-4o-mini)": 2,
+      "ACE Agent Lite (Qwen-Qwen3-8B)": 1
     },
     "Africa": {
       "nan": 36,
@@ -66,15 +67,16 @@
     }
   },
   "ai_complexity_counts_global": {
-    "nan": 555,
-    "complex": 15,
+    "nan": 557,
+    "complex": 16,
     "hard": 6,
     "regular": 5
   },
   "ai_complexity_counts_by_country": {
     "APAC": {
-      "nan": 22,
-      "hard": 2
+      "nan": 24,
+      "hard": 2,
+      "complex": 1
     },
     "Africa": {
       "nan": 36,
@@ -104,7 +106,7 @@
     "APAC": {
       "currency": "$",
       "platform_fee": {
-        "average": 1037.5,
+        "average": 1075.9259259259259,
         "min": 850.0,
         "max": 1700.0,
         "median": 850.0
@@ -117,7 +119,7 @@
         "list": 0.0105
       },
       "advanced_message": {
-        "average": 0.007,
+        "average": 0.007000000000000001,
         "min": 0.007,
         "max": 0.007,
         "median": 0.007,
@@ -131,7 +133,7 @@
         "list": 0.0021
       },
       "basic_utility_message": {
-        "average": 0.0013,
+        "average": 0.0013000000000000002,
         "min": 0.0013,
         "max": 0.0013,
         "median": 0.0013,
@@ -195,7 +197,8 @@
         1250.0,
         2550.0,
         1650.0,
-        2550.0
+        2550.0,
+        4150.0
       ],
       "weekly_revenue_labels": [
         "2025-09-28",
@@ -217,25 +220,28 @@
         "2026-01-18",
         "2026-01-25",
         "2026-02-01",
-        "2026-02-08"
+        "2026-02-08",
+        "2026-02-15"
       ],
       "clv": [
         9250.0,
         8900.0,
         5900.0,
+        4150.0,
         850.0
       ],
       "clv_labels": [
         "Kathyayani Nayak",
         "Ankit Kanwara",
         "Saathwik",
+        "Yashas Reddy",
         "Ankit"
       ],
       "service_usage": [
-        0.252,
-        0.168,
-        0.0504,
-        0.0312
+        0.28350000000000003,
+        0.18900000000000003,
+        0.05669999999999999,
+        0.035100000000000006
       ],
       "service_labels": [
         "ai_price",
@@ -246,19 +252,21 @@
       "manday_efficiency": [
         850.0,
         166.19718309859155,
+        156.60377358490567,
         142.4,
         127.58620689655173
       ],
       "manday_efficiency_labels": [
         "Ankit",
         "Saathwik",
+        "Yashas Reddy",
         "Ankit Kanwara",
         "Kathyayani Nayak"
       ],
       "hourly_counts": [
         1,
         1,
-        1,
+        4,
         5,
         1,
         5,
@@ -279,7 +287,7 @@
       ],
       "weekday_counts": [
         2.0,
-        5.0,
+        8.0,
         8.0,
         4.0,
         5.0,
@@ -296,13 +304,13 @@
         "Sunday"
       ],
       "route_revenue": [
-        24900.0
+        29050.0
       ],
       "route_labels": [
         "volumes"
       ],
       "route_counts": [
-        24
+        27
       ],
       "bot_ui_manday_rate": {
         "list": 300.0,
@@ -2402,21 +2410,21 @@
   },
   "funnel": {
     "counts": {
-      "volumes": 111,
+      "volumes": 116,
       "prices": 29,
-      "results": 65,
+      "results": 70,
       "sow_details": 57,
       "sow_download": 25
     },
     "conversion": {
-      "volumes_to_prices": 26.126126126126124,
-      "prices_to_results": 224.13793103448273,
-      "results_to_sow_details": 87.6923076923077,
+      "volumes_to_prices": 25.0,
+      "prices_to_results": 241.3793103448276,
+      "results_to_sow_details": 81.42857142857143,
       "sow_details_to_sow_download": 43.859649122807014
     }
   },
   "platform_fee_by_country": [
-    1037.5,
+    1075.9259259259259,
     1267.5,
     1650.0,
     178640.4094827586,
