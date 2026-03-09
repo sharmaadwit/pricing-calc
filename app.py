@@ -1229,6 +1229,15 @@ def index():
                     voice_pricing = calculate_voice_pricing(inputs, country=inputs.get('country', 'India'), has_text_ai=has_text_ai)
                     session['voice_pricing'] = voice_pricing
                     results['voice_pricing'] = voice_pricing
+                    # Merge voice mandays into total/bot_ui effort
+                    voice_mandays = float(voice_pricing.get('voice_mandays', 0) or 0)
+                    if voice_mandays:
+                        manday_breakdown = dict(manday_breakdown or {})
+                        manday_breakdown['bot_ui'] = float(manday_breakdown.get('bot_ui', 0) or 0) + voice_mandays
+                        manday_breakdown['custom_ai'] = float(manday_breakdown.get('custom_ai', 0) or 0)
+                        manday_breakdown['total'] = manday_breakdown['bot_ui'] + manday_breakdown['custom_ai']
+                        total_mandays = float(total_mandays or 0) + voice_mandays
+                        session['manday_breakdown'] = manday_breakdown
             except Exception as e:
                 print(f"DEBUG: Calculation failed with error: {e}", file=sys.stderr, flush=True)
                 flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
@@ -1901,6 +1910,22 @@ def index():
         
         # Calculate total mandays for template
         total_mandays = calculate_total_mandays(inputs)
+
+        # Merge voice mandays into total/bot_ui if voice pricing exists
+        try:
+            channel_type = inputs.get('channel_type', 'text_only')
+            if channel_type in ['voice_only', 'text_voice']:
+                voice_pricing = session.get('voice_pricing') or {}
+                voice_mandays = float(voice_pricing.get('voice_mandays', 0) or 0)
+                if voice_mandays:
+                    manday_breakdown = dict(manday_breakdown or {})
+                    manday_breakdown['bot_ui'] = float(manday_breakdown.get('bot_ui', 0) or 0) + voice_mandays
+                    manday_breakdown['custom_ai'] = float(manday_breakdown.get('custom_ai', 0) or 0)
+                    manday_breakdown['total'] = manday_breakdown['bot_ui'] + manday_breakdown['custom_ai']
+                    total_mandays = float(total_mandays or 0) + voice_mandays
+                    session['manday_breakdown'] = manday_breakdown
+        except Exception:
+            pass
         
         # Ensure manday_breakdown has the correct structure
         if not manday_breakdown or 'bot_ui' not in manday_breakdown:
