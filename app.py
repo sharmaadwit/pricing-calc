@@ -1116,6 +1116,8 @@ def index():
         total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
         print(f"DEBUG: dev_cost_currency = {dev_cost_currency}, country = {country}", file=sys.stderr, flush=True)
         manday_breakdown = dev_cost_breakdown['mandays_breakdown']
+        text_mandays = total_mandays
+        text_manday_breakdown = dict(manday_breakdown or {})
         
         # Debug: Log inputs being used for calculation
         print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}", file=sys.stderr, flush=True)
@@ -1203,6 +1205,8 @@ def index():
             total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
             print(f"DEBUG: dev_cost_currency = {dev_cost_currency}, country = {country}", file=sys.stderr, flush=True)
             manday_breakdown = dev_cost_breakdown['mandays_breakdown']
+            text_mandays = total_mandays
+            text_manday_breakdown = dict(manday_breakdown or {})
             # Debug: Log inputs being used for calculation
             print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}", file=sys.stderr, flush=True)
             # Calculate pricing results
@@ -1670,6 +1674,8 @@ def index():
                 contradiction_warning=contradiction_warning,
                 top_users=top_users,
                 total_mandays=total_mandays,
+                text_mandays=text_mandays,
+                text_manday_breakdown=text_manday_breakdown,
                 total_dev_cost=total_dev_cost,
                 dev_cost_currency=dev_cost_currency,
                 manday_breakdown=manday_breakdown,
@@ -1723,6 +1729,8 @@ def index():
             contradiction_warning=contradiction_warning,
             top_users=top_users,
             total_mandays=total_mandays,
+            text_mandays=text_mandays,
+            text_manday_breakdown=text_manday_breakdown,
             total_dev_cost=total_dev_cost,
             dev_cost_currency=dev_cost_currency,
             manday_breakdown=manday_breakdown,
@@ -1884,32 +1892,58 @@ def index():
         results = session.get('results', {})
         pricing_inputs = session.get('pricing_inputs', {})
         final_inclusions = session.get('inclusions', {})
-        dev_cost_breakdown = session.get('dev_cost_breakdown', {})
         final_price_details = session.get('final_price_details', {})
-        manday_breakdown = session.get('manday_breakdown', {})
         manday_rates = session.get('manday_rates', {})
         dev_cost_currency = session.get('dev_cost_currency', 'INR')
-        
-        # If dev_cost_breakdown is missing or empty, calculate it
-        if not dev_cost_breakdown or 'total_cost' not in dev_cost_breakdown:
-            try:
-                total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(inputs, manday_rates)
-                manday_breakdown = dev_cost_breakdown.get('mandays_breakdown', {})
-                # Store in session for future use
-                session['dev_cost_breakdown'] = dev_cost_breakdown
-                session['dev_cost_currency'] = dev_cost_currency
-                session['manday_breakdown'] = manday_breakdown
-            except Exception as e:
-                print(f"Error calculating dev_cost_breakdown: {e}", file=sys.stderr, flush=True)
-                # Fallback to empty structure
-                dev_cost_breakdown = {'total_cost': 0, 'ba_cost': 0, 'qa_cost': 0, 'pm_cost': 0, 'uplift_amount': 0}
-                dev_cost_currency = 'INR'
+
+        # Always recompute manday rates + text dev cost to avoid stale zeros
+        try:
+            country = inputs.get('country', 'India')
+            dev_location = inputs.get('dev_location', 'India')
+            rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
+            if country == 'LATAM':
+                default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
+                default_custom_ai = float(rates['custom_ai'].get(dev_location, 0.0) or 0.0)
+            else:
+                default_bot_ui = float(rates.get('bot_ui', 0.0) or 0.0)
+                default_custom_ai = float(rates.get('custom_ai', 0.0) or 0.0)
+            manday_rates = {
+                'bot_ui': default_bot_ui,
+                'custom_ai': default_custom_ai,
+                'default_bot_ui': default_bot_ui,
+                'default_custom_ai': default_custom_ai,
+            }
+            manday_rates['bot_ui'] = float(manday_rates.get('bot_ui', default_bot_ui))
+            manday_rates['custom_ai'] = float(manday_rates.get('custom_ai', default_custom_ai))
+            manday_rates['default_bot_ui'] = float(default_bot_ui)
+            manday_rates['default_custom_ai'] = float(default_custom_ai)
+            manday_rates['bot_ui_discount'] = round(100 * (default_bot_ui - manday_rates['bot_ui']) / default_bot_ui, 3) if default_bot_ui else 0
+            manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 3) if default_custom_ai else 0
+
+            total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(inputs, manday_rates)
+            text_manday_breakdown = dev_cost_breakdown.get('mandays_breakdown', {})
+            text_mandays = text_manday_breakdown.get('total', calculate_total_mandays(inputs))
+            session['dev_cost_breakdown'] = dev_cost_breakdown
+            session['dev_cost_currency'] = dev_cost_currency
+            session['manday_breakdown'] = text_manday_breakdown
+            session['manday_rates'] = manday_rates
+        except Exception as e:
+            print(f"Error calculating dev_cost_breakdown: {e}", file=sys.stderr, flush=True)
+            dev_cost_breakdown = {'total_cost': 0, 'ba_cost': 0, 'qa_cost': 0, 'pm_cost': 0, 'uplift_amount': 0}
+            dev_cost_currency = 'INR'
+            text_manday_breakdown = calculate_total_mandays_breakdown(inputs)
+            text_mandays = text_manday_breakdown.get('total', 0)
         
         # Recalculate pricing simulation
         pricing_simulation = calculate_pricing_simulation(inputs, pricing_inputs)
         
-        # Calculate total mandays for template
+        # Text mandays (pre-voice merge) for display
         total_mandays = calculate_total_mandays(inputs)
+        if 'text_mandays' not in locals():
+            text_mandays = total_mandays
+        if 'text_manday_breakdown' not in locals():
+            text_manday_breakdown = calculate_total_mandays_breakdown(inputs)
+        manday_breakdown = dict(text_manday_breakdown or {})
 
         # Merge voice mandays into total/bot_ui if voice pricing exists
         try:
@@ -1918,7 +1952,7 @@ def index():
                 voice_pricing = session.get('voice_pricing') or {}
                 voice_mandays = float(voice_pricing.get('voice_mandays', 0) or 0)
                 if voice_mandays:
-                    manday_breakdown = dict(manday_breakdown or {})
+                    manday_breakdown = dict(text_manday_breakdown or {})
                     manday_breakdown['bot_ui'] = float(manday_breakdown.get('bot_ui', 0) or 0) + voice_mandays
                     manday_breakdown['custom_ai'] = float(manday_breakdown.get('custom_ai', 0) or 0)
                     manday_breakdown['total'] = manday_breakdown['bot_ui'] + manday_breakdown['custom_ai']
@@ -1929,7 +1963,7 @@ def index():
         
         # Ensure manday_breakdown has the correct structure
         if not manday_breakdown or 'bot_ui' not in manday_breakdown:
-            manday_breakdown = calculate_total_mandays_breakdown(inputs)
+            manday_breakdown = dict(text_manday_breakdown or {})
         # Determine if SOW beta should be enabled for this user (refresh case)
         profile = session.get('profile') or {}
         email_for_sow = (profile.get('email') or '').strip().lower()
@@ -1954,6 +1988,8 @@ def index():
             platform_pricing_guidance=PLATFORM_PRICING_GUIDANCE,
             min_fees=min_fees,
             total_mandays=total_mandays,
+            text_mandays=text_mandays,
+            text_manday_breakdown=text_manday_breakdown,
             sow_beta_enabled=sow_beta_enabled
         )
     # Default: show volume input form (this handles "Start Over" and initial page load)

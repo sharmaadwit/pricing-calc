@@ -394,14 +394,16 @@ def calculate_voice_dev_mandays(inputs):
     total_mandays = 0
     try:
         num_voice_journeys = int(inputs.get('num_voice_journeys', 0) or 0)
-        total_mandays += num_voice_journeys * VOICE_DEV_EFFORT['journey']
     except Exception:
         pass
     try:
         num_voice_apis = int(inputs.get('num_voice_apis', 0) or 0)
-        total_mandays += num_voice_apis * VOICE_DEV_EFFORT['api_integration']
     except Exception:
         pass
+    # Apply the same 4+4 bundle logic as text journeys/APIs
+    set_mandays, rem_apis, rem_journeys = _calculate_set_mandays(num_voice_apis, num_voice_journeys)
+    total_mandays += set_mandays
+    total_mandays += rem_apis + rem_journeys
     try:
         num_additional_languages = int(inputs.get('num_additional_voice_languages', 0) or 0)
         if num_additional_languages > 0:

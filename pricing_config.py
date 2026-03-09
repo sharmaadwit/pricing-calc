@@ -449,6 +449,8 @@ PLATFORM_PRICING_GUIDANCE = {
 
 # Voice Bot Development Effort (Mandays)
 VOICE_DEV_EFFORT = {
+    # Deprecated for manday calc: voice journeys/APIs now use bundled 4+4 logic
+    # in calculate_voice_dev_mandays(). Kept for reference.
     'journey': 3,
     'api_integration': 1,
     'additional_language_multiplier': 0.30,

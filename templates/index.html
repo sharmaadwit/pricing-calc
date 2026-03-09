@@ -1355,6 +1355,40 @@
               </tbody>
             </table>
           </div>
+          {% set text_mandays_val = text_mandays if text_mandays is defined else total_mandays %}
+          {% set text_breakdown = text_manday_breakdown if text_manday_breakdown is defined else manday_breakdown %}
+          <!-- Text Effort Card -->
+          <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Text Mandays for One Time Dev Activities</h3>
+            <div style="font-size: 1.5em; font-weight: bold; color: #5a2a8a; margin-top: 2px;">{{ '{:,.1f}'.format(text_mandays_val) }}</div>
+            <div style="margin-top: 10px; font-size: 1.08em;">
+              <b>Breakdown:</b> Bot/UI: {{ '{:,.1f}'.format(text_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.1f}'.format(text_breakdown.custom_ai) }}
+            </div>
+            <div style="margin-top: 6px; font-size: 0.98em; color: #444;">
+              <b>Scope:</b>
+              APIs: {{ inputs.get('num_apis_price', '0') }},
+              Journeys: {{ inputs.get('num_journeys_price', '0') }}
+              {% set aic = (inputs.get('num_ai_workspace_commerce_price', '0') or '0')|int %}
+              {% set aif = (inputs.get('num_ai_workspace_faq_price', '0') or '0')|int %}
+              {% set ais = (inputs.get('num_ai_workspace_support_price', '0') or '0')|int %}
+              {% if aic > 0 or aif > 0 or ais > 0 %}
+                , AI Workspaces — Commerce: {{ aic }}, FAQ: {{ aif }}{% if inputs.get('num_ai_workspace_support_price') is not none %}, Support: {{ ais }}{% endif %}
+              {% endif %}
+            </div>
+            <!-- Cost Breakdown Section -->
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #c8e6c9;">
+              <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Cost Breakdown</h4>
+              <div style="font-size: 1.05em; line-height: 1.6;">
+                <div><b>Build Cost (Bot/UI + Custom/AI):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.build_cost)|smart_format }}</div>
+                <div><b>BA Effort (15%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.ba_cost)|smart_format }}</div>
+                <div><b>QA Effort (10%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.qa_cost)|smart_format }}</div>
+                <div><b>Project Manager (5%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.pm_cost)|smart_format }}</div>
+                <hr>
+                <div><b>Uplift (Total):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.uplift_amount)|smart_format }}</div>
+                <div style="font-weight: bold; margin-top: 10px;">Total One Time Dev Cost (with BA, QA, PM): {{ dev_cost_currency }}{{ (dev_cost_breakdown.total_cost)|smart_format }}</div>
+              </div>
+            </div>
+          </div>
           {% if results and results.voice_pricing %}
           <!-- Voice Channel Pricing Card -->
           <div style="background: #fffaf2; border: 1.5px solid #ffd89a; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
@@ -1430,40 +1464,8 @@
                         {% endfor %}
                         </ul>
           </div>
-          <!-- Total Mandays Card -->
-          <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
-            <h3 style="margin-top:0;">Total Mandays for One Time Dev Activities</h3>
-            <div style="font-size: 1.5em; font-weight: bold; color: #5a2a8a; margin-top: 2px;">{{ '{:,.1f}'.format(total_mandays) }}</div>
-            <div style="margin-top: 10px; font-size: 1.08em;">
-              <b>Breakdown:</b> Bot/UI: {{ '{:,.1f}'.format(manday_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.1f}'.format(manday_breakdown.custom_ai) }}
-            </div>
-            <div style="margin-top: 6px; font-size: 0.98em; color: #444;">
-              <b>Scope:</b>
-              APIs: {{ inputs.get('num_apis_price', '0') }},
-              Journeys: {{ inputs.get('num_journeys_price', '0') }}
-              {% set aic = (inputs.get('num_ai_workspace_commerce_price', '0') or '0')|int %}
-              {% set aif = (inputs.get('num_ai_workspace_faq_price', '0') or '0')|int %}
-              {% set ais = (inputs.get('num_ai_workspace_support_price', '0') or '0')|int %}
-              {% if aic > 0 or aif > 0 or ais > 0 %}
-                , AI Workspaces — Commerce: {{ aic }}, FAQ: {{ aif }}{% if inputs.get('num_ai_workspace_support_price') is not none %}, Support: {{ ais }}{% endif %}
-              {% endif %}
-            </div>
-            <!-- Cost Breakdown Section -->
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #c8e6c9;">
-              <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Cost Breakdown</h4>
-              <div style="font-size: 1.05em; line-height: 1.6;">
-                <div><b>Build Cost (Bot/UI + Custom/AI):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.build_cost)|smart_format }}</div>
-                <div><b>BA Effort (15%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.ba_cost)|smart_format }}</div>
-                <div><b>QA Effort (10%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.qa_cost)|smart_format }}</div>
-                <div><b>Project Manager (5%):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.pm_cost)|smart_format }}</div>
-                <hr>
-                <div><b>Uplift (Total):</b> {{ dev_cost_currency }}{{ (dev_cost_breakdown.uplift_amount)|smart_format }}</div>
-                <div style="font-weight: bold; margin-top: 10px;">Total One Time Dev Cost (with BA, QA, PM): {{ dev_cost_currency }}{{ (dev_cost_breakdown.total_cost)|smart_format }}</div>
-              </div>
-            </div>
-          </div>
-
         </div>
+        {#
         <div style="max-width: 1100px; margin: 0 auto;">
           <div class="form-section" style="background: #f8f9fa; border: 2px solid #e9ecef; margin-top: 32px;">
             <h2 style="margin-top:0; color:#495057; border-bottom: 2px solid #6c757d; padding-bottom: 8px;">
@@ -1696,6 +1698,7 @@
             {% endif %}
           </div>
         </div>
+        #}
         <form method="get" action="/start-over" style="margin-top: 32px; text-align: center;">
             <input type="submit" value="Start Over">
         </form>
