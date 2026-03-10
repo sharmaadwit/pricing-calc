@@ -1251,6 +1251,8 @@
           <!-- Message Type Definitions Card (moved to top) -->
           <div style="background: #fce4ec; border: 1px solid #f8bbd0; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <h3 style="margin-top:0;">Message Type Definitions</h3>
+            {% set channel_type = inputs.get('channel_type', 'text_only') %}
+            {% if channel_type == 'text_only' %}
             <ul style="margin:0 0 0 18px; padding:0; font-size:1.05em;">
               <li><b>Basic Messages:</b> Triggered messages via API, Bulk Upload (GS Media, Campaign Manager)</li>
               <li><b>Advanced Messages:</b>
@@ -1265,11 +1267,37 @@
               <li><b>AI Messages:</b> Any message that uses AI for responding to the customer</li>
               <li><b>Voice Notes:</b> Voice Notes features allows user inputs to come in as voice notes, gupshup will process the voice notes, extract intent and entity, produce desired output and then be able to either show the output as text or convert it into voice as a response.</li>
             </ul>
+            {% else %}
+            {% if channel_type == 'text_voice' %}
+            <div style="font-weight: 600; margin-bottom: 6px;">Text Definitions</div>
+            <ul style="margin:0 0 12px 18px; padding:0; font-size:1.05em;">
+              <li><b>Basic Messages:</b> Triggered messages via API, Bulk Upload (GS Media, Campaign Manager)</li>
+              <li><b>Advanced Messages:</b>
+                <ul style="margin: 4px 0 0 18px;">
+                  <li>Bot platform usage: 2-way messages (JB/Solutions), Triggered messages, Interactive journeys</li>
+                  <li>Marketing: Triggered campaigns, Segmented Campaign on Personalize</li>
+                  <li>Agent: Agent Interactions, Triggered messages</li>
+                  <li>CTX: Retargeting messages</li>
+                  <li>Service messages (incoming won't be counted)</li>
+                </ul>
+              </li>
+              <li><b>AI Messages:</b> Any message that uses AI for responding to the customer</li>
+              <li><b>Voice Notes:</b> Voice Notes features allows user inputs to come in as voice notes, gupshup will process the voice notes, extract intent and entity, produce desired output and then be able to either show the output as text or convert it into voice as a response.</li>
+            </ul>
+            {% endif %}
+            <div style="font-weight: 600; margin-bottom: 6px;">Voice Definitions</div>
+            <ul style="margin:0 0 0 18px; padding:0; font-size:1.05em;">
+              <li><b>Whatsapp Inbound:</b> End user calling a business on WhatsApp</li>
+              <li><b>Whatsapp Outbound:</b> Business Calling an end user on WhatsApp</li>
+              <li><b>PSTN Inbound:</b> End user calling a business on PSTN</li>
+              <li><b>PSTN Outbound:</b> Business Calling an end customer on PSTN</li>
+            </ul>
+            {% endif %}
           </div>
-          {% if final_price_details %}
+          {% if final_price_details and (inputs.get('channel_type') != 'voice_only') %}
           <div style="background: #fff; border: 1.5px solid #bbaadd; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <div style="display: flex; align-items: baseline; justify-content: space-between;">
-              <h3 style="margin-top:0;">Monthly minimum billing</h3>
+              <h3 style="margin-top:0;">Monthly minimum billing - Text</h3>
               <span style="font-size: 1.3em; font-weight: bold; color: #5a2a8a;">Total: {{ currency_symbol }}{{ results.revenue|int|default(0) }}</span>
             </div>
             <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
@@ -1281,22 +1309,22 @@
                 <td style="text-align:right;">{{ currency_symbol }}{{ final_price_details.platform_fee_total|int|default(0) }}</td>
               </tr>
               <tr>
-                <td><b>AI messages (Channel fee + Gupshup markup)</b></td>
+                <td><b>AI messages</b></td>
                 <td style="text-align:right;">#{{ final_price_details.ai_messages.volume }} ( {{ currency_symbol }}{{ final_price_details.ai_messages.price_per_msg|round(3) }} per Msg )</td>
               </tr>
               <tr>
-                <td><b>Advanced messages (Channel fee + Gupshup markup)</b></td>
+                <td><b>Advanced messages</b></td>
                 <td style="text-align:right;">#{{ final_price_details.advanced_messages.volume }} ( {{ currency_symbol }}{{ final_price_details.advanced_messages.markup_per_msg|round(3) }} per Msg )</td>
               </tr>
               {% if final_price_details.marketing_message.volume > 0 %}
               <tr>
-                <td><b>Basic marketing messages (Channel fee + Gupshup markup)</b></td>
+                <td><b>Basic marketing messages</b></td>
                 <td style="text-align:right;">#{{ final_price_details.marketing_message.volume }} ( Channel cost + {{ currency_symbol }}{{ final_price_details.marketing_message.markup_per_msg|round(3) }} per Msg )</td>
               </tr>
               {% endif %}
               {% if final_price_details.utility_message.volume > 0 %}
               <tr>
-                <td><b>Basic utility/authentication messages (Channel fee + Gupshup markup)</b></td>
+                <td><b>Basic utility/authentication messages</b></td>
                 <td style="text-align:right;">#{{ final_price_details.utility_message.volume }} ( Channel cost + {{ currency_symbol }}{{ final_price_details.utility_message.markup_per_msg|round(3) }} per Msg )</td>
               </tr>
               {% endif %}
@@ -1311,6 +1339,7 @@
             </table>
           </div>
           {% endif %}
+          {% if inputs.get('channel_type') != 'voice_only' %}
           <!-- Pricing Table Card -->
           <div style="background: #f5f7fa; border: 1.5px solid #dbe2ea; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <h3 style="margin-top:0;">Pricing Table</h3>
@@ -1355,8 +1384,11 @@
               </tbody>
             </table>
           </div>
+          {% endif %}
+          {% set is_voice_only = inputs.get('channel_type') == 'voice_only' %}
           {% set text_mandays_val = text_mandays if text_mandays is defined else total_mandays %}
           {% set text_breakdown = text_manday_breakdown if text_manday_breakdown is defined else manday_breakdown %}
+          {% if not is_voice_only %}
           <!-- Text Effort Card -->
           <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <h3 style="margin-top:0;">Text Mandays for One Time Dev Activities</h3>
@@ -1389,7 +1421,88 @@
               </div>
             </div>
           </div>
+          {% endif %}
           {% if voice_pricing %}
+          {% if is_voice_only %}
+          <!-- Voice Development Card (One-Time) -->
+          <div style="background: #fffaf2; border: 1.5px solid #ffd89a; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Voice Development (One-Time)</h3>
+            {% set voice_build_cost = voice_pricing.voice_dev_cost|default(0) %}
+            {% set voice_ba_cost = voice_build_cost * 0.15 %}
+            {% set voice_qa_cost = voice_build_cost * 0.10 %}
+            {% set voice_pm_cost = voice_build_cost * 0.05 %}
+            {% set voice_uplift = voice_ba_cost + voice_qa_cost + voice_pm_cost %}
+            {% set voice_total_dev = voice_build_cost + voice_uplift %}
+            <div style="font-size: 1.15em; font-weight: bold; color: #5a2a8a; margin-top: 2px;">{{ voice_pricing.voice_mandays }} mandays</div>
+            <div style="margin-top: 6px; font-size: 0.98em; color: #444;">
+              <b>Scope:</b>
+              APIs: {{ inputs.get('num_voice_apis', '0') }},
+              Journeys: {{ inputs.get('num_voice_journeys', '0') }},
+              Additional Languages: {{ inputs.get('num_additional_voice_languages', '0') }}
+            </div>
+            <div style="margin-top: 10px; font-size: 1.05em; line-height: 1.6;">
+              <div><b>Build Cost (Voice Dev):</b> {{ currency_symbol }}{{ voice_build_cost|int }}</div>
+              <div><b>BA Effort (15%):</b> {{ currency_symbol }}{{ voice_ba_cost|int }}</div>
+              <div><b>QA Effort (10%):</b> {{ currency_symbol }}{{ voice_qa_cost|int }}</div>
+              <div><b>Project Manager (5%):</b> {{ currency_symbol }}{{ voice_pm_cost|int }}</div>
+              <div><b>Uplift (Total):</b> {{ currency_symbol }}{{ voice_uplift|int }}</div>
+              <div style="font-weight: bold;">Total One Time Voice Dev Cost (with BA, QA, PM): {{ currency_symbol }}{{ voice_total_dev|int }}</div>
+            </div>
+          </div>
+
+          <!-- Voice Monthly Fees Card -->
+          <div style="background: #fffaf2; border: 1.5px solid #ffd89a; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Voice Monthly Fees</h3>
+            <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
+              {% if voice_pricing.whatsapp_setup_fee and voice_pricing.whatsapp_setup_fee > 0 %}
+              <tr>
+                <td><b>WhatsApp Setup Fee</b></td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ voice_pricing.whatsapp_setup_fee|int }}</td>
+              </tr>
+              {% endif %}
+              <tr>
+                <td><b>Voice Platform Fee</b></td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ voice_pricing.voice_platform_fee|int }}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Voice Consumption Card -->
+          <div style="background: #fffaf2; border: 1.5px solid #ffd89a; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+            <h3 style="margin-top:0;">Voice Consumption</h3>
+            <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
+              {% set pstn_in_min = (inputs.get('pstn_inbound_ai_minutes', 0) or 0)|float %}
+              {% set pstn_out_min = (inputs.get('pstn_outbound_ai_minutes', 0) or 0)|float %}
+              {% set pstn_manual_min = (inputs.get('pstn_manual_minutes', 0) or 0)|float %}
+              {% set wa_out_min = (inputs.get('whatsapp_voice_outbound_minutes', 0) or 0)|float %}
+              {% set wa_in_min = (inputs.get('whatsapp_voice_inbound_minutes', 0) or 0)|float %}
+              <tr>
+                <td><b>PSTN Inbound AI</b></td>
+                <td style="text-align:right;">{{ pstn_in_min|int }} min @ {{ currency_symbol }}{{ (voice_pricing.calling_costs.pstn_inbound_ai / (pstn_in_min if pstn_in_min else 1))|round(4) }} = {{ currency_symbol }}{{ voice_pricing.calling_costs.pstn_inbound_ai|int }}</td>
+              </tr>
+              <tr>
+                <td><b>PSTN Outbound AI</b></td>
+                <td style="text-align:right;">{{ pstn_out_min|int }} min @ {{ currency_symbol }}{{ (voice_pricing.calling_costs.pstn_outbound_ai / (pstn_out_min if pstn_out_min else 1))|round(4) }} = {{ currency_symbol }}{{ voice_pricing.calling_costs.pstn_outbound_ai|int }}</td>
+              </tr>
+              <tr>
+                <td><b>PSTN Manual C2C</b></td>
+                <td style="text-align:right;">{{ pstn_manual_min|int }} min @ {{ currency_symbol }}{{ (voice_pricing.calling_costs.pstn_manual_c2c / (pstn_manual_min if pstn_manual_min else 1))|round(4) }} = {{ currency_symbol }}{{ voice_pricing.calling_costs.pstn_manual_c2c|int }}</td>
+              </tr>
+              <tr>
+                <td><b>WhatsApp Voice Outbound</b></td>
+                <td style="text-align:right;">{{ wa_out_min|int }} min @ {{ currency_symbol }}{{ (voice_pricing.calling_costs.whatsapp_voice_outbound / (wa_out_min if wa_out_min else 1))|round(4) }} = {{ currency_symbol }}{{ voice_pricing.calling_costs.whatsapp_voice_outbound|int }}</td>
+              </tr>
+              <tr>
+                <td><b>WhatsApp Voice Inbound</b></td>
+                <td style="text-align:right;">{{ wa_in_min|int }} min @ {{ currency_symbol }}{{ (voice_pricing.calling_costs.whatsapp_voice_inbound / (wa_in_min if wa_in_min else 1))|round(4) }} = {{ currency_symbol }}{{ voice_pricing.calling_costs.whatsapp_voice_inbound|int }}</td>
+              </tr>
+              <tr style="background: #fff4dc; border-top: 2px solid #ffcc80;">
+                <td><b>Total Voice Consumption (Monthly)</b></td>
+                <td style="text-align:right; font-weight: bold; font-size: 1.1em;">{{ currency_symbol }}{{ voice_pricing.calling_costs.total|int }}</td>
+              </tr>
+            </table>
+          </div>
+          {% else %}
           <!-- Voice Channel Pricing Card -->
           <div style="background: #fffaf2; border: 1.5px solid #ffd89a; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <h3 style="margin-top:0;">Voice Channel Pricing</h3>
@@ -1397,6 +1510,24 @@
               <tr>
                 <td><b>Voice Development ({{ voice_pricing.voice_mandays }} mandays)</b></td>
                 <td style="text-align:right;">{{ currency_symbol }}{{ voice_pricing.voice_dev_cost|int }}</td>
+              </tr>
+              {% set voice_build_cost = voice_pricing.voice_dev_cost|default(0) %}
+              {% set voice_ba_cost = voice_build_cost * 0.15 %}
+              {% set voice_qa_cost = voice_build_cost * 0.10 %}
+              {% set voice_pm_cost = voice_build_cost * 0.05 %}
+              {% set voice_uplift = voice_ba_cost + voice_qa_cost + voice_pm_cost %}
+              {% set voice_total_dev = voice_build_cost + voice_uplift %}
+              <tr>
+                <td colspan="2" style="padding-top: 6px;">
+                  <div style="font-size: 1.02em; line-height: 1.6;">
+                    <div><b>Build Cost (Voice Dev):</b> {{ currency_symbol }}{{ voice_build_cost|int }}</div>
+                    <div><b>BA Effort (15%):</b> {{ currency_symbol }}{{ voice_ba_cost|int }}</div>
+                    <div><b>QA Effort (10%):</b> {{ currency_symbol }}{{ voice_qa_cost|int }}</div>
+                    <div><b>Project Manager (5%):</b> {{ currency_symbol }}{{ voice_pm_cost|int }}</div>
+                    <div><b>Uplift (Total):</b> {{ currency_symbol }}{{ voice_uplift|int }}</div>
+                    <div style="font-weight: bold;">Total One Time Voice Dev Cost (with BA, QA, PM): {{ currency_symbol }}{{ voice_total_dev|int }}</div>
+                  </div>
+                </td>
               </tr>
               {% if voice_pricing.whatsapp_setup_fee and voice_pricing.whatsapp_setup_fee > 0 %}
               <tr>
@@ -1434,26 +1565,7 @@
               </tr>
             </table>
           </div>
-          <!-- Combined Totals Card -->
-          <div style="background: #eef7ff; border: 1.5px solid #b3d7ff; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
-            <h3 style="margin-top:0;">Combined Totals</h3>
-            {% set text_total = results.revenue|default(0) %}
-            {% set voice_total = voice_pricing.total_voice_cost|default(0) %}
-            <div style="display:flex; justify-content: space-between;">
-              <div>Text Subtotal</div>
-              <div>{{ currency_symbol }}{{ text_total|int }}</div>
-            </div>
-            <div style="display:flex; justify-content: space-between;">
-              <div>Voice Subtotal</div>
-              <div>{{ currency_symbol }}{{ voice_total|int }}</div>
-            </div>
-            <hr>
-            <div style="display:flex; justify-content: space-between; font-weight:bold; font-size:1.1em;">
-              <div>Combined Invoice</div>
-              <div>{{ currency_symbol }}{{ (text_total + voice_total)|int }}</div>
-            </div>
-            <div style="margin-top:6px; color:#6c757d; font-size:0.92em;">Margin shown above pertains to text channels only.</div>
-          </div>
+          {% endif %}
           {% endif %}
           <!-- Inclusions Card -->
           <div style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">

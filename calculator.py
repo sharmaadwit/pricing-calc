@@ -15,9 +15,9 @@ from pricing_config import (
     ACTIVITY_MANDAYS,
     committed_amount_slabs,
     VOICE_DEV_EFFORT,
-    VOICE_PLATFORM_FEES,
     PSTN_CALLING_CHARGES,
     WHATSAPP_VOICE_CHARGES,
+    get_whatsapp_voice_tier,
     get_whatsapp_voice_rate,
 )
 import sys
@@ -428,13 +428,16 @@ def calculate_voice_platform_fee(inputs, has_text_ai=False):
     Calculate voice platform fee components in INR.
     """
     total_fee = 0.0
-    if inputs.get('voice_ai_enabled', 'No') == 'Yes':
-        if not has_text_ai:
-            total_fee += VOICE_PLATFORM_FEES['voice_ai']
-    if inputs.get('agent_handover_pstn', 'None') == 'Knowlarity':
-        total_fee += VOICE_PLATFORM_FEES['knowlarity_platform']
-    if inputs.get('virtual_number_required', 'No') == 'Yes':
-        total_fee += VOICE_PLATFORM_FEES['virtual_number']
+    wa_out_min = _parse_float(inputs.get('whatsapp_voice_outbound_minutes', 0))
+    wa_in_min = _parse_float(inputs.get('whatsapp_voice_inbound_minutes', 0))
+    total_wa_min = wa_out_min + wa_in_min
+    if total_wa_min > 0:
+        country = inputs.get('country', 'India')
+        region = inputs.get('region')
+        tier = get_whatsapp_voice_tier(country, total_wa_min, region=region)
+        wa_platform_fee = tier.get('wa_platform_fee')
+        if wa_platform_fee:
+            total_fee += float(wa_platform_fee)
     return total_fee
 
 def _parse_float(val):
@@ -519,11 +522,18 @@ def calculate_voice_calling_costs(inputs, country='India'):
     wa_out_min = _parse_float(inputs.get('whatsapp_voice_outbound_minutes', 0))
     wa_in_min = _parse_float(inputs.get('whatsapp_voice_inbound_minutes', 0))
     total_wa_min = wa_out_min + wa_in_min
+    region = inputs.get('region')
+    wa_voice_ai_enabled = inputs.get('voice_ai_enabled', 'No') == 'Yes'
+    wa_ai_addon = 0.0
+    if total_wa_min > 0:
+        tier = get_whatsapp_voice_tier(country, total_wa_min, region=region)
+        if wa_voice_ai_enabled:
+            wa_ai_addon = float(tier.get('voice_ai_addon_per_min') or 0)
     if wa_out_min > 0:
-        outbound_rate = wa_out_rate_override or get_whatsapp_voice_rate(country, total_wa_min, 'outbound')
+        outbound_rate = wa_out_rate_override or (get_whatsapp_voice_rate(country, total_wa_min, 'outbound', region=region) + wa_ai_addon)
         costs['whatsapp_voice_outbound'] = wa_out_min * outbound_rate
     if wa_in_min > 0:
-        inbound_rate = wa_in_rate_override or get_whatsapp_voice_rate(country, total_wa_min, 'inbound')
+        inbound_rate = wa_in_rate_override or (get_whatsapp_voice_rate(country, total_wa_min, 'inbound', region=region) + wa_ai_addon)
         costs['whatsapp_voice_inbound'] = wa_in_min * inbound_rate
     costs['total'] = (
         costs['pstn_inbound_ai']

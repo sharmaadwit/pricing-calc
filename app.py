@@ -751,9 +751,7 @@ def index():
         ai_agent_complexity = request.form.get('ai_agent_complexity', 'regular')
         # Voice channel fields
         channel_type = request.form.get('channel_type', 'text_only')
-        # Enforce: Voice supported only for India
-        if country != 'India' and channel_type in ['voice_only', 'text_voice']:
-            channel_type = 'text_only'
+        # Voice is now priced at region level for non-India
         def pv(name):
             return parse_volume(request.form.get(name, ''))
         pstn_inbound_ai_minutes = pv('pstn_inbound_ai_minutes')
@@ -1007,19 +1005,6 @@ def index():
             # Re-render the pricing page with user input and error
             return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees, voice_rate_card=voice_rate_card)
         print('HANDLER: No discount errors, continuing to results calculation', file=sys.stderr, flush=True)
-        print(
-            "DEBUG: voice inputs snapshot - "
-            f"channel_type={inputs.get('channel_type')}, "
-            f"num_voice_journeys={inputs.get('num_voice_journeys')}, "
-            f"num_voice_apis={inputs.get('num_voice_apis')}, "
-            f"pstn_inbound_ai_minutes={inputs.get('pstn_inbound_ai_minutes')}, "
-            f"pstn_outbound_ai_minutes={inputs.get('pstn_outbound_ai_minutes')}, "
-            f"pstn_manual_minutes={inputs.get('pstn_manual_minutes')}, "
-            f"whatsapp_voice_outbound_minutes={inputs.get('whatsapp_voice_outbound_minutes')}, "
-            f"whatsapp_voice_inbound_minutes={inputs.get('whatsapp_voice_inbound_minutes')}",
-            file=sys.stderr,
-            flush=True
-        )
 
         # Always recalculate platform fee before saving to session['pricing_inputs']
         calculated_platform_fee, fee_currency = calculate_platform_fee(
@@ -1246,11 +1231,9 @@ def index():
                 if channel_type in ['voice_only', 'text_voice']:
                     from calculator import calculate_voice_pricing
                     voice_pricing = calculate_voice_pricing(inputs, country=inputs.get('country', 'India'), has_text_ai=has_text_ai)
-                    print(f"DEBUG: voice_pricing computed: {voice_pricing}", file=sys.stderr, flush=True)
                     session['voice_pricing'] = voice_pricing
                     results['voice_pricing'] = voice_pricing
                 else:
-                    print(f"DEBUG: voice_pricing skipped, channel_type={channel_type}", file=sys.stderr, flush=True)
                     # Merge voice mandays into total/bot_ui effort
                     voice_mandays = float(voice_pricing.get('voice_mandays', 0) or 0)
                     if voice_mandays:
@@ -1397,6 +1380,53 @@ def index():
         if increased_tps in ['250', '1000']:
             if '80 TPS' in final_inclusions:
                 final_inclusions.remove('80 TPS')
+        # Voice inclusions handling
+        channel_type = inputs.get('channel_type', 'text_only')
+        voice_inclusions = []
+        if channel_type in ['voice_only', 'text_voice']:
+            voice_inclusions.append('Voice Development')
+            try:
+                num_voice_journeys = int(inputs.get('num_voice_journeys', 0) or 0)
+            except Exception:
+                num_voice_journeys = 0
+            if num_voice_journeys > 0:
+                voice_inclusions.append(f"Voice Journeys: {num_voice_journeys}")
+            try:
+                num_voice_apis = int(inputs.get('num_voice_apis', 0) or 0)
+            except Exception:
+                num_voice_apis = 0
+            if num_voice_apis > 0:
+                voice_inclusions.append(f"Voice API Integrations: {num_voice_apis}")
+            try:
+                num_additional_voice_languages = int(inputs.get('num_additional_voice_languages', 0) or 0)
+            except Exception:
+                num_additional_voice_languages = 0
+            if num_additional_voice_languages > 0:
+                voice_inclusions.append(f"Additional Voice Languages: {num_additional_voice_languages}")
+            if inputs.get('voice_ai_enabled') == 'Yes':
+                voice_inclusions.append('Voice AI enabled')
+            agent_handover_pstn = inputs.get('agent_handover_pstn', 'None')
+            if agent_handover_pstn and agent_handover_pstn != 'None':
+                voice_inclusions.append(f"Agent Handover (PSTN): {agent_handover_pstn}")
+            whatsapp_voice_platform = inputs.get('whatsapp_voice_platform', 'None')
+            if whatsapp_voice_platform and whatsapp_voice_platform != 'None':
+                voice_inclusions.append(f"WhatsApp Voice Platform: {whatsapp_voice_platform}")
+            if inputs.get('virtual_number_required') == 'Yes':
+                voice_inclusions.append('Virtual Number')
+            if float(inputs.get('pstn_inbound_ai_minutes', 0) or 0) > 0:
+                voice_inclusions.append('PSTN Inbound AI')
+            if float(inputs.get('pstn_outbound_ai_minutes', 0) or 0) > 0:
+                voice_inclusions.append('PSTN Outbound AI')
+            if float(inputs.get('pstn_manual_minutes', 0) or 0) > 0:
+                voice_inclusions.append('PSTN Manual C2C')
+            if float(inputs.get('whatsapp_voice_inbound_minutes', 0) or 0) > 0:
+                voice_inclusions.append('WhatsApp Voice Inbound')
+            if float(inputs.get('whatsapp_voice_outbound_minutes', 0) or 0) > 0:
+                voice_inclusions.append('WhatsApp Voice Outbound')
+        if channel_type == 'voice_only':
+            final_inclusions = voice_inclusions
+        elif channel_type == 'text_voice':
+            final_inclusions += voice_inclusions
         # Remove duplicates
         final_inclusions = list(dict.fromkeys(final_inclusions))
         # Pass contradiction_warning to the template for display if needed
@@ -1913,7 +1943,7 @@ def index():
         # Get all the data from session
         results = session.get('results', {})
         pricing_inputs = session.get('pricing_inputs', {})
-        final_inclusions = session.get('inclusions', {})
+        final_inclusions = session.get('final_inclusions', session.get('inclusions', {}))
         final_price_details = session.get('final_price_details', {})
         manday_rates = session.get('manday_rates', {})
         dev_cost_currency = session.get('dev_cost_currency', 'INR')

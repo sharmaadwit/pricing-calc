@@ -461,13 +461,6 @@ VOICE_DEV_EFFORT = {
     'whatsapp_voice_setup_fee_other': 50000,
 }
 
-# Voice Platform Fees (INR)
-VOICE_PLATFORM_FEES = {
-    'voice_ai': 150000,
-    'knowlarity_platform': 25000,
-    'virtual_number': 500,
-}
-
 # PSTN Calling Charges (INR per minute)
 PSTN_CALLING_CHARGES = {
     'inbound_ai': {
@@ -484,69 +477,185 @@ PSTN_CALLING_CHARGES = {
     },
 }
 
-# WhatsApp Voice Calling Charges (INR per minute) - Volume-based tiers
+# WhatsApp Voice Calling Charges - volume-based tiers
 WHATSAPP_VOICE_CHARGES = {
     'India': [
         {
             'min_minutes': 0,
             'max_minutes': 50000,
-            'outbound': 0.49,
-            'inbound': 0.06,
-            'meta_rate': 0.3885,
-            'gupshup_margin_pct': 25,
+            'outbound': 0.58275,
+            'inbound': 0.097125,
+            'voice_ai_addon_per_min': 7,
+            'wa_platform_fee': 50000,
         },
         {
             'min_minutes': 50001,
             'max_minutes': 250000,
-            'outbound': 0.35,
-            'inbound': 0.05,
-            'meta_rate': 0.2785,
-            'gupshup_margin_pct': 25,
+            'outbound': 0.41775,
+            'inbound': 0.069625,
+            'voice_ai_addon_per_min': 6.5,
+            'wa_platform_fee': 75000,
         },
         {
             'min_minutes': 250001,
             'max_minutes': 1000000,
-            'outbound': 0.22,
-            'inbound': 0.04,
-            'meta_rate': 0.1759,
-            'gupshup_margin_pct': 25,
+            'outbound': 0.26385,
+            'inbound': 0.043975,
+            'voice_ai_addon_per_min': 6,
+            'wa_platform_fee': 100000,
         },
         {
             'min_minutes': 1000001,
             'max_minutes': 2500000,
-            'outbound': 0.16,
-            'inbound': 0.03,
-            'meta_rate': 0.1319,
-            'gupshup_margin_pct': 25,
+            'outbound': 0.19785,
+            'inbound': 0.032975,
+            'voice_ai_addon_per_min': 5.5,
+            'wa_platform_fee': 200000,
         },
         {
             'min_minutes': 2500001,
             'max_minutes': 5000000,
-            'outbound': 0.11,
-            'inbound': 0.02,
-            'meta_rate': 0.0880,
-            'gupshup_margin_pct': 25,
+            'outbound': 0.132,
+            'inbound': 0.022,
+            'voice_ai_addon_per_min': 5,
+            'wa_platform_fee': 300000,
         },
         {
             'min_minutes': 5000001,
             'max_minutes': float('inf'),
-            'outbound': 0.07,
-            'inbound': 0.02,
-            'meta_rate': 0.0586,
-            'gupshup_margin_pct': 25,
+            'outbound': 0.0879,
+            'inbound': 0.01465,
+            'voice_ai_addon_per_min': None,
+            'wa_platform_fee': None,
         },
+    ],
+    'United Arab Emirates': [
+        {'min_minutes': 0, 'max_minutes': 50000, 'inbound': 0.003175, 'outbound': 0.01905, 'voice_ai_addon_per_min': 0.16666666666666666, 'wa_platform_fee': 2000.0},
+        {'min_minutes': 50001, 'max_minutes': 250000, 'inbound': 0.002675, 'outbound': 0.01605, 'voice_ai_addon_per_min': 0.15555555555555556, 'wa_platform_fee': 3000.0},
+        {'min_minutes': 250001, 'max_minutes': 1000000, 'inbound': 0.00225, 'outbound': 0.0135, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 4000.0},
+        {'min_minutes': 1000001, 'max_minutes': 2500000, 'inbound': 0.0017, 'outbound': 0.0102, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 5000.0},
+        {'min_minutes': 2500001, 'max_minutes': 5000000, 'inbound': 0.001375, 'outbound': 0.00825, 'voice_ai_addon_per_min': 0.13333333333333333, 'wa_platform_fee': 6000.0},
+        {'min_minutes': 5000001, 'max_minutes': float('inf'), 'inbound': 0.00125, 'outbound': 0.0075, 'voice_ai_addon_per_min': None, 'wa_platform_fee': None},
+    ],
+    'Saudi Arabia': [
+        {'min_minutes': 0, 'max_minutes': 50000, 'inbound': 0.003175, 'outbound': 0.01905, 'voice_ai_addon_per_min': 0.16666666666666666, 'wa_platform_fee': 2000.0},
+        {'min_minutes': 50001, 'max_minutes': 250000, 'inbound': 0.002675, 'outbound': 0.01605, 'voice_ai_addon_per_min': 0.15555555555555556, 'wa_platform_fee': 3000.0},
+        {'min_minutes': 250001, 'max_minutes': 1000000, 'inbound': 0.00225, 'outbound': 0.0135, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 4000.0},
+        {'min_minutes': 1000001, 'max_minutes': 2500000, 'inbound': 0.0017, 'outbound': 0.0102, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 5000.0},
+        {'min_minutes': 2500001, 'max_minutes': 5000000, 'inbound': 0.001375, 'outbound': 0.00825, 'voice_ai_addon_per_min': 0.13333333333333333, 'wa_platform_fee': 6000.0},
+        {'min_minutes': 5000001, 'max_minutes': float('inf'), 'inbound': 0.00125, 'outbound': 0.0075, 'voice_ai_addon_per_min': None, 'wa_platform_fee': None},
+    ],
+    'Brazil': [
+        {'min_minutes': 0, 'max_minutes': 50000, 'inbound': 0.0027, 'outbound': 0.0162, 'voice_ai_addon_per_min': 0.16666666666666666, 'wa_platform_fee': 2000.0},
+        {'min_minutes': 50001, 'max_minutes': 250000, 'inbound': 0.0017, 'outbound': 0.0102, 'voice_ai_addon_per_min': 0.15555555555555556, 'wa_platform_fee': 3000.0},
+        {'min_minutes': 250001, 'max_minutes': 1000000, 'inbound': 0.0011, 'outbound': 0.0066, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 4000.0},
+        {'min_minutes': 1000001, 'max_minutes': 2500000, 'inbound': 0.00085, 'outbound': 0.0051, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 5000.0},
+        {'min_minutes': 2500001, 'max_minutes': 5000000, 'inbound': 0.0005, 'outbound': 0.003, 'voice_ai_addon_per_min': 0.13333333333333333, 'wa_platform_fee': 6000.0},
+        {'min_minutes': 5000001, 'max_minutes': float('inf'), 'inbound': 0.00045, 'outbound': 0.0027, 'voice_ai_addon_per_min': None, 'wa_platform_fee': None},
+    ],
+    'Mexico': [
+        {'min_minutes': 0, 'max_minutes': 50000, 'inbound': 0.00235, 'outbound': 0.0141, 'voice_ai_addon_per_min': 0.16666666666666666, 'wa_platform_fee': 2000.0},
+        {'min_minutes': 50001, 'max_minutes': 250000, 'inbound': 0.002, 'outbound': 0.012, 'voice_ai_addon_per_min': 0.15555555555555556, 'wa_platform_fee': 3000.0},
+        {'min_minutes': 250001, 'max_minutes': 1000000, 'inbound': 0.00175, 'outbound': 0.0105, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 4000.0},
+        {'min_minutes': 1000001, 'max_minutes': 2500000, 'inbound': 0.00135, 'outbound': 0.0081, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 5000.0},
+        {'min_minutes': 2500001, 'max_minutes': 5000000, 'inbound': 0.00105, 'outbound': 0.0063, 'voice_ai_addon_per_min': 0.13333333333333333, 'wa_platform_fee': 6000.0},
+        {'min_minutes': 5000001, 'max_minutes': float('inf'), 'inbound': 0.00095, 'outbound': 0.0057, 'voice_ai_addon_per_min': None, 'wa_platform_fee': None},
+    ],
+    'South Africa': [
+        {'min_minutes': 0, 'max_minutes': 50000, 'inbound': 0.0027, 'outbound': 0.0162, 'voice_ai_addon_per_min': 0.16666666666666666, 'wa_platform_fee': 2000.0},
+        {'min_minutes': 50001, 'max_minutes': 250000, 'inbound': 0.00195, 'outbound': 0.0117, 'voice_ai_addon_per_min': 0.15555555555555556, 'wa_platform_fee': 3000.0},
+        {'min_minutes': 250001, 'max_minutes': 1000000, 'inbound': 0.001475, 'outbound': 0.00885, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 4000.0},
+        {'min_minutes': 1000001, 'max_minutes': 2500000, 'inbound': 0.0011, 'outbound': 0.0066, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 5000.0},
+        {'min_minutes': 2500001, 'max_minutes': 5000000, 'inbound': 0.001025, 'outbound': 0.00615, 'voice_ai_addon_per_min': 0.13333333333333333, 'wa_platform_fee': 6000.0},
+        {'min_minutes': 5000001, 'max_minutes': float('inf'), 'inbound': 0.00095, 'outbound': 0.0057, 'voice_ai_addon_per_min': None, 'wa_platform_fee': None},
+    ],
+    'Nigeria': [
+        {'min_minutes': 0, 'max_minutes': 50000, 'inbound': 0.002575, 'outbound': 0.01545, 'voice_ai_addon_per_min': 0.16666666666666666, 'wa_platform_fee': 2000.0},
+        {'min_minutes': 50001, 'max_minutes': 250000, 'inbound': 0.0021, 'outbound': 0.0126, 'voice_ai_addon_per_min': 0.15555555555555556, 'wa_platform_fee': 3000.0},
+        {'min_minutes': 250001, 'max_minutes': 1000000, 'inbound': 0.00185, 'outbound': 0.0111, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 4000.0},
+        {'min_minutes': 1000001, 'max_minutes': 2500000, 'inbound': 0.001725, 'outbound': 0.01035, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 5000.0},
+        {'min_minutes': 2500001, 'max_minutes': 5000000, 'inbound': 0.001375, 'outbound': 0.00825, 'voice_ai_addon_per_min': 0.13333333333333333, 'wa_platform_fee': 6000.0},
+        {'min_minutes': 5000001, 'max_minutes': float('inf'), 'inbound': 0.001325, 'outbound': 0.00795, 'voice_ai_addon_per_min': None, 'wa_platform_fee': None},
+    ],
+    'Rest of Africa': [
+        {'min_minutes': 0, 'max_minutes': 50000, 'inbound': 0.002575, 'outbound': 0.01545, 'voice_ai_addon_per_min': 0.16666666666666666, 'wa_platform_fee': 2000.0},
+        {'min_minutes': 50001, 'max_minutes': 250000, 'inbound': 0.0021, 'outbound': 0.0126, 'voice_ai_addon_per_min': 0.15555555555555556, 'wa_platform_fee': 3000.0},
+        {'min_minutes': 250001, 'max_minutes': 1000000, 'inbound': 0.00185, 'outbound': 0.0111, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 4000.0},
+        {'min_minutes': 1000001, 'max_minutes': 2500000, 'inbound': 0.00155, 'outbound': 0.0093, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 5000.0},
+        {'min_minutes': 2500001, 'max_minutes': 5000000, 'inbound': 0.001175, 'outbound': 0.00705, 'voice_ai_addon_per_min': 0.13333333333333333, 'wa_platform_fee': 6000.0},
+        {'min_minutes': 5000001, 'max_minutes': float('inf'), 'inbound': 0.00105, 'outbound': 0.0063, 'voice_ai_addon_per_min': None, 'wa_platform_fee': None},
+    ],
+    'Rest of Middle East': [
+        {'min_minutes': 0, 'max_minutes': 50000, 'inbound': 0.003175, 'outbound': 0.01905, 'voice_ai_addon_per_min': 0.16666666666666666, 'wa_platform_fee': 2000.0},
+        {'min_minutes': 50001, 'max_minutes': 250000, 'inbound': 0.002675, 'outbound': 0.01605, 'voice_ai_addon_per_min': 0.15555555555555556, 'wa_platform_fee': 3000.0},
+        {'min_minutes': 250001, 'max_minutes': 1000000, 'inbound': 0.00225, 'outbound': 0.0135, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 4000.0},
+        {'min_minutes': 1000001, 'max_minutes': 2500000, 'inbound': 0.0017, 'outbound': 0.0102, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 5000.0},
+        {'min_minutes': 2500001, 'max_minutes': 5000000, 'inbound': 0.001375, 'outbound': 0.00825, 'voice_ai_addon_per_min': 0.13333333333333333, 'wa_platform_fee': 6000.0},
+        {'min_minutes': 5000001, 'max_minutes': float('inf'), 'inbound': 0.00125, 'outbound': 0.0075, 'voice_ai_addon_per_min': None, 'wa_platform_fee': None},
+    ],
+    'Rest of Latin America': [
+        {'min_minutes': 0, 'max_minutes': 50000, 'inbound': 0.0029, 'outbound': 0.0174, 'voice_ai_addon_per_min': 0.16666666666666666, 'wa_platform_fee': 2000.0},
+        {'min_minutes': 50001, 'max_minutes': 250000, 'inbound': 0.002375, 'outbound': 0.01425, 'voice_ai_addon_per_min': 0.15555555555555556, 'wa_platform_fee': 3000.0},
+        {'min_minutes': 250001, 'max_minutes': 1000000, 'inbound': 0.00205, 'outbound': 0.0123, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 4000.0},
+        {'min_minutes': 1000001, 'max_minutes': 2500000, 'inbound': 0.00175, 'outbound': 0.0105, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 5000.0},
+        {'min_minutes': 2500001, 'max_minutes': 5000000, 'inbound': 0.0012, 'outbound': 0.0072, 'voice_ai_addon_per_min': 0.13333333333333333, 'wa_platform_fee': 6000.0},
+        {'min_minutes': 5000001, 'max_minutes': float('inf'), 'inbound': 0.001175, 'outbound': 0.00705, 'voice_ai_addon_per_min': None, 'wa_platform_fee': None},
+    ],
+    'Rest of Western Europe': [
+        {'min_minutes': 0, 'max_minutes': 50000, 'inbound': 0.002575, 'outbound': 0.01545, 'voice_ai_addon_per_min': 0.16666666666666666, 'wa_platform_fee': 2000.0},
+        {'min_minutes': 50001, 'max_minutes': 250000, 'inbound': 0.0021, 'outbound': 0.0126, 'voice_ai_addon_per_min': 0.15555555555555556, 'wa_platform_fee': 3000.0},
+        {'min_minutes': 250001, 'max_minutes': 1000000, 'inbound': 0.00185, 'outbound': 0.0111, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 4000.0},
+        {'min_minutes': 1000001, 'max_minutes': 2500000, 'inbound': 0.00155, 'outbound': 0.0093, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 5000.0},
+        {'min_minutes': 2500001, 'max_minutes': 5000000, 'inbound': 0.001375, 'outbound': 0.00825, 'voice_ai_addon_per_min': 0.13333333333333333, 'wa_platform_fee': 6000.0},
+        {'min_minutes': 5000001, 'max_minutes': float('inf'), 'inbound': 0.001175, 'outbound': 0.00705, 'voice_ai_addon_per_min': None, 'wa_platform_fee': None},
+    ],
+    'Rest of Asia Pacific': [
+        {'min_minutes': 0, 'max_minutes': 50000, 'inbound': 0.00285, 'outbound': 0.0171, 'voice_ai_addon_per_min': 0.16666666666666666, 'wa_platform_fee': 2000.0},
+        {'min_minutes': 50001, 'max_minutes': 250000, 'inbound': 0.00235, 'outbound': 0.0141, 'voice_ai_addon_per_min': 0.15555555555555556, 'wa_platform_fee': 3000.0},
+        {'min_minutes': 250001, 'max_minutes': 1000000, 'inbound': 0.002025, 'outbound': 0.01215, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 4000.0},
+        {'min_minutes': 1000001, 'max_minutes': 2500000, 'inbound': 0.001725, 'outbound': 0.01035, 'voice_ai_addon_per_min': 0.14444444444444443, 'wa_platform_fee': 5000.0},
+        {'min_minutes': 2500001, 'max_minutes': 5000000, 'inbound': 0.0013, 'outbound': 0.0078, 'voice_ai_addon_per_min': 0.13333333333333333, 'wa_platform_fee': 6000.0},
+        {'min_minutes': 5000001, 'max_minutes': float('inf'), 'inbound': 0.0011, 'outbound': 0.0066, 'voice_ai_addon_per_min': None, 'wa_platform_fee': None},
     ],
 }
 
-def get_whatsapp_voice_rate(country, minutes, call_type='outbound'):
-    if country != 'India':
-        tier = WHATSAPP_VOICE_CHARGES['India'][-1]
-        return tier[call_type]
-    tiers = WHATSAPP_VOICE_CHARGES.get(country, WHATSAPP_VOICE_CHARGES['India'])
+WA_VOICE_MARKET_BY_REGION = {
+    'UAE': 'United Arab Emirates',
+    'KSA': 'Saudi Arabia',
+    'Brazil': 'Brazil',
+    'Mexico': 'Mexico',
+    'South Africa': 'South Africa',
+    'Nigeria': 'Nigeria',
+    'Rest of Africa': 'Rest of Africa',
+}
+
+WA_VOICE_MARKET_BY_COUNTRY = {
+    'MENA': 'Rest of Middle East',
+    'LATAM': 'Rest of Latin America',
+    'Africa': 'Rest of Africa',
+    'Europe': 'Rest of Western Europe',
+    'APAC': 'Rest of Asia Pacific',
+}
+
+def resolve_wa_voice_market(country, region=None):
+    if country == 'India':
+        return 'India'
+    region_key = (region or '').strip()
+    if region_key and region_key in WA_VOICE_MARKET_BY_REGION:
+        return WA_VOICE_MARKET_BY_REGION[region_key]
+    return WA_VOICE_MARKET_BY_COUNTRY.get(country, 'Rest of Western Europe')
+
+def get_whatsapp_voice_tier(country, minutes, region=None):
+    market = resolve_wa_voice_market(country, region)
+    tiers = WHATSAPP_VOICE_CHARGES.get(market, WHATSAPP_VOICE_CHARGES['India'])
     for tier in tiers:
         if tier['min_minutes'] <= minutes <= tier['max_minutes']:
-            return tier[call_type]
-    return tiers[-1][call_type]
+            return tier
+    return tiers[-1]
+
+def get_whatsapp_voice_rate(country, minutes, call_type='outbound', region=None):
+    tier = get_whatsapp_voice_tier(country, minutes, region=region)
+    return tier[call_type]
 
 # =============================================================================
 # AI AGENT PRICING (per LLM call)
