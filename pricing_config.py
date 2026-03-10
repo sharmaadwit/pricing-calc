@@ -237,9 +237,10 @@ USER_DEFAULTS = {
     'mridul.kumawat@gupshup.io': {'country': 'India', 'region': 'West'},
     'nikhil.sharma@knowlarity.com': {'country': 'India', 'region': 'North'},
     'nikhil.sharma@gupshup.io': {'country': 'India', 'region': 'North'},
-    'purusottam.singh@gupshup.io': {'country': 'India', 'region': 'West'},
     'siddharth.singh@gupshup.io': {'country': 'MENA', 'region': 'UAE'},
     'yashas.reddy@gupshup.io': {'country': 'Africa', 'region': 'South Africa'},
+    'nidhi.shridhar@gupshup.io': {'country': 'India', 'region': 'North'},
+    'maria.diaz@gupshup.io': {'country': 'LATAM', 'region': 'Mexico'},
 }
 
 
@@ -458,22 +459,23 @@ VOICE_DEV_EFFORT = {
     'agent_handover_pstn_other': 5,
     'whatsapp_voice_knowlarity': 1,
     'whatsapp_voice_other': 5,
-    'whatsapp_voice_setup_fee_other': 50000,
 }
 
-# PSTN Calling Charges (INR per minute)
-PSTN_CALLING_CHARGES = {
-    'inbound_ai': {
-        'bundled': 4.5,
-        'overage': 6.0,
+AED_TO_USD = 0.2723
+
+# PSTN Calling Charges (Knowlarity)
+PSTN_CALLING_CHARGES_BY_REGION = {
+    'India': {
+        'currency': 'INR',
+        'inbound': 0.0,
+        'outbound': 0.4,
+        'manual_c2c': 0.4,
     },
-    'outbound_ai': {
-        'bundled': 4.8,
-        'overage': 6.0,
-    },
-    'manual_c2c': {
-        'bundled': 0.55,
-        'overage': 0.6,
+    'MENA': {
+        'currency': 'USD',
+        'inbound': round(0.10 * AED_TO_USD, 4),
+        'outbound': round(0.30 * AED_TO_USD, 4),
+        'manual_c2c': round(0.30 * AED_TO_USD, 4),
     },
 }
 
@@ -644,6 +646,13 @@ def resolve_wa_voice_market(country, region=None):
     if region_key and region_key in WA_VOICE_MARKET_BY_REGION:
         return WA_VOICE_MARKET_BY_REGION[region_key]
     return WA_VOICE_MARKET_BY_COUNTRY.get(country, 'Rest of Western Europe')
+
+def get_pstn_rates(country, region=None):
+    if country == 'India':
+        return PSTN_CALLING_CHARGES_BY_REGION['India']
+    if country == 'MENA':
+        return PSTN_CALLING_CHARGES_BY_REGION['MENA']
+    return None
 
 def get_whatsapp_voice_tier(country, minutes, region=None):
     market = resolve_wa_voice_market(country, region)

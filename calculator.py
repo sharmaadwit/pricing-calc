@@ -15,10 +15,10 @@ from pricing_config import (
     ACTIVITY_MANDAYS,
     committed_amount_slabs,
     VOICE_DEV_EFFORT,
-    PSTN_CALLING_CHARGES,
     WHATSAPP_VOICE_CHARGES,
     get_whatsapp_voice_tier,
     get_whatsapp_voice_rate,
+    get_pstn_rates,
 )
 import sys
 
@@ -493,30 +493,39 @@ def calculate_voice_calling_costs(inputs, country='India'):
     except Exception:
         wa_in_rate_override = 0
 
-    # PSTN bundled vs overage
+    # PSTN bundled vs overage (Knowlarity)
+    pstn_rates = get_pstn_rates(country, inputs.get('region'))
     inbound_min = _parse_float(inputs.get('pstn_inbound_ai_minutes', 0))
     inbound_commit = _parse_float(inputs.get('pstn_inbound_committed', 0))
     outbound_min = _parse_float(inputs.get('pstn_outbound_ai_minutes', 0))
     outbound_commit = _parse_float(inputs.get('pstn_outbound_committed', 0))
     manual_min = _parse_float(inputs.get('pstn_manual_minutes', 0))
     manual_commit = _parse_float(inputs.get('pstn_manual_committed', 0))
+    total_pstn_min = inbound_min + outbound_min + manual_min
+    pstn_ai_addon = 0.0
+    if pstn_rates and total_pstn_min > 0 and inputs.get('voice_ai_enabled', 'No') == 'Yes':
+        tier = get_whatsapp_voice_tier(country, total_pstn_min, region=inputs.get('region'))
+        pstn_ai_addon = float(tier.get('voice_ai_addon_per_min') or 0)
     if inbound_min > 0:
         bundled = min(inbound_min, inbound_commit)
         overage = max(0.0, inbound_min - inbound_commit)
-        in_bundled = pstn_in_bundled_rate or PSTN_CALLING_CHARGES['inbound_ai']['bundled']
-        in_overage = pstn_in_overage_rate or PSTN_CALLING_CHARGES['inbound_ai']['overage']
+        in_rate = pstn_rates['inbound'] if pstn_rates else 0.0
+        in_bundled = pstn_in_bundled_rate or (in_rate + pstn_ai_addon)
+        in_overage = pstn_in_overage_rate or (in_rate + pstn_ai_addon)
         costs['pstn_inbound_ai'] = bundled * in_bundled + overage * in_overage
     if outbound_min > 0:
         bundled = min(outbound_min, outbound_commit)
         overage = max(0.0, outbound_min - outbound_commit)
-        out_bundled = pstn_out_bundled_rate or PSTN_CALLING_CHARGES['outbound_ai']['bundled']
-        out_overage = pstn_out_overage_rate or PSTN_CALLING_CHARGES['outbound_ai']['overage']
+        out_rate = pstn_rates['outbound'] if pstn_rates else 0.0
+        out_bundled = pstn_out_bundled_rate or (out_rate + pstn_ai_addon)
+        out_overage = pstn_out_overage_rate or (out_rate + pstn_ai_addon)
         costs['pstn_outbound_ai'] = bundled * out_bundled + overage * out_overage
     if manual_min > 0:
         bundled = min(manual_min, manual_commit)
         overage = max(0.0, manual_min - manual_commit)
-        man_bundled = pstn_manual_bundled_rate or PSTN_CALLING_CHARGES['manual_c2c']['bundled']
-        man_overage = pstn_manual_overage_rate or PSTN_CALLING_CHARGES['manual_c2c']['overage']
+        manual_rate = pstn_rates['manual_c2c'] if pstn_rates else 0.0
+        man_bundled = pstn_manual_bundled_rate or (manual_rate + pstn_ai_addon)
+        man_overage = pstn_manual_overage_rate or (manual_rate + pstn_ai_addon)
         costs['pstn_manual_c2c'] = bundled * man_bundled + overage * man_overage
     # WhatsApp Voice
     wa_out_min = _parse_float(inputs.get('whatsapp_voice_outbound_minutes', 0))
@@ -559,14 +568,12 @@ def calculate_voice_pricing(inputs, country='India', has_text_ai=False):
     else:
         custom_ai_rate = rates.get('custom_ai', rates.get('bot_ui', 0))
     voice_dev_cost = voice_mandays * float(custom_ai_rate or 0)
-    whatsapp_setup_fee = VOICE_DEV_EFFORT['whatsapp_voice_setup_fee_other'] if inputs.get('whatsapp_voice_platform', 'None') == 'Other' else 0
     voice_platform_fee = calculate_voice_platform_fee(inputs, has_text_ai)
     calling_costs = calculate_voice_calling_costs(inputs, country)
-    total_voice_cost = voice_dev_cost + whatsapp_setup_fee + voice_platform_fee + calling_costs['total']
+    total_voice_cost = voice_dev_cost + voice_platform_fee + calling_costs['total']
     return {
         'voice_mandays': voice_mandays,
         'voice_dev_cost': voice_dev_cost,
-        'whatsapp_setup_fee': whatsapp_setup_fee,
         'voice_platform_fee': voice_platform_fee,
         'calling_costs': calling_costs,
         'total_voice_cost': total_voice_cost,
