@@ -57,6 +57,10 @@ logs/*.log
 *.swo
 *~
 results_snapshot.html
+results_snapshot_text_only.html
+results_snapshot_voice_only.html
+results_snapshot_text_voice.html
+Gupshup Voice - Pricing.xlsx
 
 # Test files
 test_*.py
