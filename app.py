@@ -1228,12 +1228,12 @@ def index():
                 # Voice pricing (if selected)
                 channel_type = inputs.get('channel_type', 'text_only')
                 has_text_ai = inputs.get('ai_module', 'NA') == 'Yes'
+                voice_pricing = {}
                 if channel_type in ['voice_only', 'text_voice']:
                     from calculator import calculate_voice_pricing
                     voice_pricing = calculate_voice_pricing(inputs, country=inputs.get('country', 'India'), has_text_ai=has_text_ai)
                     session['voice_pricing'] = voice_pricing
                     results['voice_pricing'] = voice_pricing
-                else:
                     # Merge voice mandays into total/bot_ui effort
                     voice_mandays = float(voice_pricing.get('voice_mandays', 0) or 0)
                     if voice_mandays:
