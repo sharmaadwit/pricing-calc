@@ -207,8 +207,10 @@ def clear_calc_session(preserve_auth: bool = True):
     """Clear all calculation-related session keys. Optionally preserve auth."""
     keys_to_clear = [
         'chosen_platform_fee', 'pricing_inputs', 'rate_card_platform_fee', 'results',
-        'selected_components', 'user_selections', 'inclusions', 'calculation_id',
-        'bundle_choice', 'manday_rates', 'inputs', 'voice_pricing'
+        'selected_components', 'user_selections', 'inclusions', 'final_inclusions',
+        'final_price_details', 'calculation_id', 'bundle_choice', 'manday_rates',
+        'manday_breakdown', 'dev_cost_breakdown', 'dev_cost_currency', 'inputs',
+        'voice_pricing'
     ]
     for k in keys_to_clear:
         if k in session:
