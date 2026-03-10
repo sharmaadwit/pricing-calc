@@ -1672,6 +1672,7 @@ def index():
             # Persist for SOW downloads and results refresh
             session['final_price_details'] = final_price_details
             session['final_inclusions'] = final_inclusions
+            voice_pricing = results.get('voice_pricing') or session.get('voice_pricing') or {}
             return render_template(
                 'index.html',
                 step='results',
@@ -1679,6 +1680,7 @@ def index():
                 inclusions=final_inclusions,
                 final_inclusions=final_inclusions,
                 results=results,
+                voice_pricing=voice_pricing,
                 bundle_details=bundle_details,
                 expected_invoice_amount=expected_invoice_amount,
                 chosen_platform_fee=chosen_platform_fee,
@@ -1725,6 +1727,7 @@ def index():
         # Persist for SOW downloads and results refresh
         session['final_price_details'] = final_price_details
         session['final_inclusions'] = final_inclusions
+        voice_pricing = results.get('voice_pricing') or session.get('voice_pricing') or {}
         # Record successful results step for funnel analytics
         record_funnel_event('results', inputs=inputs, profile=session.get('profile') or {})
         return render_template(
@@ -1734,6 +1737,7 @@ def index():
             inclusions=final_inclusions,
             final_inclusions=final_inclusions,
             results=results,
+            voice_pricing=voice_pricing,
             bundle_details=bundle_details,
             expected_invoice_amount=expected_invoice_amount,
             chosen_platform_fee=chosen_platform_fee,
@@ -1913,6 +1917,7 @@ def index():
         final_price_details = session.get('final_price_details', {})
         manday_rates = session.get('manday_rates', {})
         dev_cost_currency = session.get('dev_cost_currency', 'INR')
+        voice_pricing = results.get('voice_pricing') or session.get('voice_pricing') or {}
 
         # Always recompute manday rates + text dev cost to avoid stale zeros
         try:
@@ -1967,7 +1972,6 @@ def index():
         try:
             channel_type = inputs.get('channel_type', 'text_only')
             if channel_type in ['voice_only', 'text_voice']:
-                voice_pricing = session.get('voice_pricing') or {}
                 voice_mandays = float(voice_pricing.get('voice_mandays', 0) or 0)
                 if voice_mandays:
                     manday_breakdown = dict(text_manday_breakdown or {})
@@ -1994,6 +1998,7 @@ def index():
             inclusions=final_inclusions,
             final_inclusions=final_inclusions,
             results=results,
+            voice_pricing=voice_pricing,
             inputs=inputs,
             pricing_inputs=pricing_inputs,
             dev_cost_breakdown=dev_cost_breakdown,

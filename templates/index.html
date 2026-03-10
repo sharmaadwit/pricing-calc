@@ -1389,48 +1389,48 @@
               </div>
             </div>
           </div>
-          {% if results and results.voice_pricing %}
+          {% if voice_pricing %}
           <!-- Voice Channel Pricing Card -->
           <div style="background: #fffaf2; border: 1.5px solid #ffd89a; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <h3 style="margin-top:0;">Voice Channel Pricing</h3>
             <table style="border-collapse: collapse; width: 100%; font-size: 1.05em;">
               <tr>
-                <td><b>Voice Development ({{ results.voice_pricing.voice_mandays }} mandays)</b></td>
-                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.voice_dev_cost|int }}</td>
+                <td><b>Voice Development ({{ voice_pricing.voice_mandays }} mandays)</b></td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ voice_pricing.voice_dev_cost|int }}</td>
               </tr>
-              {% if results.voice_pricing.whatsapp_setup_fee and results.voice_pricing.whatsapp_setup_fee > 0 %}
+              {% if voice_pricing.whatsapp_setup_fee and voice_pricing.whatsapp_setup_fee > 0 %}
               <tr>
                 <td><b>WhatsApp Setup Fee</b></td>
-                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.whatsapp_setup_fee|int }}</td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ voice_pricing.whatsapp_setup_fee|int }}</td>
               </tr>
               {% endif %}
               <tr>
                 <td><b>Voice Platform Fee</b></td>
-                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.voice_platform_fee|int }}</td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ voice_pricing.voice_platform_fee|int }}</td>
               </tr>
               <tr>
                 <td><b>PSTN Inbound AI</b></td>
-                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.calling_costs.pstn_inbound_ai|int }}</td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ voice_pricing.calling_costs.pstn_inbound_ai|int }}</td>
               </tr>
               <tr>
                 <td><b>PSTN Outbound AI</b></td>
-                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.calling_costs.pstn_outbound_ai|int }}</td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ voice_pricing.calling_costs.pstn_outbound_ai|int }}</td>
               </tr>
               <tr>
                 <td><b>PSTN Manual C2C</b></td>
-                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.calling_costs.pstn_manual_c2c|int }}</td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ voice_pricing.calling_costs.pstn_manual_c2c|int }}</td>
               </tr>
               <tr>
                 <td><b>WhatsApp Voice Outbound</b></td>
-                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.calling_costs.whatsapp_voice_outbound|int }}</td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ voice_pricing.calling_costs.whatsapp_voice_outbound|int }}</td>
               </tr>
               <tr>
                 <td><b>WhatsApp Voice Inbound</b></td>
-                <td style="text-align:right;">{{ currency_symbol }}{{ results.voice_pricing.calling_costs.whatsapp_voice_inbound|int }}</td>
+                <td style="text-align:right;">{{ currency_symbol }}{{ voice_pricing.calling_costs.whatsapp_voice_inbound|int }}</td>
               </tr>
               <tr style="background: #fff4dc; border-top: 2px solid #ffcc80;">
                 <td><b>Total Voice Cost</b></td>
-                <td style="text-align:right; font-weight: bold; font-size: 1.2em;">{{ currency_symbol }}{{ results.voice_pricing.total_voice_cost|int }}</td>
+                <td style="text-align:right; font-weight: bold; font-size: 1.2em;">{{ currency_symbol }}{{ voice_pricing.total_voice_cost|int }}</td>
               </tr>
             </table>
           </div>
@@ -1438,7 +1438,7 @@
           <div style="background: #eef7ff; border: 1.5px solid #b3d7ff; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <h3 style="margin-top:0;">Combined Totals</h3>
             {% set text_total = results.revenue|default(0) %}
-            {% set voice_total = results.voice_pricing.total_voice_cost|default(0) %}
+            {% set voice_total = voice_pricing.total_voice_cost|default(0) %}
             <div style="display:flex; justify-content: space-between;">
               <div>Text Subtotal</div>
               <div>{{ currency_symbol }}{{ text_total|int }}</div>
