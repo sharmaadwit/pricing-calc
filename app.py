@@ -1007,6 +1007,19 @@ def index():
             # Re-render the pricing page with user input and error
             return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees, voice_rate_card=voice_rate_card)
         print('HANDLER: No discount errors, continuing to results calculation', file=sys.stderr, flush=True)
+        print(
+            "DEBUG: voice inputs snapshot - "
+            f"channel_type={inputs.get('channel_type')}, "
+            f"num_voice_journeys={inputs.get('num_voice_journeys')}, "
+            f"num_voice_apis={inputs.get('num_voice_apis')}, "
+            f"pstn_inbound_ai_minutes={inputs.get('pstn_inbound_ai_minutes')}, "
+            f"pstn_outbound_ai_minutes={inputs.get('pstn_outbound_ai_minutes')}, "
+            f"pstn_manual_minutes={inputs.get('pstn_manual_minutes')}, "
+            f"whatsapp_voice_outbound_minutes={inputs.get('whatsapp_voice_outbound_minutes')}, "
+            f"whatsapp_voice_inbound_minutes={inputs.get('whatsapp_voice_inbound_minutes')}",
+            file=sys.stderr,
+            flush=True
+        )
 
         # Always recalculate platform fee before saving to session['pricing_inputs']
         calculated_platform_fee, fee_currency = calculate_platform_fee(
