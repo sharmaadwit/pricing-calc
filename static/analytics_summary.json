@@ -1,19 +1,19 @@
 {
-  "total_calculations": 697,
+  "total_calculations": 698,
   "unique_users": 28,
-  "total_revenue": 99455804.0,
+  "total_revenue": 99457254.0,
   "countries": 7,
-  "last_updated": "2026-03-16 10:07:00",
+  "last_updated": "2026-03-16 13:15:54",
   "top_users": {
     "Kathyayani Nayak": 19565500.0,
     "Puru Chauhan": 14900000.0,
     "Nikhil Sharma": 14350000.0,
-    "Ankit Kanwara": 10638900.0,
+    "Ankit Kanwara": 10640350.0,
     "Purusottam Singh": 9965000.0
   },
   "country_breakdown": {
     "India": 557,
-    "Africa": 49,
+    "Africa": 50,
     "APAC": 34,
     "LATAM": 23,
     "MENA": 20,
@@ -21,13 +21,13 @@
     "Europe": 4
   },
   "route_breakdown": {
-    "volumes": 635,
+    "volumes": 636,
     "bundle": 62
   },
   "ai_model_counts_global": {
     "nan": 626,
+    "ACE Agent Lite (Qwen-Qwen3-8B)": 29,
     "ACE Agentic pro (gpt-4o-mini)": 28,
-    "ACE Agent Lite (Qwen-Qwen3-8B)": 28,
     "ACE Agent Premium (gpt-4o)": 6,
     "ACE Agentic Pro Experimental (gpt-4.1-mini)": 6,
     "ACE Flash Agent Premium (gemini-2.5-flash)": 1,
@@ -42,7 +42,7 @@
     },
     "Africa": {
       "nan": 42,
-      "ACE Agent Lite (Qwen-Qwen3-8B)": 4,
+      "ACE Agent Lite (Qwen-Qwen3-8B)": 5,
       "ACE Agentic pro (gpt-4o-mini)": 3
     },
     "Europe": {
@@ -72,7 +72,7 @@
   "ai_complexity_counts_global": {
     "nan": 626,
     "complex": 40,
-    "regular": 22,
+    "regular": 23,
     "hard": 9
   },
   "ai_complexity_counts_by_country": {
@@ -84,8 +84,8 @@
     },
     "Africa": {
       "nan": 42,
-      "complex": 4,
-      "regular": 3
+      "regular": 4,
+      "complex": 4
     },
     "Europe": {
       "nan": 4
@@ -337,34 +337,34 @@
     "Africa": {
       "currency": "$",
       "platform_fee": {
-        "average": 1215.3061224489795,
+        "average": 1220.0,
         "min": 850.0,
         "max": 3000.0,
         "median": 1250.0
       },
       "ai_message": {
-        "average": 0.014061224489795918,
+        "average": 0.014079999999999997,
         "min": 0.0035,
         "max": 0.015,
         "median": 0.015,
         "list": 0.015
       },
       "advanced_message": {
-        "average": 0.005510204081632653,
+        "average": 0.005520000000000001,
         "min": 0.0,
         "max": 0.006,
         "median": 0.006,
         "list": 0.006
       },
       "basic_marketing_message": {
-        "average": 0.005848979591836735,
+        "average": 0.005791999999999999,
         "min": 0.003,
         "max": 0.0379,
         "median": 0.003,
         "list": 0.003
       },
       "basic_utility_message": {
-        "average": 0.0033755102040816326,
+        "average": 0.003368,
         "min": 0.003,
         "max": 0.0076,
         "median": 0.003,
@@ -440,7 +440,8 @@
         0.0,
         0.0,
         0.0,
-        1700.0
+        1700.0,
+        1450.0
       ],
       "weekly_revenue_labels": [
         "2025-08-10",
@@ -474,27 +475,28 @@
         "2026-02-22",
         "2026-03-01",
         "2026-03-08",
-        "2026-03-15"
+        "2026-03-15",
+        "2026-03-22"
       ],
       "clv": [
         30150.0,
         24300.0,
         2550.0,
-        1700.0,
-        850.0
+        2300.0,
+        1700.0
       ],
       "clv_labels": [
         "Saathwik",
         "Yashas Reddy",
         "Mark",
-        "Kathyayani Nayak",
-        "Ankit Kanwara"
+        "Ankit Kanwara",
+        "Kathyayani Nayak"
       ],
       "service_usage": [
-        0.689,
-        0.2866,
-        0.27,
-        0.1654
+        0.7039999999999998,
+        0.28959999999999997,
+        0.276,
+        0.1684
       ],
       "service_labels": [
         "ai_price",
@@ -504,7 +506,7 @@
       ],
       "manday_efficiency": [
         850.0,
-        242.85714285714286,
+        219.04761904761904,
         169.85915492957747,
         100.0,
         89.83364140480592
@@ -523,7 +525,7 @@
         6,
         8,
         8,
-        7,
+        8,
         13,
         4
       ],
@@ -539,7 +541,7 @@
         "13:00"
       ],
       "weekday_counts": [
-        14.0,
+        15.0,
         11.0,
         12.0,
         6.0,
@@ -557,7 +559,7 @@
         "Sunday"
       ],
       "route_revenue": [
-        56550.0,
+        58000.0,
         3000.0
       ],
       "route_labels": [
@@ -565,7 +567,7 @@
         "bundle"
       ],
       "route_counts": [
-        48,
+        49,
         1
       ],
       "bot_ui_manday_rate": {
@@ -1872,34 +1874,34 @@
       "South Africa": {
         "currency": "$",
         "platform_fee": {
-          "average": 1281.578947368421,
+          "average": 1290.0,
           "min": 850.0,
           "max": 3000.0,
-          "median": 850.0
+          "median": 1050.0
         },
         "ai_message": {
-          "average": 0.013789473684210527,
+          "average": 0.013850000000000001,
           "min": 0.0035,
           "max": 0.015,
           "median": 0.015,
           "list": 0.015
         },
         "advanced_message": {
-          "average": 0.00536842105263158,
+          "average": 0.0054,
           "min": 0.0,
           "max": 0.006,
           "median": 0.006,
           "list": 0.006
         },
         "basic_marketing_message": {
-          "average": 0.006673684210526317,
+          "average": 0.006490000000000001,
           "min": 0.003,
           "max": 0.0379,
           "median": 0.003,
           "list": 0.003
         },
         "basic_utility_message": {
-          "average": 0.0034842105263157897,
+          "average": 0.0034600000000000004,
           "min": 0.003,
           "max": 0.0076,
           "median": 0.003,
@@ -2479,22 +2481,22 @@
   },
   "funnel": {
     "counts": {
-      "volumes": 322,
+      "volumes": 324,
       "prices": 65,
-      "results": 166,
+      "results": 167,
       "sow_details": 61,
       "sow_download": 27
     },
     "conversion": {
-      "volumes_to_prices": 20.18633540372671,
-      "prices_to_results": 255.38461538461536,
-      "results_to_sow_details": 36.74698795180723,
+      "volumes_to_prices": 20.061728395061728,
+      "prices_to_results": 256.92307692307696,
+      "results_to_sow_details": 36.52694610778443,
       "sow_details_to_sow_download": 44.26229508196721
     }
   },
   "platform_fee_by_country": [
     1147.0588235294117,
-    1215.3061224489795,
+    1220.0,
     1650.0,
     178131.32854578097,
     2624.086956521739,
@@ -2503,7 +2505,7 @@
   ],
   "ai_message_by_country": [
     0.0105,
-    0.014061224489795918,
+    0.014079999999999997,
     0.0267,
     1.254109055655296,
     0.032095652173913046,
