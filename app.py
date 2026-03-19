@@ -274,11 +274,22 @@ def enforce_auth_and_request_guards():
         return redirect(url_for('login'))
 
     if request.method in ['POST', 'PUT', 'DELETE', 'PATCH']:
-        sec_fetch_site = request.headers.get('Sec-Fetch-Site')
-        if sec_fetch_site and sec_fetch_site not in ['same-origin', 'same-site', 'none']:
-            abort(403)
-        if not _is_same_origin():
-            abort(403)
+        if path == '/login':
+            logger.info(
+                "AUTH DEBUG: login POST headers origin=%s referer=%s sec_fetch_site=%s has_cookie=%s csrf_form=%s csrf_header=%s",
+                request.headers.get('Origin'),
+                request.headers.get('Referer'),
+                request.headers.get('Sec-Fetch-Site'),
+                bool(request.cookies.get(app.config.get('SESSION_COOKIE_NAME', 'session'))),
+                bool(request.form.get('csrf_token')),
+                bool(request.headers.get('X-CSRF-Token')),
+            )
+        if path != '/login':
+            sec_fetch_site = request.headers.get('Sec-Fetch-Site')
+            if sec_fetch_site and sec_fetch_site not in ['same-origin', 'same-site', 'none']:
+                abort(403)
+            if not _is_same_origin():
+                abort(403)
         if not _validate_csrf():
             abort(403)
         if not _check_rate_limit():
