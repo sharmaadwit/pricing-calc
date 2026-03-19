@@ -228,7 +228,7 @@ def _is_same_origin():
     if referer and referer.startswith(host_url):
         return True
     sec_fetch_site = request.headers.get('Sec-Fetch-Site')
-    if not origin and not referer and sec_fetch_site in ['same-origin', 'same-site', 'none']:
+    if not origin and not referer and (not sec_fetch_site or sec_fetch_site in ['same-origin', 'same-site', 'none']):
         return True
     return False
 
