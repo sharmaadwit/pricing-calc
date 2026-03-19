@@ -9,6 +9,7 @@ import sys
 import re
 import secrets
 import time
+from urllib.parse import urlparse
 from collections import Counter, defaultdict
 import statistics
 from flask_sqlalchemy import SQLAlchemy
@@ -220,13 +221,23 @@ def _get_client_ip():
     return request.remote_addr or 'unknown'
 
 def _is_same_origin():
-    host_url = request.host_url.rstrip('/')
-    origin = (request.headers.get('Origin') or '').rstrip('/')
+    host = request.host
+    origin = request.headers.get('Origin') or ''
     referer = request.headers.get('Referer') or ''
-    if origin and origin.startswith(host_url):
+
+    def _host_from(url):
+        try:
+            return urlparse(url).netloc
+        except Exception:
+            return ''
+
+    origin_host = _host_from(origin) if origin else ''
+    referer_host = _host_from(referer) if referer else ''
+    if origin_host and origin_host == host:
         return True
-    if referer and referer.startswith(host_url):
+    if referer_host and referer_host == host:
         return True
+
     sec_fetch_site = request.headers.get('Sec-Fetch-Site')
     if not origin and not referer and (not sec_fetch_site or sec_fetch_site in ['same-origin', 'same-site', 'none']):
         return True
