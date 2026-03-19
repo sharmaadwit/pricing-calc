@@ -227,6 +227,9 @@ def _is_same_origin():
         return True
     if referer and referer.startswith(host_url):
         return True
+    sec_fetch_site = request.headers.get('Sec-Fetch-Site')
+    if not origin and not referer and sec_fetch_site in ['same-origin', 'same-site', 'none']:
+        return True
     return False
 
 def _rate_limit_key():
