@@ -2,11 +2,13 @@
 # This app provides a pricing calculator for messaging services with dynamic inclusions, platform fees, and analytics.
 # Key features: dynamic inclusions, robust error handling, session management, and professional UI.
 
-from flask import Flask, render_template, request, session, redirect, url_for, flash, send_file
+from flask import Flask, render_template, request, session, redirect, url_for, flash, send_file, abort
 from calculator import calculate_pricing, get_suggested_price, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES, calculate_total_mandays_breakdown, get_committed_amount_rate_for_volume, get_lowest_tier_price
 import os
 import sys
 import re
+import secrets
+import time
 from collections import Counter, defaultdict
 import statistics
 from flask_sqlalchemy import SQLAlchemy
@@ -169,7 +171,10 @@ def calculate_safe_overage_price(rate_card_price, meta_cost, markup_multiplier=1
     return round(safe_overage_price, 4)
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Needed for session
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your_secret_key')  # Needed for session
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('RAILWAY_ENVIRONMENT') == 'production' or os.environ.get('FLASK_ENV') == 'production'
 
 # SOW beta allowlist – only these emails see the Generate SOW (beta) option
 SOW_BETA_EMAILS = {
@@ -202,6 +207,80 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logger.info("Flask app logger initialized")
+
+# --- Request security helpers ---
+RATE_LIMIT_WINDOW_SECONDS = 60
+RATE_LIMIT_MAX_REQUESTS = 120
+_rate_limit_bucket = {}
+
+def _get_client_ip():
+    forwarded_for = request.headers.get('X-Forwarded-For', '')
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()
+    return request.remote_addr or 'unknown'
+
+def _is_same_origin():
+    host_url = request.host_url.rstrip('/')
+    origin = (request.headers.get('Origin') or '').rstrip('/')
+    referer = request.headers.get('Referer') or ''
+    if origin and origin.startswith(host_url):
+        return True
+    if referer and referer.startswith(host_url):
+        return True
+    return False
+
+def _rate_limit_key():
+    return f"{_get_client_ip()}:{request.path}"
+
+def _check_rate_limit():
+    now = time.time()
+    key = _rate_limit_key()
+    window_start = now - RATE_LIMIT_WINDOW_SECONDS
+    entries = _rate_limit_bucket.get(key, [])
+    entries = [ts for ts in entries if ts >= window_start]
+    if len(entries) >= RATE_LIMIT_MAX_REQUESTS:
+        return False
+    entries.append(now)
+    _rate_limit_bucket[key] = entries
+    return True
+
+def _get_csrf_token():
+    token = session.get('csrf_token')
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session['csrf_token'] = token
+    return token
+
+def _validate_csrf():
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token')
+    return token and token == session.get('csrf_token')
+
+@app.context_processor
+def inject_csrf_token():
+    return {'csrf_token': _get_csrf_token()}
+
+@app.before_request
+def enforce_auth_and_request_guards():
+    path = request.path or '/'
+    if path.startswith('/static/'):
+        return None
+
+    if path in ['/health', '/ping', '/login']:
+        pass
+    elif not session.get('authenticated'):
+        return redirect(url_for('login'))
+
+    if request.method in ['POST', 'PUT', 'DELETE', 'PATCH']:
+        sec_fetch_site = request.headers.get('Sec-Fetch-Site')
+        if sec_fetch_site and sec_fetch_site not in ['same-origin', 'same-site', 'none']:
+            abort(403)
+        if not _is_same_origin():
+            abort(403)
+        if not _validate_csrf():
+            abort(403)
+        if not _check_rate_limit():
+            abort(429)
+    return None
 # --- Session helpers ---
 def clear_calc_session(preserve_auth: bool = True):
     """Clear all calculation-related session keys. Optionally preserve auth."""

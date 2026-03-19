@@ -101,6 +101,7 @@
         {% endif %}
 
         <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <div class="section">
                 <h2>1. Business Objectives Discovered</h2>
                 <label for="business_objective">Business Objective</label>

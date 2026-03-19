@@ -62,6 +62,7 @@
           {% endif %}
         {% endwith %}
         <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <label for="password">Password:</label>
             <input type="password" name="password" id="password" required autofocus>
             <input type="submit" value="Login">

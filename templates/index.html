@@ -443,6 +443,7 @@
     <!-- Profile Step -->
     {% if step == 'profile' %}
             <form method="post" id="profile-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <input type="hidden" name="step" value="profile">
                 <div class="form-section">
                     <h2>Start: Your Details</h2>
@@ -494,6 +495,7 @@
     <!-- Volumes Form Section -->
     {% if step == 'volumes' %}
     <form method="post" id="volumes-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="step" value="volumes">
                 
                 <div class="form-group">
@@ -1128,6 +1130,7 @@
     <!-- Prices Form Section -->
     {% if step == 'prices' %}
     <form method="post" id="prices-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="step" value="prices">
         <!-- One Time Dev Prices Review (read-only, not editable) -->
         <div style="background: #f5f5fa; border: 1px solid #bbaadd; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
@@ -1254,6 +1257,7 @@
     {% set all_volumes_zero = (inputs.get('ai_volume', 0)|float == 0 and inputs.get('advanced_volume', 0)|float == 0 and inputs.get('basic_marketing_volume', 0)|float == 0 and inputs.get('basic_utility_volume', 0)|float == 0) %}
     {% if all_volumes_zero %}
     <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <h2>Enter Messaging Bundle Commitment</h2>
         <label>Messaging Bundle Commitment ({{ currency_symbol }}):</label>
         <input type="text" name="committed_amount" class="comma-number" value="{{ inputs.get('committed_amount', '') }}"><br><br>

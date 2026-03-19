@@ -13,6 +13,7 @@
 {% if not authorized %}
   <h2>Enter Analytics Access Keyword</h2>
   <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="password" name="keyword" placeholder="Secret keyword" required>
     <input type="submit" value="Access Analytics">
   </form>
