@@ -256,7 +256,8 @@ def _get_csrf_token():
 
 def _validate_csrf():
     token = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token')
-    return token and token == session.get('csrf_token')
+    session_token = session.get('csrf_token')
+    return token and session_token and token == session_token
 
 @app.context_processor
 def inject_csrf_token():
@@ -285,14 +286,18 @@ def enforce_auth_and_request_guards():
                 bool(request.headers.get('X-CSRF-Token')),
             )
         if path == '/profile-email':
+            token = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token')
+            session_token = session.get('csrf_token')
             logger.info(
-                "AUTH DEBUG: profile-email POST headers origin=%s referer=%s sec_fetch_site=%s has_cookie=%s csrf_form=%s csrf_header=%s",
+                "AUTH DEBUG: profile-email POST headers origin=%s referer=%s sec_fetch_site=%s has_cookie=%s csrf_form=%s csrf_header=%s csrf_session=%s csrf_match=%s",
                 request.headers.get('Origin'),
                 request.headers.get('Referer'),
                 request.headers.get('Sec-Fetch-Site'),
                 bool(request.cookies.get(app.config.get('SESSION_COOKIE_NAME', 'session'))),
                 bool(request.form.get('csrf_token')),
                 bool(request.headers.get('X-CSRF-Token')),
+                bool(session_token),
+                bool(token and session_token and token == session_token),
             )
         if path != '/login':
             sec_fetch_site = request.headers.get('Sec-Fetch-Site')
