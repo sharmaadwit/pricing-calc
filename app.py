@@ -10,6 +10,7 @@ import re
 import secrets
 import time
 from urllib.parse import urlparse
+from werkzeug.middleware.proxy_fix import ProxyFix
 from collections import Counter, defaultdict
 import statistics
 from flask_sqlalchemy import SQLAlchemy
@@ -178,6 +179,9 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('RAILWAY_ENVIRONMENT') == 'production' or os.environ.get('FLASK_ENV') == 'production'
 
+# Railway / reverse proxy: correct Host and scheme (url_for, Origin checks)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
+
 # SOW beta allowlist – only these emails see the Generate SOW (beta) option
 SOW_BETA_EMAILS = {
     'adwit.sharma@gupshup.io',
@@ -269,7 +273,9 @@ def _get_csrf_token():
 def _validate_csrf():
     token = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token')
     session_token = session.get('csrf_token')
-    return token and session_token and token == session_token
+    if not token or not session_token:
+        return False
+    return secrets.compare_digest(str(token), str(session_token))
 
 @app.context_processor
 def inject_csrf_token():
@@ -309,16 +315,29 @@ def enforce_auth_and_request_guards():
                 bool(request.form.get('csrf_token')),
                 bool(request.headers.get('X-CSRF-Token')),
                 bool(session_token),
-                bool(token and session_token and token == session_token),
+                bool(token and session_token and secrets.compare_digest(str(token), str(session_token))),
             )
-        if path != '/login':
+        if path == '/login':
+            csrf_ok = _validate_csrf()
+            origin_ok = _is_same_origin()
+            if not (csrf_ok or origin_ok):
+                logger.warning(
+                    "login POST rejected 403: csrf_ok=%s origin_ok=%s host=%s origin=%s referer=%s",
+                    csrf_ok,
+                    origin_ok,
+                    request.host,
+                    request.headers.get('Origin'),
+                    request.headers.get('Referer'),
+                )
+                abort(403)
+        else:
             sec_fetch_site = request.headers.get('Sec-Fetch-Site')
             if sec_fetch_site and sec_fetch_site not in ['same-origin', 'same-site', 'none']:
                 abort(403)
             if not _is_same_origin():
                 abort(403)
-        if not _validate_csrf():
-            abort(403)
+            if not _validate_csrf():
+                abort(403)
         if not _check_rate_limit():
             abort(429)
     return None
@@ -617,11 +636,10 @@ def login():
         else:
             flash('Incorrect password. Please try again.', 'error')
     else:
-        # Reset session fully on GET to handle relogin or stale sessions
-        try:
-            session.clear()
-        except Exception:
-            pass
+        # Logout + fresh calc, but keep csrf_token stable so HTML and cookie stay aligned
+        # across refreshes, multiple tabs, and prefetch (full clear() caused CSRF 403s).
+        session.pop('authenticated', None)
+        clear_calc_session(preserve_auth=True)
     return render_template('login.html')
 
 
