@@ -125,3 +125,8 @@ celerybeat.pid
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Local voice E2E report (scripts/voice_e2e_report.py)
+e2e_output/
+e2e_analytics.sqlite
+voice_e2e_results.html

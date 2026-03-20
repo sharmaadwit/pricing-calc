@@ -461,6 +461,16 @@ VOICE_DEV_EFFORT = {
     'whatsapp_voice_other': 5,
 }
 
+# Leverage (Voice AI partner) — development pass-through in INR; margin applied in calculator
+LEVERAGE_VOICE_DEV_COSTS_INR = {
+    'simple': 25000,
+    'medium': 50000,
+    'complex': 125000,
+}
+LEVERAGE_VOICE_ADDITIONAL_LANGUAGE_COST_INR = 25000
+# Client price = partner_cost * (1 + LEVERAGE_VOICE_BUILD_MARGIN)
+LEVERAGE_VOICE_BUILD_MARGIN = 0.50
+
 AED_TO_USD = 0.2723
 
 # PSTN Calling Charges (Knowlarity)
@@ -665,6 +675,67 @@ def get_whatsapp_voice_tier(country, minutes, region=None):
 def get_whatsapp_voice_rate(country, minutes, call_type='outbound', region=None):
     tier = get_whatsapp_voice_tier(country, minutes, region=region)
     return tier[call_type]
+
+
+def build_voice_rate_card_for_prices(inputs, country=None):
+    """
+    Structure for the prices step UI: PSTN bundled/overage per minute and WhatsApp per-minute
+    rates, aligned with calculator.calculate_voice_calling_costs defaults
+    (base Knowlarity/MENA rate + PSTN voice-AI add-on when applicable).
+    """
+    chan = (inputs or {}).get('channel_type', 'text_only')
+    if chan not in ('voice_only', 'text_voice'):
+        return None
+
+    def _pv(x):
+        try:
+            return float(str(x).replace(',', '')) if x not in (None, '') else 0.0
+        except Exception:
+            return 0.0
+
+    c = (country or (inputs or {}).get('country') or 'India').strip()
+    region = (inputs or {}).get('region')
+    wa_out = _pv((inputs or {}).get('whatsapp_voice_outbound_minutes', 0))
+    wa_in = _pv((inputs or {}).get('whatsapp_voice_inbound_minutes', 0))
+    total_wa_min = wa_out + wa_in
+    wa_addon = 0.0
+    if total_wa_min > 0 and (inputs or {}).get('voice_ai_enabled', 'No') == 'Yes':
+        wt = get_whatsapp_voice_tier(c, total_wa_min, region=region)
+        wa_addon = float(wt.get('voice_ai_addon_per_min') or 0)
+    wa_out_rate = float(get_whatsapp_voice_rate(c, total_wa_min, 'outbound', region=region)) + wa_addon
+    wa_in_rate = float(get_whatsapp_voice_rate(c, total_wa_min, 'inbound', region=region)) + wa_addon
+
+    pstn_block = None
+    pstn_rates = get_pstn_rates(c, region)
+    if pstn_rates:
+        in_m = _pv((inputs or {}).get('pstn_inbound_ai_minutes', 0))
+        out_m = _pv((inputs or {}).get('pstn_outbound_ai_minutes', 0))
+        man_m = _pv((inputs or {}).get('pstn_manual_minutes', 0))
+        total_pstn_min = in_m + out_m + man_m
+        pstn_ai_addon = 0.0
+        if total_pstn_min > 0 and (inputs or {}).get('voice_ai_enabled', 'No') == 'Yes':
+            pt = get_whatsapp_voice_tier(c, total_pstn_min, region=region)
+            pstn_ai_addon = float(pt.get('voice_ai_addon_per_min') or 0)
+
+        def _pair(base):
+            r = float(base) + pstn_ai_addon
+            return {'bundled': r, 'overage': r}
+
+        pstn_block = {
+            'inbound': _pair(pstn_rates['inbound']),
+            'outbound': _pair(pstn_rates['outbound']),
+            'manual': _pair(pstn_rates['manual_c2c']),
+        }
+
+    return {
+        'pstn': pstn_block,
+        'whatsapp': {
+            'outbound': wa_out_rate,
+            'inbound': wa_in_rate,
+            'total_minutes': total_wa_min,
+        },
+    }
+
 
 # =============================================================================
 # AI AGENT PRICING (per LLM call)

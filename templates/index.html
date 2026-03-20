@@ -832,6 +832,33 @@
                     {% set pstn_enabled = inputs.get('country') in ['India', 'MENA'] %}
                     <h2>Voice Channel Configuration</h2>
                     <div class="form-group">
+                        <label for="voice_partner">Voice AI delivery:</label>
+                        <select name="voice_partner" id="voice_partner">
+                            <option value="gupshup_native" {% if inputs and (inputs.get('voice_partner') or 'gupshup_native') == 'gupshup_native' %}selected{% endif %}>Gupshup native</option>
+                            {% if not inputs or inputs.get('country', 'India') == 'India' %}
+                            <option value="leverage" {% if inputs and inputs.get('voice_partner') == 'leverage' %}selected{% endif %}>Leverage (partner)</option>
+                            {% endif %}
+                        </select>
+                        <div class="help-text">Gupshup native uses mandays and the existing voice rate card. Leverage uses partner journey pricing with margin on one-time build. Usage and channel rates are unchanged.</div>
+                    </div>
+                    <div class="form-group" id="voice-leverage-dev-fields" style="display: none;">
+                        <label for="voice_leverage_complexity">Journey complexity (Leverage):</label>
+                        <select name="voice_leverage_complexity" id="voice_leverage_complexity">
+                            <option value="" {% if not inputs or not inputs.get('voice_leverage_complexity') %}selected{% endif %}>— Select —</option>
+                            <option value="simple" {% if inputs and inputs.get('voice_leverage_complexity') == 'simple' %}selected{% endif %}>Simple (₹25,000 partner cost)</option>
+                            <option value="medium" {% if inputs and inputs.get('voice_leverage_complexity') == 'medium' %}selected{% endif %}>Medium (₹50,000 partner cost)</option>
+                            <option value="complex" {% if inputs and inputs.get('voice_leverage_complexity') == 'complex' %}selected{% endif %}>Complex (₹125,000 partner cost)</option>
+                        </select>
+                        <div class="form-group" style="margin-top: 12px;">
+                            <label for="voice_leverage_extra_language">Additional language (Leverage, +₹25,000 partner cost):</label>
+                            <select name="voice_leverage_extra_language" id="voice_leverage_extra_language">
+                                <option value="No" {% if inputs and inputs.get('voice_leverage_extra_language', 'No') == 'No' %}selected{% endif %}>No</option>
+                                <option value="Yes" {% if inputs and inputs.get('voice_leverage_extra_language') == 'Yes' %}selected{% endif %}>Yes</option>
+                            </select>
+                        </div>
+                        <p style="margin-top: 10px; font-size: 0.95em; color: #555;"><em>Per-minute voice stack pricing and channel charges follow the existing calculator. Voice model tier selection: <strong>coming soon</strong>.</em></p>
+                    </div>
+                    <div class="form-group">
                         <label for="voice_ai_enabled">Voice AI Enabled:</label>
                         <select name="voice_ai_enabled" id="voice_ai_enabled">
                             <option value="No" {% if inputs and inputs.voice_ai_enabled == 'No' %}selected{% endif %}>No</option>
@@ -839,6 +866,7 @@
                         </select>
                         <div class="help-text">If Text AI is selected in Platform Fee, Voice AI platform fee is waived.</div>
                     </div>
+                    <div id="voice-native-dev-fields">
                     <div class="form-group">
                         <label for="num_voice_journeys">Number of Voice Journeys:</label>
                         <input type="number" name="num_voice_journeys" id="num_voice_journeys" min="0" value="{{ inputs.get('num_voice_journeys', '0') }}">
@@ -850,6 +878,7 @@
                     <div class="form-group">
                         <label for="num_additional_voice_languages">Additional Languages (above Hindi/English):</label>
                         <input type="number" name="num_additional_voice_languages" id="num_additional_voice_languages" min="0" value="{{ inputs.get('num_additional_voice_languages', '0') }}">
+                    </div>
                     </div>
                     {% if pstn_enabled %}
                     <div class="form-group">
@@ -1055,6 +1084,16 @@
             e.preventDefault();
             return false;
         }
+        var voicePartnerEl = document.getElementById('voice_partner');
+        var leverageComplexityEl = document.getElementById('voice_leverage_complexity');
+        if ((channelVal === 'voice_only' || channelVal === 'text_voice') && voicePartnerEl && voicePartnerEl.value === 'leverage') {
+            if (!leverageComplexityEl || !leverageComplexityEl.value) {
+                alert('Please select Journey Complexity for Leverage Voice AI.');
+                if (leverageComplexityEl) leverageComplexityEl.focus();
+                e.preventDefault();
+                return false;
+            }
+        }
     });
     // Channel toggle for Text vs Voice fields
     function enforceVoiceCountryConstraint() {
@@ -1107,6 +1146,50 @@
             if (smartCpaasGroup) { smartCpaasGroup.style.display = ''; }
             if (humanAgentsGroup) { humanAgentsGroup.style.display = ''; }
         }
+        syncVoicePartnerOptionsForCountry();
+    }
+    function toggleVoicePartnerFields() {
+        var channel = document.getElementById('channel_type') ? document.getElementById('channel_type').value : 'text_only';
+        var partnerEl = document.getElementById('voice_partner');
+        var levBlock = document.getElementById('voice-leverage-dev-fields');
+        var nativeBlock = document.getElementById('voice-native-dev-fields');
+        var levComplexity = document.getElementById('voice_leverage_complexity');
+        var levLang = document.getElementById('voice_leverage_extra_language');
+        var vj = document.getElementById('num_voice_journeys');
+        var va = document.getElementById('num_voice_apis');
+        var vl = document.getElementById('num_additional_voice_languages');
+        if (!partnerEl || !levBlock || !nativeBlock) return;
+        if (channel !== 'voice_only' && channel !== 'text_voice') return;
+        var isLev = partnerEl.value === 'leverage';
+        levBlock.style.display = isLev ? '' : 'none';
+        nativeBlock.style.display = isLev ? 'none' : '';
+        if (levComplexity) {
+            levComplexity.disabled = !isLev;
+            levComplexity.required = isLev;
+        }
+        if (levLang) levLang.disabled = !isLev;
+        if (vj) vj.disabled = isLev;
+        if (va) va.disabled = isLev;
+        if (vl) vl.disabled = isLev;
+    }
+    function syncVoicePartnerOptionsForCountry() {
+        var countrySel = document.getElementById('country-select');
+        var sel = document.getElementById('voice_partner');
+        if (!countrySel || !sel) return;
+        var country = countrySel.value;
+        var levOpt = Array.from(sel.options).find(function(o) { return o.value === 'leverage'; });
+        if (country !== 'India') {
+            if (levOpt) levOpt.remove();
+            if (sel.value === 'leverage') sel.value = 'gupshup_native';
+        } else {
+            if (!levOpt) {
+                var o = document.createElement('option');
+                o.value = 'leverage';
+                o.textContent = 'Leverage (partner)';
+                sel.appendChild(o);
+            }
+        }
+        toggleVoicePartnerFields();
     }
     document.addEventListener('DOMContentLoaded', function() {
         var channelSel = document.getElementById('channel_type');
@@ -1116,7 +1199,13 @@
         var wsCommerceEl = document.getElementById('num_ai_workspace_commerce_price');
         var wsFaqEl = document.getElementById('num_ai_workspace_faq_price');
         if (channelSel) channelSel.addEventListener('change', toggleChannelFields);
-        if (countrySel) countrySel.addEventListener('change', toggleChannelFields);
+        if (countrySel) {
+            countrySel.addEventListener('change', toggleChannelFields);
+            countrySel.addEventListener('change', syncVoicePartnerOptionsForCountry);
+        }
+        var voicePartnerSel = document.getElementById('voice_partner');
+        if (voicePartnerSel) voicePartnerSel.addEventListener('change', toggleVoicePartnerFields);
+        syncVoicePartnerOptionsForCountry();
         if (aiModuleEl) aiModuleEl.addEventListener('change', toggleAiAgentFields);
         if (aiVolumeEl) aiVolumeEl.addEventListener('input', toggleAiAgentFields);
         if (wsCommerceEl) wsCommerceEl.addEventListener('input', enforceAiModuleForWorkspace);
@@ -1145,28 +1234,41 @@
                 <li>No of AI Workspace - Commerce: <b>{{ inputs.get('num_ai_workspace_commerce_price', '0') }}</b></li>
                 <li>No of AI Workspace - FAQ: <b>{{ inputs.get('num_ai_workspace_faq_price', '0') }}</b></li>
                 <li>Voice Notes: <b>{{ inputs.get('voice_notes_price', 'No') }}</b>{% if inputs.get('voice_notes_price') == 'Yes' and inputs.get('voice_notes_model') %} - {{ inputs.get('voice_notes_model') }}{% endif %}</li>
+                {% if inputs.get('channel_type') in ['voice_only', 'text_voice'] %}
+                <li>Voice AI delivery: <b>{% if inputs.get('voice_partner') == 'leverage' %}Leverage (partner){% else %}Gupshup native{% endif %}</b>
+                  {% if inputs.get('voice_partner') == 'leverage' %}
+                    · Complexity: <b>{{ {'simple':'Simple','medium':'Medium','complex':'Complex'}.get(inputs.get('voice_leverage_complexity') or '', '—') }}</b>
+                    · Extra language: <b>{{ inputs.get('voice_leverage_extra_language', 'No') }}</b>
+                  {% endif %}
+                </li>
+                {% endif %}
             </ul>
         </div>
         <h2>Rate Card Pricing</h2>
-        <p>Review and adjust the suggested prices if needed. These prices will be used to calculate your final pricing.</p>
+        <p>Review values if needed. You cannot submit prices <strong>below</strong> the rate card minimums shown (platform fee, markups, manday rates{% if voice_rate_card %}, voice per-minute rates{% endif %}{% if inputs.get('voice_notes_price') == 'Yes' %}, voice notes{% endif %}).</p>
         <!-- Platform Fee Card -->
         <div style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
             <h3 style="margin-top:0;">Platform Fee</h3>
             <label>Platform Fee (editable):</label>
             {{ currency_symbol }}<input type="text" name="platform_fee" class="comma-number" value="{{ platform_fee }}" required><br>
-            <small>This is the calculated platform fee based on your selections. You can edit it if needed.</small>
+            <small>Minimum (rate card): {{ currency_symbol }}{{ (rate_card_platform_fee if rate_card_platform_fee is defined else platform_fee)|float|int }} — cannot go lower.</small>
         </div>
         <!-- Message Rates Card -->
         <div style="background: #fce4ec; border: 1px solid #f8bbd0; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
             <h3 style="margin-top:0;">Message Markup Rates</h3>
+            <p style="font-size:0.92em;color:#555;margin-top:0;">Each field must be at least the default rate card markup (pre-filled below).</p>
             <label>AI Message Markup Rate Card:</label>
-            {{ currency_symbol }}<input type="text" name="ai_price" class="comma-number" value="{{ suggested.ai_price }}" required><br><br>
+            {{ currency_symbol }}<input type="text" name="ai_price" class="comma-number" value="{{ suggested.ai_price }}" required><br>
+            <small>Minimum: {{ currency_symbol }}{{ suggested.ai_price }} (rate card)</small><br><br>
             <label>Advanced Message Markup Rate Card:</label>
-            {{ currency_symbol }}<input type="text" name="advanced_price" class="comma-number" value="{{ suggested.advanced_price }}" required><br><br>
+            {{ currency_symbol }}<input type="text" name="advanced_price" class="comma-number" value="{{ suggested.advanced_price }}" required><br>
+            <small>Minimum: {{ currency_symbol }}{{ suggested.advanced_price }} (rate card)</small><br><br>
             <label>Basic Marketing Message Markup Rate Card:</label>
-            {{ currency_symbol }}<input type="text" name="basic_marketing_price" class="comma-number" value="{{ suggested.basic_marketing_price }}" required><br><br>
+            {{ currency_symbol }}<input type="text" name="basic_marketing_price" class="comma-number" value="{{ suggested.basic_marketing_price }}" required><br>
+            <small>Minimum: {{ currency_symbol }}{{ suggested.basic_marketing_price }} (rate card)</small><br><br>
             <label>Basic Utility/Authentication Message Markup Rate Card:</label>
             {{ currency_symbol }}<input type="text" name="basic_utility_price" class="comma-number" value="{{ suggested.basic_utility_price }}" required>
+            <br><small>Minimum: {{ currency_symbol }}{{ suggested.basic_utility_price }} (rate card)</small>
         </div>
 
         {% if voice_rate_card %}
@@ -1216,16 +1318,18 @@
             <h3 style="margin-top:0;">Voice Notes Pricing</h3>
             <label>Voice Notes Rate (per minute):</label>
             {{ currency_symbol }}<input type="text" name="voice_notes_rate" class="comma-number" value="{{ suggested.voice_notes_rate if suggested and suggested.get('voice_notes_rate') else '' }}" required><br>
-            <small>Rate for {{ inputs.get('voice_notes_model') }} - {{ currency_symbol }}{{ suggested.voice_notes_rate if suggested and suggested.get('voice_notes_rate') else '0.00' }}/min</small>
+            <small>Model: {{ inputs.get('voice_notes_model') }} — minimum (rate card): {{ currency_symbol }}{{ suggested.voice_notes_rate if suggested and suggested.get('voice_notes_rate') else '0.00' }}/min</small>
         </div>
         {% endif %}
         <!-- Manday Rates Card -->
         <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
             <h3 style="margin-top:0;">Manday Rates</h3>
             <label>Bot/UI Manday Rate:</label>
-            <input type="text" name="bot_ui_manday_rate" id="bot_ui_manday_rate" min="0" class="comma-number" value="{{ '{:,}'.format(suggested.get('bot_ui_manday_rate')|float) if suggested and suggested.get('bot_ui_manday_rate') not in (None, '') else '' }}" required><br><br>
+            <input type="text" name="bot_ui_manday_rate" id="bot_ui_manday_rate" min="0" class="comma-number" value="{{ '{:,}'.format(suggested.get('bot_ui_manday_rate')|float) if suggested and suggested.get('bot_ui_manday_rate') not in (None, '') else '' }}" required><br>
+            <small>Minimum: {{ '{:,}'.format(suggested.get('bot_ui_manday_rate')|float) if suggested and suggested.get('bot_ui_manday_rate') not in (None, '') else '' }} (default rate card)</small><br><br>
             <label>Custom/AI Manday Rate:</label>
             <input type="text" name="custom_ai_manday_rate" id="custom_ai_manday_rate" min="0" class="comma-number" value="{{ '{:,}'.format(suggested.get('custom_ai_manday_rate')|float) if suggested and suggested.get('custom_ai_manday_rate') not in (None, '') else '' }}" required>
+            <br><small>Minimum: {{ '{:,}'.format(suggested.get('custom_ai_manday_rate')|float) if suggested and suggested.get('custom_ai_manday_rate') not in (None, '') else '' }} (default rate card)</small>
         </div>
         <input type="submit" value="Calculate Results">
     </form>
@@ -1450,6 +1554,16 @@
           <!-- Voice Development Card (One-Time) -->
           <div style="background: #fffaf2; border: 1.5px solid #ffd89a; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <h3 style="margin-top:0;">Voice Development (One-Time)</h3>
+            {% if voice_pricing.get('voice_partner_model') == 'leverage' %}
+            <div style="margin-top: 6px; font-size: 0.98em; color: #444;">
+              <b>Voice AI scope:</b> {{ {'simple':'Simple','medium':'Medium','complex':'Complex'}.get(inputs.get('voice_leverage_complexity') or '', '—') }} complexity
+              {% if inputs.get('voice_leverage_extra_language') == 'Yes' %} · <b>Additional language</b>{% endif %}
+            </div>
+            <table style="border-collapse: collapse; width: 100%; font-size: 1.05em; margin-top: 12px;">
+              <tr><td><b>One-time voice development</b></td><td style="text-align:right; font-weight: bold;">{{ currency_symbol }}{{ '{:,.0f}'.format(voice_pricing.voice_dev_cost|default(0)|float) }}</td></tr>
+            </table>
+            <p style="margin-top: 10px; font-size: 0.92em; color: #666;">Usage and channel rates follow the voice rate card.</p>
+            {% else %}
             {% set voice_build_cost = voice_pricing.voice_dev_cost|default(0) %}
             {% set voice_ba_cost = voice_build_cost * 0.15 %}
             {% set voice_qa_cost = voice_build_cost * 0.10 %}
@@ -1475,6 +1589,7 @@
                 'Total One Time Voice Dev Cost (with BA, QA, PM)'
               ) }}
             </div>
+            {% endif %}
           </div>
 
           <!-- Voice Monthly Fees Card -->

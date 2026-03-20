@@ -16,6 +16,9 @@ from pricing_config import (
     committed_amount_slabs,
     VOICE_DEV_EFFORT,
     WHATSAPP_VOICE_CHARGES,
+    LEVERAGE_VOICE_DEV_COSTS_INR,
+    LEVERAGE_VOICE_ADDITIONAL_LANGUAGE_COST_INR,
+    LEVERAGE_VOICE_BUILD_MARGIN,
     get_whatsapp_voice_tier,
     get_whatsapp_voice_rate,
     get_pstn_rates,
@@ -391,6 +394,11 @@ def calculate_voice_dev_mandays(inputs):
     """
     Calculate total mandays for voice development work based on inputs and VOICE_DEV_EFFORT.
     """
+    channel = (inputs.get('channel_type') or 'text_only').strip()
+    country_in = (inputs.get('country') or '').strip()
+    vp = (inputs.get('voice_partner') or 'gupshup_native').strip().lower()
+    if channel in ('voice_only', 'text_voice') and vp == 'leverage' and country_in == 'India':
+        return 0.0
     total_mandays = 0
     try:
         num_voice_journeys = int(inputs.get('num_voice_journeys', 0) or 0)
@@ -558,6 +566,35 @@ def calculate_voice_pricing(inputs, country='India', has_text_ai=False):
     High-level aggregator for voice pricing: development, platform, calling.
     Returns a dict with mandays, cost breakdown and total.
     """
+    voice_partner = (inputs.get('voice_partner') or 'gupshup_native').strip().lower()
+    if voice_partner == 'leverage' and country != 'India':
+        voice_partner = 'gupshup_native'
+    voice_platform_fee = calculate_voice_platform_fee(inputs, has_text_ai)
+    calling_costs = calculate_voice_calling_costs(inputs, country)
+
+    if voice_partner == 'leverage' and country == 'India':
+        complexity = (inputs.get('voice_leverage_complexity') or 'simple').strip().lower()
+        if complexity not in LEVERAGE_VOICE_DEV_COSTS_INR:
+            complexity = 'simple'
+        partner_journey_cost = float(LEVERAGE_VOICE_DEV_COSTS_INR.get(complexity, 0))
+        partner_language_cost = 0.0
+        if (inputs.get('voice_leverage_extra_language') or 'No') == 'Yes':
+            partner_language_cost = float(LEVERAGE_VOICE_ADDITIONAL_LANGUAGE_COST_INR)
+        voice_leverage_partner_cost = partner_journey_cost + partner_language_cost
+        voice_dev_cost = voice_leverage_partner_cost * (1.0 + float(LEVERAGE_VOICE_BUILD_MARGIN))
+        total_voice_cost = voice_dev_cost + voice_platform_fee + calling_costs['total']
+        return {
+            'voice_partner_model': 'leverage',
+            'voice_mandays': 0.0,
+            'voice_dev_cost': voice_dev_cost,
+            'voice_leverage_partner_cost': voice_leverage_partner_cost,
+            'voice_leverage_build_margin': float(LEVERAGE_VOICE_BUILD_MARGIN),
+            'voice_leverage_complexity': complexity,
+            'voice_platform_fee': voice_platform_fee,
+            'calling_costs': calling_costs,
+            'total_voice_cost': total_voice_cost,
+        }
+
     voice_mandays = calculate_voice_dev_mandays(inputs)
     # Use custom_ai rate for voice work when available, else bot_ui
     rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
@@ -568,10 +605,9 @@ def calculate_voice_pricing(inputs, country='India', has_text_ai=False):
     else:
         custom_ai_rate = rates.get('custom_ai', rates.get('bot_ui', 0))
     voice_dev_cost = voice_mandays * float(custom_ai_rate or 0)
-    voice_platform_fee = calculate_voice_platform_fee(inputs, has_text_ai)
-    calling_costs = calculate_voice_calling_costs(inputs, country)
     total_voice_cost = voice_dev_cost + voice_platform_fee + calling_costs['total']
     return {
+        'voice_partner_model': 'gupshup_native',
         'voice_mandays': voice_mandays,
         'voice_dev_cost': voice_dev_cost,
         'voice_platform_fee': voice_platform_fee,

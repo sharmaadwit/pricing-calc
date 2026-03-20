@@ -28,6 +28,7 @@ from pricing_config import (
     AI_AGENT_PRICING,
     compute_ai_price_components,
     get_default_location_for_email,
+    build_voice_rate_card_for_prices,
 )
 from calculator import get_committed_amount_rate_for_volume
 
@@ -882,9 +883,26 @@ def index():
         whatsapp_voice_outbound_minutes = pv('whatsapp_voice_outbound_minutes')
         whatsapp_voice_inbound_minutes = pv('whatsapp_voice_inbound_minutes')
         voice_ai_enabled = request.form.get('voice_ai_enabled', 'No')
+        voice_partner = request.form.get('voice_partner', 'gupshup_native').strip().lower()
+        if voice_partner not in ('gupshup_native', 'leverage'):
+            voice_partner = 'gupshup_native'
+        if channel_type == 'text_only':
+            voice_partner = 'gupshup_native'
+        if country != 'India':
+            voice_partner = 'gupshup_native'
+        voice_leverage_complexity = request.form.get('voice_leverage_complexity', '').strip().lower()
+        if voice_leverage_complexity not in ('simple', 'medium', 'complex'):
+            voice_leverage_complexity = ''
+        voice_leverage_extra_language = request.form.get('voice_leverage_extra_language', 'No')
+        if voice_leverage_extra_language not in ('Yes', 'No'):
+            voice_leverage_extra_language = 'No'
         num_voice_journeys = request.form.get('num_voice_journeys', '0')
         num_voice_apis = request.form.get('num_voice_apis', '0')
         num_additional_voice_languages = request.form.get('num_additional_voice_languages', '0')
+        if channel_type in ('voice_only', 'text_voice') and voice_partner == 'leverage':
+            num_voice_journeys = '0'
+            num_voice_apis = '0'
+            num_additional_voice_languages = '0'
         agent_handover_pstn = request.form.get('agent_handover_pstn', 'None')
         whatsapp_voice_platform = request.form.get('whatsapp_voice_platform', 'None')
         virtual_number_required = request.form.get('virtual_number_required', 'No')
@@ -924,6 +942,9 @@ def index():
             # Voice channel fields
             'channel_type': channel_type,
             'voice_ai_enabled': voice_ai_enabled,
+            'voice_partner': voice_partner,
+            'voice_leverage_complexity': voice_leverage_complexity,
+            'voice_leverage_extra_language': voice_leverage_extra_language,
             'num_voice_journeys': num_voice_journeys,
             'num_voice_apis': num_voice_apis,
             'num_additional_voice_languages': num_additional_voice_languages,
@@ -939,6 +960,22 @@ def index():
             'whatsapp_voice_outbound_minutes': whatsapp_voice_outbound_minutes,
             'whatsapp_voice_inbound_minutes': whatsapp_voice_inbound_minutes,
         }
+        if channel_type in ('voice_only', 'text_voice') and voice_partner == 'leverage':
+            _vlc = session['inputs'].get('voice_leverage_complexity') or ''
+            if _vlc not in ('simple', 'medium', 'complex'):
+                flash('Please select Journey Complexity for Leverage Voice AI.', 'error')
+                profile = session.get('profile') or {}
+                calculation_id = session.get('calculation_id')
+                return render_template(
+                    'index.html',
+                    step='volumes',
+                    currency_symbol=currency_symbol,
+                    inputs=session['inputs'],
+                    profile=profile,
+                    calculation_id=calculation_id,
+                    min_fees=min_fees,
+                    ai_agent_pricing=AI_AGENT_PRICING,
+                )
         # Ensure profile is updated from form data
         profile = session.get('profile') or {}
         if user_email:
@@ -970,29 +1007,8 @@ def index():
                 return float(val) == 0.0
             except Exception:
                 return True
-        # --- Voice rate card (read-only) for Prices page ---
-        voice_rate_card = None
-        try:
-            chan = session.get('inputs', {}).get('channel_type', 'text_only')
-            if country == 'India' and chan in ['voice_only', 'text_voice']:
-                from pricing_config import PSTN_CALLING_CHARGES, get_whatsapp_voice_rate
-                wa_out = float(session['inputs'].get('whatsapp_voice_outbound_minutes', 0) or 0)
-                wa_in = float(session['inputs'].get('whatsapp_voice_inbound_minutes', 0) or 0)
-                total_wa_min = wa_out + wa_in
-                voice_rate_card = {
-                    'pstn': {
-                        'inbound': PSTN_CALLING_CHARGES['inbound_ai'],
-                        'outbound': PSTN_CALLING_CHARGES['outbound_ai'],
-                        'manual': PSTN_CALLING_CHARGES['manual_c2c'],
-                    },
-                    'whatsapp': {
-                        'outbound': get_whatsapp_voice_rate(country, total_wa_min, 'outbound'),
-                        'inbound': get_whatsapp_voice_rate(country, total_wa_min, 'inbound'),
-                        'total_minutes': total_wa_min,
-                    }
-                }
-        except Exception:
-            voice_rate_card = None
+        # --- Voice rate card for Prices page (PSTN India/MENA + WA by market) ---
+        voice_rate_card = build_voice_rate_card_for_prices(session.get('inputs', {}), country)
 
         # --- AI pricing: combine tier-based markup with optional model + complexity ---
         base_ai_markup = get_suggested_price(country, 'ai', ai_volume) if not is_zero(ai_volume) else get_lowest_tier_price(country, 'ai')
@@ -1008,7 +1024,28 @@ def index():
             'voice_notes_rate': get_voice_notes_price(country, session.get('inputs', {}).get('voice_notes_model', '')) if session.get('inputs', {}).get('voice_notes_price') == 'Yes' else 0.0,
         }
         suggested_prices = patch_suggested_prices(suggested_prices, session.get('inputs', {}))
-        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=session.get('inputs', {}), currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees, voice_rate_card=voice_rate_card)
+        rate_card_pf_vol, _ = calculate_platform_fee(
+            country,
+            session.get('inputs', {}).get('bfsi_tier', 'NA'),
+            session.get('inputs', {}).get('personalize_load', 'NA'),
+            session.get('inputs', {}).get('human_agents', 'NA'),
+            session.get('inputs', {}).get('ai_module', 'NA'),
+            session.get('inputs', {}).get('smart_cpaas', 'No'),
+            session.get('inputs', {}).get('increased_tps', 'NA'),
+        )
+        return render_template(
+            'index.html',
+            step='prices',
+            suggested=suggested_prices,
+            inputs=session.get('inputs', {}),
+            currency_symbol=currency_symbol,
+            platform_fee=platform_fee,
+            rate_card_platform_fee=rate_card_pf_vol,
+            calculation_id=calculation_id,
+            min_fees=min_fees,
+            voice_rate_card=voice_rate_card,
+            ai_agent_pricing=AI_AGENT_PRICING,
+        )
 
     elif step == 'prices' and request.method == 'POST':
         print('HANDLER: Entered prices POST step', file=sys.stderr, flush=True)
@@ -1071,47 +1108,100 @@ def index():
             inputs.get('smart_cpaas', 'No'),
             inputs.get('increased_tps', 'NA')
         )
-        discount_errors = []
-        # Discount checks: allow up to 90% discount for basic marketing, 70% for all others
-        if ai_price is not None and (suggested_ai or 0) and ai_price < 0.3 * (suggested_ai or 0):
-            discount_errors.append("AI Message price is less than 30% of the rate card.")
-        if advanced_price is not None and (suggested_advanced or 0) and advanced_price < 0.3 * (suggested_advanced or 0):
-            discount_errors.append("Advanced Message price is less than 30% of the rate card.")
-        if basic_marketing_price is not None and (suggested_marketing or 0) and basic_marketing_price < 0.1 * (suggested_marketing or 0):
-            discount_errors.append("Basic Marketing Message price is less than 10% of the rate card.")
-        if basic_utility_price is not None and (suggested_utility or 0) and basic_utility_price < 0.3 * (suggested_utility or 0):
-            discount_errors.append("Basic Utility/Authentication Message price is less than 30% of the rate card.")
-        # Platform fee discount check
-        if platform_fee < 0.3 * rate_card_platform_fee:
-            discount_errors.append("Platform Fee is less than 30% of the rate card platform fee.")
-        if discount_errors:
-            print('HANDLER: Discount errors found, rendering prices page with errors', file=sys.stderr, flush=True)
-            for msg in discount_errors:
-                flash(msg, 'error')
-            flash("Probability of deal desk rejection is high.", 'error')
-            # Recompute voice rate card on error re-render
-            voice_rate_card = None
+        _eps = 1e-9
+        pricing_floor_errors = []
+        if platform_fee < float(rate_card_platform_fee) - _eps:
+            pricing_floor_errors.append(
+                f"Platform fee cannot be below the rate card platform fee ({rate_card_platform_fee:g})."
+            )
+        if ai_price is not None and suggested_ai is not None and float(ai_price) < float(suggested_ai) - _eps:
+            pricing_floor_errors.append("AI Message markup cannot be below the rate card value.")
+        if advanced_price is not None and suggested_advanced is not None and float(advanced_price) < float(suggested_advanced) - _eps:
+            pricing_floor_errors.append("Advanced Message markup cannot be below the rate card value.")
+        if basic_marketing_price is not None and suggested_marketing is not None and float(basic_marketing_price) < float(suggested_marketing) - _eps:
+            pricing_floor_errors.append("Basic Marketing markup cannot be below the rate card value.")
+        if basic_utility_price is not None and suggested_utility is not None and float(basic_utility_price) < float(suggested_utility) - _eps:
+            pricing_floor_errors.append("Basic Utility markup cannot be below the rate card value.")
+        default_bot_ui, default_custom_ai = get_default_manday_rates(inputs)
+        if bot_ui_manday_rate is not None and float(bot_ui_manday_rate) < float(default_bot_ui) - _eps:
+            pricing_floor_errors.append(
+                f"Bot/UI manday rate cannot be below the default rate card ({default_bot_ui:g})."
+            )
+        if custom_ai_manday_rate is not None and float(custom_ai_manday_rate) < float(default_custom_ai) - _eps:
+            pricing_floor_errors.append(
+                f"Custom/AI manday rate cannot be below the default rate card ({default_custom_ai:g})."
+            )
+        if inputs.get('voice_notes_price') == 'Yes' and inputs.get('voice_notes_model'):
+            vn_rate = parse_price(request.form.get('voice_notes_rate', ''))
+            vn_floor = get_voice_notes_price(country, inputs.get('voice_notes_model', ''))
+            if vn_rate is not None and vn_floor is not None and float(vn_rate) < float(vn_floor) - _eps:
+                pricing_floor_errors.append("Voice notes rate cannot be below the model rate card.")
+        _chan = inputs.get('channel_type', 'text_only')
+        if _chan in ('voice_only', 'text_voice'):
             try:
-                chan = inputs.get('channel_type', 'text_only')
-                if country == 'India' and chan in ['voice_only', 'text_voice']:
-                    from pricing_config import PSTN_CALLING_CHARGES, get_whatsapp_voice_rate
-                    wa_out = float(inputs.get('whatsapp_voice_outbound_minutes', 0) or 0)
-                    wa_in = float(inputs.get('whatsapp_voice_inbound_minutes', 0) or 0)
-                    total_wa_min = wa_out + wa_in
-                    voice_rate_card = {
-                        'pstn': {
-                            'inbound': PSTN_CALLING_CHARGES['inbound_ai'],
-                            'outbound': PSTN_CALLING_CHARGES['outbound_ai'],
-                            'manual': PSTN_CALLING_CHARGES['manual_c2c'],
-                        },
-                        'whatsapp': {
-                            'outbound': get_whatsapp_voice_rate(country, total_wa_min, 'outbound'),
-                            'inbound': get_whatsapp_voice_rate(country, total_wa_min, 'inbound'),
-                            'total_minutes': total_wa_min,
-                        }
-                    }
+                from pricing_config import get_pstn_rates, get_whatsapp_voice_rate, get_whatsapp_voice_tier
+                wa_out = float(inputs.get('whatsapp_voice_outbound_minutes', 0) or 0)
+                wa_in = float(inputs.get('whatsapp_voice_inbound_minutes', 0) or 0)
+                total_wa = wa_out + wa_in
+                if total_wa > 0:
+                    _reg = inputs.get('region')
+                    tier = get_whatsapp_voice_tier(country, total_wa, region=_reg)
+                    _addon = float(tier.get('voice_ai_addon_per_min') or 0) if inputs.get('voice_ai_enabled') == 'Yes' else 0.0
+                    min_wa_out = float(get_whatsapp_voice_rate(country, total_wa, 'outbound', region=_reg)) + _addon
+                    min_wa_in = float(get_whatsapp_voice_rate(country, total_wa, 'inbound', region=_reg)) + _addon
+                    vr_o = voice_rate_overrides.get('vr_wa_out_per_min')
+                    vr_i = voice_rate_overrides.get('vr_wa_in_per_min')
+                    if vr_o is not None and float(vr_o) < min_wa_out - _eps:
+                        pricing_floor_errors.append(
+                            "WhatsApp voice outbound rate cannot be below the rate card (including voice AI add-on when enabled)."
+                        )
+                    if vr_i is not None and float(vr_i) < min_wa_in - _eps:
+                        pricing_floor_errors.append(
+                            "WhatsApp voice inbound rate cannot be below the rate card (including voice AI add-on when enabled)."
+                        )
+                pr = get_pstn_rates(country, inputs.get('region'))
+                if pr:
+                    def _pstn_vol(x):
+                        try:
+                            return float(str(x).replace(',', '')) if x not in (None, '') else 0.0
+                        except Exception:
+                            return 0.0
+                    in_m = _pstn_vol(inputs.get('pstn_inbound_ai_minutes', 0))
+                    out_m = _pstn_vol(inputs.get('pstn_outbound_ai_minutes', 0))
+                    man_m = _pstn_vol(inputs.get('pstn_manual_minutes', 0))
+                    total_pstn_min = in_m + out_m + man_m
+                    pstn_ai_addon = 0.0
+                    if total_pstn_min > 0 and inputs.get('voice_ai_enabled') == 'Yes':
+                        pt = get_whatsapp_voice_tier(
+                            country, total_pstn_min, region=inputs.get('region')
+                        )
+                        pstn_ai_addon = float(pt.get('voice_ai_addon_per_min') or 0)
+                    pstn_msg = (
+                        "PSTN per-minute rates cannot be below the rate card "
+                        "(including voice AI add-on when enabled)."
+                    )
+                    for kb, ko, base in (
+                        ('vr_pstn_in_bundled', 'vr_pstn_in_overage', float(pr['inbound'])),
+                        ('vr_pstn_out_bundled', 'vr_pstn_out_overage', float(pr['outbound'])),
+                        ('vr_pstn_manual_bundled', 'vr_pstn_manual_overage', float(pr['manual_c2c'])),
+                    ):
+                        floor = base + pstn_ai_addon
+                        vb = voice_rate_overrides.get(kb)
+                        vo = voice_rate_overrides.get(ko)
+                        if vb is not None and float(vb) < floor - _eps:
+                            pricing_floor_errors.append(pstn_msg)
+                            break
+                        if vo is not None and float(vo) < floor - _eps:
+                            pricing_floor_errors.append(pstn_msg)
+                            break
             except Exception:
-                voice_rate_card = None
+                pass
+        if pricing_floor_errors:
+            print('HANDLER: Pricing floor errors, rendering prices page with errors', file=sys.stderr, flush=True)
+            for msg in pricing_floor_errors:
+                flash(msg, 'error')
+            flash("Prices cannot be set below rate card / internal reference values.", 'error')
+            voice_rate_card = build_voice_rate_card_for_prices(inputs, country)
 
             suggested_prices = {
                 'ai_price': suggested_ai,
@@ -1120,9 +1210,22 @@ def index():
                 'basic_utility_price': suggested_utility,
                 'voice_notes_rate': get_voice_notes_price(country, inputs.get('voice_notes_model', '')) if inputs.get('voice_notes_price') == 'Yes' else 0.0,
             }
+            suggested_prices = patch_suggested_prices(suggested_prices, inputs)
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
             # Re-render the pricing page with user input and error
-            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees, voice_rate_card=voice_rate_card)
+            return render_template(
+                'index.html',
+                step='prices',
+                suggested=suggested_prices,
+                inputs=inputs,
+                currency_symbol=currency_symbol,
+                platform_fee=platform_fee,
+                rate_card_platform_fee=rate_card_platform_fee,
+                calculation_id=calculation_id,
+                min_fees=min_fees,
+                voice_rate_card=voice_rate_card,
+                ai_agent_pricing=AI_AGENT_PRICING,
+            )
         print('HANDLER: No discount errors, continuing to results calculation', file=sys.stderr, flush=True)
 
         # Always recalculate platform fee before saving to session['pricing_inputs']
@@ -1268,7 +1371,19 @@ def index():
             'voice_notes_rate': get_voice_notes_price(country, inputs.get('voice_notes_model', '')) if inputs.get('voice_notes_price') == 'Yes' else 0.0,
         }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
+            return render_template(
+                'index.html',
+                step='prices',
+                suggested=suggested_prices,
+                inputs=inputs,
+                currency_symbol=currency_symbol,
+                platform_fee=platform_fee,
+                rate_card_platform_fee=rate_card_platform_fee,
+                calculation_id=calculation_id,
+                min_fees=min_fees,
+                voice_rate_card=build_voice_rate_card_for_prices(inputs, country),
+                ai_agent_pricing=AI_AGENT_PRICING,
+            )
         
         # Remove duplicate Committed Amount if present
         seen = set()
@@ -1292,7 +1407,19 @@ def index():
             'voice_notes_rate': get_voice_notes_price(country, inputs.get('voice_notes_model', '')) if inputs.get('voice_notes_price') == 'Yes' else 0.0,
         }
             currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-            return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
+            return render_template(
+                'index.html',
+                step='prices',
+                suggested=suggested_prices,
+                inputs=inputs,
+                currency_symbol=currency_symbol,
+                platform_fee=platform_fee,
+                rate_card_platform_fee=rate_card_platform_fee,
+                calculation_id=calculation_id,
+                min_fees=min_fees,
+                voice_rate_card=build_voice_rate_card_for_prices(inputs, country),
+                ai_agent_pricing=AI_AGENT_PRICING,
+            )
         print("PASSED results validation, about to render results page", file=sys.stderr, flush=True)
         try:
             # --- Ensure manday_rates is always set and complete ---
@@ -1373,11 +1500,45 @@ def index():
             'voice_notes_rate': get_voice_notes_price(country, inputs.get('voice_notes_model', '')) if inputs.get('voice_notes_price') == 'Yes' else 0.0,
         }
                 currency_symbol = COUNTRY_CURRENCY.get(country, '$')
-                return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
+                return render_template(
+                    'index.html',
+                    step='prices',
+                    suggested=suggested_prices,
+                    inputs=inputs,
+                    currency_symbol=currency_symbol,
+                    platform_fee=platform_fee,
+                    rate_card_platform_fee=rate_card_platform_fee,
+                    calculation_id=calculation_id,
+                    min_fees=min_fees,
+                    voice_rate_card=build_voice_rate_card_for_prices(inputs, country),
+                    ai_agent_pricing=AI_AGENT_PRICING,
+                )
         except Exception as e:
             print(f"DEBUG: Error in manday/dev cost or pricing calculation: {e}", file=sys.stderr, flush=True)
             flash('Internal error during calculation. Please try again.', 'error')
-            return render_template('index.html', step='prices', suggested={}, inputs=inputs, currency_symbol=currency_symbol, platform_fee=platform_fee, calculation_id=calculation_id, min_fees=min_fees)
+            _cs = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
+            _rc_pf, _ = calculate_platform_fee(
+                inputs.get('country', 'India'),
+                inputs.get('bfsi_tier', 'NA'),
+                inputs.get('personalize_load', 'NA'),
+                inputs.get('human_agents', 'NA'),
+                inputs.get('ai_module', 'NA'),
+                inputs.get('smart_cpaas', 'No'),
+                inputs.get('increased_tps', 'NA'),
+            )
+            return render_template(
+                'index.html',
+                step='prices',
+                suggested={},
+                inputs=inputs,
+                currency_symbol=_cs,
+                platform_fee=platform_fee,
+                rate_card_platform_fee=_rc_pf,
+                calculation_id=calculation_id,
+                min_fees=min_fees,
+                voice_rate_card=build_voice_rate_card_for_prices(inputs, inputs.get('country', 'India')),
+                ai_agent_pricing=AI_AGENT_PRICING,
+            )
         results['margin'] = results.get('margin', '')
         expected_invoice_amount = results.get('revenue', 0)
         chosen_platform_fee = float(platform_fee)
@@ -1503,7 +1664,17 @@ def index():
         channel_type = inputs.get('channel_type', 'text_only')
         voice_inclusions = []
         if channel_type in ['voice_only', 'text_voice']:
-            voice_inclusions.append('Voice Development')
+            voice_partner_inc = (inputs.get('voice_partner') or 'gupshup_native').strip().lower()
+            if voice_partner_inc == 'leverage':
+                voice_inclusions.append('Voice AI development')
+                _lc = (inputs.get('voice_leverage_complexity') or '').strip().lower()
+                _lcl = {'simple': 'Simple', 'medium': 'Medium', 'complex': 'Complex'}.get(_lc, _lc)
+                if _lcl:
+                    voice_inclusions.append(f"Voice journey complexity: {_lcl}")
+                if inputs.get('voice_leverage_extra_language') == 'Yes':
+                    voice_inclusions.append('Additional voice language (priced)')
+            else:
+                voice_inclusions.append('Voice development')
             try:
                 num_voice_journeys = int(inputs.get('num_voice_journeys', 0) or 0)
             except Exception:
@@ -1965,14 +2136,35 @@ def index():
             if user_bot_ui < 0.5 * default_bot_ui or user_custom_ai < 0.5 * default_custom_ai:
                 flash('Manday rates cannot be discounted by more than 50% from the default rate.', 'error')
                 record_funnel_event('prices', inputs=inputs)
-                return render_template('index.html', step='prices', suggested={
-                    'ai_price': pricing_inputs.get('ai_price', ''),
-                    'advanced_price': pricing_inputs.get('advanced_price', ''),
-                    'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
-                    'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
-                    'bot_ui_manday_rate': default_bot_ui,
-                    'custom_ai_manday_rate': default_custom_ai,
-                }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id, min_fees=min_fees, ai_agent_pricing=AI_AGENT_PRICING)
+                _nav_pf, _ = calculate_platform_fee(
+                    country,
+                    inputs.get('bfsi_tier', 'NA'),
+                    inputs.get('personalize_load', 'NA'),
+                    inputs.get('human_agents', 'NA'),
+                    inputs.get('ai_module', 'NA'),
+                    inputs.get('smart_cpaas', 'No'),
+                    inputs.get('increased_tps', 'NA'),
+                )
+                return render_template(
+                    'index.html',
+                    step='prices',
+                    suggested={
+                        'ai_price': pricing_inputs.get('ai_price', ''),
+                        'advanced_price': pricing_inputs.get('advanced_price', ''),
+                        'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
+                        'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
+                        'bot_ui_manday_rate': default_bot_ui,
+                        'custom_ai_manday_rate': default_custom_ai,
+                    },
+                    inputs=inputs,
+                    currency_symbol=COUNTRY_CURRENCY.get(country, '$'),
+                    platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')),
+                    rate_card_platform_fee=_nav_pf,
+                    calculation_id=calculation_id,
+                    min_fees=min_fees,
+                    voice_rate_card=build_voice_rate_card_for_prices(inputs, country),
+                    ai_agent_pricing=AI_AGENT_PRICING,
+                )
             # Save user rates for use in results
             session['manday_rates'] = {
                 'bot_ui': user_bot_ui,
@@ -1983,14 +2175,35 @@ def index():
         else:
             # GET: pre-fill with defaults
             record_funnel_event('prices', inputs=inputs)
-            return render_template('index.html', step='prices', suggested={
-                'ai_price': pricing_inputs.get('ai_price', ''),
-                'advanced_price': pricing_inputs.get('advanced_price', ''),
-                'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
-                'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
-                'bot_ui_manday_rate': default_bot_ui,
-                'custom_ai_manday_rate': default_custom_ai,
-            }, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id, min_fees=min_fees)
+            _nav_pf_get, _ = calculate_platform_fee(
+                country,
+                inputs.get('bfsi_tier', 'NA'),
+                inputs.get('personalize_load', 'NA'),
+                inputs.get('human_agents', 'NA'),
+                inputs.get('ai_module', 'NA'),
+                inputs.get('smart_cpaas', 'No'),
+                inputs.get('increased_tps', 'NA'),
+            )
+            return render_template(
+                'index.html',
+                step='prices',
+                suggested={
+                    'ai_price': pricing_inputs.get('ai_price', ''),
+                    'advanced_price': pricing_inputs.get('advanced_price', ''),
+                    'basic_marketing_price': pricing_inputs.get('basic_marketing_price', ''),
+                    'basic_utility_price': pricing_inputs.get('basic_utility_price', ''),
+                    'bot_ui_manday_rate': default_bot_ui,
+                    'custom_ai_manday_rate': default_custom_ai,
+                },
+                inputs=inputs,
+                currency_symbol=COUNTRY_CURRENCY.get(country, '$'),
+                platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')),
+                rate_card_platform_fee=_nav_pf_get,
+                calculation_id=calculation_id,
+                min_fees=min_fees,
+                voice_rate_card=build_voice_rate_card_for_prices(inputs, country),
+                ai_agent_pricing=AI_AGENT_PRICING,
+            )
     elif step == 'bundle' and request.method == 'POST':
         # User submitted messaging bundle commitment (can be 0)
         inputs = session.get('inputs', {}) or {}
@@ -2045,7 +2258,28 @@ def index():
         }
         suggested_prices = patch_suggested_prices(suggested_prices, inputs)
         record_funnel_event('prices', inputs=inputs)
-        return render_template('index.html', step='prices', suggested=suggested_prices, inputs=inputs, currency_symbol=COUNTRY_CURRENCY.get(country, '$'), platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')), calculation_id=calculation_id, min_fees=min_fees)
+        _bundle_rc_pf, _ = calculate_platform_fee(
+            country,
+            inputs.get('bfsi_tier', 'NA'),
+            inputs.get('personalize_load', 'NA'),
+            inputs.get('human_agents', 'NA'),
+            inputs.get('ai_module', 'NA'),
+            inputs.get('smart_cpaas', 'No'),
+            inputs.get('increased_tps', 'NA'),
+        )
+        return render_template(
+            'index.html',
+            step='prices',
+            suggested=suggested_prices,
+            inputs=inputs,
+            currency_symbol=COUNTRY_CURRENCY.get(country, '$'),
+            platform_fee=pricing_inputs.get('platform_fee', inputs.get('platform_fee', '')),
+            rate_card_platform_fee=_bundle_rc_pf,
+            calculation_id=calculation_id,
+            min_fees=min_fees,
+            voice_rate_card=build_voice_rate_card_for_prices(inputs, country),
+            ai_agent_pricing=AI_AGENT_PRICING,
+        )
     elif step == 'results':
         # Handle GET request for results page (page refresh)
         inputs = session.get('inputs', {})
