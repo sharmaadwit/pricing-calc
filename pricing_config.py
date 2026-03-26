@@ -17,9 +17,6 @@
 # Format: (min_volume, max_volume, price_per_message)
 # =============================================================================
 
-# --- Volume-based Price Tiers by Country and Message Type (VOLUMES ROUTE) ---
-# USAGE: Used in volumes route for suggested prices and tier-based overage prices
-# FUNCTIONS: get_suggested_price(), get_next_tier_price() in calculator.py
 # --- Meta Costs by Country and Message Type (SHARED) ---
 # USAGE: Used in both volumes route and committed amount route for final price calculation
 # PURPOSE: Meta's charges for each message type, added to Gupshup markup to get final price
@@ -113,18 +110,6 @@ committed_amount_slabs = {
     ],
 }
 
-# --- Messaging Bundle Markup Rates by Country (COMMITTED AMOUNT/BUNDLE ROUTE) ---
-# USAGE: Alternative format for committed amount route (currently not used, kept for reference)
-# PURPOSE: Same data as committed_amount_slabs but in different format
-# NOTE: This configuration is currently commented out as committed_amount_slabs is used instead
-# bundle_markup_rates = {
-#     'India': [
-#         {'min': 0, 'max': 50000, 'basic_marketing': 0.15, 'basic_utility': 0.03, 'advanced': 0.50, 'ai': 1.00},
-#         # ... rest of the data
-#     ],
-#     # ... rest of countries
-# }
-
 # =============================================================================
 # DEVELOPMENT COST CONFIGURATIONS (Used by both routes)
 # =============================================================================
@@ -187,22 +172,6 @@ ACTIVITY_MANDAYS = {
     "ux": 1,
     "ai_agents": 5,
     "ai_workspace_support": 2,
-}
-
-# =============================================================================
-# UI/UX CONFIGURATIONS (Used by both routes)
-# =============================================================================
-
-# --- Country to currency symbol mapping ---
-# USAGE: Used in both routes for display purposes
-# PURPOSE: Maps countries to their currency symbols for UI display
-COUNTRY_CURRENCY = {
-    'India': '₹',
-    'MENA': '$',  # USD for MENA
-    'LATAM': '$',
-    'Africa': '$',
-    'Europe': '$',  # Use USD for Europe
-    'APAC': '$',
 }
 
 # --- User profile & defaults configuration ---
@@ -440,10 +409,6 @@ PLATFORM_PRICING_GUIDANCE = {
 
 # Voice Bot Development Effort (Mandays)
 VOICE_DEV_EFFORT = {
-    # Deprecated for manday calc: voice journeys/APIs now use bundled 4+4 logic
-    # in calculate_voice_dev_mandays(). Kept for reference.
-    'journey': 3,
-    'api_integration': 1,
     'additional_language_multiplier': 0.30,
     'agent_handover_pstn_knowlarity': 1,
     'agent_handover_pstn_other': 5,
@@ -466,13 +431,11 @@ AED_TO_USD = 0.2723
 # PSTN Calling Charges (Knowlarity)
 PSTN_CALLING_CHARGES_BY_REGION = {
     'India': {
-        'currency': 'INR',
         'inbound': 0.0,
         'outbound': 0.4,
         'manual_c2c': 0.4,
     },
     'MENA': {
-        'currency': 'USD',
         'inbound': round(0.10 * AED_TO_USD, 4),
         'outbound': round(0.30 * AED_TO_USD, 4),
         'manual_c2c': round(0.30 * AED_TO_USD, 4),

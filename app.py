@@ -6,13 +6,11 @@ from flask import Flask, render_template, request, session, redirect, url_for, f
 from calculator import calculate_pricing, get_suggested_price, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES, calculate_total_mandays_breakdown, get_committed_amount_rate_for_volume, get_lowest_tier_price
 import os
 import sys
-import re
 import secrets
 import time
 from urllib.parse import urlparse
 from werkzeug.middleware.proxy_fix import ProxyFix
 from collections import Counter, defaultdict
-import statistics
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
@@ -24,14 +22,12 @@ from docx import Document
 from pricing_config import (
     committed_amount_slabs,
     PLATFORM_PRICING_GUIDANCE,
-    VOICE_NOTES_PRICING,
     get_voice_notes_price,
     AI_AGENT_PRICING,
     compute_ai_price_components,
     get_default_location_for_email,
     build_voice_rate_card_for_prices,
 )
-from calculator import get_committed_amount_rate_for_volume
 
 # 🍕 PIZZA EASTER EGG SYSTEM 🍕
 def generate_pizza_easter_egg_id(calculation_data=None):
@@ -608,8 +604,6 @@ class FunnelEvent(db.Model):
     country = db.Column(db.String(64), nullable=True)
     region = db.Column(db.String(64), nullable=True)
 
-# os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # For local testing only
-
 # Country to currency symbol mapping
 COUNTRY_CURRENCY = {
     'India': '₹',
@@ -652,8 +646,6 @@ def profile_email():
     """
     if not session.get('authenticated'):
         return redirect(url_for('login'))
-
-    from pricing_config import get_default_location_for_email
 
     profile = session.get('profile') or {}
 
@@ -705,12 +697,9 @@ def start_over():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    """Main route for the pricing calculator. Handles all user steps (volumes, prices, bundle, results)."""
     if not session.get('authenticated'):
         return redirect(url_for('login'))
-    """
-    Main route for the pricing calculator. Handles all user steps (volumes, prices, bundle, results).
-    Manages session data, input validation, pricing logic, and inclusions logic.
-    """
     print("DEBUG: session at start of request:", dict(session), file=sys.stderr, flush=True)
     # Determine current step; default to 'volumes' for backward compatibility.
     # We will explicitly route to 'profile' when needed below.
@@ -1491,11 +1480,10 @@ def index():
                 print(f"DEBUG: Calculation successful, results: {results}", file=sys.stderr, flush=True)
                 # Voice pricing (if selected)
                 channel_type = inputs.get('channel_type', 'text_only')
-                has_text_ai = inputs.get('ai_module', 'NA') == 'Yes'
                 voice_pricing = {}
                 if channel_type in ['voice_only', 'text_voice']:
                     from calculator import calculate_voice_pricing
-                    voice_pricing = calculate_voice_pricing(inputs, country=inputs.get('country', 'India'), has_text_ai=has_text_ai)
+                    voice_pricing = calculate_voice_pricing(inputs, country=inputs.get('country', 'India'))
                     session['voice_pricing'] = voice_pricing
                     results['voice_pricing'] = voice_pricing
                     # Merge voice mandays into total/bot_ui effort
@@ -3264,7 +3252,6 @@ def sow_details():
 
     # Defaults for initial load
     try:
-        from calculator import calculate_total_mandays
         default_total_mandays = calculate_total_mandays(inputs)
     except Exception:
         default_total_mandays = ''
@@ -3329,7 +3316,6 @@ def analytics():
                     func.to_char(Analytics.timestamp, 'IYYY-"W"IW')
                 ).all()}
                 # Most common countries
-                from collections import Counter
                 country_list = [row[0] for row in db.session.query(Analytics.country).all() if row[0] is not None]
                 country_counter = Counter(country_list).most_common(5)
                 # Platform fee stats
@@ -3835,7 +3821,6 @@ def analytics():
                     correlation = 0
 
                 # 5. Seasonality (by month)
-                from collections import defaultdict
                 month_counts = defaultdict(int)
                 for a in Analytics.query.all():
                     if a.timestamp:
@@ -3889,21 +3874,10 @@ def readme():
     """Render the native HTML documentation page."""
     return render_template('readme.html')
 
-# --- Minimal session test routes ---
-@app.route('/set-session')
-def set_session():
-    session['test'] = 'hello'
-    return 'Session set!'
-
-@app.route('/get-session')
-def get_session():
-    return f"Session value: {session.get('test', 'not set')}"
-
 # --- PATCH: Ensure manday rates always included in suggested_prices for 'prices' step ---
 def get_default_manday_rates(inputs):
     country = inputs.get('country', 'India') if inputs else 'India'
     dev_location = inputs.get('dev_location', 'India') if inputs else 'India'
-    from calculator import COUNTRY_MANDAY_RATES
     rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
     if country == 'LATAM':
         default_bot_ui = rates['bot_ui'][dev_location]
@@ -3941,8 +3915,6 @@ def calculate_pricing_simulation(inputs, pricing_inputs=None):
         basic_utility_volume = float(inputs.get('basic_utility_volume', 0) or 0)
         platform_fee = float(inputs.get('platform_fee', 0) or 0)
         committed_amount = float(inputs.get('committed_amount', 0) or 0)
-        from pricing_config import meta_costs_table
-        from calculator import get_committed_amount_rate_for_volume
         meta_costs = meta_costs_table.get(country, meta_costs_table['APAC'])
     except Exception as e:
         print(f"ERROR in calculate_pricing_simulation: {e}", file=sys.stderr, flush=True)
@@ -4010,7 +3982,6 @@ def calculate_pricing_simulation(inputs, pricing_inputs=None):
     required_committed_amount = (ai_volume * ai_price) + (advanced_volume * adv_price) + (basic_marketing_volume * mkt_price) + (basic_utility_volume * utl_price)
     
     # Find the nearest programmed bundle amount
-    from pricing_config import committed_amount_slabs
     slabs = committed_amount_slabs.get(country, committed_amount_slabs['APAC'])
     
     # Get all programmed bundle amounts (both lower and upper bounds of tiers)
@@ -4048,14 +4019,10 @@ def calculate_pricing_simulation(inputs, pricing_inputs=None):
     else:
         nearest_bundle = nearest_upper
     
-    # Find the tier rates for both bundles
-    chosen_tier_rates = None
     lower_tier_rates = None
     upper_tier_rates = None
     
     for slab in slabs:
-        if slab[0] <= nearest_bundle < slab[1]:
-            chosen_tier_rates = slab[2]
         if slab[0] <= nearest_lower < slab[1]:
             lower_tier_rates = slab[2]
         if slab[0] <= nearest_upper < slab[1]:

@@ -15,7 +15,6 @@ from pricing_config import (
     ACTIVITY_MANDAYS,
     committed_amount_slabs,
     VOICE_DEV_EFFORT,
-    WHATSAPP_VOICE_CHARGES,
     LEVERAGE_VOICE_DEV_COSTS_INR,
     LEVERAGE_VOICE_ADDITIONAL_LANGUAGE_COST_INR,
     LEVERAGE_VOICE_BUILD_MARGIN,
@@ -37,7 +36,7 @@ def get_committed_amount_rate_for_volume(country, msg_type, volume):
 
 # Update get_suggested_price to use committed amount slab rates for volume route
 
-def get_suggested_price(country, msg_type, volume, currency=None):
+def get_suggested_price(country, msg_type, volume):
     """
     Return the suggested price for a message type, country, and volume.
     Now uses the committed amount slab rate for the estimated monthly revenue.
@@ -53,12 +52,6 @@ def get_lowest_tier_price(country, msg_type):
     if not slabs:
         return 0
     return slabs[0][2][msg_type]
-
-def get_next_tier_price(country, msg_type, volume):
-    """
-    Deprecated: Overage prices are no longer used or displayed.
-    """
-    return 0.0
 
 def calculate_pricing(
     country, ai_volume, advanced_volume, basic_marketing_volume, basic_utility_volume, platform_fee,
@@ -83,16 +76,6 @@ def calculate_pricing(
     user_basic_marketing_price = basic_marketing_price if basic_marketing_price is not None else suggested_basic_marketing_price
     user_basic_utility_price = basic_utility_price if basic_utility_price is not None else suggested_basic_utility_price
 
-    # Calculate overage prices using 1.2x multiplier for consistency with bundle flow
-    # Ensure overage prices are never lower than rate card prices
-    def safe_overage_price(base_price, markup=1.2):
-        return max(base_price * markup, base_price)
-    
-    overage_ai_price = safe_overage_price(float(user_ai_price))
-    overage_advanced_price = safe_overage_price(float(user_advanced_price))
-    overage_basic_marketing_price = safe_overage_price(float(user_basic_marketing_price))
-    overage_basic_utility_price = safe_overage_price(float(user_basic_utility_price))
-
     # Revenue (user-chosen)
     ai_revenue = (costs['ai'] + user_ai_price) * ai_volume
     advanced_revenue = user_advanced_price * advanced_volume  # Only markup for advanced
@@ -114,13 +97,8 @@ def calculate_pricing(
     voice_notes_revenue_s = 0  # Billed on actuals, no volume input
     suggested_revenue = ai_revenue_s + advanced_revenue_s + basic_marketing_revenue_s + basic_utility_revenue_s + voice_notes_revenue_s
 
-    # Channel cost (as per your logic)
-    adv_marketing_vol = 0.0
-    adv_utility_vol = 0.0
     channel_cost = (
-        (costs['marketing'] * adv_marketing_vol)
-        + (costs['utility'] * adv_utility_vol)
-        + (basic_marketing_volume * costs['marketing'])
+        (basic_marketing_volume * costs['marketing'])
         + (basic_utility_volume * costs['utility'])
     )
 
@@ -209,7 +187,7 @@ def calculate_pricing(
         'line_items': line_items,
         'platform_fee': platform_fee,
         'revenue': revenue + platform_fee,
-        'suggested_revenue': suggested_revenue + platform_fee if suggested_revenue is not None else None,
+        'suggested_revenue': suggested_revenue + platform_fee,
         'channel_cost': channel_cost,
         'ai_costs': ai_costs,
         'total_costs': total_costs,
@@ -383,9 +361,6 @@ def get_committed_amount_rates(country, committed_amount):
             return rates
     return slabs[0][2]  # fallback to first slab
 
-def get_committed_amount_rates_india(committed_amount):
-    return get_committed_amount_rates('India', committed_amount)
-
 # =============================================================================
 # Voice Channel Helpers
 # =============================================================================
@@ -431,7 +406,7 @@ def calculate_voice_dev_mandays(inputs):
         total_mandays += VOICE_DEV_EFFORT['whatsapp_voice_other']
     return total_mandays
 
-def calculate_voice_platform_fee(inputs, has_text_ai=False):
+def calculate_voice_platform_fee(inputs):
     """
     Calculate voice platform fee components in INR.
     """
@@ -561,7 +536,7 @@ def calculate_voice_calling_costs(inputs, country='India'):
     )
     return costs
 
-def calculate_voice_pricing(inputs, country='India', has_text_ai=False):
+def calculate_voice_pricing(inputs, country='India'):
     """
     High-level aggregator for voice pricing: development, platform, calling.
     Returns a dict with mandays, cost breakdown and total.
@@ -569,7 +544,7 @@ def calculate_voice_pricing(inputs, country='India', has_text_ai=False):
     voice_partner = (inputs.get('voice_partner') or 'gupshup_native').strip().lower()
     if voice_partner == 'leverage' and country != 'India':
         voice_partner = 'gupshup_native'
-    voice_platform_fee = calculate_voice_platform_fee(inputs, has_text_ai)
+    voice_platform_fee = calculate_voice_platform_fee(inputs)
     calling_costs = calculate_voice_calling_costs(inputs, country)
 
     if voice_partner == 'leverage' and country == 'India':
