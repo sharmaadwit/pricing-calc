@@ -131,3 +131,15 @@ e2e_output/
 e2e_analytics.sqlite
 voice_e2e_results.html
 channel_smoke_results.html
+
+# IDE
+.idea/
+
+# Secrets (supply via env vars, never commit)
+credentials.json
+
+# Generated data exports
+analytics.csv
+
+# Offline notebooks
+notebooks/
