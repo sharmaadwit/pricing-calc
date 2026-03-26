@@ -178,24 +178,14 @@ COUNTRY_MANDAY_RATES = {
 }
 
 # --- Activity to Manday Mapping (applies to all countries) ---
-# USAGE: Used in both routes for development cost calculations
-# PURPOSE: Maps development activities to manday requirements
-# FUNCTIONS: calculate_total_mandays() in calculator.py
+# USAGE: calculator.calculate_total_mandays / calculate_total_manday_cost
+# Per-journey/API counts and 4+4 bundle size (5) are hardcoded in calculator._calculate_set_mandays.
 ACTIVITY_MANDAYS = {
-    "journey": 1,
-    "api": 1,
-    "ai_agents": 10,
-    "4_journey_4_api": 5,
     "aa_setup": 1,
     "onboarding": 0.5,
     "testing": 1,
     "ux": 1,
-    "security_audit": 2,
-    "performance_optimization": 1.5,
-    "integration_setup": 2,
-    "data_migration": 3,
-    "custom_component": 0.5,
-    "webhook": 0.25,
+    "ai_agents": 5,
     "ai_workspace_support": 2,
 }
 
