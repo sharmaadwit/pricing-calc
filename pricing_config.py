@@ -696,16 +696,14 @@ def build_voice_rate_card_for_prices(inputs, country=None):
 #
 # Each ACE model has vendor costs for Regular, Hard, and Complex use cases.
 # These are the underlying LLM costs per call in INR (India) or USD
-# (International). Pricing logic:
-#   - If model cost < threshold (1 INR or 0.0105 USD), we ignore model pricing
-#     and continue to use the existing per-message tier logic for AI.
-#   - If model cost >= threshold, final AI price per message is:
-#         final_price = cost * multiplier
-#     where multiplier is currently 5x. In that case, we back out the AI
-#     markup as:
-#         ai_markup = max(0, final_price - meta_costs_table[country]['ai'])
-#     so that:
-#         meta_costs_table[country]['ai'] + ai_markup == final_price.
+# (International), derived from the rate card: cost per 1k tokens × token
+# assumptions (regular 8k, hard 15k, complex 20k), including 20% infra.
+# Pricing logic (see compute_ai_price_components):
+#   - Raw cost below/equal threshold (1 INR or ~0.0105 USD): AI markup is a flat
+#     threshold amount (charge “at 1” / USD equivalent).
+#   - Raw cost above threshold: AI markup = raw_cost * multiplier (2x).
+#   - Model path only applies when that markup beats volume-tier AI markup.
+#   - final AI price per message = meta_costs_table[country]['ai'] + markup.
 #
 # NOTE: All thresholds and multipliers MUST be read from this config; do not
 #       hard-code them in app.py or calculator.py.
@@ -713,54 +711,49 @@ def build_voice_rate_card_for_prices(inputs, country=None):
 AI_AGENT_PRICING = {
     'India': {  # Costs in INR per call
         'ACE Agent Lite (Qwen-Qwen3-8B)': {
-            'regular': 0.0693208,
-            'hard': 0.1299766,
-            'complex': 0.1733021,
+            'regular': 0.0722930,
+            'hard': 0.1355494,
+            'complex': 0.1807325,
         },
         'ACE Agent Lite Experimental (gpt-5-nano)': {
-            'regular': 0.0736534,
-            'hard': 0.1381001,
-            'complex': 0.1841335,
+            'regular': 0.0768113,
+            'hard': 0.1440212,
+            'complex': 0.1920283,
         },
-        'ACE Agentic pro (gpt-4o-mini)': {
-            'regular': 0.1689695,
-            'hard': 0.3168179,
-            'complex': 0.4224238,
+        'ACE Agentic pro (gpt-5-mini)': {
+            'regular': 0.3840565,
+            'hard': 0.7201060,
+            'complex': 0.9601413,
         },
         'ACE Agentic Pro Experimental (gpt-4.1-mini)': {
-            'regular': 0.4505854,
-            'hard': 0.8448476,
-            'complex': 1.1264635,
+            'regular': 0.4699044,
+            'hard': 0.8810708,
+            'complex': 1.1747611,
         },
-        'ACE Agent Premium (gpt-4o)': {
-            'regular': 2.8161588,
-            'hard': 5.2802978,
-            'complex': 7.0403970,
-        },
-        'ACE Agent Premium Experimental (gpt-5-mini)': {
-            'regular': 1.8413346,
-            'hard': 3.4525024,
-            'complex': 4.6033365,
+        'ACE Agent Premium (gpt-5)': {
+            'regular': 0.1762142,
+            'hard': 0.3304016,
+            'complex': 0.4405354,
         },
         'ACE Agent Premium Experimental (gpt-4.1)': {
-            'regular': 2.2529270,
-            'hard': 4.2242382,
-            'complex': 5.6323176,
+            'regular': 2.3495222,
+            'hard': 4.4053542,
+            'complex': 5.8738056,
         },
         'ACE Agent Nano Experimental (gpt-4.1-nano)': {
-            'regular': 0.1126464,
-            'hard': 0.2112119,
-            'complex': 0.2816159,
+            'regular': 0.1174761,
+            'hard': 0.2202677,
+            'complex': 0.2936903,
         },
         'ACE Flash Agent Pro (gemini-2.5-flash-lite)': {
-            'regular': 0.1126464,
-            'hard': 0.2112119,
-            'complex': 0.2816159,
+            'regular': 0.4699044,
+            'hard': 0.8810708,
+            'complex': 1.1747611,
         },
         'ACE Flash Agent Premium (gemini-2.5-flash)': {
-            'regular': 0.4505854,
-            'hard': 0.8448476,
-            'complex': 1.1264635,
+            'regular': 0.1174761,
+            'hard': 0.2202677,
+            'complex': 0.2936903,
         },
     },
     'International': {  # Costs in USD per call
@@ -774,25 +767,20 @@ AI_AGENT_PRICING = {
             'hard': 0.0015300,
             'complex': 0.0020400,
         },
-        'ACE Agentic pro (gpt-4o-mini)': {
-            'regular': 0.0018720,
-            'hard': 0.0035100,
-            'complex': 0.0046800,
+        'ACE Agentic pro (gpt-5-mini)': {
+            'regular': 0.0040800,
+            'hard': 0.0076500,
+            'complex': 0.0102000,
         },
         'ACE Agentic Pro Experimental (gpt-4.1-mini)': {
             'regular': 0.0049920,
             'hard': 0.0093600,
             'complex': 0.0124800,
         },
-        'ACE Agent Premium (gpt-4o)': {
-            'regular': 0.0312000,
-            'hard': 0.0585000,
-            'complex': 0.0780000,
-        },
-        'ACE Agent Premium Experimental (gpt-5-mini)': {
-            'regular': 0.0204000,
-            'hard': 0.0382500,
-            'complex': 0.0510000,
+        'ACE Agent Premium (gpt-5)': {
+            'regular': 0.0018720,
+            'hard': 0.0035100,
+            'complex': 0.0046800,
         },
         'ACE Agent Premium Experimental (gpt-4.1)': {
             'regular': 0.0249600,
@@ -805,27 +793,33 @@ AI_AGENT_PRICING = {
             'complex': 0.0031200,
         },
         'ACE Flash Agent Pro (gemini-2.5-flash-lite)': {
-            'regular': 0.0012480,
-            'hard': 0.0023400,
-            'complex': 0.0031200,
-        },
-        'ACE Flash Agent Premium (gemini-2.5-flash)': {
             'regular': 0.0049920,
             'hard': 0.0093600,
             'complex': 0.0124800,
         },
+        'ACE Flash Agent Premium (gemini-2.5-flash)': {
+            'regular': 0.0012480,
+            'hard': 0.0023400,
+            'complex': 0.0031200,
+        },
     },
 }
 
+# Older sessions stored these display names; map to current keys for lookups.
+AI_AGENT_MODEL_LEGACY_ALIASES = {
+    'ACE Agentic pro (gpt-4o-mini)': 'ACE Agentic pro (gpt-5-mini)',
+    'ACE Agent Premium (gpt-4o)': 'ACE Agent Premium (gpt-5)',
+}
+
 AI_AGENT_SETTINGS = {
-    # Thresholds are in the same currency as the underlying costs
+    # Threshold: flat markup when raw_cost <= threshold; above threshold use multiplier.
     'India': {
-        'threshold': 1.0,      # INR
-        'multiplier': 5.0,
+        'threshold': 1.0,      # INR — flat AI markup when model raw cost <= 1
+        'multiplier': 2.0,
     },
     'International': {
-        'threshold': 0.0105,   # USD
-        'multiplier': 5.0,
+        'threshold': 0.0105,   # USD (~parity with 1 INR tier in prior config)
+        'multiplier': 2.0,
     },
 }
 
@@ -848,6 +842,7 @@ def get_ai_model_cost(pricing_key: str, model: str, complexity: str) -> float:
     if not model or model == 'None':
         return 0.0
     models = AI_AGENT_PRICING.get(pricing_key, {})
+    model = AI_AGENT_MODEL_LEGACY_ALIASES.get(model, model)
     model_data = models.get(model)
     if not model_data:
         return 0.0
@@ -881,17 +876,17 @@ def compute_ai_price_components(country: str, model: str, complexity: str, tier_
     multiplier = float(settings.get('multiplier', 1.0) or 1.0)
 
     raw_cost = get_ai_model_cost(pricing_key, model, complexity)
-    
-    # Calculate potential model-based markup
-    model_markup = raw_cost * multiplier
-    
-    # Logic: 
-    # 1. We keep the original raw_cost < threshold rule.
-    # 2. BUT, we also ensure that model pricing only kicks in if it's BETTER (higher)
-    #    than the standard tier markup. This ensures prices "adjust accordingly"
-    #    upwards for higher complexity/models, but don't drop below the rate card.
-    
-    if raw_cost >= threshold and model_markup > float(tier_ai_markup or 0.0):
+
+    # Model-based markup: above threshold → 2× raw cost; at/below → flat threshold
+    # (1 INR or USD equivalent), not the raw fractional token cost.
+    if raw_cost <= 0:
+        model_markup = 0.0
+    elif raw_cost <= threshold:
+        model_markup = threshold
+    else:
+        model_markup = raw_cost * multiplier
+
+    if raw_cost > 0 and model_markup > float(tier_ai_markup or 0.0):
         final_price = meta_ai_cost + model_markup
         return {
             'final_price': final_price,

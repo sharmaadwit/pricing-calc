@@ -229,9 +229,9 @@ AI model & complexity behaviour:
   - a **Use Case Complexity** (`regular`, `hard`, `complex`).
 - For pricing:
   - The raw vendor cost per call is read from `AI_AGENT_PRICING[pricing_key][model][complexity]`, where `pricing_key` is `India` (INR) or `International` (USD).
-  - Thresholds and multipliers come from `AI_AGENT_SETTINGS` (currently `1.0` INR and `0.0105` USD, with a `5.0` multiplier).
-  - If the vendor cost is **below the threshold**, the app ignores the model and keeps the slab-based AI markup unchanged.
-  - If the vendor cost is **at/above the threshold**, the final AI price per message becomes `cost × multiplier`; since `meta_costs_table[country]['ai']` is `0.0`, this full amount is treated and displayed as **Gupshup markup** (the UI labels this as `Channel Cost + Markup` for non-AI text message types).
+  - Thresholds and multipliers come from `AI_AGENT_SETTINGS` (currently `1.0` INR and `0.0105` USD, with a `2.0` multiplier for costs **above** the threshold).
+  - If the vendor cost is **at or below the threshold**, model-based AI markup is a **flat** threshold amount (1 INR or 0.0105 USD), whenever that beats slab pricing.
+  - If the vendor cost is **above the threshold**, markup is `cost × multiplier` (2×). Either way, the model path only applies when it beats the slab-based AI markup; since `meta_costs_table[country]['ai']` is `0.0`, the chosen markup is shown as **Gupshup markup** (the UI labels this as `Channel Cost + Markup` for non-AI text message types).
 
 ## 🔧 Development
 

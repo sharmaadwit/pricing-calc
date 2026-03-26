@@ -130,6 +130,8 @@ dmypy.json
 e2e_output/
 e2e_analytics.sqlite
 voice_e2e_results.html
+e2e_results_page.html
+text_only_gpt5_vs_gpt41.html
 channel_smoke_results.html
 
 # IDE

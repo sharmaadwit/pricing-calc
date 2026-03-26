@@ -96,7 +96,7 @@ def _base_volume_fields(
         "num_voice_journeys": num_voice_journeys,
         "num_voice_apis": num_voice_apis,
         "num_additional_voice_languages": add_lang,
-        "ai_agent_model": "ACE Agentic pro (gpt-4o-mini)",
+        "ai_agent_model": "ACE Agentic pro (gpt-5-mini)",
         "ai_agent_complexity": "regular",
     }
 
