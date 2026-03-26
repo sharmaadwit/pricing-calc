@@ -709,51 +709,46 @@ def build_voice_rate_card_for_prices(inputs, country=None):
 #       hard-code them in app.py or calculator.py.
 
 AI_AGENT_PRICING = {
-    'India': {  # Costs in INR per call
+    'India': {  # Costs in INR per call (rate card; token × FX, incl. 20% infra)
         'ACE Agent Lite (Qwen-Qwen3-8B)': {
-            'regular': 0.0722930,
-            'hard': 0.1355494,
-            'complex': 0.1807325,
+            'regular': 0.0723644,
+            'hard': 0.1356833,
+            'complex': 0.1809111,
         },
         'ACE Agent Lite Experimental (gpt-5-nano)': {
-            'regular': 0.0768113,
-            'hard': 0.1440212,
-            'complex': 0.1920283,
+            'regular': 0.0768872,
+            'hard': 0.1441635,
+            'complex': 0.1922180,
         },
         'ACE Agentic pro (gpt-5-mini)': {
-            'regular': 0.3840565,
-            'hard': 0.7201060,
-            'complex': 0.9601413,
+            'regular': 0.3844360,
+            'hard': 0.7208175,
+            'complex': 0.9610900,
         },
         'ACE Agentic Pro Experimental (gpt-4.1-mini)': {
-            'regular': 0.4699044,
-            'hard': 0.8810708,
-            'complex': 1.1747611,
+            'regular': 0.4703687,
+            'hard': 0.8819414,
+            'complex': 1.1759219,
         },
         'ACE Agent Premium (gpt-5)': {
-            'regular': 0.1762142,
-            'hard': 0.3304016,
-            'complex': 0.4405354,
+            'regular': 1.9221800,
+            'hard': 3.6040875,
+            'complex': 4.8054499,
         },
         'ACE Agent Premium Experimental (gpt-4.1)': {
-            'regular': 2.3495222,
-            'hard': 4.4053542,
-            'complex': 5.8738056,
-        },
-        'ACE Agent Nano Experimental (gpt-4.1-nano)': {
-            'regular': 0.1174761,
-            'hard': 0.2202677,
-            'complex': 0.2936903,
+            'regular': 2.3518437,
+            'hard': 4.4097070,
+            'complex': 5.8796093,
         },
         'ACE Flash Agent Pro (gemini-2.5-flash-lite)': {
-            'regular': 0.4699044,
-            'hard': 0.8810708,
-            'complex': 1.1747611,
+            'regular': 0.1175922,
+            'hard': 0.2204854,
+            'complex': 0.2939805,
         },
         'ACE Flash Agent Premium (gemini-2.5-flash)': {
-            'regular': 0.1174761,
-            'hard': 0.2202677,
-            'complex': 0.2936903,
+            'regular': 0.4703687,
+            'hard': 0.8819414,
+            'complex': 1.1759219,
         },
     },
     'International': {  # Costs in USD per call
@@ -778,29 +773,24 @@ AI_AGENT_PRICING = {
             'complex': 0.0124800,
         },
         'ACE Agent Premium (gpt-5)': {
-            'regular': 0.0018720,
-            'hard': 0.0035100,
-            'complex': 0.0046800,
+            'regular': 0.0204000,
+            'hard': 0.0382500,
+            'complex': 0.0510000,
         },
         'ACE Agent Premium Experimental (gpt-4.1)': {
             'regular': 0.0249600,
             'hard': 0.0468000,
             'complex': 0.0624000,
         },
-        'ACE Agent Nano Experimental (gpt-4.1-nano)': {
+        'ACE Flash Agent Pro (gemini-2.5-flash-lite)': {
             'regular': 0.0012480,
             'hard': 0.0023400,
             'complex': 0.0031200,
         },
-        'ACE Flash Agent Pro (gemini-2.5-flash-lite)': {
+        'ACE Flash Agent Premium (gemini-2.5-flash)': {
             'regular': 0.0049920,
             'hard': 0.0093600,
             'complex': 0.0124800,
-        },
-        'ACE Flash Agent Premium (gemini-2.5-flash)': {
-            'regular': 0.0012480,
-            'hard': 0.0023400,
-            'complex': 0.0031200,
         },
     },
 }
@@ -809,6 +799,7 @@ AI_AGENT_PRICING = {
 AI_AGENT_MODEL_LEGACY_ALIASES = {
     'ACE Agentic pro (gpt-4o-mini)': 'ACE Agentic pro (gpt-5-mini)',
     'ACE Agent Premium (gpt-4o)': 'ACE Agent Premium (gpt-5)',
+    'ACE Agent Nano Experimental (gpt-4.1-nano)': 'ACE Flash Agent Pro (gemini-2.5-flash-lite)',
 }
 
 AI_AGENT_SETTINGS = {
