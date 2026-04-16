@@ -3,7 +3,7 @@
   "unique_users": 28,
   "total_revenue": 112825854.0,
   "countries": 7,
-  "last_updated": "2026-04-16 07:49:19",
+  "last_updated": "2026-04-16 10:16:20",
   "top_users": {
     "Puru Chauhan": 20150000.0,
     "Kathyayani Nayak": 19565500.0,
@@ -2533,14 +2533,14 @@
   },
   "funnel": {
     "counts": {
-      "volumes": 522,
+      "volumes": 523,
       "prices": 108,
       "results": 224,
       "sow_details": 85,
       "sow_download": 35
     },
     "conversion": {
-      "volumes_to_prices": 20.689655172413794,
+      "volumes_to_prices": 20.650095602294456,
       "prices_to_results": 207.4074074074074,
       "results_to_sow_details": 37.94642857142857,
       "sow_details_to_sow_download": 41.17647058823529
