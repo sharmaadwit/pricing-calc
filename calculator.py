@@ -21,6 +21,8 @@ from pricing_config import (
     get_whatsapp_voice_tier,
     get_whatsapp_voice_rate,
     get_pstn_rates,
+    get_one_time_dev_profile,
+    TEXT_ONE_TIME_HOURS_PER_MANDAY,
 )
 import sys
 
@@ -223,52 +225,138 @@ def _calculate_extras_mandays(inputs, activity_mandays):
         extras += activity_mandays['ux']
     return extras
 
+def _int_input(inputs, key, default=0):
+    try:
+        return int(inputs.get(key) or default)
+    except Exception:
+        return default
+
+
+def _hours_to_mandays(hours):
+    return float(hours) / float(TEXT_ONE_TIME_HOURS_PER_MANDAY)
+
+
+def _scale_up_block_days(value, included, rule, label):
+    if not rule or value <= included:
+        return 0.0, None
+    blocks = (value - included + rule["per"] - 1) // rule["per"]
+    days = _hours_to_mandays(blocks * rule["hours"])
+    return days, {
+        "label": label,
+        "days": days,
+        "detail": f"{value} entered, {included} included",
+    }
+
+
+def _compute_text_implementation_mandays(inputs):
+    profile = get_one_time_dev_profile(inputs.get("one_time_dev_profile"))
+    if not profile:
+        return {
+            "bot_ui": 0.0,
+            "custom_ai": 0.0,
+            "total": 0.0,
+            "implementation_profile_id": "",
+            "effort_lines": [],
+        }
+
+    included = profile.get("included") or {}
+    scale_ups = profile.get("scale_ups") or {}
+    journeys = _int_input(inputs, "num_journeys_price") if "journeys" in included else 0
+    apis = _int_input(inputs, "num_apis_price")
+    logical_steps = _int_input(inputs, "num_logical_steps_price")
+    screens = _int_input(inputs, "num_wa_screens_price")
+    languages = _int_input(inputs, "num_additional_text_languages")
+    effort_lines = [{"label": "Base profile effort", "days": float(profile["base_days"])}]
+    extra_days = 0.0
+
+    step_days, step_line = _scale_up_block_days(
+        logical_steps,
+        included.get("logical_steps", 0),
+        scale_ups.get("logical_steps"),
+        "Logical steps above included",
+    )
+    if step_line:
+        extra_days += step_days
+        effort_lines.append(step_line)
+
+    api_days, api_line = _scale_up_block_days(
+        apis,
+        included.get("apis", 0),
+        scale_ups.get("apis"),
+        "APIs above included",
+    )
+    if api_line:
+        extra_days += api_days
+        effort_lines.append(api_line)
+
+    screen_days, screen_line = _scale_up_block_days(
+        screens,
+        included.get("screens", 0),
+        scale_ups.get("screens"),
+        "Screens above included",
+    )
+    if screen_line:
+        extra_days += screen_days
+        effort_lines.append(screen_line)
+
+    language_multiplier = scale_ups.get("languages_multiplier")
+    if languages > 0 and language_multiplier:
+        language_days = float(profile["base_days"]) * float(language_multiplier) * languages
+        extra_days += language_days
+        effort_lines.append(
+            {
+                "label": "Additional languages",
+                "days": language_days,
+                "detail": f"{languages} language(s) at {language_multiplier:.0%} of base effort",
+            }
+        )
+
+    if journeys > included.get("journeys", 0) and included.get("journeys", 0) > 0:
+        extra_journeys = journeys - included.get("journeys", 0)
+        journey_days = float(profile["base_days"]) * extra_journeys
+        extra_days += journey_days
+        effort_lines.append(
+            {
+                "label": "Additional journeys above included",
+                "days": journey_days,
+                "detail": f"{journeys} entered, {included.get('journeys', 0)} included",
+            }
+        )
+
+    total_days = float(profile["base_days"]) + extra_days
+    rate_bucket = profile.get("rate_bucket", "bot_ui")
+    bot_ui = total_days if rate_bucket == "bot_ui" else 0.0
+    custom_ai = total_days if rate_bucket == "custom_ai" else 0.0
+    return {
+        "bot_ui": bot_ui,
+        "custom_ai": custom_ai,
+        "total": bot_ui + custom_ai,
+        "implementation_profile_id": profile["id"],
+        "effort_lines": effort_lines,
+    }
+
+
 # --- refactored calculate_total_mandays ---
 def calculate_total_mandays(inputs):
-    """
-    Calculate the total mandays based on user inputs and the activity-to-manday mapping.
-    Uses shared helpers for set and extras logic.
-    """
-    total_mandays = 0
-    num_journeys = int(inputs.get('num_journeys_price') or 0)
-    num_apis = int(inputs.get('num_apis_price') or 0)
-    set_mandays, rem_apis, rem_journeys = _calculate_set_mandays(num_apis, num_journeys)
-    total_mandays += set_mandays
-    total_mandays += rem_apis + rem_journeys
-    # AI Agents (Commerce + FAQ + Support)
-    total_mandays += int(inputs.get('num_ai_workspace_commerce_price') or 0) * ACTIVITY_MANDAYS['ai_agents']
-    total_mandays += int(inputs.get('num_ai_workspace_faq_price') or 0) * ACTIVITY_MANDAYS['ai_agents']
-    total_mandays += int(inputs.get('num_ai_workspace_support_price') or 0) * ACTIVITY_MANDAYS['ai_workspace_support']
-    # Extras
+    """Calculate total mandays for text one-time development."""
+    implementation = _compute_text_implementation_mandays(inputs)
+    total_mandays = implementation["total"]
     total_mandays += _calculate_extras_mandays(inputs, ACTIVITY_MANDAYS)
     return total_mandays
 
 # --- refactored calculate_total_mandays_breakdown ---
 def calculate_total_mandays_breakdown(inputs):
-    """
-    Returns a dict with mandays for bot_ui and custom_ai activities, using shared helpers for set and extras logic.
-    """
-    num_journeys = int(inputs.get('num_journeys_price') or 0)
-    num_apis = int(inputs.get('num_apis_price') or 0)
-    num_ai_commerce = int(inputs.get('num_ai_workspace_commerce_price') or 0)
-    num_ai_faq = int(inputs.get('num_ai_workspace_faq_price') or 0)
-    num_ai_support = int(inputs.get('num_ai_workspace_support_price') or 0)
-    bot_ui_mandays, rem_apis, rem_journeys = _calculate_set_mandays(num_apis, num_journeys)
-    bot_ui_mandays += rem_apis + rem_journeys
-    # Extras for bot_ui
+    """Return bot_ui and custom_ai mandays from profile effort and extras."""
+    implementation = _compute_text_implementation_mandays(inputs)
+    bot_ui_mandays = implementation["bot_ui"]
+    custom_ai_mandays = implementation["custom_ai"]
     bot_ui_mandays += _calculate_extras_mandays(inputs, ACTIVITY_MANDAYS)
-    # Custom/AI: AI workspaces
-    custom_ai_mandays = 0
-    if num_ai_commerce > 0:
-        custom_ai_mandays += num_ai_commerce * ACTIVITY_MANDAYS['ai_agents']
-    if num_ai_faq > 0:
-        custom_ai_mandays += num_ai_faq * ACTIVITY_MANDAYS['ai_agents']
-    if num_ai_support > 0:
-        custom_ai_mandays += num_ai_support * ACTIVITY_MANDAYS['ai_workspace_support']
     return {
-        'bot_ui': bot_ui_mandays,
-        'custom_ai': custom_ai_mandays,
-        'total': bot_ui_mandays + custom_ai_mandays
+        "bot_ui": bot_ui_mandays,
+        "custom_ai": custom_ai_mandays,
+        "total": bot_ui_mandays + custom_ai_mandays,
+        "implementation_profile_id": implementation["implementation_profile_id"],
+        "effort_lines": implementation["effort_lines"],
     }
 
 def calculate_total_manday_cost(inputs, manday_rates=None):
@@ -345,6 +433,8 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
         'total_cost': total_cost,
         'currency': currency,
         'mandays_breakdown': breakdown,
+        'text_effort_lines': breakdown.get('effort_lines', []),
+        'implementation_profile_id': breakdown.get('implementation_profile_id', ''),
     }
     return total_cost, currency, breakdown_dict
 

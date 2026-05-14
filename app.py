@@ -27,6 +27,10 @@ from pricing_config import (
     compute_ai_price_components,
     get_default_location_for_email,
     build_voice_rate_card_for_prices,
+    TEXT_ONE_TIME_EFFORT_PROFILES,
+    TEXT_ONE_TIME_EFFORT_PROFILES_BY_ID,
+    TEXT_ONE_TIME_AGENTIC_PROFILE_IDS,
+    normalize_one_time_dev_profile,
 )
 
 # 🍕 PIZZA EASTER EGG SYSTEM 🍕
@@ -171,6 +175,14 @@ def calculate_safe_overage_price(rate_card_price, meta_cost, markup_multiplier=1
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your_secret_key')  # Needed for session
+
+
+@app.context_processor
+def inject_text_one_time_effort_catalog():
+    return {
+        'text_one_time_effort_profiles': TEXT_ONE_TIME_EFFORT_PROFILES,
+        'text_one_time_effort_profiles_by_id': TEXT_ONE_TIME_EFFORT_PROFILES_BY_ID,
+    }
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('RAILWAY_ENVIRONMENT') == 'production' or os.environ.get('FLASK_ENV') == 'production'
@@ -855,20 +867,17 @@ def index():
         ux_price = request.form.get('ux_price', 'No')
         testing_qa_price = request.form.get('testing_qa_price', 'No')
         aa_setup_price = request.form.get('aa_setup_price', 'No')
+        one_time_dev_profile = normalize_one_time_dev_profile(request.form.get('one_time_dev_profile', ''))
         num_apis_price = request.form.get('num_apis_price', '0')
         num_journeys_price = request.form.get('num_journeys_price', '0')
-        num_ai_workspace_commerce_price = request.form.get('num_ai_workspace_commerce_price', '0')
-        num_ai_workspace_faq_price = request.form.get('num_ai_workspace_faq_price', '0')
-        # If any AI workspace is selected, AI Module must be Yes
-        try:
-            ws_commerce_count = int(str(num_ai_workspace_commerce_price).strip() or '0')
-        except Exception:
-            ws_commerce_count = 0
-        try:
-            ws_faq_count = int(str(num_ai_workspace_faq_price).strip() or '0')
-        except Exception:
-            ws_faq_count = 0
-        if ws_commerce_count > 0 or ws_faq_count > 0:
+        num_logical_steps_price = request.form.get('num_logical_steps_price', '0')
+        num_wa_screens_price = request.form.get('num_wa_screens_price', '0')
+        num_additional_text_languages = request.form.get('num_additional_text_languages', '0')
+        if one_time_dev_profile in TEXT_ONE_TIME_AGENTIC_PROFILE_IDS:
+            num_journeys_price = '0'
+        num_ai_workspace_commerce_price = '0'
+        num_ai_workspace_faq_price = '0'
+        if one_time_dev_profile in TEXT_ONE_TIME_AGENTIC_PROFILE_IDS:
             ai_module = 'Yes'
         # Voice notes fields
         voice_notes_price = request.form.get('voice_notes_price', 'No')
@@ -939,8 +948,12 @@ def index():
             'ux_price': ux_price,
             'testing_qa_price': testing_qa_price,
             'aa_setup_price': aa_setup_price,
+            'one_time_dev_profile': one_time_dev_profile,
             'num_apis_price': num_apis_price,
             'num_journeys_price': num_journeys_price,
+            'num_logical_steps_price': num_logical_steps_price,
+            'num_wa_screens_price': num_wa_screens_price,
+            'num_additional_text_languages': num_additional_text_languages,
             'num_ai_workspace_commerce_price': num_ai_workspace_commerce_price,
             'num_ai_workspace_faq_price': num_ai_workspace_faq_price,
             # Voice notes fields
@@ -1294,7 +1307,8 @@ def index():
         # Use one-time dev activity fields from form if present, else from session
         dev_fields = [
             'onboarding_price', 'ux_price', 'testing_qa_price', 'aa_setup_price',
-            'num_apis_price', 'num_journeys_price', 'num_ai_workspace_commerce_price', 'num_ai_workspace_faq_price',
+            'one_time_dev_profile', 'num_apis_price', 'num_journeys_price',
+            'num_logical_steps_price', 'num_wa_screens_price', 'num_additional_text_languages',
             'voice_notes_price', 'voice_notes_model', 'voice_notes_rate'
         ]
         patched_form = (request.form.copy() if hasattr(request.form, 'copy') else dict(request.form)) or {}

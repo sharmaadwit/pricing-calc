@@ -305,6 +305,37 @@
             margin-top: 4px;
             font-style: italic;
         }
+
+        .effort-profile-panel {
+            display: none;
+            margin-top: 12px;
+            padding: 16px 18px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+        }
+
+        .effort-profile-panel.is-visible { display: block; }
+        .effort-profile-panel[data-complexity="Simple"] { border-color: #86efac; background: #f0fdf4; }
+        .effort-profile-panel[data-complexity="Medium"] { border-color: #fde047; background: #fefce8; }
+        .effort-profile-panel[data-complexity="Complex"] { border-color: #f9a8d4; background: #fdf2f8; }
+        .effort-profile-panel h4 { margin: 0 0 8px; color: #1f2937; }
+        .effort-profile-panel p { margin: 0 0 10px; color: #374151; }
+        .effort-profile-panel ul { margin: 0 0 10px 18px; padding: 0; color: #374151; }
+        .scope-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+        .included-hint {
+            margin-top: 4px;
+            color: #047857;
+            font-size: 0.82rem;
+        }
+        @media (max-width: 768px) {
+            .scope-grid { grid-template-columns: 1fr; }
+        }
         
         .calculation-id {
             background: #e0f2fe;
@@ -611,20 +642,14 @@
 
         function enforceAiModuleForWorkspace() {
             var aiModuleEl = document.getElementById('ai_module');
-            var wsCommerceEl = document.getElementById('num_ai_workspace_commerce_price');
-            var wsFaqEl = document.getElementById('num_ai_workspace_faq_price');
+            var profileEl = document.getElementById('one_time_dev_profile');
             if (!aiModuleEl) return;
-            function parseCount(el) {
-                if (!el || !el.value) return 0;
-                try {
-                    return parseInt(el.value, 10) || 0;
-                } catch (e) {
-                    return 0;
-                }
-            }
-            var commerce = parseCount(wsCommerceEl);
-            var faq = parseCount(wsFaqEl);
-            if (commerce > 0 || faq > 0) {
+            var agenticProfiles = {
+                simple_agentic_ai: true,
+                medium_agentic_ai_api: true,
+                complex_agentic_ai_api: true
+            };
+            if (profileEl && agenticProfiles[profileEl.value]) {
                 aiModuleEl.value = 'Yes';
             }
         }
@@ -698,6 +723,53 @@
                 <div class="form-section" id="text-dev-section">
                     <h2>One time dev charges - Text only</h2>
                     <div class="form-group">
+                        <label for="one_time_dev_complexity">Implementation complexity:</label>
+                        <select id="one_time_dev_complexity">
+                            <option value="">Select complexity</option>
+                            <option value="Simple" {% if inputs.get('one_time_dev_profile') and text_one_time_effort_profiles_by_id.get(inputs.get('one_time_dev_profile', ''), {}).get('complexity') == 'Simple' %}selected{% endif %}>Simple</option>
+                            <option value="Medium" {% if inputs.get('one_time_dev_profile') and text_one_time_effort_profiles_by_id.get(inputs.get('one_time_dev_profile', ''), {}).get('complexity') == 'Medium' %}selected{% endif %}>Medium</option>
+                            <option value="Complex" {% if inputs.get('one_time_dev_profile') and text_one_time_effort_profiles_by_id.get(inputs.get('one_time_dev_profile', ''), {}).get('complexity') == 'Complex' %}selected{% endif %}>Complex</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="one_time_dev_profile">Bot type profile:</label>
+                        <select name="one_time_dev_profile" id="one_time_dev_profile" required>
+                            <option value="">Select bot type</option>
+                            {% for profile in text_one_time_effort_profiles %}
+                            <option value="{{ profile.id }}" data-complexity="{{ profile.complexity }}" {% if inputs.get('one_time_dev_profile', '') == profile.id %}selected{% endif %}>{{ profile.bot_type }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="help-text">Base effort and included scope come from the selected profile. Counts below only add effort above included limits.</div>
+                        <div id="one-time-dev-profile-panel" class="effort-profile-panel" aria-live="polite"></div>
+                    </div>
+                    <script type="application/json" id="text-one-time-effort-profiles-json">{{ text_one_time_effort_profiles | tojson }}</script>
+                    <div class="scope-grid">
+                        <div class="form-group" id="scope_journeys_group">
+                            <label for="num_journeys_price">Journeys:</label>
+                            <input type="number" name="num_journeys_price" id="num_journeys_price" min="0" value="{{ inputs.get('num_journeys_price', '0') }}">
+                            <div class="included-hint" id="included_journeys_hint"></div>
+                        </div>
+                        <div class="form-group" id="scope_apis_group">
+                            <label for="num_apis_price">APIs:</label>
+                            <input type="number" name="num_apis_price" id="num_apis_price" min="0" value="{{ inputs.get('num_apis_price', '0') }}">
+                            <div class="included-hint" id="included_apis_hint"></div>
+                        </div>
+                        <div class="form-group" id="scope_logical_steps_group">
+                            <label for="num_logical_steps_price">Logical steps:</label>
+                            <input type="number" name="num_logical_steps_price" id="num_logical_steps_price" min="0" value="{{ inputs.get('num_logical_steps_price', '0') }}">
+                            <div class="included-hint" id="included_logical_steps_hint"></div>
+                        </div>
+                        <div class="form-group" id="scope_screens_group">
+                            <label for="num_wa_screens_price">WhatsApp screens:</label>
+                            <input type="number" name="num_wa_screens_price" id="num_wa_screens_price" min="0" value="{{ inputs.get('num_wa_screens_price', '0') }}">
+                            <div class="included-hint" id="included_screens_hint"></div>
+                        </div>
+                        <div class="form-group" id="scope_languages_group">
+                            <label for="num_additional_text_languages">Additional languages (above Hindi/English):</label>
+                            <input type="number" name="num_additional_text_languages" id="num_additional_text_languages" min="0" value="{{ inputs.get('num_additional_text_languages', '0') }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label for="onboarding_price">Onboarding Required?:</label>
                         <select name="onboarding_price" id="onboarding_price">
                             <option value="Yes" {% if inputs and inputs.onboarding_price == 'Yes' %}selected{% endif %}>Yes</option>
@@ -727,26 +799,6 @@
                             <option value="Yes" {% if inputs and inputs.aa_setup_price == 'Yes' %}selected{% endif %}>Yes</option>
                             <option value="No" {% if inputs and inputs.aa_setup_price == 'No' %}selected{% endif %}>No</option>
                         </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="num_apis_price">No of APIs:</label>
-                        <input type="number" name="num_apis_price" id="num_apis_price" min="0" value="{{ inputs.get('num_apis_price', '') }}">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="num_journeys_price">No of Journeys:</label>
-                        <input type="number" name="num_journeys_price" id="num_journeys_price" min="0" value="{{ inputs.get('num_journeys_price', '') }}">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="num_ai_workspace_commerce_price">No of AI Workspace - Commerce:</label>
-                        <input type="number" name="num_ai_workspace_commerce_price" id="num_ai_workspace_commerce_price" min="0" value="{{ inputs.get('num_ai_workspace_commerce_price', '') }}">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="num_ai_workspace_faq_price">No of AI Workspace - FAQ:</label>
-                        <input type="number" name="num_ai_workspace_faq_price" id="num_ai_workspace_faq_price" min="0" value="{{ inputs.get('num_ai_workspace_faq_price', '') }}">
                     </div>
                     
                     <div class="form-group">
@@ -1172,6 +1224,92 @@
         if (va) va.disabled = isLev;
         if (vl) vl.disabled = isLev;
     }
+    function syncTextDevProfileOptions() {
+        var complexityEl = document.getElementById('one_time_dev_complexity');
+        var profileEl = document.getElementById('one_time_dev_profile');
+        if (!complexityEl || !profileEl) return;
+        var complexity = complexityEl.value;
+        var selectedValid = false;
+        Array.from(profileEl.options).forEach(function(opt, idx) {
+            if (idx === 0) {
+                opt.hidden = false;
+                return;
+            }
+            var matches = !complexity || opt.getAttribute('data-complexity') === complexity;
+            opt.hidden = !matches;
+            if (opt.selected && matches) selectedValid = true;
+        });
+        if (!selectedValid) profileEl.value = '';
+        updateTextDevProfilePanel();
+        enforceAiModuleForWorkspace();
+    }
+    function updateTextDevProfilePanel() {
+        var profileEl = document.getElementById('one_time_dev_profile');
+        var panelEl = document.getElementById('one-time-dev-profile-panel');
+        var dataEl = document.getElementById('text-one-time-effort-profiles-json');
+        if (!profileEl || !panelEl || !dataEl) return;
+        var profiles = [];
+        try {
+            profiles = JSON.parse(dataEl.textContent || '[]');
+        } catch (err) {
+            profiles = [];
+        }
+        var profile = profiles.find(function(item) { return item.id === profileEl.value; });
+        function setHint(id, includedValue) {
+            var hintEl = document.getElementById(id);
+            if (!hintEl) return;
+            if (includedValue === undefined || includedValue === null) {
+                hintEl.textContent = '';
+                return;
+            }
+            hintEl.textContent = 'Included in profile: ' + includedValue;
+        }
+        function toggleGroup(groupId, visible) {
+            var groupEl = document.getElementById(groupId);
+            if (groupEl) groupEl.style.display = visible ? '' : 'none';
+        }
+        if (!profile) {
+            panelEl.classList.remove('is-visible');
+            panelEl.innerHTML = '';
+            panelEl.removeAttribute('data-complexity');
+            toggleGroup('scope_journeys_group', true);
+            toggleGroup('scope_apis_group', true);
+            toggleGroup('scope_logical_steps_group', true);
+            toggleGroup('scope_screens_group', true);
+            toggleGroup('scope_languages_group', true);
+            return;
+        }
+        var included = profile.included || {};
+        var scaleUps = profile.scale_ups || {};
+        panelEl.dataset.complexity = profile.complexity;
+        panelEl.innerHTML = [
+            '<h4>' + profile.complexity + ' — ' + profile.bot_type + '</h4>',
+            '<p><strong>Definition:</strong> ' + profile.definition + '</p>',
+            '<p><strong>Inclusions:</strong></p>',
+            '<ul>' + (profile.inclusions || []).map(function(item) { return '<li>' + item + '</li>'; }).join('') + '</ul>',
+            '<p><strong>Base effort estimate:</strong> ' + profile.base_days + ' day(s)</p>',
+            (profile.scale_up_rules && profile.scale_up_rules.length)
+                ? '<p><strong>Scale-up rules:</strong></p><ul>' + profile.scale_up_rules.map(function(item) { return '<li>' + item + '</li>'; }).join('') + '</ul>'
+                : '',
+            profile.comments ? '<p><strong>Notes:</strong> ' + profile.comments + '</p>' : ''
+        ].join('');
+        panelEl.classList.add('is-visible');
+        setHint('included_journeys_hint', included.journeys);
+        setHint('included_apis_hint', included.apis);
+        setHint('included_logical_steps_hint', included.logical_steps);
+        setHint('included_screens_hint', included.screens);
+        var journeysEl = document.getElementById('num_journeys_price');
+        var showJourneys = included.journeys !== undefined;
+        if (journeysEl) {
+            journeysEl.disabled = !showJourneys;
+            if (!showJourneys) journeysEl.value = '0';
+        }
+        toggleGroup('scope_journeys_group', showJourneys);
+        toggleGroup('scope_apis_group', included.apis !== undefined || !!scaleUps.apis);
+        toggleGroup('scope_logical_steps_group', included.logical_steps !== undefined || !!scaleUps.logical_steps);
+        toggleGroup('scope_screens_group', included.screens !== undefined || !!scaleUps.screens);
+        toggleGroup('scope_languages_group', !!scaleUps.languages_multiplier);
+    }
     function syncVoicePartnerOptionsForCountry() {
         var countrySel = document.getElementById('country-select');
         var sel = document.getElementById('voice_partner');
@@ -1196,8 +1334,8 @@
         var countrySel = document.getElementById('country-select');
         var aiModuleEl = document.getElementById('ai_module');
         var aiVolumeEl = document.getElementById('ai_volume');
-        var wsCommerceEl = document.getElementById('num_ai_workspace_commerce_price');
-        var wsFaqEl = document.getElementById('num_ai_workspace_faq_price');
+        var complexityEl = document.getElementById('one_time_dev_complexity');
+        var profileEl = document.getElementById('one_time_dev_profile');
         if (channelSel) channelSel.addEventListener('change', toggleChannelFields);
         if (countrySel) {
             countrySel.addEventListener('change', toggleChannelFields);
@@ -1208,8 +1346,9 @@
         syncVoicePartnerOptionsForCountry();
         if (aiModuleEl) aiModuleEl.addEventListener('change', toggleAiAgentFields);
         if (aiVolumeEl) aiVolumeEl.addEventListener('input', toggleAiAgentFields);
-        if (wsCommerceEl) wsCommerceEl.addEventListener('input', enforceAiModuleForWorkspace);
-        if (wsFaqEl) wsFaqEl.addEventListener('input', enforceAiModuleForWorkspace);
+        if (complexityEl) complexityEl.addEventListener('change', syncTextDevProfileOptions);
+        if (profileEl) profileEl.addEventListener('change', syncTextDevProfileOptions);
+        syncTextDevProfileOptions();
         toggleChannelFields();
         toggleAiAgentFields();
     });
@@ -1225,14 +1364,20 @@
         <div style="background: #f5f5fa; border: 1px solid #bbaadd; border-radius: 8px; padding: 18px 28px; margin-bottom: 24px;">
             <h3>One Time Dev Prices (Review)</h3>
             <ul style="list-style:none; padding:0; margin:0; font-size:1.08em;">
+                {% set dev_profile = text_one_time_effort_profiles_by_id.get(inputs.get('one_time_dev_profile', '')) %}
+                {% if dev_profile %}
+                <li>Implementation profile: <b>{{ dev_profile.complexity }} — {{ dev_profile.bot_type }}</b></li>
+                <li>Definition: <b>{{ dev_profile.definition }}</b></li>
+                {% endif %}
                 <li>Onboarding: <b>{{ inputs.get('onboarding_price', 'No') }}</b></li>
                 <li>UX: <b>{{ inputs.get('ux_price', 'No') }}</b></li>
                 <li>Testing/QA: <b>{{ inputs.get('testing_qa_price', 'No') }}</b></li>
                 <li>AA Setup: <b>{{ inputs.get('aa_setup_price', 'No') }}</b></li>
-                <li>No of APIs: <b>{{ inputs.get('num_apis_price', '0') }}</b></li>
-                <li>No of Journeys: <b>{{ inputs.get('num_journeys_price', '0') }}</b></li>
-                <li>No of AI Workspace - Commerce: <b>{{ inputs.get('num_ai_workspace_commerce_price', '0') }}</b></li>
-                <li>No of AI Workspace - FAQ: <b>{{ inputs.get('num_ai_workspace_faq_price', '0') }}</b></li>
+                <li>Scope —
+                  {% if not dev_profile or dev_profile.get('rate_bucket') != 'custom_ai' %}
+                  Journeys: <b>{{ inputs.get('num_journeys_price', '0') }}</b>,
+                  {% endif %}
+                  APIs: <b>{{ inputs.get('num_apis_price', '0') }}</b>, Logical steps: <b>{{ inputs.get('num_logical_steps_price', '0') }}</b>, Screens: <b>{{ inputs.get('num_wa_screens_price', '0') }}</b>, Additional languages: <b>{{ inputs.get('num_additional_text_languages', '0') }}</b></li>
                 <li>Voice Notes: <b>{{ inputs.get('voice_notes_price', 'No') }}</b>{% if inputs.get('voice_notes_price') == 'Yes' and inputs.get('voice_notes_model') %} - {{ inputs.get('voice_notes_model') }}{% endif %}</li>
                 {% if inputs.get('channel_type') in ['voice_only', 'text_voice'] %}
                 <li>Voice AI delivery: <b>{% if inputs.get('voice_partner') == 'leverage' %}Leverage (partner){% else %}Gupshup native{% endif %}</b>
@@ -1523,17 +1668,33 @@
             <div style="margin-top: 10px; font-size: 1.08em;">
               <b>Breakdown:</b> Bot/UI: {{ '{:,.1f}'.format(text_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.1f}'.format(text_breakdown.custom_ai) }}
             </div>
+            {% set dev_profile = text_one_time_effort_profiles_by_id.get(inputs.get('one_time_dev_profile', '')) %}
             <div style="margin-top: 6px; font-size: 0.98em; color: #444;">
               <b>Scope:</b>
-              APIs: {{ inputs.get('num_apis_price', '0') }},
-              Journeys: {{ inputs.get('num_journeys_price', '0') }}
-              {% set aic = (inputs.get('num_ai_workspace_commerce_price', '0') or '0')|int %}
-              {% set aif = (inputs.get('num_ai_workspace_faq_price', '0') or '0')|int %}
-              {% set ais = (inputs.get('num_ai_workspace_support_price', '0') or '0')|int %}
-              {% if aic > 0 or aif > 0 or ais > 0 %}
-                , AI Workspaces — Commerce: {{ aic }}, FAQ: {{ aif }}{% if inputs.get('num_ai_workspace_support_price') is not none %}, Support: {{ ais }}{% endif %}
+              {% if not dev_profile or dev_profile.get('rate_bucket') != 'custom_ai' %}
+              Journeys: {{ inputs.get('num_journeys_price', '0') }},
               {% endif %}
+              APIs: {{ inputs.get('num_apis_price', '0') }},
+              Logical steps: {{ inputs.get('num_logical_steps_price', '0') }},
+              Screens: {{ inputs.get('num_wa_screens_price', '0') }},
+              Additional languages: {{ inputs.get('num_additional_text_languages', '0') }}
             </div>
+            {% if dev_profile %}
+            <div style="margin-top: 12px; font-size: 0.98em; color: #444;">
+              <b>Implementation profile:</b> {{ dev_profile.complexity }} — {{ dev_profile.bot_type }}
+              <div style="margin-top: 6px;"><b>Definition:</b> {{ dev_profile.definition }}</div>
+            </div>
+            {% endif %}
+            {% if text_breakdown.get('effort_lines') %}
+            <div style="margin-top: 12px; font-size: 0.98em; color: #444;">
+              <b>Effort lines:</b>
+              <ul style="margin: 6px 0 0 18px; padding: 0;">
+                {% for line in text_breakdown.effort_lines %}
+                <li>{{ line.label }}: {{ '{:,.2f}'.format(line.days) }} day(s){% if line.detail %} ({{ line.detail }}){% endif %}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
             <!-- Cost Breakdown Section -->
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #c8e6c9;">
               <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Cost Breakdown</h4>

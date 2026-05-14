@@ -174,6 +174,205 @@ ACTIVITY_MANDAYS = {
     "ai_workspace_support": 2,
 }
 
+TEXT_ONE_TIME_LANGUAGE_SCALE_MULTIPLIER = 0.5
+TEXT_ONE_TIME_HOURS_PER_MANDAY = 8
+
+TEXT_ONE_TIME_EFFORT_PROFILES = [
+    {
+        "id": "simple_structured",
+        "complexity": "Simple",
+        "bot_type": "Structured Bot",
+        "definition": "One static journey up to 20 steps.",
+        "inclusions": ["Conditional handling within the base journey."],
+        "base_days": 1.0,
+        "rate_bucket": "bot_ui",
+        "included": {"journeys": 1, "logical_steps": 20},
+        "scale_ups": {
+            "logical_steps": {"over": 20, "per": 10, "hours": 6},
+            "languages_multiplier": TEXT_ONE_TIME_LANGUAGE_SCALE_MULTIPLIER,
+        },
+        "scale_up_rules": [
+            "Every additional 10 logical steps adds 6 hours.",
+            "Every additional language adds about 50% of base implementation effort.",
+        ],
+    },
+    {
+        "id": "simple_structured_api",
+        "complexity": "Simple",
+        "bot_type": "Structured + API",
+        "definition": "Structured journey up to 20 steps and 5 API calls.",
+        "inclusions": ["Journey logic and API integration within the stated limits."],
+        "base_days": 1.5,
+        "rate_bucket": "bot_ui",
+        "included": {"journeys": 1, "logical_steps": 20, "apis": 5},
+        "scale_ups": {
+            "logical_steps": {"over": 20, "per": 10, "hours": 6},
+            "apis": {"over": 5, "per": 2, "hours": 4},
+            "languages_multiplier": TEXT_ONE_TIME_LANGUAGE_SCALE_MULTIPLIER,
+        },
+        "scale_up_rules": [
+            "Every additional 10 logical steps adds 6 hours.",
+            "Every additional 2 APIs adds 4 hours.",
+            "Every additional language adds about 50% of base implementation effort.",
+        ],
+    },
+    {
+        "id": "simple_wa_static",
+        "complexity": "Simple",
+        "bot_type": "WA Static Flows",
+        "definition": "Journey with static flow screens (1 journey and up to 5 screens).",
+        "inclusions": ["Static WhatsApp flow screens within the base screen count."],
+        "base_days": 1.0,
+        "rate_bucket": "bot_ui",
+        "included": {"journeys": 1, "screens": 5},
+        "scale_ups": {"screens": {"over": 5, "per": 1, "hours": 2}},
+        "scale_up_rules": ["Every new screen adds 2 hours."],
+    },
+    {
+        "id": "simple_agentic_ai",
+        "complexity": "Simple",
+        "bot_type": "Agentic AI",
+        "definition": "Static FAQ agent.",
+        "inclusions": [
+            "Training data: text-readable PDFs, CSV files, websites, and PDFs with images and tabular data.",
+        ],
+        "base_days": 1.0,
+        "rate_bucket": "custom_ai",
+        "included": {},
+        "scale_ups": {},
+        "scale_up_rules": ["Total hours may vary based on time taken to train the agent on the supplied data."],
+    },
+    {
+        "id": "medium_structured_api",
+        "complexity": "Medium",
+        "bot_type": "Structured + API",
+        "definition": "One journey up to 20 steps and 2 APIs with encryption/decryption handling.",
+        "inclusions": ["Encryption/decryption handling and journey-specific logic."],
+        "base_days": 2.0,
+        "rate_bucket": "bot_ui",
+        "included": {"journeys": 1, "logical_steps": 20, "apis": 2},
+        "scale_ups": {
+            "logical_steps": {"over": 20, "per": 10, "hours": 6},
+            "apis": {"over": 2, "per": 2, "hours": 4},
+            "languages_multiplier": TEXT_ONE_TIME_LANGUAGE_SCALE_MULTIPLIER,
+        },
+        "scale_up_rules": [
+            "Every additional 10 logical steps adds 6 hours.",
+            "Every additional 2 APIs adds 4 hours.",
+            "Every additional language adds about 50% of base implementation effort.",
+        ],
+    },
+    {
+        "id": "medium_wa_dynamic",
+        "complexity": "Medium",
+        "bot_type": "WA Flows Dynamic",
+        "definition": "Journey with dynamic flow screens (max 5 screens and 5 APIs).",
+        "inclusions": ["Dynamic WhatsApp flow screens and API-backed screen logic."],
+        "base_days": 4.0,
+        "rate_bucket": "bot_ui",
+        "included": {"journeys": 1, "screens": 5, "apis": 5},
+        "scale_ups": {
+            "screens": {"over": 5, "per": 1, "hours": 2},
+            "apis": {"over": 5, "per": 2, "hours": 4},
+        },
+        "scale_up_rules": ["Every new screen adds 2 hours."],
+    },
+    {
+        "id": "medium_catalog",
+        "complexity": "Medium",
+        "bot_type": "Catalog",
+        "definition": "Catalog journey without native payment (up to 20 steps and 3 APIs).",
+        "inclusions": ["Catalog browsing and product selection without native payment."],
+        "base_days": 3.0,
+        "rate_bucket": "bot_ui",
+        "included": {"journeys": 1, "logical_steps": 20, "apis": 3},
+        "scale_ups": {
+            "logical_steps": {"over": 20, "per": 10, "hours": 6},
+            "apis": {"over": 3, "per": 2, "hours": 4},
+        },
+        "scale_up_rules": [],
+    },
+    {
+        "id": "medium_native_payment",
+        "complexity": "Medium",
+        "bot_type": "Native Payment",
+        "definition": "Purchase journey without catalog with native payment (up to 20 steps and 5 APIs).",
+        "inclusions": ["Native payment flow without catalog integration."],
+        "base_days": 4.0,
+        "rate_bucket": "bot_ui",
+        "included": {"journeys": 1, "logical_steps": 20, "apis": 5},
+        "scale_ups": {
+            "logical_steps": {"over": 20, "per": 10, "hours": 6},
+            "apis": {"over": 5, "per": 2, "hours": 4},
+        },
+        "scale_up_rules": [],
+    },
+    {
+        "id": "medium_catalog_native_payment",
+        "complexity": "Medium",
+        "bot_type": "Catalog + Native Payment",
+        "definition": "Purchase journey with catalog and native payment (up to 20 steps and 5 APIs).",
+        "inclusions": ["Catalog browsing and native payment within the stated limits."],
+        "base_days": 5.0,
+        "rate_bucket": "bot_ui",
+        "included": {"journeys": 1, "logical_steps": 20, "apis": 5},
+        "scale_ups": {
+            "logical_steps": {"over": 20, "per": 10, "hours": 6},
+            "apis": {"over": 5, "per": 2, "hours": 4},
+        },
+        "scale_up_rules": [],
+    },
+    {
+        "id": "medium_agentic_ai_api",
+        "complexity": "Medium",
+        "bot_type": "Agentic AI + API",
+        "definition": "Journey with a set of steps and up to 3 APIs (tool integration).",
+        "inclusions": ["Agentic journey with tool/API integration within the base API limit."],
+        "base_days": 3.0,
+        "rate_bucket": "custom_ai",
+        "included": {"apis": 3},
+        "scale_ups": {"apis": {"over": 3, "per": 2, "hours": 4}},
+        "comments": "Examples: lead generation, appointment booking.",
+        "scale_up_rules": [],
+    },
+    {
+        "id": "complex_agentic_ai_api",
+        "complexity": "Complex",
+        "bot_type": "Agentic AI + API",
+        "definition": "AI agent with richer training data, tool integration, and formatted messaging.",
+        "inclusions": [
+            "Training data: websites, complex PDF documents, and web scraping.",
+            "API tool integration for more than 3 APIs, including APIs with certificates.",
+            "WhatsApp formatted messages and up to 5 APIs.",
+        ],
+        "base_days": 7.5,
+        "rate_bucket": "custom_ai",
+        "included": {"apis": 5},
+        "scale_ups": {"apis": {"over": 5, "per": 2, "hours": 4}},
+        "scale_up_rules": [],
+    },
+]
+
+TEXT_ONE_TIME_EFFORT_PROFILES_BY_ID = {
+    profile["id"]: profile for profile in TEXT_ONE_TIME_EFFORT_PROFILES
+}
+
+TEXT_ONE_TIME_AGENTIC_PROFILE_IDS = {
+    profile["id"]
+    for profile in TEXT_ONE_TIME_EFFORT_PROFILES
+    if profile.get("rate_bucket") == "custom_ai"
+}
+
+
+def normalize_one_time_dev_profile(profile_id: str) -> str:
+    profile_id = (profile_id or "").strip()
+    return profile_id if profile_id in TEXT_ONE_TIME_EFFORT_PROFILES_BY_ID else ""
+
+
+def get_one_time_dev_profile(profile_id: str):
+    return TEXT_ONE_TIME_EFFORT_PROFILES_BY_ID.get(normalize_one_time_dev_profile(profile_id))
+
+
 # --- User profile & defaults configuration ---
 #
 # Lightweight, code-based mapping so we can infer country/region defaults from
