@@ -33,6 +33,27 @@ from pricing_config import (
     normalize_one_time_dev_profile,
 )
 
+
+def dev_location_for_manday_rates(country, inputs):
+    """
+    Pick delivery location keys for manday rate tables.
+
+    TEXT_ONE_TIME_* profile math applies in every country; only rates/currency vary.
+    LATAM chooses India vs LATAM delivery; India keeps a canonical value for sessions.
+    """
+    country = (country or 'India').strip()
+    raw = None
+    if isinstance(inputs, dict):
+        raw = inputs.get('dev_location')
+        if raw is not None:
+            raw = str(raw).strip()
+    if country == 'LATAM':
+        return raw or 'LATAM'
+    if country == 'India':
+        return raw or 'India'
+    return None
+
+
 # 🍕 PIZZA EASTER EGG SYSTEM 🍕
 def generate_pizza_easter_egg_id(calculation_data=None):
     """
@@ -842,8 +863,12 @@ def index():
             currency = 'INR'
         else:
             currency = 'USD'
-        # Use dev_location only for India
-        dev_location = request.form.get('dev_location', 'India').strip() if country == 'India' else None
+        if country == 'LATAM':
+            dev_location = (request.form.get('dev_location') or 'LATAM').strip()
+        elif country == 'India':
+            dev_location = (request.form.get('dev_location') or 'India').strip()
+        else:
+            dev_location = None
         print(f"[app.py] After country/currency logic: country='{country}', currency='{currency}', dev_location='{dev_location}'", file=sys.stderr, flush=True)
         def parse_volume(val):
             try:
@@ -872,6 +897,10 @@ def index():
         num_journeys_price = request.form.get('num_journeys_price', '0')
         num_logical_steps_price = request.form.get('num_logical_steps_price', '0')
         num_wa_screens_price = request.form.get('num_wa_screens_price', '0')
+        wa_static_flows = 'Yes' if request.form.get('wa_static_flows') in ('Yes', 'on', 'true', '1') else 'No'
+        wa_dynamic_flows = 'Yes' if request.form.get('wa_dynamic_flows') in ('Yes', 'on', 'true', '1') else 'No'
+        if wa_static_flows == 'No' and wa_dynamic_flows == 'No':
+            num_wa_screens_price = '0'
         num_additional_text_languages = request.form.get('num_additional_text_languages', '0')
         if one_time_dev_profile in TEXT_ONE_TIME_AGENTIC_PROFILE_IDS:
             num_journeys_price = '0'
@@ -953,9 +982,12 @@ def index():
             'num_journeys_price': num_journeys_price,
             'num_logical_steps_price': num_logical_steps_price,
             'num_wa_screens_price': num_wa_screens_price,
+            'wa_static_flows': wa_static_flows,
+            'wa_dynamic_flows': wa_dynamic_flows,
             'num_additional_text_languages': num_additional_text_languages,
             'num_ai_workspace_commerce_price': num_ai_workspace_commerce_price,
             'num_ai_workspace_faq_price': num_ai_workspace_faq_price,
+            'dev_location': dev_location,
             # Voice notes fields
             'voice_notes_price': voice_notes_price,
             'voice_notes_model': voice_notes_model,
@@ -1308,7 +1340,7 @@ def index():
         dev_fields = [
             'onboarding_price', 'ux_price', 'testing_qa_price', 'aa_setup_price',
             'one_time_dev_profile', 'num_apis_price', 'num_journeys_price',
-            'num_logical_steps_price', 'num_wa_screens_price', 'num_additional_text_languages',
+            'num_logical_steps_price', 'num_wa_screens_price', 'wa_static_flows', 'wa_dynamic_flows', 'num_additional_text_languages',
             'voice_notes_price', 'voice_notes_model', 'voice_notes_rate'
         ]
         patched_form = (request.form.copy() if hasattr(request.form, 'copy') else dict(request.form)) or {}
@@ -1322,8 +1354,8 @@ def index():
                 except Exception:
                     pass
         # --- Ensure manday_rates is always set and complete ---
-        country = inputs.get('country', 'India')
-        dev_location = inputs.get('dev_location', 'India')
+        country = (inputs.get('country') or 'India').strip()
+        dev_location = dev_location_for_manday_rates(country, inputs)
         rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
         # Always reset manday_rates to backend defaults when country or dev_location changes
         if country == 'LATAM':
@@ -1347,15 +1379,20 @@ def index():
         manday_rates['bot_ui_discount'] = round(100 * (default_bot_ui - manday_rates['bot_ui']) / default_bot_ui, 3) if default_bot_ui else 0
         manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 3) if default_custom_ai else 0
         total_mandays = calculate_total_mandays(patched_form)
-        # --- PATCH: Always .strip() the country and set dev_location only for India before dev cost calculation ---
+        # --- PATCH: country + dev_location for manday cost (rates unchanged per country tables) ---
         if 'country' in patched_form:
             patched_form['country'] = patched_form['country'].strip()
         else:
             patched_form['country'] = inputs.get('country', 'India').strip()
-        if patched_form['country'] != 'India':
-            patched_form['dev_location'] = None
+        _cc = patched_form['country']
+        if _cc == 'LATAM':
+            _dl = patched_form.get('dev_location') or inputs.get('dev_location') or 'LATAM'
+            patched_form['dev_location'] = str(_dl).strip()
+        elif _cc == 'India':
+            _dl = patched_form.get('dev_location') or inputs.get('dev_location') or 'India'
+            patched_form['dev_location'] = str(_dl).strip()
         else:
-            patched_form['dev_location'] = patched_form.get('dev_location', 'India').strip()
+            patched_form['dev_location'] = None
         total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
         print(f"DEBUG: dev_cost_currency = {dev_cost_currency}, country = {country}", file=sys.stderr, flush=True)
         manday_breakdown = dev_cost_breakdown['mandays_breakdown']
@@ -1444,8 +1481,8 @@ def index():
         print("PASSED results validation, about to render results page", file=sys.stderr, flush=True)
         try:
             # --- Ensure manday_rates is always set and complete ---
-            country = inputs.get('country', 'India')
-            dev_location = inputs.get('dev_location', 'India')
+            country = (inputs.get('country') or 'India').strip()
+            dev_location = dev_location_for_manday_rates(country, inputs)
             rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
             # Always reset manday_rates to backend defaults when country or dev_location changes
             if country == 'LATAM':
@@ -2132,10 +2169,8 @@ def index():
     elif step == 'prices':
         inputs = session.get('inputs', {})
         pricing_inputs = session.get('pricing_inputs', {}) or {}
-        country = inputs.get('country', 'India')
-        dev_location = inputs.get('dev_location', 'India')
-        # Get default rates
-        country = inputs.get('country', 'India').strip()
+        country = (inputs.get('country') or 'India').strip()
+        dev_location = dev_location_for_manday_rates(country, inputs)
         print(f"DEBUG: country used for manday rates = '{country}'", file=sys.stderr, flush=True)
         rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
         if country == 'LATAM':
@@ -2249,7 +2284,8 @@ def index():
         session['chosen_platform_fee'] = platform_fee
         # Go to prices page
         pricing_inputs = session.get('pricing_inputs', {}) or {}
-        dev_location = inputs.get('dev_location', 'India')
+        country = (country or 'India').strip()
+        dev_location = dev_location_for_manday_rates(country, inputs)
         rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
         if country == 'LATAM':
             default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
@@ -2324,8 +2360,8 @@ def index():
 
         # Always recompute manday rates + text dev cost to avoid stale zeros
         try:
-            country = inputs.get('country', 'India')
-            dev_location = inputs.get('dev_location', 'India')
+            country = (inputs.get('country') or 'India').strip()
+            dev_location = dev_location_for_manday_rates(country, inputs)
             rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
             if country == 'LATAM':
                 default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
@@ -3890,8 +3926,8 @@ def readme():
 
 # --- PATCH: Ensure manday rates always included in suggested_prices for 'prices' step ---
 def get_default_manday_rates(inputs):
-    country = inputs.get('country', 'India') if inputs else 'India'
-    dev_location = inputs.get('dev_location', 'India') if inputs else 'India'
+    country = (inputs.get('country') or 'India').strip() if inputs else 'India'
+    dev_location = dev_location_for_manday_rates(country, inputs)
     rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
     if country == 'LATAM':
         default_bot_ui = rates['bot_ui'][dev_location]

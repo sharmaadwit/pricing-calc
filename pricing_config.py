@@ -224,9 +224,9 @@ TEXT_ONE_TIME_EFFORT_PROFILES = [
         "inclusions": ["Static WhatsApp flow screens within the base screen count."],
         "base_days": 1.0,
         "rate_bucket": "bot_ui",
-        "included": {"journeys": 1, "screens": 5},
-        "scale_ups": {"screens": {"over": 5, "per": 1, "hours": 2}},
-        "scale_up_rules": ["Every new screen adds 2 hours."],
+        "included": {"journeys": 1},
+        "scale_ups": {},
+        "scale_up_rules": [],
     },
     {
         "id": "simple_agentic_ai",
@@ -270,12 +270,11 @@ TEXT_ONE_TIME_EFFORT_PROFILES = [
         "inclusions": ["Dynamic WhatsApp flow screens and API-backed screen logic."],
         "base_days": 4.0,
         "rate_bucket": "bot_ui",
-        "included": {"journeys": 1, "screens": 5, "apis": 5},
+        "included": {"journeys": 1, "apis": 5},
         "scale_ups": {
-            "screens": {"over": 5, "per": 1, "hours": 2},
             "apis": {"over": 5, "per": 2, "hours": 4},
         },
-        "scale_up_rules": ["Every new screen adds 2 hours."],
+        "scale_up_rules": ["Every additional 2 APIs adds 4 hours."],
     },
     {
         "id": "medium_catalog",

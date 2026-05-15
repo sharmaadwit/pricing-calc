@@ -225,11 +225,35 @@ def _calculate_extras_mandays(inputs, activity_mandays):
         extras += activity_mandays['ux']
     return extras
 
+
+def _extras_effort_line_items(inputs, activity_mandays):
+    """Human-readable manday lines for optional one-time extras (shown on results alongside profile lines)."""
+    items = []
+    if inputs.get('onboarding_price', 'No') == 'Yes':
+        d = float(activity_mandays['onboarding'])
+        items.append(
+            {'label': 'Onboarding support', 'days': d, 'detail': 'one-time option, Bot/UI bucket'}
+        )
+    if inputs.get('ux_price', 'No') == 'Yes':
+        d = float(activity_mandays['ux'])
+        items.append({'label': 'UX workshops', 'days': d, 'detail': 'one-time option, Bot/UI bucket'})
+    if inputs.get('testing_qa_price', 'No') == 'Yes':
+        d = float(activity_mandays['testing'])
+        items.append({'label': 'Testing / QA support', 'days': d, 'detail': 'one-time option, Bot/UI bucket'})
+    if inputs.get('aa_setup_price', 'No') == 'Yes':
+        d = float(activity_mandays['aa_setup'])
+        items.append({'label': 'Automated Alerts (AA) setup', 'days': d, 'detail': 'one-time option, Bot/UI bucket'})
+    return items
+
 def _int_input(inputs, key, default=0):
     try:
         return int(inputs.get(key) or default)
     except Exception:
         return default
+
+
+def _is_truthy_flag(inputs, key):
+    return str(inputs.get(key, "No")).strip().lower() in ("yes", "true", "1", "on")
 
 
 def _hours_to_mandays(hours):
@@ -265,6 +289,8 @@ def _compute_text_implementation_mandays(inputs):
     apis = _int_input(inputs, "num_apis_price")
     logical_steps = _int_input(inputs, "num_logical_steps_price")
     screens = _int_input(inputs, "num_wa_screens_price")
+    static_flow = _is_truthy_flag(inputs, "wa_static_flows")
+    dynamic_flow = _is_truthy_flag(inputs, "wa_dynamic_flows")
     languages = _int_input(inputs, "num_additional_text_languages")
     effort_lines = [{"label": "Base profile effort", "days": float(profile["base_days"])}]
     extra_days = 0.0
@@ -289,15 +315,21 @@ def _compute_text_implementation_mandays(inputs):
         extra_days += api_days
         effort_lines.append(api_line)
 
-    screen_days, screen_line = _scale_up_block_days(
-        screens,
-        included.get("screens", 0),
-        scale_ups.get("screens"),
-        "Screens above included",
-    )
-    if screen_line:
+    # Static/Dynamic flow screens apply across all complexities:
+    # 1 day covers up to 5 screens, then +1 day for every next block of 5.
+    if (static_flow or dynamic_flow) and screens > 0:
+        screen_days = float((screens + 4) // 5)
         extra_days += screen_days
-        effort_lines.append(screen_line)
+        flow_label = "WhatsApp flow screens (Static + Dynamic)" if (static_flow and dynamic_flow) else (
+            "WhatsApp flow screens (Static)" if static_flow else "WhatsApp flow screens (Dynamic)"
+        )
+        effort_lines.append(
+            {
+                "label": flow_label,
+                "days": screen_days,
+                "detail": f"{screens} screens entered, 5 screens per 1 day block",
+            }
+        )
 
     language_multiplier = scale_ups.get("languages_multiplier")
     if languages > 0 and language_multiplier:
@@ -348,15 +380,23 @@ def calculate_total_mandays(inputs):
 def calculate_total_mandays_breakdown(inputs):
     """Return bot_ui and custom_ai mandays from profile effort and extras."""
     implementation = _compute_text_implementation_mandays(inputs)
-    bot_ui_mandays = implementation["bot_ui"]
+    extras_total = _calculate_extras_mandays(inputs, ACTIVITY_MANDAYS)
+    extras_lines = _extras_effort_line_items(inputs, ACTIVITY_MANDAYS)
+    impl_lines = list(implementation["effort_lines"])
+    effort_lines_full = impl_lines + extras_lines
+    bot_ui_mandays = implementation["bot_ui"] + extras_total
     custom_ai_mandays = implementation["custom_ai"]
-    bot_ui_mandays += _calculate_extras_mandays(inputs, ACTIVITY_MANDAYS)
+    impl_total = float(implementation["total"])
     return {
         "bot_ui": bot_ui_mandays,
         "custom_ai": custom_ai_mandays,
         "total": bot_ui_mandays + custom_ai_mandays,
         "implementation_profile_id": implementation["implementation_profile_id"],
-        "effort_lines": implementation["effort_lines"],
+        "implementation_total": impl_total,
+        "extras_mandays": float(extras_total),
+        "implementation_effort_lines": impl_lines,
+        "extras_effort_lines": extras_lines,
+        "effort_lines": effort_lines_full,
     }
 
 def calculate_total_manday_cost(inputs, manday_rates=None):
@@ -368,7 +408,7 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
     country = inputs.get('country', 'India').strip()
     dev_location = (inputs.get('dev_location') or 'India').strip()
     rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
-    # Only use dev_location for India, otherwise use the main rate
+    # India/APAC/etc. use flat rates; LATAM selects delivery location keys on the rate dict.
     if country == 'India':
         bot_ui_rate = rates['bot_ui'][dev_location] if isinstance(rates['bot_ui'], dict) else rates['bot_ui']
         custom_ai_rate = rates['custom_ai'][dev_location] if isinstance(rates['custom_ai'], dict) else rates['custom_ai']

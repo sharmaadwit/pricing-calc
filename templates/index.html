@@ -739,7 +739,7 @@
                             <option value="{{ profile.id }}" data-complexity="{{ profile.complexity }}" {% if inputs.get('one_time_dev_profile', '') == profile.id %}selected{% endif %}>{{ profile.bot_type }}</option>
                             {% endfor %}
                         </select>
-                        <div class="help-text">Base effort and included scope come from the selected profile. Counts below only add effort above included limits.</div>
+                        <div class="help-text">Base effort and included scope come from the selected profile. Counts below only add effort above included limits. Profiles and manday arithmetic are the same in every country; only currency and the per-manday rate card change with country.</div>
                         <div id="one-time-dev-profile-panel" class="effort-profile-panel" aria-live="polite"></div>
                     </div>
                     <script type="application/json" id="text-one-time-effort-profiles-json">{{ text_one_time_effort_profiles | tojson }}</script>
@@ -758,6 +758,20 @@
                             <label for="num_logical_steps_price">Logical steps:</label>
                             <input type="number" name="num_logical_steps_price" id="num_logical_steps_price" min="0" value="{{ inputs.get('num_logical_steps_price', '0') }}">
                             <div class="included-hint" id="included_logical_steps_hint"></div>
+                        </div>
+                        <div class="form-group" id="scope_flow_type_group">
+                            <label>WhatsApp flow type:</label>
+                            <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+                                <label style="display:flex; align-items:center; gap:6px; font-weight:500;">
+                                    <input type="checkbox" name="wa_static_flows" id="wa_static_flows" value="Yes" {% if inputs.get('wa_static_flows') == 'Yes' %}checked{% endif %}>
+                                    Static flow
+                                </label>
+                                <label style="display:flex; align-items:center; gap:6px; font-weight:500;">
+                                    <input type="checkbox" name="wa_dynamic_flows" id="wa_dynamic_flows" value="Yes" {% if inputs.get('wa_dynamic_flows') == 'Yes' %}checked{% endif %}>
+                                    Dynamic flow
+                                </label>
+                            </div>
+                            <div class="help-text">Applies across all complexities. Screen effort uses 5 screens per 1 day block (1-5: 1 day, 6-10: 2 days, 11-15: 3 days).</div>
                         </div>
                         <div class="form-group" id="scope_screens_group">
                             <label for="num_wa_screens_price">WhatsApp screens:</label>
@@ -1248,6 +1262,10 @@
         var panelEl = document.getElementById('one-time-dev-profile-panel');
         var dataEl = document.getElementById('text-one-time-effort-profiles-json');
         if (!profileEl || !panelEl || !dataEl) return;
+        var staticFlowEl = document.getElementById('wa_static_flows');
+        var dynamicFlowEl = document.getElementById('wa_dynamic_flows');
+        var screensEl = document.getElementById('num_wa_screens_price');
+        var flowSelected = (staticFlowEl && staticFlowEl.checked) || (dynamicFlowEl && dynamicFlowEl.checked);
         var profiles = [];
         try {
             profiles = JSON.parse(dataEl.textContent || '[]');
@@ -1275,8 +1293,13 @@
             toggleGroup('scope_journeys_group', true);
             toggleGroup('scope_apis_group', true);
             toggleGroup('scope_logical_steps_group', true);
-            toggleGroup('scope_screens_group', true);
+            toggleGroup('scope_screens_group', flowSelected);
             toggleGroup('scope_languages_group', true);
+            setHint('included_screens_hint', flowSelected ? '5 screens per 1 day block' : null);
+            if (screensEl) {
+                screensEl.disabled = !flowSelected;
+                if (!flowSelected) screensEl.value = '0';
+            }
             return;
         }
         var included = profile.included || {};
@@ -1297,7 +1320,7 @@
         setHint('included_journeys_hint', included.journeys);
         setHint('included_apis_hint', included.apis);
         setHint('included_logical_steps_hint', included.logical_steps);
-        setHint('included_screens_hint', included.screens);
+        setHint('included_screens_hint', flowSelected ? '5 screens per 1 day block' : included.screens);
         var journeysEl = document.getElementById('num_journeys_price');
         var showJourneys = included.journeys !== undefined;
         if (journeysEl) {
@@ -1307,7 +1330,12 @@
         toggleGroup('scope_journeys_group', showJourneys);
         toggleGroup('scope_apis_group', included.apis !== undefined || !!scaleUps.apis);
         toggleGroup('scope_logical_steps_group', included.logical_steps !== undefined || !!scaleUps.logical_steps);
-        toggleGroup('scope_screens_group', included.screens !== undefined || !!scaleUps.screens);
+        var showScreens = flowSelected || included.screens !== undefined || !!scaleUps.screens;
+        toggleGroup('scope_screens_group', showScreens);
+        if (screensEl) {
+            screensEl.disabled = !showScreens;
+            if (!showScreens) screensEl.value = '0';
+        }
         toggleGroup('scope_languages_group', !!scaleUps.languages_multiplier);
     }
     function syncVoicePartnerOptionsForCountry() {
@@ -1336,6 +1364,8 @@
         var aiVolumeEl = document.getElementById('ai_volume');
         var complexityEl = document.getElementById('one_time_dev_complexity');
         var profileEl = document.getElementById('one_time_dev_profile');
+        var staticFlowEl = document.getElementById('wa_static_flows');
+        var dynamicFlowEl = document.getElementById('wa_dynamic_flows');
         if (channelSel) channelSel.addEventListener('change', toggleChannelFields);
         if (countrySel) {
             countrySel.addEventListener('change', toggleChannelFields);
@@ -1348,6 +1378,8 @@
         if (aiVolumeEl) aiVolumeEl.addEventListener('input', toggleAiAgentFields);
         if (complexityEl) complexityEl.addEventListener('change', syncTextDevProfileOptions);
         if (profileEl) profileEl.addEventListener('change', syncTextDevProfileOptions);
+        if (staticFlowEl) staticFlowEl.addEventListener('change', updateTextDevProfilePanel);
+        if (dynamicFlowEl) dynamicFlowEl.addEventListener('change', updateTextDevProfilePanel);
         syncTextDevProfileOptions();
         toggleChannelFields();
         toggleAiAgentFields();
@@ -1373,6 +1405,7 @@
                 <li>UX: <b>{{ inputs.get('ux_price', 'No') }}</b></li>
                 <li>Testing/QA: <b>{{ inputs.get('testing_qa_price', 'No') }}</b></li>
                 <li>AA Setup: <b>{{ inputs.get('aa_setup_price', 'No') }}</b></li>
+                <li>WhatsApp flow types: <b>Static: {{ inputs.get('wa_static_flows', 'No') }}, Dynamic: {{ inputs.get('wa_dynamic_flows', 'No') }}</b></li>
                 <li>Scope —
                   {% if not dev_profile or dev_profile.get('rate_bucket') != 'custom_ai' %}
                   Journeys: <b>{{ inputs.get('num_journeys_price', '0') }}</b>,
@@ -1664,7 +1697,15 @@
           <!-- Text Effort Card -->
           <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <h3 style="margin-top:0;">Text Mandays for One Time Dev Activities</h3>
+            <p style="margin: 0 0 8px 0; font-size: 0.94em; color: #555;">The headline total sums <strong>profile implementation mandays</strong> and any <strong>optional one-time options</strong> (onboarding, UX, testing/QA, AA setup) priced in the Bot/UI bucket.</p>
             <div style="font-size: 1.5em; font-weight: bold; color: #5a2a8a; margin-top: 2px;">{{ '{:,.1f}'.format(text_mandays_val) }}</div>
+            {% set impl_roll = text_breakdown.get('implementation_total') %}
+            {% set extras_roll = text_breakdown.get('extras_mandays', 0)|float %}
+            {% if impl_roll is not none %}
+            <div style="margin-top: 10px; font-size: 0.98em; color: #444;">
+              <b>Roll-up:</b> Implementation (profile &amp; scope): {{ '{:,.1f}'.format(impl_roll|float) }} mandays{% if extras_roll > 0 %} · Optional one-time options: {{ '{:,.1f}'.format(extras_roll) }} mandays{% endif %}
+            </div>
+            {% endif %}
             <div style="margin-top: 10px; font-size: 1.08em;">
               <b>Breakdown:</b> Bot/UI: {{ '{:,.1f}'.format(text_breakdown.bot_ui) }}, Custom/AI: {{ '{:,.1f}'.format(text_breakdown.custom_ai) }}
             </div>
@@ -1676,6 +1717,7 @@
               {% endif %}
               APIs: {{ inputs.get('num_apis_price', '0') }},
               Logical steps: {{ inputs.get('num_logical_steps_price', '0') }},
+              Flows (Static/Dynamic): {{ inputs.get('wa_static_flows', 'No') }}/{{ inputs.get('wa_dynamic_flows', 'No') }},
               Screens: {{ inputs.get('num_wa_screens_price', '0') }},
               Additional languages: {{ inputs.get('num_additional_text_languages', '0') }}
             </div>
@@ -1685,14 +1727,32 @@
               <div style="margin-top: 6px;"><b>Definition:</b> {{ dev_profile.definition }}</div>
             </div>
             {% endif %}
-            {% if text_breakdown.get('effort_lines') %}
+            {% if text_breakdown.get('implementation_effort_lines') or text_breakdown.get('extras_effort_lines') or text_breakdown.get('effort_lines') %}
             <div style="margin-top: 12px; font-size: 0.98em; color: #444;">
-              <b>Effort lines:</b>
+              {% if text_breakdown.get('implementation_effort_lines') %}
+              <div style="margin-top: 4px;"><b>Implementation effort (mandays/day equivalents):</b></div>
+              <ul style="margin: 6px 0 0 18px; padding: 0;">
+                {% for line in text_breakdown.implementation_effort_lines %}
+                <li>{{ line.label }}: {{ '{:,.2f}'.format(line.days) }} day(s){% if line.detail %} ({{ line.detail }}){% endif %}</li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+              {% if text_breakdown.get('extras_effort_lines') and text_breakdown.extras_effort_lines|length > 0 %}
+              <div style="margin-top: 10px;"><b>Optional one-time activities (included in headline total above):</b></div>
+              <ul style="margin: 6px 0 0 18px; padding: 0;">
+                {% for line in text_breakdown.extras_effort_lines %}
+                <li>{{ line.label }}: {{ '{:,.2f}'.format(line.days) }} day(s){% if line.detail %} ({{ line.detail }}){% endif %}</li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+              {% if not text_breakdown.get('implementation_effort_lines') and text_breakdown.get('effort_lines') %}
+              <div style="margin-top: 4px;"><b>Effort lines:</b></div>
               <ul style="margin: 6px 0 0 18px; padding: 0;">
                 {% for line in text_breakdown.effort_lines %}
                 <li>{{ line.label }}: {{ '{:,.2f}'.format(line.days) }} day(s){% if line.detail %} ({{ line.detail }}){% endif %}</li>
                 {% endfor %}
               </ul>
+              {% endif %}
             </div>
             {% endif %}
             <!-- Cost Breakdown Section -->
