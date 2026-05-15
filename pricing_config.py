@@ -177,6 +177,13 @@ ACTIVITY_MANDAYS = {
 TEXT_ONE_TIME_LANGUAGE_SCALE_MULTIPLIER = 0.5
 TEXT_ONE_TIME_HOURS_PER_MANDAY = 8
 
+# WhatsApp flow screen effort (CE Bot Delivery Effort Estimates — GTM sheet)
+TEXT_ONE_TIME_STATIC_FLOW_BASE_DAYS = 1.0
+TEXT_ONE_TIME_STATIC_FLOW_INCLUDED_SCREENS = 5
+TEXT_ONE_TIME_DYNAMIC_FLOW_BASE_DAYS = 4.0
+TEXT_ONE_TIME_DYNAMIC_FLOW_INCLUDED_SCREENS = 5
+TEXT_ONE_TIME_FLOW_EXTRA_SCREEN_HOURS = 2
+
 TEXT_ONE_TIME_EFFORT_PROFILES = [
     {
         "id": "simple_structured",
@@ -217,18 +224,6 @@ TEXT_ONE_TIME_EFFORT_PROFILES = [
         ],
     },
     {
-        "id": "simple_wa_static",
-        "complexity": "Simple",
-        "bot_type": "WA Static Flows",
-        "definition": "Journey with static flow screens (1 journey and up to 5 screens).",
-        "inclusions": ["Static WhatsApp flow screens within the base screen count."],
-        "base_days": 1.0,
-        "rate_bucket": "bot_ui",
-        "included": {"journeys": 1},
-        "scale_ups": {},
-        "scale_up_rules": [],
-    },
-    {
         "id": "simple_agentic_ai",
         "complexity": "Simple",
         "bot_type": "Agentic AI",
@@ -261,20 +256,6 @@ TEXT_ONE_TIME_EFFORT_PROFILES = [
             "Every additional 2 APIs adds 4 hours.",
             "Every additional language adds about 50% of base implementation effort.",
         ],
-    },
-    {
-        "id": "medium_wa_dynamic",
-        "complexity": "Medium",
-        "bot_type": "WA Flows Dynamic",
-        "definition": "Journey with dynamic flow screens (max 5 screens and 5 APIs).",
-        "inclusions": ["Dynamic WhatsApp flow screens and API-backed screen logic."],
-        "base_days": 4.0,
-        "rate_bucket": "bot_ui",
-        "included": {"journeys": 1, "apis": 5},
-        "scale_ups": {
-            "apis": {"over": 5, "per": 2, "hours": 4},
-        },
-        "scale_up_rules": ["Every additional 2 APIs adds 4 hours."],
     },
     {
         "id": "medium_catalog",

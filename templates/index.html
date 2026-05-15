@@ -771,12 +771,17 @@
                                     Dynamic flow
                                 </label>
                             </div>
-                            <div class="help-text">Applies across all complexities. Screen effort uses 5 screens per 1 day block (1-5: 1 day, 6-10: 2 days, 11-15: 3 days).</div>
+                            <div class="help-text">Applies across all complexities. Static: 1 day base (5 screens incl.), +2h per extra screen. Dynamic: 4 day base (5 screens incl.), +2h per extra screen.</div>
                         </div>
-                        <div class="form-group" id="scope_screens_group">
-                            <label for="num_wa_screens_price">WhatsApp screens:</label>
-                            <input type="number" name="num_wa_screens_price" id="num_wa_screens_price" min="0" value="{{ inputs.get('num_wa_screens_price', '0') }}">
-                            <div class="included-hint" id="included_screens_hint"></div>
+                        <div class="form-group" id="scope_static_screens_group">
+                            <label for="num_wa_static_screens">Static flow screens:</label>
+                            <input type="number" name="num_wa_static_screens" id="num_wa_static_screens" min="0" value="{{ inputs.get('num_wa_static_screens', inputs.get('num_wa_screens_price', '0')) }}">
+                            <div class="included-hint" id="included_static_screens_hint"></div>
+                        </div>
+                        <div class="form-group" id="scope_dynamic_screens_group">
+                            <label for="num_wa_dynamic_screens">Dynamic flow screens:</label>
+                            <input type="number" name="num_wa_dynamic_screens" id="num_wa_dynamic_screens" min="0" value="{{ inputs.get('num_wa_dynamic_screens', '0') }}">
+                            <div class="included-hint" id="included_dynamic_screens_hint"></div>
                         </div>
                         <div class="form-group" id="scope_languages_group">
                             <label for="num_additional_text_languages">Additional languages (above Hindi/English):</label>
@@ -1264,8 +1269,10 @@
         if (!profileEl || !panelEl || !dataEl) return;
         var staticFlowEl = document.getElementById('wa_static_flows');
         var dynamicFlowEl = document.getElementById('wa_dynamic_flows');
-        var screensEl = document.getElementById('num_wa_screens_price');
-        var flowSelected = (staticFlowEl && staticFlowEl.checked) || (dynamicFlowEl && dynamicFlowEl.checked);
+        var staticScreensEl = document.getElementById('num_wa_static_screens');
+        var dynamicScreensEl = document.getElementById('num_wa_dynamic_screens');
+        var staticSelected = staticFlowEl && staticFlowEl.checked;
+        var dynamicSelected = dynamicFlowEl && dynamicFlowEl.checked;
         var profiles = [];
         try {
             profiles = JSON.parse(dataEl.textContent || '[]');
@@ -1293,12 +1300,16 @@
             toggleGroup('scope_journeys_group', true);
             toggleGroup('scope_apis_group', true);
             toggleGroup('scope_logical_steps_group', true);
-            toggleGroup('scope_screens_group', flowSelected);
+            toggleGroup('scope_static_screens_group', staticSelected);
+            toggleGroup('scope_dynamic_screens_group', dynamicSelected);
             toggleGroup('scope_languages_group', true);
-            setHint('included_screens_hint', flowSelected ? '5 screens per 1 day block' : null);
-            if (screensEl) {
-                screensEl.disabled = !flowSelected;
-                if (!flowSelected) screensEl.value = '0';
+            if (staticScreensEl) {
+                staticScreensEl.disabled = !staticSelected;
+                if (!staticSelected) staticScreensEl.value = '0';
+            }
+            if (dynamicScreensEl) {
+                dynamicScreensEl.disabled = !dynamicSelected;
+                if (!dynamicSelected) dynamicScreensEl.value = '0';
             }
             return;
         }
@@ -1320,7 +1331,6 @@
         setHint('included_journeys_hint', included.journeys);
         setHint('included_apis_hint', included.apis);
         setHint('included_logical_steps_hint', included.logical_steps);
-        setHint('included_screens_hint', flowSelected ? '5 screens per 1 day block' : included.screens);
         var journeysEl = document.getElementById('num_journeys_price');
         var showJourneys = included.journeys !== undefined;
         if (journeysEl) {
@@ -1330,11 +1340,15 @@
         toggleGroup('scope_journeys_group', showJourneys);
         toggleGroup('scope_apis_group', included.apis !== undefined || !!scaleUps.apis);
         toggleGroup('scope_logical_steps_group', included.logical_steps !== undefined || !!scaleUps.logical_steps);
-        var showScreens = flowSelected || included.screens !== undefined || !!scaleUps.screens;
-        toggleGroup('scope_screens_group', showScreens);
-        if (screensEl) {
-            screensEl.disabled = !showScreens;
-            if (!showScreens) screensEl.value = '0';
+        toggleGroup('scope_static_screens_group', staticSelected);
+        toggleGroup('scope_dynamic_screens_group', dynamicSelected);
+        if (staticScreensEl) {
+            staticScreensEl.disabled = !staticSelected;
+            if (!staticSelected) staticScreensEl.value = '0';
+        }
+        if (dynamicScreensEl) {
+            dynamicScreensEl.disabled = !dynamicSelected;
+            if (!dynamicSelected) dynamicScreensEl.value = '0';
         }
         toggleGroup('scope_languages_group', !!scaleUps.languages_multiplier);
     }
@@ -1410,7 +1424,7 @@
                   {% if not dev_profile or dev_profile.get('rate_bucket') != 'custom_ai' %}
                   Journeys: <b>{{ inputs.get('num_journeys_price', '0') }}</b>,
                   {% endif %}
-                  APIs: <b>{{ inputs.get('num_apis_price', '0') }}</b>, Logical steps: <b>{{ inputs.get('num_logical_steps_price', '0') }}</b>, Screens: <b>{{ inputs.get('num_wa_screens_price', '0') }}</b>, Additional languages: <b>{{ inputs.get('num_additional_text_languages', '0') }}</b></li>
+                  APIs: <b>{{ inputs.get('num_apis_price', '0') }}</b>, Logical steps: <b>{{ inputs.get('num_logical_steps_price', '0') }}</b>, Static screens: <b>{{ inputs.get('num_wa_static_screens', '0') }}</b>, Dynamic screens: <b>{{ inputs.get('num_wa_dynamic_screens', '0') }}</b>, Additional languages: <b>{{ inputs.get('num_additional_text_languages', '0') }}</b></li>
                 <li>Voice Notes: <b>{{ inputs.get('voice_notes_price', 'No') }}</b>{% if inputs.get('voice_notes_price') == 'Yes' and inputs.get('voice_notes_model') %} - {{ inputs.get('voice_notes_model') }}{% endif %}</li>
                 {% if inputs.get('channel_type') in ['voice_only', 'text_voice'] %}
                 <li>Voice AI delivery: <b>{% if inputs.get('voice_partner') == 'leverage' %}Leverage (partner){% else %}Gupshup native{% endif %}</b>
@@ -1718,7 +1732,7 @@
               APIs: {{ inputs.get('num_apis_price', '0') }},
               Logical steps: {{ inputs.get('num_logical_steps_price', '0') }},
               Flows (Static/Dynamic): {{ inputs.get('wa_static_flows', 'No') }}/{{ inputs.get('wa_dynamic_flows', 'No') }},
-              Screens: {{ inputs.get('num_wa_screens_price', '0') }},
+              Static screens: {{ inputs.get('num_wa_static_screens', '0') }}, Dynamic screens: {{ inputs.get('num_wa_dynamic_screens', '0') }},
               Additional languages: {{ inputs.get('num_additional_text_languages', '0') }}
             </div>
             {% if dev_profile %}

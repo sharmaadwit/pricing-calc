@@ -896,11 +896,15 @@ def index():
         num_apis_price = request.form.get('num_apis_price', '0')
         num_journeys_price = request.form.get('num_journeys_price', '0')
         num_logical_steps_price = request.form.get('num_logical_steps_price', '0')
+        num_wa_static_screens = request.form.get('num_wa_static_screens', '0')
+        num_wa_dynamic_screens = request.form.get('num_wa_dynamic_screens', '0')
         num_wa_screens_price = request.form.get('num_wa_screens_price', '0')
         wa_static_flows = 'Yes' if request.form.get('wa_static_flows') in ('Yes', 'on', 'true', '1') else 'No'
         wa_dynamic_flows = 'Yes' if request.form.get('wa_dynamic_flows') in ('Yes', 'on', 'true', '1') else 'No'
-        if wa_static_flows == 'No' and wa_dynamic_flows == 'No':
-            num_wa_screens_price = '0'
+        if wa_static_flows == 'No':
+            num_wa_static_screens = '0'
+        if wa_dynamic_flows == 'No':
+            num_wa_dynamic_screens = '0'
         num_additional_text_languages = request.form.get('num_additional_text_languages', '0')
         if one_time_dev_profile in TEXT_ONE_TIME_AGENTIC_PROFILE_IDS:
             num_journeys_price = '0'
@@ -981,6 +985,8 @@ def index():
             'num_apis_price': num_apis_price,
             'num_journeys_price': num_journeys_price,
             'num_logical_steps_price': num_logical_steps_price,
+            'num_wa_static_screens': num_wa_static_screens,
+            'num_wa_dynamic_screens': num_wa_dynamic_screens,
             'num_wa_screens_price': num_wa_screens_price,
             'wa_static_flows': wa_static_flows,
             'wa_dynamic_flows': wa_dynamic_flows,
@@ -1340,7 +1346,8 @@ def index():
         dev_fields = [
             'onboarding_price', 'ux_price', 'testing_qa_price', 'aa_setup_price',
             'one_time_dev_profile', 'num_apis_price', 'num_journeys_price',
-            'num_logical_steps_price', 'num_wa_screens_price', 'wa_static_flows', 'wa_dynamic_flows', 'num_additional_text_languages',
+            'num_logical_steps_price', 'num_wa_static_screens', 'num_wa_dynamic_screens',
+            'num_wa_screens_price', 'wa_static_flows', 'wa_dynamic_flows', 'num_additional_text_languages',
             'voice_notes_price', 'voice_notes_model', 'voice_notes_rate'
         ]
         patched_form = (request.form.copy() if hasattr(request.form, 'copy') else dict(request.form)) or {}

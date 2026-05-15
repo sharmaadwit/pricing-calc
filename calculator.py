@@ -23,6 +23,11 @@ from pricing_config import (
     get_pstn_rates,
     get_one_time_dev_profile,
     TEXT_ONE_TIME_HOURS_PER_MANDAY,
+    TEXT_ONE_TIME_STATIC_FLOW_BASE_DAYS,
+    TEXT_ONE_TIME_STATIC_FLOW_INCLUDED_SCREENS,
+    TEXT_ONE_TIME_DYNAMIC_FLOW_BASE_DAYS,
+    TEXT_ONE_TIME_DYNAMIC_FLOW_INCLUDED_SCREENS,
+    TEXT_ONE_TIME_FLOW_EXTRA_SCREEN_HOURS,
 )
 import sys
 
@@ -260,6 +265,23 @@ def _hours_to_mandays(hours):
     return float(hours) / float(TEXT_ONE_TIME_HOURS_PER_MANDAY)
 
 
+def _wa_flow_screen_effort_days(screen_count, base_days, included_screens):
+    """GTM sheet: base days cover included screens; each screen above adds fixed hours."""
+    if screen_count <= 0:
+        return 0.0, None
+    extra_screens = max(0, screen_count - included_screens)
+    extra_days = _hours_to_mandays(extra_screens * TEXT_ONE_TIME_FLOW_EXTRA_SCREEN_HOURS)
+    total_days = float(base_days) + extra_days
+    if extra_screens:
+        detail = (
+            f"{screen_count} screens, {included_screens} included, "
+            f"+{TEXT_ONE_TIME_FLOW_EXTRA_SCREEN_HOURS}h per additional screen"
+        )
+    else:
+        detail = f"{screen_count} screens (up to {included_screens} included in base)"
+    return total_days, detail
+
+
 def _scale_up_block_days(value, included, rule, label):
     if not rule or value <= included:
         return 0.0, None
@@ -288,9 +310,16 @@ def _compute_text_implementation_mandays(inputs):
     journeys = _int_input(inputs, "num_journeys_price") if "journeys" in included else 0
     apis = _int_input(inputs, "num_apis_price")
     logical_steps = _int_input(inputs, "num_logical_steps_price")
-    screens = _int_input(inputs, "num_wa_screens_price")
     static_flow = _is_truthy_flag(inputs, "wa_static_flows")
     dynamic_flow = _is_truthy_flag(inputs, "wa_dynamic_flows")
+    static_screens = _int_input(inputs, "num_wa_static_screens")
+    dynamic_screens = _int_input(inputs, "num_wa_dynamic_screens")
+    if static_screens == 0 and dynamic_screens == 0:
+        legacy_screens = _int_input(inputs, "num_wa_screens_price")
+        if static_flow:
+            static_screens = legacy_screens
+        elif dynamic_flow:
+            dynamic_screens = legacy_screens
     languages = _int_input(inputs, "num_additional_text_languages")
     effort_lines = [{"label": "Base profile effort", "days": float(profile["base_days"])}]
     extra_days = 0.0
@@ -315,19 +344,33 @@ def _compute_text_implementation_mandays(inputs):
         extra_days += api_days
         effort_lines.append(api_line)
 
-    # Static/Dynamic flow screens apply across all complexities:
-    # 1 day covers up to 5 screens, then +1 day for every next block of 5.
-    if (static_flow or dynamic_flow) and screens > 0:
-        screen_days = float((screens + 4) // 5)
-        extra_days += screen_days
-        flow_label = "WhatsApp flow screens (Static + Dynamic)" if (static_flow and dynamic_flow) else (
-            "WhatsApp flow screens (Static)" if static_flow else "WhatsApp flow screens (Dynamic)"
+    if static_flow and static_screens > 0:
+        static_days, static_detail = _wa_flow_screen_effort_days(
+            static_screens,
+            TEXT_ONE_TIME_STATIC_FLOW_BASE_DAYS,
+            TEXT_ONE_TIME_STATIC_FLOW_INCLUDED_SCREENS,
         )
+        extra_days += static_days
         effort_lines.append(
             {
-                "label": flow_label,
-                "days": screen_days,
-                "detail": f"{screens} screens entered, 5 screens per 1 day block",
+                "label": "WhatsApp static flow screens",
+                "days": static_days,
+                "detail": static_detail,
+            }
+        )
+
+    if dynamic_flow and dynamic_screens > 0:
+        dynamic_days, dynamic_detail = _wa_flow_screen_effort_days(
+            dynamic_screens,
+            TEXT_ONE_TIME_DYNAMIC_FLOW_BASE_DAYS,
+            TEXT_ONE_TIME_DYNAMIC_FLOW_INCLUDED_SCREENS,
+        )
+        extra_days += dynamic_days
+        effort_lines.append(
+            {
+                "label": "WhatsApp dynamic flow screens",
+                "days": dynamic_days,
+                "detail": dynamic_detail,
             }
         )
 
