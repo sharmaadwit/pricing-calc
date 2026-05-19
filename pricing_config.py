@@ -174,7 +174,7 @@ ACTIVITY_MANDAYS = {
     "ai_workspace_support": 2,
 }
 
-TEXT_ONE_TIME_LANGUAGE_SCALE_MULTIPLIER = 0.5
+TEXT_ONE_TIME_LANGUAGE_SCALE_MULTIPLIER = 0.25
 TEXT_ONE_TIME_HOURS_PER_MANDAY = 8
 
 # WhatsApp flow screen effort (CE Bot Delivery Effort Estimates — GTM sheet)
@@ -200,7 +200,7 @@ TEXT_ONE_TIME_EFFORT_PROFILES = [
         },
         "scale_up_rules": [
             "Every additional 10 logical steps adds 6 hours.",
-            "Every additional language adds about 50% of base implementation effort.",
+            "Every additional language adds about 25% of implementation effort calculated so far.",
         ],
     },
     {
@@ -220,7 +220,7 @@ TEXT_ONE_TIME_EFFORT_PROFILES = [
         "scale_up_rules": [
             "Every additional 10 logical steps adds 6 hours.",
             "Every additional 2 APIs adds 4 hours.",
-            "Every additional language adds about 50% of base implementation effort.",
+            "Every additional language adds about 25% of implementation effort calculated so far.",
         ],
     },
     {
@@ -254,7 +254,7 @@ TEXT_ONE_TIME_EFFORT_PROFILES = [
         "scale_up_rules": [
             "Every additional 10 logical steps adds 6 hours.",
             "Every additional 2 APIs adds 4 hours.",
-            "Every additional language adds about 50% of base implementation effort.",
+            "Every additional language adds about 25% of implementation effort calculated so far.",
         ],
     },
     {
@@ -586,14 +586,71 @@ PLATFORM_PRICING_GUIDANCE = {
 # VOICE CHANNEL PRICING CONFIGURATION (India-first)
 # =============================================================================
 
-# Voice Bot Development Effort (Mandays)
+# Voice one-time effort (Voice Delivery Effort Estimates — GTM sheet)
+VOICE_ONE_TIME_EFFORT_PROFILES = [
+    {
+        "id": "voice_simple_agentic",
+        "complexity": "Simple",
+        "bot_type": "Agentic AI",
+        "definition": "PDF/SOP/FAQ-style agentic voice bot (text-readable training material).",
+        "base_days": 3.0,
+        "included_apis": 0,
+        "extra_language_days": 1.0,
+        "extra_api_days": 0.0,
+        "scale_up_rules": ["Additional 1 day per language."],
+    },
+    {
+        "id": "voice_medium_agentic_api",
+        "complexity": "Medium",
+        "bot_type": "Agentic AI + API",
+        "definition": "Voice agent with journey steps and up to 3 APIs (tool integration).",
+        "base_days": 6.0,
+        "included_apis": 3,
+        "extra_language_days": 1.0,
+        "extra_api_days": 1.0,
+        "scale_up_rules": [
+            "Additional 1 day per API/tool above included.",
+            "Additional 1 day per language.",
+        ],
+    },
+    {
+        "id": "voice_complex_agentic_api",
+        "complexity": "Complex",
+        "bot_type": "Agentic AI + API",
+        "definition": "Richer training data, tool/API integration (certificates), formatted messaging.",
+        "base_days": 12.0,
+        "included_apis": 5,
+        "extra_language_days": 2.0,
+        "extra_api_days": 1.0,
+        "scale_up_rules": [
+            "Additional 1 day per API/tool above included.",
+            "Additional 2 days per language.",
+        ],
+    },
+]
+
+VOICE_ONE_TIME_EFFORT_PROFILES_BY_ID = {
+    profile["id"]: profile for profile in VOICE_ONE_TIME_EFFORT_PROFILES
+}
+
+VOICE_CHAT_AI_HANDOVER_DAYS = 1.0
+
+# Platform / channel integration add-ons (mandays) on top of profile effort
 VOICE_DEV_EFFORT = {
-    'additional_language_multiplier': 0.30,
     'agent_handover_pstn_knowlarity': 1,
     'agent_handover_pstn_other': 5,
     'whatsapp_voice_knowlarity': 1,
     'whatsapp_voice_other': 5,
 }
+
+
+def normalize_voice_one_time_dev_profile(profile_id: str) -> str:
+    profile_id = (profile_id or "").strip()
+    return profile_id if profile_id in VOICE_ONE_TIME_EFFORT_PROFILES_BY_ID else ""
+
+
+def get_voice_one_time_dev_profile(profile_id: str):
+    return VOICE_ONE_TIME_EFFORT_PROFILES_BY_ID.get(normalize_voice_one_time_dev_profile(profile_id))
 
 # Leverage (Voice AI partner) — development pass-through in INR; margin applied in calculator
 LEVERAGE_VOICE_DEV_COSTS_INR = {

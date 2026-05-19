@@ -733,7 +733,7 @@
                     </div>
                     <div class="form-group">
                         <label for="one_time_dev_profile">Bot type profile:</label>
-                        <select name="one_time_dev_profile" id="one_time_dev_profile" required>
+                        <select name="one_time_dev_profile" id="one_time_dev_profile">
                             <option value="">Select bot type</option>
                             {% for profile in text_one_time_effort_profiles %}
                             <option value="{{ profile.id }}" data-complexity="{{ profile.complexity }}" {% if inputs.get('one_time_dev_profile', '') == profile.id %}selected{% endif %}>{{ profile.bot_type }}</option>
@@ -938,17 +938,42 @@
                         <div class="help-text">If Text AI is selected in Platform Fee, Voice AI platform fee is waived.</div>
                     </div>
                     <div id="voice-native-dev-fields">
+                    <input type="hidden" name="num_voice_journeys" id="num_voice_journeys" value="0">
                     <div class="form-group">
-                        <label for="num_voice_journeys">Number of Voice Journeys:</label>
-                        <input type="number" name="num_voice_journeys" id="num_voice_journeys" min="0" value="{{ inputs.get('num_voice_journeys', '0') }}">
+                        <label for="voice_one_time_dev_complexity">Voice implementation complexity:</label>
+                        <select id="voice_one_time_dev_complexity">
+                            <option value="">Select complexity</option>
+                            <option value="Simple" {% if inputs.get('voice_one_time_dev_profile') and voice_one_time_effort_profiles_by_id.get(inputs.get('voice_one_time_dev_profile', ''), {}).get('complexity') == 'Simple' %}selected{% endif %}>Simple</option>
+                            <option value="Medium" {% if inputs.get('voice_one_time_dev_profile') and voice_one_time_effort_profiles_by_id.get(inputs.get('voice_one_time_dev_profile', ''), {}).get('complexity') == 'Medium' %}selected{% endif %}>Medium</option>
+                            <option value="Complex" {% if inputs.get('voice_one_time_dev_profile') and voice_one_time_effort_profiles_by_id.get(inputs.get('voice_one_time_dev_profile', ''), {}).get('complexity') == 'Complex' %}selected{% endif %}>Complex</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label for="num_voice_apis">Number of Voice API Integrations:</label>
+                        <label for="voice_one_time_dev_profile">Voice bot type profile:</label>
+                        <select name="voice_one_time_dev_profile" id="voice_one_time_dev_profile">
+                            <option value="">Select bot type</option>
+                            {% for vprofile in voice_one_time_effort_profiles %}
+                            <option value="{{ vprofile.id }}" data-complexity="{{ vprofile.complexity }}" {% if inputs.get('voice_one_time_dev_profile', '') == vprofile.id %}selected{% endif %}>{{ vprofile.bot_type }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="help-text">Per GTM voice effort sheet: Simple 3 days, Medium 6 days (+ APIs), Complex 12 days.</div>
+                        <div id="voice-one-time-dev-profile-panel" class="effort-profile-panel" aria-live="polite"></div>
+                    </div>
+                    <script type="application/json" id="voice-one-time-effort-profiles-json">{{ voice_one_time_effort_profiles | tojson }}</script>
+                    <div class="form-group">
+                        <label for="num_voice_apis">API / tool integrations:</label>
                         <input type="number" name="num_voice_apis" id="num_voice_apis" min="0" value="{{ inputs.get('num_voice_apis', '0') }}">
                     </div>
                     <div class="form-group">
-                        <label for="num_additional_voice_languages">Additional Languages (above Hindi/English):</label>
+                        <label for="num_additional_voice_languages">Additional languages (above Hindi/English):</label>
                         <input type="number" name="num_additional_voice_languages" id="num_additional_voice_languages" min="0" value="{{ inputs.get('num_additional_voice_languages', '0') }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Chat AI handover (hybrid):</label>
+                        <label style="display:flex; align-items:center; gap:6px; font-weight:500; margin-top:6px;">
+                            <input type="checkbox" name="voice_chat_ai_handover" id="voice_chat_ai_handover" value="Yes" {% if inputs.get('voice_chat_ai_handover') == 'Yes' %}checked{% endif %}>
+                            Include chat AI handover effort (+1 day)
+                        </label>
                     </div>
                     </div>
                     {% if pstn_enabled %}
@@ -1165,6 +1190,28 @@
                 return false;
             }
         }
+        if (chanVal === 'text_only' || chanVal === 'text_voice') {
+            var textProfileEl = document.getElementById('one_time_dev_profile');
+            if (textProfileEl && !textProfileEl.value) {
+                alert('Please select an implementation complexity and bot type profile for text one-time development.');
+                textProfileEl.focus();
+                e.preventDefault();
+                return false;
+            }
+        }
+        if (chanVal === 'voice_only' || chanVal === 'text_voice') {
+            var voicePartner = document.getElementById('voice_partner');
+            var isLeverage = voicePartner && voicePartner.value === 'leverage';
+            if (!isLeverage) {
+                var voiceProfileEl = document.getElementById('voice_one_time_dev_profile');
+                if (voiceProfileEl && !voiceProfileEl.value) {
+                    alert('Please select a voice implementation profile for one-time voice development.');
+                    voiceProfileEl.focus();
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        }
     });
     // Channel toggle for Text vs Voice fields
     function enforceVoiceCountryConstraint() {
@@ -1218,6 +1265,16 @@
             if (humanAgentsGroup) { humanAgentsGroup.style.display = ''; }
         }
         syncVoicePartnerOptionsForCountry();
+        toggleVoicePartnerFields();
+        var textProfileEl = document.getElementById('one_time_dev_profile');
+        var voiceProfileEl = document.getElementById('voice_one_time_dev_profile');
+        var needsText = (channel === 'text_only' || channel === 'text_voice');
+        var needsVoice = (channel === 'voice_only' || channel === 'text_voice');
+        if (textProfileEl) textProfileEl.required = needsText;
+        if (voiceProfileEl) {
+            var vp = document.getElementById('voice_partner');
+            voiceProfileEl.required = needsVoice && (!vp || vp.value !== 'leverage');
+        }
     }
     function toggleVoicePartnerFields() {
         var channel = document.getElementById('channel_type') ? document.getElementById('channel_type').value : 'text_only';
@@ -1242,6 +1299,57 @@
         if (vj) vj.disabled = isLev;
         if (va) va.disabled = isLev;
         if (vl) vl.disabled = isLev;
+        var voiceProfileEl = document.getElementById('voice_one_time_dev_profile');
+        if (voiceProfileEl) {
+            var needsVoice = (channel === 'voice_only' || channel === 'text_voice');
+            voiceProfileEl.required = needsVoice && !isLev;
+        }
+    }
+    function syncVoiceDevProfileOptions() {
+        var complexityEl = document.getElementById('voice_one_time_dev_complexity');
+        var profileEl = document.getElementById('voice_one_time_dev_profile');
+        if (!complexityEl || !profileEl) return;
+        var complexity = complexityEl.value;
+        var selectedValid = false;
+        Array.from(profileEl.options).forEach(function(opt, idx) {
+            if (idx === 0) {
+                opt.hidden = false;
+                return;
+            }
+            var matches = !complexity || opt.getAttribute('data-complexity') === complexity;
+            opt.hidden = !matches;
+            if (opt.selected && matches) selectedValid = true;
+        });
+        if (!selectedValid) profileEl.value = '';
+        updateVoiceDevProfilePanel();
+    }
+    function updateVoiceDevProfilePanel() {
+        var profileEl = document.getElementById('voice_one_time_dev_profile');
+        var panelEl = document.getElementById('voice-one-time-dev-profile-panel');
+        var dataEl = document.getElementById('voice-one-time-effort-profiles-json');
+        if (!profileEl || !panelEl || !dataEl) return;
+        var profiles = [];
+        try {
+            profiles = JSON.parse(dataEl.textContent || '[]');
+        } catch (err) {
+            profiles = [];
+        }
+        var profile = profiles.find(function(item) { return item.id === profileEl.value; });
+        if (!profile) {
+            panelEl.classList.remove('is-visible');
+            panelEl.innerHTML = '';
+            return;
+        }
+        panelEl.dataset.complexity = profile.complexity;
+        panelEl.innerHTML = [
+            '<h4>' + profile.complexity + ' — ' + profile.bot_type + '</h4>',
+            '<p><strong>Definition:</strong> ' + profile.definition + '</p>',
+            '<p><strong>Base effort estimate:</strong> ' + profile.base_days + ' day(s)</p>',
+            (profile.scale_up_rules && profile.scale_up_rules.length)
+                ? '<p><strong>Scale-up rules:</strong></p><ul>' + profile.scale_up_rules.map(function(item) { return '<li>' + item + '</li>'; }).join('') + '</ul>'
+                : ''
+        ].join('');
+        panelEl.classList.add('is-visible');
     }
     function syncTextDevProfileOptions() {
         var complexityEl = document.getElementById('one_time_dev_complexity');
@@ -1394,7 +1502,12 @@
         if (profileEl) profileEl.addEventListener('change', syncTextDevProfileOptions);
         if (staticFlowEl) staticFlowEl.addEventListener('change', updateTextDevProfilePanel);
         if (dynamicFlowEl) dynamicFlowEl.addEventListener('change', updateTextDevProfilePanel);
+        var voiceComplexityEl = document.getElementById('voice_one_time_dev_complexity');
+        var voiceProfileEl = document.getElementById('voice_one_time_dev_profile');
+        if (voiceComplexityEl) voiceComplexityEl.addEventListener('change', syncVoiceDevProfileOptions);
+        if (voiceProfileEl) voiceProfileEl.addEventListener('change', syncVoiceDevProfileOptions);
         syncTextDevProfileOptions();
+        syncVoiceDevProfileOptions();
         toggleChannelFields();
         toggleAiAgentFields();
     });
@@ -1431,6 +1544,12 @@
                   {% if inputs.get('voice_partner') == 'leverage' %}
                     · Complexity: <b>{{ {'simple':'Simple','medium':'Medium','complex':'Complex'}.get(inputs.get('voice_leverage_complexity') or '', '—') }}</b>
                     · Extra language: <b>{{ inputs.get('voice_leverage_extra_language', 'No') }}</b>
+                  {% else %}
+                    {% set vprof = voice_one_time_effort_profiles_by_id.get(inputs.get('voice_one_time_dev_profile', '')) %}
+                    {% if vprof %}· Profile: <b>{{ vprof.complexity }} — {{ vprof.bot_type }}</b>{% endif %}
+                    · APIs: <b>{{ inputs.get('num_voice_apis', '0') }}</b>
+                    · Additional languages: <b>{{ inputs.get('num_additional_voice_languages', '0') }}</b>
+                    {% if inputs.get('voice_chat_ai_handover') == 'Yes' %} · Chat AI handover{% endif %}
                   {% endif %}
                 </li>
                 {% endif %}
@@ -1806,12 +1925,26 @@
             {% set voice_uplift = voice_ba_cost + voice_qa_cost + voice_pm_cost %}
             {% set voice_total_dev = voice_build_cost + voice_uplift %}
             <div style="font-size: 1.15em; font-weight: bold; color: #5a2a8a; margin-top: 2px;">{{ voice_pricing.voice_mandays }} mandays</div>
+            {% set voice_dev_profile = voice_one_time_effort_profiles_by_id.get(inputs.get('voice_one_time_dev_profile', '')) %}
             <div style="margin-top: 6px; font-size: 0.98em; color: #444;">
               <b>Scope:</b>
+              {% if voice_dev_profile %}
+              Profile: {{ voice_dev_profile.complexity }} — {{ voice_dev_profile.bot_type }},
+              {% endif %}
               APIs: {{ inputs.get('num_voice_apis', '0') }},
-              Journeys: {{ inputs.get('num_voice_journeys', '0') }},
-              Additional Languages: {{ inputs.get('num_additional_voice_languages', '0') }}
+              Additional languages: {{ inputs.get('num_additional_voice_languages', '0') }}
+              {% if inputs.get('voice_chat_ai_handover') == 'Yes' %} · Chat AI handover{% endif %}
             </div>
+            {% if voice_pricing.get('voice_effort_lines') %}
+            <div style="margin-top: 10px; font-size: 0.98em; color: #444;">
+              <b>Voice effort lines:</b>
+              <ul style="margin: 6px 0 0 18px; padding: 0;">
+                {% for line in voice_pricing.voice_effort_lines %}
+                <li>{{ line.label }}: {{ '{:,.2f}'.format(line.days) }} day(s){% if line.detail %} ({{ line.detail }}){% endif %}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
             <div style="margin-top: 10px;">
               {{ render_cost_breakdown(
                 voice_build_cost,

@@ -31,7 +31,16 @@ from pricing_config import (
     TEXT_ONE_TIME_EFFORT_PROFILES_BY_ID,
     TEXT_ONE_TIME_AGENTIC_PROFILE_IDS,
     normalize_one_time_dev_profile,
+    VOICE_ONE_TIME_EFFORT_PROFILES,
+    VOICE_ONE_TIME_EFFORT_PROFILES_BY_ID,
+    normalize_voice_one_time_dev_profile,
 )
+
+VOICE_COMPLEXITY_TO_PROFILE_ID = {
+    'Simple': 'voice_simple_agentic',
+    'Medium': 'voice_medium_agentic_api',
+    'Complex': 'voice_complex_agentic_api',
+}
 
 
 def dev_location_for_manday_rates(country, inputs):
@@ -203,6 +212,9 @@ def inject_text_one_time_effort_catalog():
     return {
         'text_one_time_effort_profiles': TEXT_ONE_TIME_EFFORT_PROFILES,
         'text_one_time_effort_profiles_by_id': TEXT_ONE_TIME_EFFORT_PROFILES_BY_ID,
+        'text_one_time_agentic_profile_ids': TEXT_ONE_TIME_AGENTIC_PROFILE_IDS,
+        'voice_one_time_effort_profiles': VOICE_ONE_TIME_EFFORT_PROFILES,
+        'voice_one_time_effort_profiles_by_id': VOICE_ONE_TIME_EFFORT_PROFILES_BY_ID,
     }
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -945,6 +957,15 @@ def index():
         voice_leverage_extra_language = request.form.get('voice_leverage_extra_language', 'No')
         if voice_leverage_extra_language not in ('Yes', 'No'):
             voice_leverage_extra_language = 'No'
+        voice_one_time_dev_profile = normalize_voice_one_time_dev_profile(
+            request.form.get('voice_one_time_dev_profile', '')
+        )
+        if not voice_one_time_dev_profile:
+            _vc = (request.form.get('voice_one_time_dev_complexity') or '').strip()
+            voice_one_time_dev_profile = VOICE_COMPLEXITY_TO_PROFILE_ID.get(_vc, '')
+        voice_chat_ai_handover = (
+            'Yes' if request.form.get('voice_chat_ai_handover') in ('Yes', 'on', 'true', '1') else 'No'
+        )
         num_voice_journeys = request.form.get('num_voice_journeys', '0')
         num_voice_apis = request.form.get('num_voice_apis', '0')
         num_additional_voice_languages = request.form.get('num_additional_voice_languages', '0')
@@ -1001,6 +1022,8 @@ def index():
             'channel_type': channel_type,
             'voice_ai_enabled': voice_ai_enabled,
             'voice_partner': voice_partner,
+            'voice_one_time_dev_profile': voice_one_time_dev_profile,
+            'voice_chat_ai_handover': voice_chat_ai_handover,
             'voice_leverage_complexity': voice_leverage_complexity,
             'voice_leverage_extra_language': voice_leverage_extra_language,
             'num_voice_journeys': num_voice_journeys,
@@ -1348,6 +1371,7 @@ def index():
             'one_time_dev_profile', 'num_apis_price', 'num_journeys_price',
             'num_logical_steps_price', 'num_wa_static_screens', 'num_wa_dynamic_screens',
             'num_wa_screens_price', 'wa_static_flows', 'wa_dynamic_flows', 'num_additional_text_languages',
+            'voice_one_time_dev_profile', 'voice_chat_ai_handover', 'num_voice_apis', 'num_additional_voice_languages',
             'voice_notes_price', 'voice_notes_model', 'voice_notes_rate'
         ]
         patched_form = (request.form.copy() if hasattr(request.form, 'copy') else dict(request.form)) or {}
@@ -1544,15 +1568,7 @@ def index():
                     voice_pricing = calculate_voice_pricing(inputs, country=inputs.get('country', 'India'))
                     session['voice_pricing'] = voice_pricing
                     results['voice_pricing'] = voice_pricing
-                    # Merge voice mandays into total/bot_ui effort
-                    voice_mandays = float(voice_pricing.get('voice_mandays', 0) or 0)
-                    if voice_mandays:
-                        manday_breakdown = dict(manday_breakdown or {})
-                        manday_breakdown['bot_ui'] = float(manday_breakdown.get('bot_ui', 0) or 0) + voice_mandays
-                        manday_breakdown['custom_ai'] = float(manday_breakdown.get('custom_ai', 0) or 0)
-                        manday_breakdown['total'] = manday_breakdown['bot_ui'] + manday_breakdown['custom_ai']
-                        total_mandays = float(total_mandays or 0) + voice_mandays
-                        session['manday_breakdown'] = manday_breakdown
+                    # Keep text and voice manday totals separate (text_manday_breakdown vs voice_pricing)
             except Exception as e:
                 print(f"DEBUG: Calculation failed with error: {e}", file=sys.stderr, flush=True)
                 flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
@@ -2414,20 +2430,7 @@ def index():
             text_manday_breakdown = calculate_total_mandays_breakdown(inputs)
         manday_breakdown = dict(text_manday_breakdown or {})
 
-        # Merge voice mandays into total/bot_ui if voice pricing exists
-        try:
-            channel_type = inputs.get('channel_type', 'text_only')
-            if channel_type in ['voice_only', 'text_voice']:
-                voice_mandays = float(voice_pricing.get('voice_mandays', 0) or 0)
-                if voice_mandays:
-                    manday_breakdown = dict(text_manday_breakdown or {})
-                    manday_breakdown['bot_ui'] = float(manday_breakdown.get('bot_ui', 0) or 0) + voice_mandays
-                    manday_breakdown['custom_ai'] = float(manday_breakdown.get('custom_ai', 0) or 0)
-                    manday_breakdown['total'] = manday_breakdown['bot_ui'] + manday_breakdown['custom_ai']
-                    total_mandays = float(total_mandays or 0) + voice_mandays
-                    session['manday_breakdown'] = manday_breakdown
-        except Exception:
-            pass
+        # Text and voice mandays remain separate on the results page
         
         # Ensure manday_breakdown has the correct structure
         if not manday_breakdown or 'bot_ui' not in manday_breakdown:

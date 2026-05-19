@@ -22,6 +22,10 @@ from pricing_config import (
     get_whatsapp_voice_rate,
     get_pstn_rates,
     get_one_time_dev_profile,
+    get_voice_one_time_dev_profile,
+    normalize_voice_one_time_dev_profile,
+    VOICE_ONE_TIME_EFFORT_PROFILES,
+    VOICE_CHAT_AI_HANDOVER_DAYS,
     TEXT_ONE_TIME_HOURS_PER_MANDAY,
     TEXT_ONE_TIME_STATIC_FLOW_BASE_DAYS,
     TEXT_ONE_TIME_STATIC_FLOW_INCLUDED_SCREENS,
@@ -261,6 +265,18 @@ def _is_truthy_flag(inputs, key):
     return str(inputs.get(key, "No")).strip().lower() in ("yes", "true", "1", "on")
 
 
+def _channel_type(inputs):
+    return (inputs.get("channel_type") or "text_only").strip()
+
+
+def channel_includes_text_dev(inputs):
+    return _channel_type(inputs) in ("text_only", "text_voice")
+
+
+def channel_includes_voice_dev(inputs):
+    return _channel_type(inputs) in ("voice_only", "text_voice")
+
+
 def _hours_to_mandays(hours):
     return float(hours) / float(TEXT_ONE_TIME_HOURS_PER_MANDAY)
 
@@ -295,6 +311,15 @@ def _scale_up_block_days(value, included, rule, label):
 
 
 def _compute_text_implementation_mandays(inputs):
+    if not channel_includes_text_dev(inputs):
+        return {
+            "bot_ui": 0.0,
+            "custom_ai": 0.0,
+            "total": 0.0,
+            "implementation_profile_id": "",
+            "effort_lines": [],
+        }
+
     profile = get_one_time_dev_profile(inputs.get("one_time_dev_profile"))
     if not profile:
         return {
@@ -374,18 +399,6 @@ def _compute_text_implementation_mandays(inputs):
             }
         )
 
-    language_multiplier = scale_ups.get("languages_multiplier")
-    if languages > 0 and language_multiplier:
-        language_days = float(profile["base_days"]) * float(language_multiplier) * languages
-        extra_days += language_days
-        effort_lines.append(
-            {
-                "label": "Additional languages",
-                "days": language_days,
-                "detail": f"{languages} language(s) at {language_multiplier:.0%} of base effort",
-            }
-        )
-
     if journeys > included.get("journeys", 0) and included.get("journeys", 0) > 0:
         extra_journeys = journeys - included.get("journeys", 0)
         journey_days = float(profile["base_days"]) * extra_journeys
@@ -395,6 +408,22 @@ def _compute_text_implementation_mandays(inputs):
                 "label": "Additional journeys above included",
                 "days": journey_days,
                 "detail": f"{journeys} entered, {included.get('journeys', 0)} included",
+            }
+        )
+
+    implementation_subtotal = float(profile["base_days"]) + extra_days
+    language_multiplier = scale_ups.get("languages_multiplier")
+    if languages > 0 and language_multiplier:
+        language_days = implementation_subtotal * float(language_multiplier) * languages
+        extra_days += language_days
+        effort_lines.append(
+            {
+                "label": "Additional languages",
+                "days": language_days,
+                "detail": (
+                    f"{languages} language(s) at {language_multiplier:.0%} of "
+                    f"implementation effort ({implementation_subtotal:.2f} day(s))"
+                ),
             }
         )
 
@@ -414,6 +443,8 @@ def _compute_text_implementation_mandays(inputs):
 # --- refactored calculate_total_mandays ---
 def calculate_total_mandays(inputs):
     """Calculate total mandays for text one-time development."""
+    if not channel_includes_text_dev(inputs):
+        return 0.0
     implementation = _compute_text_implementation_mandays(inputs)
     total_mandays = implementation["total"]
     total_mandays += _calculate_extras_mandays(inputs, ACTIVITY_MANDAYS)
@@ -422,6 +453,18 @@ def calculate_total_mandays(inputs):
 # --- refactored calculate_total_mandays_breakdown ---
 def calculate_total_mandays_breakdown(inputs):
     """Return bot_ui and custom_ai mandays from profile effort and extras."""
+    if not channel_includes_text_dev(inputs):
+        return {
+            "bot_ui": 0.0,
+            "custom_ai": 0.0,
+            "total": 0.0,
+            "implementation_profile_id": "",
+            "implementation_total": 0.0,
+            "extras_mandays": 0.0,
+            "implementation_effort_lines": [],
+            "extras_effort_lines": [],
+            "effort_lines": [],
+        }
     implementation = _compute_text_implementation_mandays(inputs)
     extras_total = _calculate_extras_mandays(inputs, ACTIVITY_MANDAYS)
     extras_lines = _extras_effort_line_items(inputs, ACTIVITY_MANDAYS)
@@ -538,46 +581,107 @@ def get_committed_amount_rates(country, committed_amount):
 # Voice Channel Helpers
 # =============================================================================
 
-def calculate_voice_dev_mandays(inputs):
-    """
-    Calculate total mandays for voice development work based on inputs and VOICE_DEV_EFFORT.
-    """
-    channel = (inputs.get('channel_type') or 'text_only').strip()
-    country_in = (inputs.get('country') or '').strip()
-    vp = (inputs.get('voice_partner') or 'gupshup_native').strip().lower()
-    if channel in ('voice_only', 'text_voice') and vp == 'leverage' and country_in == 'India':
-        return 0.0
-    total_mandays = 0
-    try:
-        num_voice_journeys = int(inputs.get('num_voice_journeys', 0) or 0)
-    except Exception:
-        pass
-    try:
-        num_voice_apis = int(inputs.get('num_voice_apis', 0) or 0)
-    except Exception:
-        pass
-    # Apply the same 4+4 bundle logic as text journeys/APIs
-    set_mandays, rem_apis, rem_journeys = _calculate_set_mandays(num_voice_apis, num_voice_journeys)
-    total_mandays += set_mandays
-    total_mandays += rem_apis + rem_journeys
-    try:
-        num_additional_languages = int(inputs.get('num_additional_voice_languages', 0) or 0)
-        if num_additional_languages > 0:
-            base_effort = total_mandays
-            total_mandays += base_effort * VOICE_DEV_EFFORT['additional_language_multiplier'] * num_additional_languages
-    except Exception:
-        pass
+def _voice_platform_integration_mandays(inputs):
+    """Channel/platform integration add-ons (mandays) on top of voice profile effort."""
+    extra = 0.0
+    lines = []
     agent_handover_pstn = inputs.get('agent_handover_pstn', 'None')
     if agent_handover_pstn == 'Knowlarity':
-        total_mandays += VOICE_DEV_EFFORT['agent_handover_pstn_knowlarity']
+        d = float(VOICE_DEV_EFFORT['agent_handover_pstn_knowlarity'])
+        extra += d
+        lines.append({"label": "Agent handover (PSTN) — Knowlarity", "days": d})
     elif agent_handover_pstn == 'Other':
-        total_mandays += VOICE_DEV_EFFORT['agent_handover_pstn_other']
+        d = float(VOICE_DEV_EFFORT['agent_handover_pstn_other'])
+        extra += d
+        lines.append({"label": "Agent handover (PSTN) — other platform", "days": d})
     whatsapp_voice_platform = inputs.get('whatsapp_voice_platform', 'None')
     if whatsapp_voice_platform == 'Knowlarity':
-        total_mandays += VOICE_DEV_EFFORT['whatsapp_voice_knowlarity']
+        d = float(VOICE_DEV_EFFORT['whatsapp_voice_knowlarity'])
+        extra += d
+        lines.append({"label": "WhatsApp voice platform — Knowlarity", "days": d})
     elif whatsapp_voice_platform == 'Other':
-        total_mandays += VOICE_DEV_EFFORT['whatsapp_voice_other']
-    return total_mandays
+        d = float(VOICE_DEV_EFFORT['whatsapp_voice_other'])
+        extra += d
+        lines.append({"label": "WhatsApp voice platform — other", "days": d})
+    return extra, lines
+
+
+def _compute_voice_implementation_mandays(inputs):
+    """Profile-based voice one-time effort (GTM voice sheet). Leverage uses partner pricing separately."""
+    if not channel_includes_voice_dev(inputs):
+        return {"total": 0.0, "effort_lines": [], "implementation_profile_id": ""}
+
+    country_in = (inputs.get('country') or '').strip()
+    vp = (inputs.get('voice_partner') or 'gupshup_native').strip().lower()
+    if vp == 'leverage' and country_in == 'India':
+        return {"total": 0.0, "effort_lines": [], "implementation_profile_id": ""}
+
+    profile = get_voice_one_time_dev_profile(inputs.get('voice_one_time_dev_profile'))
+    if not profile:
+        return {"total": 0.0, "effort_lines": [], "implementation_profile_id": ""}
+
+    apis = _int_input(inputs, 'num_voice_apis')
+    languages = _int_input(inputs, 'num_additional_voice_languages')
+    included_apis = int(profile.get('included_apis', 0) or 0)
+    effort_lines = [{"label": "Base voice profile effort", "days": float(profile['base_days'])}]
+    extra_days = 0.0
+
+    if apis > included_apis and float(profile.get('extra_api_days', 0) or 0) > 0:
+        api_days = float(profile['extra_api_days']) * (apis - included_apis)
+        extra_days += api_days
+        effort_lines.append(
+            {
+                "label": "APIs/tools above included",
+                "days": api_days,
+                "detail": f"{apis} entered, {included_apis} included",
+            }
+        )
+
+    if languages > 0 and float(profile.get('extra_language_days', 0) or 0) > 0:
+        lang_days = float(profile['extra_language_days']) * languages
+        extra_days += lang_days
+        effort_lines.append(
+            {
+                "label": "Additional languages",
+                "days": lang_days,
+                "detail": f"{languages} language(s) at {profile['extra_language_days']} day(s) each",
+            }
+        )
+
+    if _is_truthy_flag(inputs, 'voice_chat_ai_handover'):
+        extra_days += float(VOICE_CHAT_AI_HANDOVER_DAYS)
+        effort_lines.append(
+            {
+                "label": "Chat AI handover (hybrid)",
+                "days": float(VOICE_CHAT_AI_HANDOVER_DAYS),
+            }
+        )
+
+    platform_days, platform_lines = _voice_platform_integration_mandays(inputs)
+    extra_days += platform_days
+    effort_lines.extend(platform_lines)
+
+    total_days = float(profile['base_days']) + extra_days
+    return {
+        "total": total_days,
+        "effort_lines": effort_lines,
+        "implementation_profile_id": profile['id'],
+    }
+
+
+def calculate_voice_dev_mandays(inputs):
+    """Total mandays for Gupshup-native voice one-time development."""
+    return float(_compute_voice_implementation_mandays(inputs).get('total', 0) or 0)
+
+
+def calculate_voice_dev_mandays_breakdown(inputs):
+    impl = _compute_voice_implementation_mandays(inputs)
+    total = float(impl.get('total', 0) or 0)
+    return {
+        "total": total,
+        "effort_lines": list(impl.get('effort_lines') or []),
+        "implementation_profile_id": impl.get('implementation_profile_id', ''),
+    }
 
 def calculate_voice_platform_fee(inputs):
     """
@@ -714,6 +818,17 @@ def calculate_voice_pricing(inputs, country='India'):
     High-level aggregator for voice pricing: development, platform, calling.
     Returns a dict with mandays, cost breakdown and total.
     """
+    if not channel_includes_voice_dev(inputs):
+        return {
+            'voice_partner_model': 'none',
+            'voice_mandays': 0.0,
+            'voice_dev_cost': 0.0,
+            'voice_platform_fee': 0.0,
+            'calling_costs': {'total': 0.0},
+            'total_voice_cost': 0.0,
+            'voice_effort_lines': [],
+        }
+
     voice_partner = (inputs.get('voice_partner') or 'gupshup_native').strip().lower()
     if voice_partner == 'leverage' and country != 'India':
         voice_partner = 'gupshup_native'
@@ -743,7 +858,8 @@ def calculate_voice_pricing(inputs, country='India'):
             'total_voice_cost': total_voice_cost,
         }
 
-    voice_mandays = calculate_voice_dev_mandays(inputs)
+    voice_breakdown = calculate_voice_dev_mandays_breakdown(inputs)
+    voice_mandays = float(voice_breakdown.get('total', 0) or 0)
     # Use custom_ai rate for voice work when available, else bot_ui
     rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
     if isinstance(rates.get('custom_ai'), dict):
@@ -761,4 +877,6 @@ def calculate_voice_pricing(inputs, country='India'):
         'voice_platform_fee': voice_platform_fee,
         'calling_costs': calling_costs,
         'total_voice_cost': total_voice_cost,
+        'voice_effort_lines': voice_breakdown.get('effort_lines', []),
+        'voice_implementation_profile_id': voice_breakdown.get('implementation_profile_id', ''),
     }
