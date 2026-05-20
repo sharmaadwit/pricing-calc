@@ -260,7 +260,7 @@ logger.info("Flask app logger initialized")
 def handle_internal_error(err):
     logger.exception("Unhandled 500: %s", err)
     flash('Something went wrong. Please try again or start a new calculation.', 'error')
-    return render_template('login.html'), 500
+    return redirect(url_for('index'))
 
 
 # --- Request security helpers ---
