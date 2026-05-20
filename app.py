@@ -255,6 +255,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.info("Flask app logger initialized")
 
+
+@app.errorhandler(500)
+def handle_internal_error(err):
+    logger.exception("Unhandled 500: %s", err)
+    flash('Something went wrong. Please try again or start a new calculation.', 'error')
+    return render_template('login.html'), 500
+
+
 # --- Request security helpers ---
 RATE_LIMIT_WINDOW_SECONDS = 60
 RATE_LIMIT_MAX_REQUESTS = 120
@@ -1576,9 +1584,9 @@ def index():
                     'ai_price': suggested_ai,
                     'advanced_price': suggested_advanced,
                     'basic_marketing_price': suggested_marketing,
-            'basic_utility_price': suggested_utility,
-            'voice_notes_rate': get_voice_notes_price(country, inputs.get('voice_notes_model', '')) if inputs.get('voice_notes_price') == 'Yes' else 0.0,
-        }
+                    'basic_utility_price': suggested_utility,
+                    'voice_notes_rate': get_voice_notes_price(country, inputs.get('voice_notes_model', '')) if inputs.get('voice_notes_price') == 'Yes' else 0.0,
+                }
                 currency_symbol = COUNTRY_CURRENCY.get(country, '$')
                 return render_template(
                     'index.html',
@@ -1969,12 +1977,16 @@ def index():
             analytics_kwargs['calculation_route'] = 'volumes'
         # Debug: Log manday rates and breakdown before saving to Analytics
         print(f"DEBUG: Saving Analytics: bot_ui_manday_rate={analytics_kwargs.get('bot_ui_manday_rate')}, custom_ai_manday_rate={analytics_kwargs.get('custom_ai_manday_rate')}, bot_ui_mandays={analytics_kwargs.get('bot_ui_mandays')}, custom_ai_mandays={analytics_kwargs.get('custom_ai_mandays')}, calculation_route={analytics_kwargs.get('calculation_route')}", file=sys.stderr, flush=True)
-        new_analytics = Analytics(**analytics_kwargs)
-        db.session.add(new_analytics)
-        db.session.commit()
-        # Top 5 users by number of calculations
-        user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
-        top_users = Counter(user_names).most_common()  # Remove the 5 limit
+        top_users = []
+        try:
+            new_analytics = Analytics(**analytics_kwargs)
+            db.session.add(new_analytics)
+            db.session.commit()
+            user_names = [row[0] for row in db.session.query(Analytics.user_name).all() if row[0]]
+            top_users = Counter(user_names).most_common()
+        except Exception:
+            logger.exception("Analytics save failed; continuing to results page")
+            db.session.rollback()
         # When setting results['suggested_revenue'], use rate_card_platform_fee instead of platform_fee
         results['suggested_revenue'] = (results.get('suggested_revenue', 0) - platform_fee) + rate_card_platform_fee
         print("RENDERING RESULTS PAGE", file=sys.stderr, flush=True)
