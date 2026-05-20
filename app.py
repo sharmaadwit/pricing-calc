@@ -238,22 +238,32 @@ SOW_BETA_EMAILS = {
     'yashas.reddy@gupshup.io',
 }
 
-# Test log to verify logging is working
-print("=== FLASK APP STARTING UP ===", file=sys.stderr, flush=True)
-print(f"Python version: {sys.version}", file=sys.stderr, flush=True)
-print("=== END STARTUP LOG ===", file=sys.stderr, flush=True)
-
-# Set up proper logging for Railway/gunicorn
-import logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stderr)
-    ]
+# Verbose stderr traces only in non-production (set APP_VERBOSE=1 to force on)
+_APP_VERBOSE = (
+    os.environ.get('APP_VERBOSE', '').lower() in ('1', 'true', 'yes')
+    or os.environ.get('RAILWAY_ENVIRONMENT') != 'production'
 )
+
+
+def _vprint(*args, **kwargs):
+    if _APP_VERBOSE:
+        kwargs.setdefault('file', sys.stderr)
+        kwargs.setdefault('flush', True)
+        print(*args, **kwargs)
+
+
+# Set up logging for Railway/gunicorn (INFO in production, DEBUG otherwise)
+import logging
+
+_log_level = logging.DEBUG if _APP_VERBOSE else logging.INFO
+logging.basicConfig(
+    level=_log_level,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stderr)],
+)
+logging.getLogger('werkzeug').setLevel(logging.WARNING if not _APP_VERBOSE else logging.INFO)
 logger = logging.getLogger(__name__)
-logger.info("Flask app logger initialized")
+logger.info("Flask app started (Python %s, log_level=%s)", sys.version.split()[0], logging.getLevelName(_log_level))
 
 
 @app.errorhandler(500)
@@ -411,7 +421,7 @@ def clear_calc_session(preserve_auth: bool = True):
 @app.route('/health')
 def health_check():
     logger.info("Health check endpoint accessed")
-    print("HEALTH CHECK ACCESSED", file=sys.stderr, flush=True)
+    _vprint("HEALTH CHECK ACCESSED", file=sys.stderr, flush=True)
     return "OK", 200
 
 # Root route for basic connectivity test
@@ -753,7 +763,7 @@ def index():
     """Main route for the pricing calculator. Handles all user steps (volumes, prices, bundle, results)."""
     if not session.get('authenticated'):
         return redirect(url_for('login'))
-    print("DEBUG: session at start of request:", dict(session), file=sys.stderr, flush=True)
+    _vprint("DEBUG: session at start of request:", dict(session), file=sys.stderr, flush=True)
     # Determine current step; default to 'volumes' for backward compatibility.
     # We will explicitly route to 'profile' when needed below.
     step = request.form.get('step', request.args.get('step', 'volumes'))
@@ -762,10 +772,10 @@ def index():
     if not request.form and session.get('results') and session.get('inputs'):
         step = 'results'
     
-    print("\n--- DEBUG ---", file=sys.stderr, flush=True)
-    print("Form data:", dict(request.form), file=sys.stderr, flush=True)
-    print("Session data:", dict(session), file=sys.stderr, flush=True)
-    print("Detected step:", step, file=sys.stderr, flush=True)
+    _vprint("\n--- DEBUG ---", file=sys.stderr, flush=True)
+    _vprint("Form data:", dict(request.form), file=sys.stderr, flush=True)
+    _vprint("Session data:", dict(session), file=sys.stderr, flush=True)
+    _vprint("Detected step:", step, file=sys.stderr, flush=True)
     
     # Generate calculation_id only when user moves to page 2 (prices or bundle step)
     # For all other steps, preserve existing calculation_id from session
@@ -773,18 +783,18 @@ def index():
         # 🍕 Easter egg chance for calculation ID (only for new calculations)
         if should_trigger_easter_egg():
             calculation_id = generate_pizza_easter_egg_id()
-            print(f"🍕 PIZZA EASTER EGG TRIGGERED! ID: {calculation_id}", file=sys.stderr, flush=True)
+            _vprint(f"🍕 PIZZA EASTER EGG TRIGGERED! ID: {calculation_id}", file=sys.stderr, flush=True)
         else:
             calculation_id = str(uuid.uuid4())
         session['calculation_id'] = calculation_id
-        print(f"DEBUG: New calculation started on {step} step. Calculation ID: {calculation_id}", file=sys.stderr, flush=True)
+        _vprint(f"DEBUG: New calculation started on {step} step. Calculation ID: {calculation_id}", file=sys.stderr, flush=True)
     else:
         # For all other cases, preserve the calculation_id from session
         calculation_id = session.get('calculation_id', str(uuid.uuid4()))
-        print(f"DEBUG: Using existing calculation ID: {calculation_id}", file=sys.stderr, flush=True)
+        _vprint(f"DEBUG: Using existing calculation ID: {calculation_id}", file=sys.stderr, flush=True)
     
-    print("Current step:", step, file=sys.stderr, flush=True)
-    print("--- END DEBUG ---\n", file=sys.stderr, flush=True)
+    _vprint("Current step:", step, file=sys.stderr, flush=True)
+    _vprint("--- END DEBUG ---\n", file=sys.stderr, flush=True)
     results = None
     currency_symbol = None
 
@@ -889,7 +899,7 @@ def index():
             dev_location = (request.form.get('dev_location') or 'India').strip()
         else:
             dev_location = None
-        print(f"[app.py] After country/currency logic: country='{country}', currency='{currency}', dev_location='{dev_location}'", file=sys.stderr, flush=True)
+        _vprint(f"[app.py] After country/currency logic: country='{country}', currency='{currency}', dev_location='{dev_location}'", file=sys.stderr, flush=True)
         def parse_volume(val):
             try:
                 return float(val.replace(',', '')) if val and str(val).strip() else 0.0
@@ -900,7 +910,7 @@ def index():
         basic_marketing_volume = parse_volume(request.form.get('basic_marketing_volume', ''))
         basic_utility_volume = parse_volume(request.form.get('basic_utility_volume', ''))
         # Debug: Log parsed volumes
-        print(f"DEBUG: Parsed volumes - ai: {ai_volume}, advanced: {advanced_volume}, marketing: {basic_marketing_volume}, utility: {basic_utility_volume}", file=sys.stderr, flush=True)
+        _vprint(f"DEBUG: Parsed volumes - ai: {ai_volume}, advanced: {advanced_volume}, marketing: {basic_marketing_volume}, utility: {basic_utility_volume}", file=sys.stderr, flush=True)
         bfsi_tier = request.form.get('bfsi_tier', 'NA')
         personalize_load = request.form.get('personalize_load', 'NA')
         human_agents = request.form.get('human_agents', 'NA')
@@ -1081,7 +1091,7 @@ def index():
         # We DO NOT overwrite session['inputs'] from profile here, as that would
         # revert user's form selections to profile defaults.
         
-        print("DEBUG: session['inputs'] correctly set to form data:", session['inputs'], file=sys.stderr, flush=True)
+        _vprint("DEBUG: session['inputs'] correctly set to form data:", session['inputs'], file=sys.stderr, flush=True)
         # Only route to bundle if all text volumes are zero AND this is not a voice-only scenario
         total_voice_minutes = (
             pstn_inbound_ai_minutes + pstn_outbound_ai_minutes + pstn_manual_minutes +
@@ -1137,10 +1147,10 @@ def index():
         )
 
     elif step == 'prices' and request.method == 'POST':
-        print('HANDLER: Entered prices POST step', file=sys.stderr, flush=True)
+        _vprint('HANDLER: Entered prices POST step', file=sys.stderr, flush=True)
         inputs = session.get('inputs', {})
         if not inputs:
-            print('HANDLER: No inputs in session, redirecting to index', file=sys.stderr, flush=True)
+            _vprint('HANDLER: No inputs in session, redirecting to index', file=sys.stderr, flush=True)
             flash('Session expired or missing. Please start again.', 'error')
             return redirect(url_for('index'))
         def parse_price(val):
@@ -1286,7 +1296,7 @@ def index():
             except Exception:
                 pass
         if pricing_floor_errors:
-            print('HANDLER: Pricing floor errors, rendering prices page with errors', file=sys.stderr, flush=True)
+            _vprint('HANDLER: Pricing floor errors, rendering prices page with errors', file=sys.stderr, flush=True)
             for msg in pricing_floor_errors:
                 flash(msg, 'error')
             flash("Prices cannot be set below rate card / internal reference values.", 'error')
@@ -1315,7 +1325,7 @@ def index():
                 voice_rate_card=voice_rate_card,
                 ai_agent_pricing=AI_AGENT_PRICING,
             )
-        print('HANDLER: No discount errors, continuing to results calculation', file=sys.stderr, flush=True)
+        _vprint('HANDLER: No discount errors, continuing to results calculation', file=sys.stderr, flush=True)
 
         # Always recalculate platform fee before saving to session['pricing_inputs']
         calculated_platform_fee, fee_currency = calculate_platform_fee(
@@ -1433,13 +1443,13 @@ def index():
         else:
             patched_form['dev_location'] = None
         total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
-        print(f"DEBUG: dev_cost_currency = {dev_cost_currency}, country = {country}", file=sys.stderr, flush=True)
+        _vprint(f"DEBUG: dev_cost_currency = {dev_cost_currency}, country = {country}", file=sys.stderr, flush=True)
         manday_breakdown = dev_cost_breakdown['mandays_breakdown']
         text_mandays = total_mandays
         text_manday_breakdown = dict(manday_breakdown or {})
         
         # Debug: Log inputs being used for calculation
-        print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}", file=sys.stderr, flush=True)
+        _vprint(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}", file=sys.stderr, flush=True)
         
         # Calculate pricing results (text channels)
         try:
@@ -1456,9 +1466,9 @@ def index():
                 basic_utility_price=basic_utility_price,
                 voice_notes_rate=float(inputs.get('voice_notes_rate', 0) or 0) if inputs.get('voice_notes_price') == 'Yes' else None
             )
-            print(f"DEBUG: Calculation successful, results: {results}", file=sys.stderr, flush=True)
+            _vprint(f"DEBUG: Calculation successful, results: {results}", file=sys.stderr, flush=True)
         except Exception as e:
-            print(f"DEBUG: Calculation failed with error: {e}", file=sys.stderr, flush=True)
+            _vprint(f"DEBUG: Calculation failed with error: {e}", file=sys.stderr, flush=True)
             flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
             suggested_prices = {
                 'ai_price': suggested_ai,
@@ -1494,7 +1504,7 @@ def index():
             results['line_items'] = unique_line_items
         # Validate results
         if not results or 'line_items' not in results:
-            print(f"DEBUG: Invalid results: {results}", file=sys.stderr, flush=True)
+            _vprint(f"DEBUG: Invalid results: {results}", file=sys.stderr, flush=True)
             flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
             suggested_prices = {
                 'ai_price': suggested_ai,
@@ -1517,7 +1527,7 @@ def index():
                 voice_rate_card=build_voice_rate_card_for_prices(inputs, country),
                 ai_agent_pricing=AI_AGENT_PRICING,
             )
-        print("PASSED results validation, about to render results page", file=sys.stderr, flush=True)
+        _vprint("PASSED results validation, about to render results page", file=sys.stderr, flush=True)
         try:
             # --- Ensure manday_rates is always set and complete ---
             country = (inputs.get('country') or 'India').strip()
@@ -1546,12 +1556,12 @@ def index():
             manday_rates['custom_ai_discount'] = round(100 * (default_custom_ai - manday_rates['custom_ai']) / default_custom_ai, 3) if default_custom_ai else 0
             total_mandays = calculate_total_mandays(patched_form)
             total_dev_cost, dev_cost_currency, dev_cost_breakdown = calculate_total_manday_cost(patched_form, manday_rates)
-            print(f"DEBUG: dev_cost_currency = {dev_cost_currency}, country = {country}", file=sys.stderr, flush=True)
+            _vprint(f"DEBUG: dev_cost_currency = {dev_cost_currency}, country = {country}", file=sys.stderr, flush=True)
             manday_breakdown = dev_cost_breakdown['mandays_breakdown']
             text_mandays = total_mandays
             text_manday_breakdown = dict(manday_breakdown or {})
             # Debug: Log inputs being used for calculation
-            print(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}", file=sys.stderr, flush=True)
+            _vprint(f"DEBUG: Calculation inputs - ai_volume: {inputs.get('ai_volume', 0)}, advanced_volume: {inputs.get('advanced_volume', 0)}, marketing_volume: {inputs.get('basic_marketing_volume', 0)}, utility_volume: {inputs.get('basic_utility_volume', 0)}", file=sys.stderr, flush=True)
             # Calculate pricing results
             try:
                 results = calculate_pricing(
@@ -1567,7 +1577,7 @@ def index():
                     basic_utility_price=basic_utility_price,
                     voice_notes_rate=float(inputs.get('voice_notes_rate', 0) or 0) if inputs.get('voice_notes_price') == 'Yes' else None
                 )
-                print(f"DEBUG: Calculation successful, results: {results}", file=sys.stderr, flush=True)
+                _vprint(f"DEBUG: Calculation successful, results: {results}", file=sys.stderr, flush=True)
                 # Voice pricing (if selected)
                 channel_type = inputs.get('channel_type', 'text_only')
                 voice_pricing = {}
@@ -1578,7 +1588,7 @@ def index():
                     results['voice_pricing'] = voice_pricing
                     # Keep text and voice manday totals separate (text_manday_breakdown vs voice_pricing)
             except Exception as e:
-                print(f"DEBUG: Calculation failed with error: {e}", file=sys.stderr, flush=True)
+                _vprint(f"DEBUG: Calculation failed with error: {e}", file=sys.stderr, flush=True)
                 flash('Pricing calculation failed. Please check your inputs and try again.', 'error')
                 suggested_prices = {
                     'ai_price': suggested_ai,
@@ -1602,7 +1612,7 @@ def index():
                     ai_agent_pricing=AI_AGENT_PRICING,
                 )
         except Exception as e:
-            print(f"DEBUG: Error in manday/dev cost or pricing calculation: {e}", file=sys.stderr, flush=True)
+            _vprint(f"DEBUG: Error in manday/dev cost or pricing calculation: {e}", file=sys.stderr, flush=True)
             flash('Internal error during calculation. Please try again.', 'error')
             _cs = COUNTRY_CURRENCY.get(inputs.get('country', 'India'), '$')
             _rc_pf, _ = calculate_platform_fee(
@@ -1976,7 +1986,7 @@ def index():
         else:
             analytics_kwargs['calculation_route'] = 'volumes'
         # Debug: Log manday rates and breakdown before saving to Analytics
-        print(f"DEBUG: Saving Analytics: bot_ui_manday_rate={analytics_kwargs.get('bot_ui_manday_rate')}, custom_ai_manday_rate={analytics_kwargs.get('custom_ai_manday_rate')}, bot_ui_mandays={analytics_kwargs.get('bot_ui_mandays')}, custom_ai_mandays={analytics_kwargs.get('custom_ai_mandays')}, calculation_route={analytics_kwargs.get('calculation_route')}", file=sys.stderr, flush=True)
+        _vprint(f"DEBUG: Saving Analytics: bot_ui_manday_rate={analytics_kwargs.get('bot_ui_manday_rate')}, custom_ai_manday_rate={analytics_kwargs.get('custom_ai_manday_rate')}, bot_ui_mandays={analytics_kwargs.get('bot_ui_mandays')}, custom_ai_mandays={analytics_kwargs.get('custom_ai_mandays')}, calculation_route={analytics_kwargs.get('calculation_route')}", file=sys.stderr, flush=True)
         top_users = []
         try:
             new_analytics = Analytics(**analytics_kwargs)
@@ -1989,7 +1999,7 @@ def index():
             db.session.rollback()
         # When setting results['suggested_revenue'], use rate_card_platform_fee instead of platform_fee
         results['suggested_revenue'] = (results.get('suggested_revenue', 0) - platform_fee) + rate_card_platform_fee
-        print("RENDERING RESULTS PAGE", file=sys.stderr, flush=True)
+        _vprint("RENDERING RESULTS PAGE", file=sys.stderr, flush=True)
         contradiction_warning = None
         # Determine if SOW beta should be enabled for this user
         profile = session.get('profile') or {}
@@ -2039,9 +2049,9 @@ def index():
                 'overage_price': calculate_safe_overage_price(utility_price, meta_costs.get('utility', 0))
             }
         }
-        print("DEBUG: advanced_price =", advanced_price)
-        print("DEBUG: meta_costs['advanced'] =", meta_costs.get('advanced', 0))
-        print("DEBUG: final_price_details.advanced_messages.price_per_msg =", final_price_details['advanced_messages']['price_per_msg'])
+        _vprint("DEBUG: advanced_price =", advanced_price)
+        _vprint("DEBUG: meta_costs['advanced'] =", meta_costs.get('advanced', 0))
+        _vprint("DEBUG: final_price_details.advanced_messages.price_per_msg =", final_price_details['advanced_messages']['price_per_msg'])
         if all(float(inputs.get(v, 0)) == 0.0 for v in ['ai_volume', 'advanced_volume', 'basic_marketing_volume', 'basic_utility_volume']):
             committed_amount = float(inputs.get('committed_amount', 0) or 0)
             rates = get_committed_amount_rates(inputs.get('country', 'India'), committed_amount)
@@ -2206,7 +2216,7 @@ def index():
         pricing_inputs = session.get('pricing_inputs', {}) or {}
         country = (inputs.get('country') or 'India').strip()
         dev_location = dev_location_for_manday_rates(country, inputs)
-        print(f"DEBUG: country used for manday rates = '{country}'", file=sys.stderr, flush=True)
+        _vprint(f"DEBUG: country used for manday rates = '{country}'", file=sys.stderr, flush=True)
         rates = COUNTRY_MANDAY_RATES.get(country, COUNTRY_MANDAY_RATES['APAC'])
         if country == 'LATAM':
             default_bot_ui = float(rates['bot_ui'].get(dev_location, 0.0) or 0.0)
@@ -2425,7 +2435,7 @@ def index():
             session['manday_breakdown'] = text_manday_breakdown
             session['manday_rates'] = manday_rates
         except Exception as e:
-            print(f"Error calculating dev_cost_breakdown: {e}", file=sys.stderr, flush=True)
+            _vprint(f"Error calculating dev_cost_breakdown: {e}", file=sys.stderr, flush=True)
             dev_cost_breakdown = {'total_cost': 0, 'ba_cost': 0, 'qa_cost': 0, 'pm_cost': 0, 'uplift_amount': 0}
             dev_cost_currency = 'INR'
             text_manday_breakdown = calculate_total_mandays_breakdown(inputs)
@@ -2480,7 +2490,7 @@ def index():
     # Clear calculation_id when starting fresh
     if 'calculation_id' in session:
         session.pop('calculation_id')
-        print("DEBUG: Cleared calculation_id for fresh start", file=sys.stderr, flush=True)
+        _vprint("DEBUG: Cleared calculation_id for fresh start", file=sys.stderr, flush=True)
     
     country = session.get('inputs', {}).get('country', 'India')
     currency_symbol = COUNTRY_CURRENCY.get(country, '$')
@@ -3598,7 +3608,7 @@ def analytics():
                     
                     # Ensure msg_types structure exists
                     if 'msg_types' not in stats[country]:
-                        print(f'DEBUG: Adding msg_types fallback for {country}', file=sys.stderr, flush=True)
+                        _vprint(f'DEBUG: Adding msg_types fallback for {country}', file=sys.stderr, flush=True)
                         stats[country]['msg_types'] = {
                             'ai': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
                             'advanced': {'avg': 0, 'min': 0, 'max': 0, 'median': 0},
@@ -3928,7 +3938,7 @@ def analytics():
         return render_template('analytics.html', authorized=False, analytics={})
     except Exception as e:
         import traceback
-        print("ANALYTICS ERROR:", e, file=sys.stderr, flush=True)
+        _vprint("ANALYTICS ERROR:", e, file=sys.stderr, flush=True)
         traceback.print_exc()
         return "Internal Server Error (analytics)", 500
 
@@ -3989,7 +3999,7 @@ def calculate_pricing_simulation(inputs, pricing_inputs=None):
         committed_amount = float(inputs.get('committed_amount', 0) or 0)
         meta_costs = meta_costs_table.get(country, meta_costs_table['APAC'])
     except Exception as e:
-        print(f"ERROR in calculate_pricing_simulation: {e}", file=sys.stderr, flush=True)
+        _vprint(f"ERROR in calculate_pricing_simulation: {e}", file=sys.stderr, flush=True)
         # Return a minimal valid structure to ensure internal section shows
         return {
             'volume_route': {
@@ -4162,7 +4172,7 @@ def calculate_pricing_simulation(inputs, pricing_inputs=None):
             'meta_costs': meta_costs
         }
     except Exception as e:
-        print(f"ERROR in calculate_pricing_simulation return: {e}", file=sys.stderr, flush=True)
+        _vprint(f"ERROR in calculate_pricing_simulation return: {e}", file=sys.stderr, flush=True)
         # Return a minimal valid structure to ensure internal section shows
         return {
             'volume_route': {
@@ -4188,5 +4198,5 @@ def calculate_pricing_simulation(inputs, pricing_inputs=None):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     logger.info(f"Starting Flask app on port {port}")
-    print(f"STARTING FLASK APP ON PORT {port}", file=sys.stderr, flush=True)
+    _vprint(f"STARTING FLASK APP ON PORT {port}", file=sys.stderr, flush=True)
     app.run(host='0.0.0.0', port=port, debug=True)

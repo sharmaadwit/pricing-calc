@@ -33,6 +33,7 @@ from pricing_config import (
     TEXT_ONE_TIME_DYNAMIC_FLOW_INCLUDED_SCREENS,
     TEXT_ONE_TIME_FLOW_EXTRA_SCREEN_HOURS,
 )
+import os
 import sys
 
 # New function to map volume to committed amount slab rate
@@ -503,7 +504,8 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
         bot_ui_rate = rates['bot_ui']
         custom_ai_rate = rates['custom_ai']
         currency = rates['currency']
-    print(f"DEBUG: [calculator.py] dev_cost_currency = {currency}, country = '{country}', dev_location = '{dev_location}'", file=sys.stderr, flush=True)
+    if os.environ.get('RAILWAY_ENVIRONMENT') != 'production' or os.environ.get('APP_VERBOSE', '').lower() in ('1', 'true', 'yes'):
+        print(f"DEBUG: [calculator.py] dev_cost_currency = {currency}, country = '{country}', dev_location = '{dev_location}'", file=sys.stderr, flush=True)
     breakdown = calculate_total_mandays_breakdown(inputs)
     if manday_rates:
         user_bot_ui_rate = manday_rates.get('bot_ui', rates['bot_ui'][dev_location] if country == 'LATAM' else rates['bot_ui'])
