@@ -228,14 +228,16 @@ SOW_BETA_EMAILS = {
     'adwit.sharma@gupshup.io',
     'ankit.kanwara@gupshup.io',
     'gargi.upadhyay@gupshup.io',
-    'kathyayani.nayak@gupshup.io',
-    'mauricio.martins@gupshup.io',
     'mridul.kumawat@gupshup.io',
     'nikhil.sharma@knowlarity.com',
     'nikhil.sharma@gupshup.io',
-    'purusottam.singh@gupshup.io',
     'siddharth.singh@gupshup.io',
     'yashas.reddy@gupshup.io',
+    'ananya.a@gupshup.io',
+    'puru.chauhan@gupshup.io',
+    'puru.chauhan@knowlarity.com',
+    'nidhi.shridhar@gupshup.io',
+    'maria.diaz@gupshup.io',
 }
 
 # Verbose stderr traces only in non-production (set APP_VERBOSE=1 to force on)
