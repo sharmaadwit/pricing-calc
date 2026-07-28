@@ -145,3 +145,4 @@ analytics.csv
 
 # Offline notebooks
 notebooks/
+*.dmg
