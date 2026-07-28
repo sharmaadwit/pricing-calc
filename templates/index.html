@@ -403,6 +403,8 @@
                 font-size: 0.8em;
             }
         }
+    details[open] > summary .accordion-arrow { transform: rotate(180deg); }
+    details > summary::-webkit-details-marker { display: none; }
     </style>
     <script>
     // Global function for adding commas to numbers
@@ -1077,10 +1079,15 @@
                         <div class="help-text">Access to Workspace Configuration and data retraining screens</div>
                     </div>
 
-                    <details style="margin:12px 0; border:1px solid #d0d9e8; border-radius:8px;" {% if inputs and (inputs.get('bfsi_tier','NA') != 'NA' or inputs.get('personalize_load','NA') != 'NA' or inputs.get('smart_cpaas','No') == 'Yes' or inputs.get('increased_tps','NA') != 'NA') %}open{% endif %}>
-                        <summary style="padding:12px 16px; cursor:pointer; font-weight:600; background:#f8fafd; border-radius:8px; list-style:none; display:flex; justify-content:space-between; align-items:center; user-select:none;">
-                            Advanced platform options
-                            <span style="font-size:0.82em; color:#888; font-weight:normal;">BFSI tier · TPS · Personalize · Smart CPaaS</span>
+                    <details style="margin:16px 0; border:2px solid #4a6fa5; border-radius:10px; box-shadow:0 2px 8px rgba(74,111,165,0.10);" {% if inputs and (inputs.get('bfsi_tier','NA') != 'NA' or inputs.get('personalize_load','NA') != 'NA' or inputs.get('smart_cpaas','No') == 'Yes' or inputs.get('increased_tps','NA') != 'NA') %}open{% endif %}>
+                        <summary style="padding:14px 18px; cursor:pointer; font-weight:700; background:linear-gradient(90deg,#eef3fb,#f8fafd); border-radius:8px; list-style:none; display:flex; justify-content:space-between; align-items:center; user-select:none; color:#2d4a7a; font-size:1.0em;">
+                            <span style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:1.1em;">⚙️</span> Advanced platform options
+                            </span>
+                            <span style="display:flex; align-items:center; gap:10px;">
+                                <span style="font-size:0.78em; color:#5a7ab5; font-weight:500; background:#dce8f7; padding:3px 10px; border-radius:12px;">BFSI · TPS · Personalize · Smart CPaaS</span>
+                                <span class="accordion-arrow" style="font-size:1.1em; color:#4a6fa5; transition:transform 0.2s;">▼</span>
+                            </span>
                         </summary>
                         <div style="padding:16px;">
                             <div class="form-group">
