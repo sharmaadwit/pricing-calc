@@ -544,9 +544,10 @@ def calculate_total_manday_cost(inputs, manday_rates=None):
     custom_ai_cost = breakdown['custom_ai'] * custom_ai_rate
 
     build_cost = bot_ui_cost + custom_ai_cost
-    ba_cost = 0.15 * build_cost
-    qa_cost = 0.10 * build_cost
-    pm_cost = 0.05 * build_cost
+    include_uplift = inputs.get('include_uplift', 'Yes') == 'Yes'
+    ba_cost = 0.15 * build_cost if include_uplift else 0
+    qa_cost = 0.10 * build_cost if include_uplift else 0
+    pm_cost = 0.05 * build_cost if include_uplift else 0
     uplift_amount = ba_cost + qa_cost + pm_cost
     total_cost = build_cost + uplift_amount
 

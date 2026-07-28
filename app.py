@@ -924,6 +924,7 @@ def index():
         ux_price = request.form.get('ux_price', 'No')
         testing_qa_price = request.form.get('testing_qa_price', 'No')
         aa_setup_price = request.form.get('aa_setup_price', 'No')
+        include_uplift = 'Yes' if request.form.get('include_uplift') in ('Yes', 'on', '1', 'true') else 'No'
         one_time_dev_profile = normalize_one_time_dev_profile(request.form.get('one_time_dev_profile', ''))
         num_apis_price = request.form.get('num_apis_price', '0')
         num_journeys_price = request.form.get('num_journeys_price', '0')
@@ -1022,6 +1023,7 @@ def index():
             'ux_price': ux_price,
             'testing_qa_price': testing_qa_price,
             'aa_setup_price': aa_setup_price,
+            'include_uplift': include_uplift,
             'one_time_dev_profile': one_time_dev_profile,
             'num_apis_price': num_apis_price,
             'num_journeys_price': num_journeys_price,
@@ -1387,7 +1389,7 @@ def index():
         }
         # Use one-time dev activity fields from form if present, else from session
         dev_fields = [
-            'onboarding_price', 'ux_price', 'testing_qa_price', 'aa_setup_price',
+            'onboarding_price', 'ux_price', 'testing_qa_price', 'aa_setup_price', 'include_uplift',
             'one_time_dev_profile', 'num_apis_price', 'num_journeys_price',
             'num_logical_steps_price', 'num_wa_static_screens', 'num_wa_dynamic_screens',
             'num_wa_screens_price', 'wa_static_flows', 'wa_dynamic_flows', 'num_additional_text_languages',

@@ -819,6 +819,12 @@
                             <option value="No" {% if inputs and inputs.aa_setup_price == 'No' %}selected{% endif %}>No</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" name="include_uplift" id="include_uplift" value="Yes" {% if not inputs or inputs.get('include_uplift', 'Yes') == 'Yes' %}checked{% endif %}>
+                            Include BA/QA/PM Uplift (30%)
+                        </label>
+                    </div>
                     
                     <div class="form-group">
                         <label for="voice_notes_price">Voice Notes Required?:</label>
@@ -1919,9 +1925,9 @@
             <p style="margin-top: 10px; font-size: 0.92em; color: #666;">Usage and channel rates follow the voice rate card.</p>
             {% else %}
             {% set voice_build_cost = voice_pricing.voice_dev_cost|default(0) %}
-            {% set voice_ba_cost = voice_build_cost * 0.15 %}
-            {% set voice_qa_cost = voice_build_cost * 0.10 %}
-            {% set voice_pm_cost = voice_build_cost * 0.05 %}
+            {% set voice_ba_cost = voice_build_cost * 0.15 if inputs.get('include_uplift', 'Yes') == 'Yes' else 0 %}
+            {% set voice_qa_cost = voice_build_cost * 0.10 if inputs.get('include_uplift', 'Yes') == 'Yes' else 0 %}
+            {% set voice_pm_cost = voice_build_cost * 0.05 if inputs.get('include_uplift', 'Yes') == 'Yes' else 0 %}
             {% set voice_uplift = voice_ba_cost + voice_qa_cost + voice_pm_cost %}
             {% set voice_total_dev = voice_build_cost + voice_uplift %}
             <div style="font-size: 1.15em; font-weight: bold; color: #5a2a8a; margin-top: 2px;">{{ voice_pricing.voice_mandays }} mandays</div>
