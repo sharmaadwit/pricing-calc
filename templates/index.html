@@ -485,7 +485,7 @@
                     </div>
                     <div class="form-group">
                         <label for="profile_email">Work Email</label>
-                        <input type="email" id="profile_email" name="user_email" value="{{ profile.email or '' }}" required>
+                        <input type="email" id="profile_email" name="user_email" value="{{ profile.email or '' }}" required onblur="lookupProfile(this.value)">
                         <div class="help-text">No password is stored. Email is used only for internal analytics and prefill logic.</div>
                     </div>
                     <div class="form-group">
@@ -508,6 +508,21 @@
                     </div>
                 </div>
             </form>
+            <script>
+            function lookupProfile(email) {
+                if (!email || !email.includes('@')) return;
+                fetch('/api/lookup-profile?email=' + encodeURIComponent(email))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.name && !document.getElementById('profile_name').value)
+                            document.getElementById('profile_name').value = data.name;
+                        if (data.country)
+                            document.getElementById('profile_country').value = data.country;
+                        if (data.region)
+                            document.getElementById('profile_region').value = data.region;
+                    });
+            }
+            </script>
     {% endif %}
 
     <!-- How to Use and User Flow Diagram -->
@@ -528,16 +543,6 @@
     <form method="post" id="volumes-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="step" value="volumes">
-                
-                <div class="form-group">
-        <label for="user_name">Enter your name:</label>
-                    <input type="text" name="user_name" id="user_name" value="{{ inputs.get('user_name', '') }}" required>
-                </div>
-                <div class="form-group">
-                    <label for="user_email">Work Email:</label>
-                    <input type="email" name="user_email" id="user_email" value="{{ (profile.email if profile and profile.email is defined else inputs.get('user_email', '')) }}" required>
-                    <div class="help-text">Used to recall your profile and map you to the right country/region.</div>
-                </div>
                 
                 <div class="form-group">
                     <label for="country-select">Country:</label>
@@ -598,9 +603,11 @@
                     option.textContent = region;
                     regionSelect.appendChild(option);
                 });
-                // Set selected region if present
+                // Set selected region if present, otherwise default to first option
                 if (selectedRegion) {
                     regionSelect.value = selectedRegion;
+                } else {
+                    regionSelect.value = regionMapping[selectedCountry][0];
                 }
             } else {
                 regionContainer.style.display = 'none';
@@ -717,6 +724,23 @@
             enforceAiModuleForWorkspace();
             toggleAiAgentFields();
             updateVoiceNotesPricing();
+            updateRegionDropdown();
+            // Auto-restore complexity filter from saved profile ID
+            var savedProfile = "{{ inputs.get('one_time_dev_profile', '') | safe }}";
+            if (savedProfile) {
+                var profileSelect = document.getElementById('one_time_dev_profile');
+                var complexitySelect = document.getElementById('one_time_dev_complexity');
+                if (profileSelect && complexitySelect) {
+                    var opt = profileSelect.querySelector('option[value="' + savedProfile + '"]');
+                    if (opt) {
+                        var complexity = opt.getAttribute('data-complexity');
+                        if (complexity) {
+                            complexitySelect.value = complexity;
+                            complexitySelect.dispatchEvent(new Event('change'));
+                        }
+                    }
+                }
+            }
         };
         </script>
         <!-- Section 1: One Time Dev Charges -->
@@ -789,41 +813,30 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="onboarding_price">Onboarding Required?:</label>
-                        <select name="onboarding_price" id="onboarding_price">
-                            <option value="Yes" {% if inputs and inputs.onboarding_price == 'Yes' %}selected{% endif %}>Yes</option>
-                            <option value="No" {% if inputs and inputs.onboarding_price == 'No' %}selected{% endif %}>No</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="ux_price">Journey Design Required?:</label>
-                        <select name="ux_price" id="ux_price">
-                            <option value="Yes" {% if inputs and inputs.ux_price == 'Yes' %}selected{% endif %}>Yes</option>
-                            <option value="No" {% if inputs and inputs.ux_price == 'No' %}selected{% endif %}>No</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="testing_qa_price">Testing/QA Services Required?:</label>
-                        <select name="testing_qa_price" id="testing_qa_price">
-                            <option value="Yes" {% if inputs and inputs.testing_qa_price == 'Yes' %}selected{% endif %}>Yes</option>
-                            <option value="No" {% if inputs and inputs.testing_qa_price == 'No' %}selected{% endif %}>No</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="aa_setup_price">Agent Assist Setup Required?:</label>
-                        <select name="aa_setup_price" id="aa_setup_price">
-                            <option value="Yes" {% if inputs and inputs.aa_setup_price == 'Yes' %}selected{% endif %}>Yes</option>
-                            <option value="No" {% if inputs and inputs.aa_setup_price == 'No' %}selected{% endif %}>No</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                            <input type="checkbox" name="include_uplift" id="include_uplift" value="Yes" {% if not inputs or inputs.get('include_uplift', 'Yes') == 'Yes' %}checked{% endif %}>
-                            Include BA/QA/PM Uplift (30%)
-                        </label>
+                        <label style="font-weight:600; display:block; margin-bottom:10px;">Optional one-time services:</label>
+                        <div style="display:flex; flex-direction:column; gap:8px; padding:14px 16px; background:#f8fafd; border:1px solid #d0d9e8; border-radius:8px;">
+                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal;">
+                                <input type="checkbox" name="onboarding_price" id="onboarding_price" value="Yes" style="width:auto;" {% if not inputs or inputs.get('onboarding_price','Yes') == 'Yes' %}checked{% endif %}>
+                                Onboarding
+                            </label>
+                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal;">
+                                <input type="checkbox" name="ux_price" id="ux_price" value="Yes" style="width:auto;" {% if inputs and inputs.get('ux_price','No') == 'Yes' %}checked{% endif %}>
+                                Journey Design (UX)
+                            </label>
+                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal;">
+                                <input type="checkbox" name="testing_qa_price" id="testing_qa_price" value="Yes" style="width:auto;" {% if not inputs or inputs.get('testing_qa_price','Yes') == 'Yes' %}checked{% endif %}>
+                                Testing / QA
+                            </label>
+                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal;">
+                                <input type="checkbox" name="aa_setup_price" id="aa_setup_price" value="Yes" style="width:auto;" {% if inputs and inputs.get('aa_setup_price','No') == 'Yes' %}checked{% endif %}>
+                                Agent Assist Setup
+                            </label>
+                            <hr style="border:none; border-top:1px solid #d0d9e8; margin:4px 0;">
+                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal;">
+                                <input type="checkbox" name="include_uplift" id="include_uplift" value="Yes" style="width:auto;" {% if not inputs or inputs.get('include_uplift', 'Yes') == 'Yes' %}checked{% endif %}>
+                                Include BA/QA/PM overhead (30%)
+                            </label>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -1055,28 +1068,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="personalize_load">Personalize Load:</label>
-                        <select name="personalize_load" id="personalize_load">
-                            <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>- Not Applicable</option>
-                            <option value="Standard" {% if inputs and inputs.personalize_load == 'Standard' %}selected{% endif %}>Standard - upto 5 million records, no external events</option>
-                            <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced - 10 million records, external events supported</option>
-                        </select>
-                        <div class="help-text">If the client requires large number of profiles and support for external events, select the appropriate tier.</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="bfsi_tier">BFSI Tier:</label>
-                        <select name="bfsi_tier" id="bfsi_tier">
-                            <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>- Not Applicable</option>
-                            <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1</option>
-                            <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2</option>
-                            <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3</option>
-                        </select>
-                        <div class="help-text">Each tier comes with specific controls of privacy and security requirements. The exact inclusions of each tier will be displayed on the final pricing page.</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="ai_module">AI Module (Yes/No):</label>
+                        <label for="ai_module">AI Module:</label>
                         <select name="ai_module" id="ai_module">
                             <option value="NA" {% if inputs and inputs.ai_module == 'NA' %}selected{% endif %}>- Not Applicable</option>
                             <option value="Yes" {% if inputs and inputs.ai_module == 'Yes' %}selected{% endif %}>Yes</option>
@@ -1084,26 +1076,48 @@
                         </select>
                         <div class="help-text">Access to Workspace Configuration and data retraining screens</div>
                     </div>
-                    
-                    <div class="form-group" id="smart_cpaas_group">
-                        <label for="smart_cpaas">Smart CPaaS:</label>
-                        <select name="smart_cpaas" id="smart_cpaas">
-                            <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
-                            <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes</option>
-                        </select>
-                        <div class="help-text">Auto failover between channels</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="increased_tps">Increased TPS:</label>
-                        <select name="increased_tps" id="increased_tps">
-                            <option value="NA" {% if inputs and inputs.increased_tps == 'NA' %}selected{% endif %}>NA</option>
-                            <option value="250" {% if inputs and inputs.increased_tps == '250' %}selected{% endif %}>250 (upto 250 Messages per Second)</option>
-                            <option value="1000" {% if inputs and inputs.increased_tps == '1000' %}selected{% endif %}>1000 (upto 1000 Messages per Second)</option>
-                        </select>
-                        <div class="help-text">Required to support high volume campaigns</div>
-                    </div>
-                    
+
+                    <details style="margin:12px 0; border:1px solid #d0d9e8; border-radius:8px;" {% if inputs and (inputs.get('bfsi_tier','NA') != 'NA' or inputs.get('personalize_load','NA') != 'NA' or inputs.get('smart_cpaas','No') == 'Yes' or inputs.get('increased_tps','NA') != 'NA') %}open{% endif %}>
+                        <summary style="padding:12px 16px; cursor:pointer; font-weight:600; background:#f8fafd; border-radius:8px; list-style:none; display:flex; justify-content:space-between; align-items:center; user-select:none;">
+                            Advanced platform options
+                            <span style="font-size:0.82em; color:#888; font-weight:normal;">BFSI tier · TPS · Personalize · Smart CPaaS</span>
+                        </summary>
+                        <div style="padding:16px;">
+                            <div class="form-group">
+                                <label for="bfsi_tier">BFSI Tier:</label>
+                                <select name="bfsi_tier" id="bfsi_tier">
+                                    <option value="NA" {% if inputs and inputs.bfsi_tier == 'NA' %}selected{% endif %}>- Not a financial institution</option>
+                                    <option value="Tier 1" {% if inputs and inputs.bfsi_tier == 'Tier 1' %}selected{% endif %}>Tier 1 — Enterprise bank (large regulated)</option>
+                                    <option value="Tier 2" {% if inputs and inputs.bfsi_tier == 'Tier 2' %}selected{% endif %}>Tier 2 — Mid-market NBFC / regional bank</option>
+                                    <option value="Tier 3" {% if inputs and inputs.bfsi_tier == 'Tier 3' %}selected{% endif %}>Tier 3 — Credit union / cooperative</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="personalize_load">Personalize Load:</label>
+                                <select name="personalize_load" id="personalize_load">
+                                    <option value="NA" {% if inputs and inputs.personalize_load == 'NA' %}selected{% endif %}>Not needed</option>
+                                    <option value="Standard" {% if inputs and inputs.personalize_load == 'Standard' %}selected{% endif %}>Standard — customer lists up to 5M contacts</option>
+                                    <option value="Advanced" {% if inputs and inputs.personalize_load == 'Advanced' %}selected{% endif %}>Advanced — 10M+ contacts or real-time event triggers</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="smart_cpaas_group">
+                                <label for="smart_cpaas">Smart CPaaS:</label>
+                                <select name="smart_cpaas" id="smart_cpaas">
+                                    <option value="No" {% if inputs and inputs.smart_cpaas == 'No' %}selected{% endif %}>No</option>
+                                    <option value="Yes" {% if inputs and inputs.smart_cpaas == 'Yes' %}selected{% endif %}>Yes — auto failover between channels</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="increased_tps">Increased TPS:</label>
+                                <select name="increased_tps" id="increased_tps">
+                                    <option value="NA" {% if inputs and inputs.increased_tps == 'NA' %}selected{% endif %}>Standard throughput (included)</option>
+                                    <option value="250" {% if inputs and inputs.increased_tps == '250' %}selected{% endif %}>High volume campaigns — 250 msg/sec</option>
+                                    <option value="1000" {% if inputs and inputs.increased_tps == '1000' %}selected{% endif %}>Broadcast scale — 1,000 msg/sec</option>
+                                </select>
+                            </div>
+                        </div>
+                    </details>
+
                     <div class="form-group" id="human_agents_group">
                         <label for="human_agents">Number of Human Agents (Agent Assist):</label>
                         <select name="human_agents" id="human_agents">
@@ -1691,8 +1705,41 @@
     <!-- Results Section: Pricing Table, Inclusions, Invoice Amount, Margin Table -->
     {% if step == 'results' %}
         <div style="max-width: 1100px; margin: 0 auto;">
-          <!-- Message Type Definitions Card (moved to top) -->
-          <div style="background: #fce4ec; border: 1px solid #f8bbd0; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
+          <!-- Deal Summary Banner -->
+          <div style="background: linear-gradient(135deg, #1976d2 0%, #5a2a8a 100%); color: white; border-radius: 12px; padding: 24px 32px; margin-bottom: 28px; display:flex; flex-wrap:wrap; gap:20px; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="font-size:0.8em; opacity:0.75; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Deal Summary</div>
+              <div style="font-size:1em; opacity:0.9;">
+                <strong>{{ inputs.get('user_name','') or '' }}</strong>
+                {% if inputs.get('country') %} · {{ inputs.get('country') }}{% if inputs.get('region') %} ({{ inputs.get('region') }}){% endif %}{% endif %}
+                {% if inputs.get('channel_type') %} · {{ {'text_only':'Text Only','voice_only':'Voice Only','text_voice':'Text + Voice'}.get(inputs.get('channel_type'),'') }}{% endif %}
+              </div>
+            </div>
+            {% if results and results.revenue %}
+            <div style="text-align:center;">
+              <div style="font-size:0.75em; opacity:0.7; text-transform:uppercase; letter-spacing:0.05em;">Monthly Minimum</div>
+              <div style="font-size:2em; font-weight:800; line-height:1.2;">{{ currency_symbol }}{{ '{:,.0f}'.format(results.revenue|float) }}</div>
+            </div>
+            {% endif %}
+            {% if dev_cost_breakdown and dev_cost_breakdown.total_cost %}
+            <div style="text-align:center;">
+              <div style="font-size:0.75em; opacity:0.7; text-transform:uppercase; letter-spacing:0.05em;">One-Time Dev</div>
+              <div style="font-size:2em; font-weight:800; line-height:1.2;">{{ dev_cost_currency }}{{ '{:,.0f}'.format(dev_cost_breakdown.total_cost|float) }}</div>
+            </div>
+            {% endif %}
+            {% if results and results.margin_pct is defined %}
+            <div style="text-align:center;">
+              <div style="font-size:0.75em; opacity:0.7; text-transform:uppercase; letter-spacing:0.05em;">Margin</div>
+              <div style="font-size:2em; font-weight:800; line-height:1.2;">{{ (results.margin_pct * 100)|round(1) }}%</div>
+            </div>
+            {% endif %}
+            <div style="text-align:right;">
+              {% if inputs.get('calculation_id') %}<div style="font-size:0.72em; opacity:0.6; margin-bottom:8px;">{{ inputs.get('calculation_id') }}</div>{% endif %}
+              <a href="/start-over" style="display:inline-block; padding:8px 18px; background:rgba(255,255,255,0.18); color:white; border-radius:6px; text-decoration:none; font-size:0.9em; border:1px solid rgba(255,255,255,0.35);">New Calculation</a>
+            </div>
+          </div>
+          <!-- Message Type Definitions Card (moved to bottom - see end of results) -->
+          <div id="glossary-card" style="background: #fce4ec; border: 1px solid #f8bbd0; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px; display:none;">
             <h3 style="margin-top:0;">Message Type Definitions</h3>
             {% set channel_type = inputs.get('channel_type', 'text_only') %}
             {% if channel_type == 'text_only' %}
@@ -1736,7 +1783,7 @@
               <li><b>PSTN Outbound:</b> Business Calling an end customer on PSTN</li>
             </ul>
             {% endif %}
-          </div>
+          </div><!-- end hidden glossary -->
           {% if final_price_details and (inputs.get('channel_type') != 'voice_only') %}
           <div style="background: #fff; border: 1.5px solid #bbaadd; border-radius: 8px; padding: 18px 28px; margin-bottom: 28px;">
             <div style="display: flex; align-items: baseline; justify-content: space-between;">
@@ -2272,14 +2319,39 @@
           </div>
         </div>
         #}
-        <form method="get" action="/start-over" style="margin-top: 32px; text-align: center;">
-            <input type="submit" value="Start Over">
-        </form>
-        {% if sow_beta_enabled %}
-        <div style="margin-top: 16px; text-align: center;">
+          <!-- Message Type Definitions (bottom) -->
+          <details style="margin-top:28px; border:1px solid #f8bbd0; border-radius:8px;">
+            <summary style="padding:14px 20px; cursor:pointer; font-weight:600; background:#fce4ec; border-radius:8px; list-style:none; display:flex; justify-content:space-between; align-items:center; user-select:none;">
+              Message Type Definitions <span style="font-size:0.82em; color:#888; font-weight:normal;">expand for definitions</span>
+            </summary>
+            <div style="padding:18px 28px;">
+            {% set channel_type = inputs.get('channel_type', 'text_only') %}
+            {% if channel_type != 'voice_only' %}
+            <ul style="margin:0 0 0 18px; padding:0; font-size:1.05em;">
+              <li><b>Basic Messages:</b> Triggered messages via API, Bulk Upload (GS Media, Campaign Manager)</li>
+              <li><b>Advanced Messages:</b> Bot platform usage, interactive journeys, campaigns, agent interactions</li>
+              <li><b>AI Messages:</b> Any message that uses AI for responding to the customer</li>
+              <li><b>Voice Notes:</b> Voice input processing — STT, intent extraction, TTS response</li>
+            </ul>
+            {% endif %}
+            {% if channel_type in ['voice_only', 'text_voice'] %}
+            <div style="font-weight:600; margin:12px 0 6px;">Voice Definitions</div>
+            <ul style="margin:0 0 0 18px; padding:0; font-size:1.05em;">
+              <li><b>WhatsApp Inbound:</b> End user calling a business on WhatsApp</li>
+              <li><b>WhatsApp Outbound:</b> Business calling an end user on WhatsApp</li>
+              <li><b>PSTN Inbound:</b> End user calling a business on PSTN</li>
+              <li><b>PSTN Outbound:</b> Business calling an end customer on PSTN</li>
+            </ul>
+            {% endif %}
+            </div>
+          </details>
+
+        <div style="margin-top: 28px; text-align: center; display:flex; gap:16px; justify-content:center; align-items:center;">
+            <a href="/start-over" style="padding:10px 24px; background:#f5f5f5; color:#333; border:1px solid #ccc; border-radius:6px; text-decoration:none;">Start Over</a>
+            {% if sow_beta_enabled %}
             <a href="{{ url_for('sow_details') }}" class="btn-secondary" target="_blank">Generate SOW (beta)</a>
+            {% endif %}
         </div>
-        {% endif %}
         </div>
     </div>
 </body>

@@ -2,7 +2,7 @@
 # This app provides a pricing calculator for messaging services with dynamic inclusions, platform fees, and analytics.
 # Key features: dynamic inclusions, robust error handling, session management, and professional UI.
 
-from flask import Flask, render_template, request, session, redirect, url_for, flash, send_file, abort
+from flask import Flask, render_template, request, session, redirect, url_for, flash, send_file, abort, jsonify
 from calculator import calculate_pricing, get_suggested_price, meta_costs_table, calculate_total_mandays, calculate_total_manday_cost, COUNTRY_MANDAY_RATES, calculate_total_mandays_breakdown, get_committed_amount_rate_for_volume, get_lowest_tier_price
 import os
 import sys
@@ -702,6 +702,30 @@ def login():
     return render_template('login.html')
 
 
+@app.route('/api/lookup-profile')
+def api_lookup_profile():
+    if not session.get('authenticated'):
+        return jsonify({}), 403
+    email = (request.args.get('email') or '').strip().lower()
+    if not email:
+        return jsonify({})
+    result = {}
+    mapped = get_default_location_for_email(email)
+    if mapped:
+        country, region = mapped
+        result['country'] = country
+        if region:
+            result['region'] = region
+    existing = Analytics.query.filter_by(user_email=email).order_by(Analytics.timestamp.desc()).first()
+    if existing:
+        if existing.user_name:
+            result['name'] = existing.user_name
+        if existing.country and 'country' not in result:
+            result['country'] = existing.country
+        if existing.region and 'region' not in result:
+            result['region'] = existing.region
+    return jsonify(result)
+
 @app.route('/profile-email', methods=['GET', 'POST'])
 def profile_email():
     """
@@ -882,8 +906,8 @@ def index():
             if key in session:
                 session.pop(key)
         # Calculation ID will be generated when user moves to page 2 (prices or bundle)
-        user_name = request.form.get('user_name', '')
-        user_email = (request.form.get('user_email') or '').strip()
+        user_name = session.get('profile', {}).get('name', '')
+        user_email = (session.get('profile', {}).get('email') or '').strip()
         # Step 1: User submitted volumes and platform fee options
         country = request.form['country'].strip()  # Always strip country
         region = request.form.get('region', '')
