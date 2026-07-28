@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sample 03 — Review Summary</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      color: #2c3e50;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      padding: 28px 32px;
+      color: #fff;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .header h1 { margin: 0 0 8px; font-size: 1.7rem; }
+    .header p { margin: 0; opacity: 0.92; }
+    .nav { padding: 12px 32px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; font-size: 0.92rem; }
+    .nav a { color: #5a2a8a; margin-right: 16px; }
+    .content { padding: 32px; display: grid; gap: 24px; }
+    .review-card,
+    .results-card {
+      border-radius: 12px;
+      padding: 22px 26px;
+    }
+    .review-card {
+      background: #f5f5fa;
+      border: 1px solid #bbaadd;
+    }
+    .results-card {
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
+    }
+    .results-card.voice {
+      background: #fffaf2;
+      border-color: #ffd89a;
+    }
+    h2 { margin: 0 0 14px; font-size: 1.2rem; }
+    ul { margin: 0; padding-left: 18px; }
+    li { margin-bottom: 8px; }
+    .sublist { margin-top: 6px; }
+    .metric {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #5a2a8a;
+      margin: 8px 0 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    td {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    td:last-child { text-align: right; font-weight: 600; }
+    .note { color: #6b7280; font-size: 0.9rem; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Review and results summary</h1>
+      <p>Read-only cards for the prices step and results step, using the same profile and effort breakdown language.</p>
+    </header>
+    <nav class="nav">
+      <a href="01-profile-selector.html">01 Profile selector</a>
+      <a href="02-hybrid-effort-form.html">02 Hybrid effort form</a>
+      <a href="03-review-summary.html"><strong>03 Review summary</strong></a>
+    </nav>
+    <main class="content">
+      <section class="review-card" aria-labelledby="review-title">
+        <h2 id="review-title">One-time dev prices (review)</h2>
+        <ul>
+          <li><strong>Implementation profile:</strong> Medium — Structured + API</li>
+          <li><strong>Definition:</strong> One journey up to 20 steps and 2 APIs with encryption/decryption handling.</li>
+          <li><strong>Inclusions:</strong>
+            <ul class="sublist">
+              <li>Encryption/decryption handling within scope.</li>
+              <li>Journey-specific logic within included step and API limits.</li>
+            </ul>
+          </li>
+          <li><strong>Entered scope:</strong> Journeys 1, APIs 4, logical steps 28, additional languages 1</li>
+          <li><strong>Onboarding:</strong> Yes</li>
+          <li><strong>Journey design:</strong> No</li>
+          <li><strong>Testing / QA:</strong> Yes</li>
+        </ul>
+        <p class="note">Review should show profile text and operational toggles together so reps can sanity-check before rate entry.</p>
+      </section>
+
+      <section class="results-card" aria-labelledby="text-results-title">
+        <h2 id="text-results-title">Text mandays for one-time dev activities</h2>
+        <div class="metric">3.75 days</div>
+        <ul>
+          <li><strong>Breakdown:</strong> Bot/UI 3.75, Custom/AI 0.00</li>
+          <li><strong>Effort lines:</strong>
+            <ul class="sublist">
+              <li>Base profile effort: 2.00 days</li>
+              <li>Logical steps above included: +0.50 days</li>
+              <li>APIs above included: +0.25 days</li>
+              <li>Additional languages: +1.00 day</li>
+            </ul>
+          </li>
+        </ul>
+        <table>
+          <tr><td>Build cost</td><td>₹75,000</td></tr>
+          <tr><td>BA (15%)</td><td>₹11,250</td></tr>
+          <tr><td>QA (10%)</td><td>₹7,500</td></tr>
+          <tr><td>PM (5%)</td><td>₹3,750</td></tr>
+          <tr><td>Total one-time dev cost</td><td>₹97,500</td></tr>
+        </table>
+      </section>
+
+      <section class="results-card voice" aria-labelledby="voice-results-title">
+        <h2 id="voice-results-title">Voice development (one-time)</h2>
+        <p><strong>Voice AI scope:</strong> Medium complexity, additional language selected</p>
+        <table>
+          <tr><td>One-time voice development</td><td>₹75,000</td></tr>
+        </table>
+        <p class="note">Keep Leverage partner pricing separate from the text profile matrix unless the business maps them deliberately.</p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

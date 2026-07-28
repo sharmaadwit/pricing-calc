@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sample 01 — Implementation Profile Selector</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      color: #2c3e50;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 920px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      padding: 28px 32px;
+      color: #fff;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .header h1 { margin: 0 0 8px; font-size: 1.7rem; }
+    .header p { margin: 0; opacity: 0.92; }
+    .nav { padding: 12px 32px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; font-size: 0.92rem; }
+    .nav a { color: #5a2a8a; margin-right: 16px; }
+    .content { padding: 32px; }
+    .form-section {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .form-section h2 { margin: 0 0 8px; font-size: 1.25rem; }
+    .section-note { margin: 0 0 20px; color: #6b7280; font-size: 0.92rem; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font: inherit;
+      background: #fff;
+    }
+    .help-text {
+      margin-top: 6px;
+      color: #6b7280;
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+    .profile-panel {
+      display: none;
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+    }
+    .profile-panel.is-visible { display: block; }
+    .profile-panel[data-complexity="Simple"] { border-color: #86efac; background: #f0fdf4; }
+    .profile-panel[data-complexity="Medium"] { border-color: #fde047; background: #fefce8; }
+    .profile-panel[data-complexity="Complex"] { border-color: #f9a8d4; background: #fdf2f8; }
+    .profile-panel h3 { margin: 0 0 10px; }
+    .profile-panel p { margin: 0 0 10px; }
+    .profile-panel ul { margin: 0 0 10px 18px; padding: 0; }
+    .profile-panel li { margin-bottom: 6px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #ede9fe;
+      color: #5b21b6;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .actions { display: flex; gap: 12px; }
+    .button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font: inherit;
+      cursor: pointer;
+    }
+    .button-primary { background: #667eea; color: #fff; }
+    .button-secondary { background: #e5e7eb; color: #111827; }
+    @media (max-width: 720px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Implementation profile selector</h1>
+      <p>Reference scope for one-time build effort. Pricing still uses the existing manday engine in this sample.</p>
+    </header>
+    <nav class="nav">
+      <a href="01-profile-selector.html"><strong>01 Profile selector</strong></a>
+      <a href="02-hybrid-effort-form.html">02 Hybrid effort form</a>
+      <a href="03-review-summary.html">03 Review summary</a>
+    </nav>
+    <main class="content">
+      <section class="form-section" aria-labelledby="text-dev-title">
+        <h2 id="text-dev-title">One-time dev charges — text</h2>
+        <p class="section-note">Pattern: collect a stable profile id, show definition and inclusions from the same catalog the calculator will use later.</p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="complexity">Complexity</label>
+            <select id="complexity" name="implementation_complexity">
+              <option value="">Select complexity</option>
+              <option value="Simple">Simple</option>
+              <option value="Medium">Medium</option>
+              <option value="Complex">Complex</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="bot_type">Bot type</label>
+            <select id="bot_type" name="implementation_bot_type" disabled>
+              <option value="">Select bot type</option>
+            </select>
+            <div class="help-text">Options depend on the selected complexity.</div>
+          </div>
+        </div>
+        <input type="hidden" id="profile_id" name="implementation_profile_id" value="">
+        <div id="profile_panel" class="profile-panel" aria-live="polite"></div>
+        <div class="actions" style="margin-top: 20px;">
+          <button type="button" class="button button-primary">Continue to volumes</button>
+          <button type="button" class="button button-secondary">Clear profile</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const PROFILES = [
+      {
+        id: "simple_structured",
+        complexity: "Simple",
+        bot_type: "Structured Bot",
+        effort_days: 1,
+        definition: "One static journey up to 20 steps.",
+        inclusions: ["Conditional handling within the base journey."],
+        scale_up_rules: [
+          "Every additional 10 logical steps adds 6 hours.",
+          "Every additional language adds about 50% of base implementation effort."
+        ]
+      },
+      {
+        id: "simple_structured_api",
+        complexity: "Simple",
+        bot_type: "Structured + API",
+        effort_days: 1.5,
+        definition: "Structured journey up to 20 steps and 5 API calls.",
+        inclusions: ["Journey logic and API integration within the stated limits."],
+        scale_up_rules: [
+          "Every additional 10 logical steps adds 6 hours.",
+          "Every additional 2 APIs adds 4 hours.",
+          "Every additional language adds about 50% of base implementation effort."
+        ]
+      },
+      {
+        id: "medium_structured_api",
+        complexity: "Medium",
+        bot_type: "Structured + API",
+        effort_days: 2,
+        definition: "One journey up to 20 steps and 2 APIs with encryption/decryption handling.",
+        inclusions: ["Encryption/decryption handling and journey-specific logic."],
+        scale_up_rules: [
+          "Every additional 10 logical steps adds 6 hours.",
+          "Every additional 2 APIs adds 4 hours.",
+          "Every additional language adds about 50% of base implementation effort."
+        ]
+      },
+      {
+        id: "complex_agentic_ai_api",
+        complexity: "Complex",
+        bot_type: "Agentic AI + API",
+        effort_days: 7.5,
+        definition: "AI agent with richer training data, tool integration, and formatted messaging.",
+        inclusions: [
+          "Training data: websites, complex PDFs, and web scraping.",
+          "More than 3 API tools, including APIs with certificates.",
+          "WhatsApp formatted messages and up to 5 APIs."
+        ],
+        scale_up_rules: []
+      }
+    ];
+
+    const complexityEl = document.getElementById("complexity");
+    const botTypeEl = document.getElementById("bot_type");
+    const profileIdEl = document.getElementById("profile_id");
+    const panelEl = document.getElementById("profile_panel");
+
+    function renderBotTypes() {
+      const complexity = complexityEl.value;
+      const matches = PROFILES.filter((profile) => profile.complexity === complexity);
+      botTypeEl.innerHTML = '<option value="">Select bot type</option>';
+      botTypeEl.disabled = !complexity;
+      matches.forEach((profile) => {
+        const option = document.createElement("option");
+        option.value = profile.id;
+        option.textContent = profile.bot_type;
+        botTypeEl.appendChild(option);
+      });
+      profileIdEl.value = "";
+      renderPanel();
+    }
+
+    function renderPanel() {
+      const profile = PROFILES.find((item) => item.id === botTypeEl.value);
+      if (!profile) {
+        panelEl.classList.remove("is-visible");
+        panelEl.innerHTML = "";
+        profileIdEl.value = "";
+        return;
+      }
+      profileIdEl.value = profile.id;
+      panelEl.dataset.complexity = profile.complexity;
+      panelEl.innerHTML = [
+        '<span class="badge">Profile id: ' + profile.id + "</span>",
+        "<h3>" + profile.complexity + " — " + profile.bot_type + "</h3>",
+        "<p><strong>Definition:</strong> " + profile.definition + "</p>",
+        "<p><strong>Inclusions:</strong></p>",
+        "<ul>" + profile.inclusions.map((item) => "<li>" + item + "</li>").join("") + "</ul>",
+        "<p><strong>Base effort estimate:</strong> " + profile.effort_days + " day(s)</p>",
+        profile.scale_up_rules.length
+          ? "<p><strong>Scale-up rules:</strong></p><ul>" + profile.scale_up_rules.map((item) => "<li>" + item + "</li>").join("") + "</ul>"
+          : ""
+      ].join("");
+      panelEl.classList.add("is-visible");
+    }
+
+    complexityEl.addEventListener("change", renderBotTypes);
+    botTypeEl.addEventListener("change", renderPanel);
+  </script>
+</body>
+</html>

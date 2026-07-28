@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sample 02 — Hybrid Effort Form</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      color: #2c3e50;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      padding: 28px 32px;
+      color: #fff;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .header h1 { margin: 0 0 8px; font-size: 1.7rem; }
+    .header p { margin: 0; opacity: 0.92; }
+    .nav { padding: 12px 32px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; font-size: 0.92rem; }
+    .nav a { color: #5a2a8a; margin-right: 16px; }
+    .content { padding: 32px; display: grid; gap: 24px; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+      gap: 24px;
+    }
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .card h2 { margin: 0 0 8px; font-size: 1.2rem; }
+    .card p { margin: 0 0 18px; color: #6b7280; font-size: 0.92rem; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font: inherit;
+    }
+    .hint {
+      margin-top: 6px;
+      color: #6b7280;
+      font-size: 0.82rem;
+    }
+    .included {
+      color: #047857;
+      font-size: 0.82rem;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Hybrid effort form</h1>
+      <p>Profile sets base effort and included scope. Counts only drive scale-ups above the included limits.</p>
+    </header>
+    <nav class="nav">
+      <a href="01-profile-selector.html">01 Profile selector</a>
+      <a href="02-hybrid-effort-form.html"><strong>02 Hybrid effort form</strong></a>
+      <a href="03-review-summary.html">03 Review summary</a>
+    </nav>
+    <main class="content">
+      <div class="layout">
+        <section class="card">
+          <h2>Scope inputs</h2>
+          <p>Example profile: Simple — Structured + API (1.5 days base; 20 steps and 5 APIs included).</p>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="journeys">Journeys</label>
+              <input id="journeys" type="number" min="0" value="1">
+              <div class="included">Included in profile: 1</div>
+            </div>
+            <div class="form-group">
+              <label for="apis">APIs</label>
+              <input id="apis" type="number" min="0" value="8">
+              <div class="included">Included in profile: 5</div>
+            </div>
+            <div class="form-group">
+              <label for="logical_steps">Logical steps</label>
+              <input id="logical_steps" type="number" min="0" value="35">
+              <div class="included">Included in profile: 20</div>
+            </div>
+            <div class="form-group">
+              <label for="languages">Additional languages</label>
+              <input id="languages" type="number" min="0" value="1">
+              <div class="hint">Above Hindi/English baseline.</div>
+            </div>
+          </div>
+        </section>
+        <aside class="card" id="effort_summary" aria-live="polite"></aside>
+      </div>
+    </main>
+  </div>
+  <script>
+    const PROFILE = {
+      id: "simple_structured_api",
+      label: "Simple — Structured + API",
+      base_days: 1.5,
+      included: { journeys: 1, apis: 5, logical_steps: 20 },
+      rate_bucket: "bot_ui",
+      scale_ups: {
+        logical_steps: { over: 20, step: 10, hours: 6 },
+        apis: { over: 5, step: 2, hours: 4 },
+        languages: { multiplier: 0.5 }
+      }
+    };
+
+    const fields = ["journeys", "apis", "logical_steps", "languages"];
+    const summaryEl = document.getElementById("effort_summary");
+
+    function hoursToDays(hours) {
+      return hours / 8;
+    }
+
+    function renderSummary() {
+      const journeys = Number(document.getElementById("journeys").value || 0);
+      const apis = Number(document.getElementById("apis").value || 0);
+      const logicalSteps = Number(document.getElementById("logical_steps").value || 0);
+      const languages = Number(document.getElementById("languages").value || 0);
+
+      const lines = [];
+      let extraDays = 0;
+
+      lines.push("<h2>Effort preview</h2>");
+      lines.push("<p>Illustrative only. Production should use the same rules in calculator.py.</p>");
+      lines.push("<p><strong>Profile:</strong> " + PROFILE.label + "</p>");
+      lines.push("<p><strong>Base effort:</strong> " + PROFILE.base_days.toFixed(2) + " days</p>");
+
+      const stepRule = PROFILE.scale_ups.logical_steps;
+      if (logicalSteps > stepRule.over) {
+        const blocks = Math.ceil((logicalSteps - stepRule.over) / stepRule.step);
+        const hours = blocks * stepRule.hours;
+        const days = hoursToDays(hours);
+        extraDays += days;
+        lines.push("<p>+ Logical steps above included: " + days.toFixed(2) + " days</p>");
+      }
+
+      const apiRule = PROFILE.scale_ups.apis;
+      if (apis > apiRule.over) {
+        const blocks = Math.ceil((apis - apiRule.over) / apiRule.step);
+        const hours = blocks * apiRule.hours;
+        const days = hoursToDays(hours);
+        extraDays += days;
+        lines.push("<p>+ APIs above included: " + days.toFixed(2) + " days</p>");
+      }
+
+      if (languages > 0) {
+        const days = PROFILE.base_days * PROFILE.scale_ups.languages.multiplier * languages;
+        extraDays += days;
+        lines.push("<p>+ Additional languages: " + days.toFixed(2) + " days</p>");
+      }
+
+      const totalDays = PROFILE.base_days + extraDays;
+      const botUiMandays = totalDays;
+      const customAiMandays = 0;
+      const botUiRate = 20000;
+      const buildCost = botUiMandays * botUiRate;
+      const uplift = buildCost * 0.3;
+
+      lines.push("<hr>");
+      lines.push("<p><strong>Total effort:</strong> " + totalDays.toFixed(2) + " days</p>");
+      lines.push("<p><strong>Bot/UI mandays:</strong> " + botUiMandays.toFixed(2) + "</p>");
+      lines.push("<p><strong>Custom/AI mandays:</strong> " + customAiMandays.toFixed(2) + "</p>");
+      lines.push("<p><strong>Build cost:</strong> ₹" + buildCost.toLocaleString("en-IN") + "</p>");
+      lines.push("<p><strong>BA + QA + PM:</strong> ₹" + uplift.toLocaleString("en-IN") + "</p>");
+      lines.push("<p><strong>One-time dev total:</strong> ₹" + (buildCost + uplift).toLocaleString("en-IN") + "</p>");
+
+      summaryEl.innerHTML = lines.join("");
+    }
+
+    fields.forEach((id) => {
+      document.getElementById(id).addEventListener("input", renderSummary);
+    });
+    renderSummary();
+  </script>
+</body>
+</html>
