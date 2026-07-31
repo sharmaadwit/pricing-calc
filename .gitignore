@@ -146,3 +146,6 @@ analytics.csv
 # Offline notebooks
 notebooks/
 *.dmg
+
+# Keep the real test suite tracked
+!tests/test_*.py
