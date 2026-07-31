@@ -2326,6 +2326,7 @@
           </div>
         </div>
         #}
+          {% if step == 'results' %}
           <!-- Message Type Definitions (bottom) -->
           <details style="margin-top:28px; border:1px solid #f8bbd0; border-radius:8px;">
             <summary style="padding:14px 20px; cursor:pointer; font-weight:600; background:#fce4ec; border-radius:8px; list-style:none; display:flex; justify-content:space-between; align-items:center; user-select:none;">
@@ -2352,10 +2353,11 @@
             {% endif %}
             </div>
           </details>
+        {% endif %}
 
         <div style="margin-top: 28px; text-align: center; display:flex; gap:16px; justify-content:center; align-items:center;">
             <a href="/start-over" style="padding:10px 24px; background:#f5f5f5; color:#333; border:1px solid #ccc; border-radius:6px; text-decoration:none;">Start Over</a>
-            {% if sow_beta_enabled %}
+            {% if step == 'results' and sow_beta_enabled %}
             <a href="{{ url_for('sow_details') }}" class="btn-secondary" target="_blank">Generate SOW (beta)</a>
             {% endif %}
         </div>
