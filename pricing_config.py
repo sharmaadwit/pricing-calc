@@ -937,7 +937,7 @@ def build_voice_rate_card_for_prices(inputs, country=None):
 # Pricing logic (see compute_ai_price_components):
 #   - Raw cost below/equal threshold (1 INR or ~0.0105 USD): AI markup is a flat
 #     threshold amount (charge “at 1” / USD equivalent).
-#   - Raw cost above threshold: AI markup = raw_cost * multiplier (2x).
+#   - Raw cost above threshold: AI markup = raw_cost * multiplier (1.5x).
 #   - Model path only applies when that markup beats volume-tier AI markup.
 #   - final AI price per message = meta_costs_table[country]['ai'] + markup.
 #
@@ -1042,11 +1042,11 @@ AI_AGENT_SETTINGS = {
     # Threshold: flat markup when raw_cost <= threshold; above threshold use multiplier.
     'India': {
         'threshold': 1.0,      # INR — flat AI markup when model raw cost <= 1
-        'multiplier': 2.0,
+        'multiplier': 1.5,
     },
     'International': {
         'threshold': 0.0105,   # USD (~parity with 1 INR tier in prior config)
-        'multiplier': 2.0,
+        'multiplier': 1.5,
     },
 }
 
@@ -1104,7 +1104,7 @@ def compute_ai_price_components(country: str, model: str, complexity: str, tier_
 
     raw_cost = get_ai_model_cost(pricing_key, model, complexity)
 
-    # Model-based markup: above threshold → 2× raw cost; at/below → flat threshold
+    # Model-based markup: above threshold → raw cost × multiplier; at/below → flat threshold
     # (1 INR or USD equivalent), not the raw fractional token cost.
     if raw_cost <= 0:
         model_markup = 0.0
