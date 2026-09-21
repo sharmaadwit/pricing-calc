@@ -223,22 +223,6 @@ app.config['SESSION_COOKIE_SECURE'] = os.environ.get('RAILWAY_ENVIRONMENT') == '
 # Railway / reverse proxy: correct Host and scheme (url_for, Origin checks)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
-# SOW beta allowlist – only these emails see the Generate SOW (beta) option
-SOW_BETA_EMAILS = {
-    'adwit.sharma@gupshup.io',
-    'ankit.kanwara@gupshup.io',
-    'gargi.upadhyay@gupshup.io',
-    'mridul.kumawat@gupshup.io',
-    'nikhil.sharma@knowlarity.com',
-    'nikhil.sharma@gupshup.io',
-    'siddharth.singh@gupshup.io',
-    'yashas.reddy@gupshup.io',
-    'ananya.a@gupshup.io',
-    'puru.chauhan@gupshup.io',
-    'puru.chauhan@knowlarity.com',
-    'nidhi.shridhar@gupshup.io',
-    'maria.diaz@gupshup.io',
-}
 
 # Verbose stderr traces only in non-production (set APP_VERBOSE=1 to force on)
 _APP_VERBOSE = (
@@ -2029,10 +2013,8 @@ def index():
         results['suggested_revenue'] = (results.get('suggested_revenue', 0) - platform_fee) + rate_card_platform_fee
         _vprint("RENDERING RESULTS PAGE", file=sys.stderr, flush=True)
         contradiction_warning = None
-        # Determine if SOW beta should be enabled for this user
         profile = session.get('profile') or {}
-        email_for_sow = (profile.get('email') or '').strip().lower()
-        sow_beta_enabled = bool(email_for_sow and email_for_sow in SOW_BETA_EMAILS)
+        sow_beta_enabled = True
         # Always calculate final_price_details for all routes
         committed_amount = float(inputs.get('committed_amount', 0) or 0)
         country = inputs.get('country', 'India')
@@ -2485,10 +2467,8 @@ def index():
         # Ensure manday_breakdown has the correct structure
         if not manday_breakdown or 'bot_ui' not in manday_breakdown:
             manday_breakdown = dict(text_manday_breakdown or {})
-        # Determine if SOW beta should be enabled for this user (refresh case)
         profile = session.get('profile') or {}
-        email_for_sow = (profile.get('email') or '').strip().lower()
-        sow_beta_enabled = bool(email_for_sow and email_for_sow in SOW_BETA_EMAILS)
+        sow_beta_enabled = True
         record_funnel_event('results', inputs=inputs, profile=profile)
         return render_template(
             'index.html',

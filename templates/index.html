@@ -2357,8 +2357,8 @@
 
         <div style="margin-top: 28px; text-align: center; display:flex; gap:16px; justify-content:center; align-items:center;">
             <a href="/start-over" style="padding:10px 24px; background:#f5f5f5; color:#333; border:1px solid #ccc; border-radius:6px; text-decoration:none;">Start Over</a>
-            {% if step == 'results' and sow_beta_enabled %}
-            <a href="{{ url_for('sow_details') }}" class="btn-secondary" target="_blank">Generate SOW (beta)</a>
+            {% if step == 'results' %}
+            <a href="{{ url_for('sow_details') }}" class="btn-secondary" target="_blank">Generate SOW</a>
             {% endif %}
         </div>
         </div>
