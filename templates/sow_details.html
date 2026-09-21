@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SOW Details (Beta)</title>
+    <title>SOW Details</title>
     <style>
         body {
             font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
@@ -92,7 +92,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Scope of Work Details (Beta)</h1>
+        <h1>Scope of Work Details</h1>
         <p class="help-text">
             Fill these fields once per deal. They will be used to enrich the SOW document.
         </p>
@@ -241,14 +241,6 @@
                     {% endfor %}
                 </select>
 
-                <label for="ai_channel" style="margin-top: 12px;">Channel</label>
-                <select id="ai_channel" name="ai_channel">
-                    {% set ch = sow.ai_channel or '' %}
-                    {% for opt in ['Whatsapp', 'Whatsapp Voice', 'Web', 'PSTN Voice'] %}
-                    <option value="{{ opt }}" {% if ch == opt %}selected{% endif %}>{{ opt }}</option>
-                    {% endfor %}
-                </select>
-
                 <label for="ai_use_case_category" style="margin-top: 12px;">Use-Case Category</label>
                 <select id="ai_use_case_category" name="ai_use_case_category">
                     {% set uc = sow.ai_use_case_category or '' %}
@@ -315,6 +307,15 @@
                     </div>
                     </div>
                 </div>
+
+                <label for="security_javascript_scraping" style="margin-top: 12px;">Security / Javascript Scraping Restrictions</label>
+                <select id="security_javascript_scraping" name="security_javascript_scraping">
+                    {% set sec = sow.security_javascript_scraping or '' %}
+                    <option value="" {% if sec == '' %}selected{% endif %}>-- Select --</option>
+                    {% for opt in ['Yes (Specify if yes)', 'No'] %}
+                    <option value="{{ opt }}" {% if sec == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
 
                 <label for="ai_languages" style="margin-top: 12px;">AI Languages</label>
                 <input type="text" id="ai_languages" name="ai_languages" value="{{ sow.ai_languages or '' }}">

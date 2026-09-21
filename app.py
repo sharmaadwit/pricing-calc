@@ -2710,8 +2710,6 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
                         row.cells[1].text = model_name
                 elif desc == 'Bot type':
                     row.cells[1].text = sow_details.get('ai_bot_type', '')
-                elif desc == 'Channel':
-                    row.cells[1].text = sow_details.get('ai_channel', '')
                 elif desc == 'Use-Case Category':
                     use_case = sow_details.get('ai_use_case_category', '')
                     use_case_other = (sow_details.get('ai_use_case_other') or '').strip()
@@ -2721,8 +2719,6 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
                         row.cells[1].text = use_case
                 elif desc == 'Bot Complexity':
                     row.cells[1].text = complexity
-                elif desc == 'LLM Model':
-                    row.cells[1].text = model
                 elif desc == 'Type of Training data':
                     options = ['CSV', 'Website', 'Text', 'Others']
                     text = _checkbox_group(options, training_selected)
@@ -2730,6 +2726,8 @@ def generate_sow_docx(inputs, results, final_price_details, profile, sow_details
                     if other:
                         text = f"{text}\nOthers: {other}"
                     row.cells[1].text = text
+                elif desc.startswith('Security/ Javascript Scraping'):
+                    row.cells[1].text = sow_details.get('security_javascript_scraping', '')
                 elif desc.startswith('Training Schedule'):
                     if website_selected:
                         parts = []
@@ -3163,10 +3161,6 @@ def sow_details():
         return redirect(url_for('login'))
 
     profile = session.get('profile') or {}
-    email_for_sow = (profile.get('email') or '').strip().lower()
-    if not email_for_sow or email_for_sow not in SOW_BETA_EMAILS:
-        flash('SOW generation (beta) is currently enabled only for a limited set of internal users.', 'error')
-        return redirect(url_for('index', step='results'))
 
     inputs = session.get('inputs') or {}
     results = session.get('results')
@@ -3225,11 +3219,11 @@ def sow_details():
             'ai_model_name': request.form.get('ai_model_name', '').strip(),
             'ai_model_name_other': request.form.get('ai_model_name_other', '').strip(),
             'ai_bot_type': request.form.get('ai_bot_type', '').strip(),
-            'ai_channel': request.form.get('ai_channel', '').strip(),
             'ai_use_case_category': request.form.get('ai_use_case_category', '').strip(),
             'ai_use_case_other': request.form.get('ai_use_case_other', '').strip(),
             'ai_bot_complexity': request.form.get('ai_bot_complexity', '').strip(),
             'ai_llm_model': request.form.get('ai_llm_model', '').strip(),
+            'security_javascript_scraping': request.form.get('security_javascript_scraping', '').strip(),
             'training_data': request.form.getlist('training_data'),
             'training_data_other': request.form.get('training_data_other', '').strip(),
             'training_start_date': request.form.get('training_start_date', '').strip(),
