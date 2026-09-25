@@ -3396,12 +3396,17 @@ def analytics():
                 # Calculations by day
                 calculations_by_day = {str(row[0]): row[1] for row in db.session.query(func.date(Analytics.timestamp), func.count()).group_by(func.date(Analytics.timestamp)).all()}
                 # Calculations by week
-                calculations_by_week = {str(row[0]): row[1] for row in db.session.query(
-                    func.to_char(Analytics.timestamp, 'IYYY-"W"IW'),
-                    func.count()
-                ).group_by(
-                    func.to_char(Analytics.timestamp, 'IYYY-"W"IW')
-                ).all()}
+                calculations_by_week = {}
+                try:
+                    week_data = db.session.query(
+                        func.to_char(Analytics.timestamp, 'IYYY-"W"IW').label('week'),
+                        func.count().label('cnt')
+                    ).group_by(
+                        'week'
+                    ).all()
+                    calculations_by_week = {str(row[0]): row[1] for row in week_data}
+                except Exception:
+                    pass
                 # Most common countries
                 country_list = [row[0] for row in db.session.query(Analytics.country).all() if row[0] is not None]
                 country_counter = Counter(country_list).most_common(5)
