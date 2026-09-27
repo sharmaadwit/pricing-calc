@@ -7,7 +7,7 @@ Runs daily at 8 PM IST via cron job
 
 import os
 import sys
-import psycopg2
+import psycopg
 import csv
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -42,7 +42,7 @@ def export_analytics_to_csv():
         log_message("Starting CSV export from PostgreSQL...")
         
         # Connect to database
-        conn = psycopg2.connect(DB_URL)
+        conn = psycopg.connect(DB_URL)
         cur = conn.cursor()
         
         # Export all data from analytics table
@@ -77,7 +77,7 @@ def export_funnel_to_csv():
     try:
         log_message("Starting funnel_events CSV export from PostgreSQL...")
 
-        conn = psycopg2.connect(DB_URL)
+        conn = psycopg.connect(DB_URL)
         cur = conn.cursor()
 
         # Check if funnel_events table exists
