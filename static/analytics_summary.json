@@ -3,7 +3,7 @@
   "unique_users": 33,
   "total_revenue": 164639004.0,
   "countries": 7,
-  "last_updated": "2026-11-18 23:52:54",
+  "last_updated": "2026-11-19 05:53:01",
   "top_users": {
     "Puru Chauhan": 36600000.0,
     "Yashas Reddy": 24535300.0,
@@ -2904,14 +2904,14 @@
   },
   "funnel": {
     "counts": {
-      "volumes": 1287,
+      "volumes": 1289,
       "prices": 462,
       "results": 433,
       "sow_details": 231,
       "sow_download": 100
     },
     "conversion": {
-      "volumes_to_prices": 35.8974358974359,
+      "volumes_to_prices": 35.84173778122576,
       "prices_to_results": 93.72294372294373,
       "results_to_sow_details": 53.34872979214781,
       "sow_details_to_sow_download": 43.290043290043286
